@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: campusos-postgres
+    environment:
+      POSTGRES_USER: campusos
+      POSTGRES_PASSWORD: campusospassword
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - campusos-net
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: campusos-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - campusos-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: campusos-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - campusos-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: campusos-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - campusos-net
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: campusos-zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - campusos-net
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: campusos-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - campusos-net
+    restart: unless-stopped
+
+networks:
+  campusos-net:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -1,0 +1,3 @@
+. .\tools\load-env.ps1
+
+Start-Process "cmd.exe" -ArgumentList "/k", "title Eureka Server && .\mvnw.cmd spring-boot:run -pl services/eureka-server"; Start-Sleep -Seconds 10; Start-Process "cmd.exe" -ArgumentList "/k", "title API Gateway && .\mvnw.cmd spring-boot:run -pl services/api-gateway"; Start-Process "cmd.exe" -ArgumentList "/k", "title Auth Service && .\mvnw.cmd spring-boot:run -pl services/auth-service"; Start-Process "cmd.exe" -ArgumentList "/k", "title Profile Service && .\mvnw.cmd spring-boot:run -pl services/profile-service"; Start-Process "cmd.exe" -ArgumentList "/k", "title Event Service && .\mvnw.cmd spring-boot:run -pl services/event-service"
