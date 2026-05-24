@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAutoDismissMessage } from '../hooks/useAutoDismissMessage';
 import { 
   User, Mail, GraduationCap, Building2, Calendar, 
   Camera, Lock, CheckCircle2, AlertCircle, Loader2,
@@ -20,6 +21,9 @@ export const ProfilePage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passError, setPassError] = useState('');
   const [passSuccess, setPassSuccess] = useState('');
+
+  useAutoDismissMessage(passError, () => setPassError(''));
+  useAutoDismissMessage(passSuccess, () => setPassSuccess(''));
 
   if (!user) return null;
 
@@ -90,7 +94,7 @@ export const ProfilePage = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto pb-10">
+    <div className="max-w-[1400px] w-full mx-auto pb-10 px-4 sm:px-6 lg:px-8">
       
       {/* Banner & Header */}
       <motion.div 

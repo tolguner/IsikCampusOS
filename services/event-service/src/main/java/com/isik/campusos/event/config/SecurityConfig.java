@@ -21,11 +21,13 @@ import java.util.List;
  * Event Service güvenlik yapılandırması.
  *
  * Rol tabanlı erişim kontrolü:
- *  - GET /api/v1/events        → Kimlik doğrulayan herkes (STUDENT, REGISTRAR, vb.)
- *  - POST /api/v1/events/draft → Kimlik doğrulayan herkes (club admin kontrolü servis katmanında)
- *  - POST /{id}/approve        → Yalnızca ROLE_SKS_ADMIN veya ROLE_ADMIN
- *  - POST /{id}/rsvp           → Kimlik doğrulayan herkes
- *  - POST /{id}/checkin/{uid}  → Kimlik doğrulayan herkes (club admin kontrolü servis katmanında)
+ * - GET /api/v1/events → Kimlik doğrulayan herkes (STUDENT, REGISTRAR, vb.)
+ * - POST /api/v1/events/draft → Kimlik doğrulayan herkes (club admin kontrolü
+ * servis katmanında)
+ * - POST /{id}/approve → Yalnızca ROLE_SKS_ADMIN veya ROLE_ADMIN
+ * - POST /{id}/rsvp → Kimlik doğrulayan herkes
+ * - POST /{id}/checkin/{uid} → Kimlik doğrulayan herkes (club admin kontrolü
+ * servis katmanında)
  */
 @Configuration
 @EnableWebSecurity
@@ -38,25 +40,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // Yayınlanmış etkinlikleri herkes görebilir (authenticated)
-                .requestMatchers(HttpMethod.GET, "/api/v1/events").authenticated()
-                .requestMatchers(HttpMethod.GET, "/api/v1/events/**").authenticated()
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // Yayınlanmış etkinlikleri herkes görebilir (authenticated)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/events").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/events/**").authenticated()
 
-                // Kulüp listeleme — authenticated
-                .requestMatchers(HttpMethod.GET, "/api/v1/clubs/**").authenticated()
+                        // Kulüp listeleme — authenticated
+                        .requestMatchers(HttpMethod.GET, "/api/v1/clubs/**").authenticated()
 
-                // Etkinlik onaylama — yalnızca SKS_ADMIN veya ADMIN
-                .requestMatchers(HttpMethod.POST, "/api/v1/events/*/approve")
-                    .hasAnyAuthority("ROLE_SKS_ADMIN", "ROLE_ADMIN")
+                        // Etkinlik onaylama — yalnızca SKS_ADMIN veya ADMIN
+                        .requestMatchers(HttpMethod.POST, "/api/v1/events/*/approve")
+                        .hasAnyAuthority("ROLE_SKS_ADMIN", "ROLE_ADMIN")
 
-                // Etkinlik oluşturma, RSVP, checkin — authenticated
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                        // Etkinlik oluşturma, RSVP, checkin — authenticated
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -68,8 +69,10 @@ public class SecurityConfig {
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
-        return new UrlBasedCorsConfigurationSource() {{
-            registerCorsConfiguration("/**", config);
-        }};
+        return new UrlBasedCorsConfigurationSource() {
+            {
+                registerCorsConfiguration("/**", config);
+            }
+        };
     }
 }

@@ -10,6 +10,9 @@ import java.util.Optional;
 @Repository
 public interface RsvpRepository extends JpaRepository<Rsvp, String> {
     List<Rsvp> findByEventId(String eventId);
+    List<Rsvp> findByUserIdOrderByCreatedAtDesc(String userId);
     Optional<Rsvp> findByEventIdAndUserId(String eventId, String userId);
+    Optional<Rsvp> findByEventIdAndCheckInToken(String eventId, String checkInToken);
     List<Rsvp> findByEventIdAndStatusOrderByCreatedAtAsc(String eventId, Rsvp.RsvpStatus status);
+    List<Rsvp> findByEventIdAndStatusInOrderByCreatedAtAsc(String eventId, List<Rsvp.RsvpStatus> statuses);
 }

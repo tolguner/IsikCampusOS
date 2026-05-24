@@ -16,7 +16,7 @@ export const SettingsPage = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto w-full h-full animate-fade-in flex flex-col space-y-8 pb-10">
+    <div className="max-w-[1400px] mx-auto w-full h-full animate-fade-in flex flex-col space-y-8 pb-10 px-4 sm:px-6 lg:px-8">
       
       <div className="mb-2">
         <h1 className="text-3xl font-extrabold text-white">Ayarlar</h1>
