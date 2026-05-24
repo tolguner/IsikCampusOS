@@ -5,9 +5,17 @@ import { AuthPage } from './pages/AuthPage';
 import { EmailVerification } from './pages/EmailVerification';
 import { ChangePassword } from './pages/ChangePassword';
 import { RegistrarDashboard } from './pages/RegistrarDashboard';
+import { SksDashboard } from './pages/SksDashboard';
 import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
+import { ClubsPage } from './pages/ClubsPage';
+import { ClubDetailPage } from './pages/ClubDetailPage';
+import { NotificationsPage } from './pages/NotificationsPage';
+import { StudentDashboard } from './pages/StudentDashboard';
+import { ClubPresidentDashboard } from './pages/ClubPresidentDashboard';
+import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
 import { useAuthStore } from './store/authStore';
+import { AutoClearMessages } from './components/AutoClearMessages';
 
 // Giriş sonrası yönlendirme mantığı:
 // 1. emailVerified === false → E-posta doğrulama
@@ -38,9 +46,11 @@ function App() {
 
   return (
     <BrowserRouter>
+      <AutoClearMessages />
       <Routes>
         {/* Auth — giriş sayfası */}
         <Route path="/login" element={!isAuthenticated ? <AuthPage /> : <Navigate to="/" />} />
+        <Route path="/certificates/verify" element={<CertificateVerificationPage />} />
 
         {/* E-posta doğrulama — giriş yapmış ama doğrulanmamış */}
         <Route path="/verify-email" element={
@@ -62,25 +72,10 @@ function App() {
             <AppLayout>
               {user?.roles.includes('ROLE_REGISTRAR') ? (
                 <RegistrarDashboard />
+              ) : user?.roles.includes('ROLE_SKS_ADMIN') ? (
+                <SksDashboard />
               ) : (
-                <div className="flex flex-col items-center justify-center h-full space-y-6 mt-20">
-                  <h1 className="text-5xl font-extrabold gradient-text">
-                    Kontrol Paneli
-                  </h1>
-                  <p className="text-xl text-white/40 text-center max-w-2xl leading-relaxed">
-                    Hoş geldin{user?.fullName ? `, ${user.fullName}` : ''}! Kampüs hayatını yönetmek için hazırsın.
-                    Etkinlikleri keşfet, tesisleri rezerve et ve daha fazlasını yap.
-                  </p>
-                  <div className="flex gap-4 mt-8">
-                    <button className="px-8 py-3 rounded-2xl gradient-btn shadow-lg shadow-indigo-500/20 cursor-pointer">
-                      Etkinlikleri Keşfet
-                    </button>
-                    <button className="px-8 py-3 rounded-2xl font-semibold text-white cursor-pointer transition-all"
-                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      Tesis Rezerve Et
-                    </button>
-                  </div>
-                </div>
+                <StudentDashboard />
               )}
             </AppLayout>
           </ProtectedRoute>
@@ -98,6 +93,38 @@ function App() {
           <ProtectedRoute>
             <AppLayout>
               <SettingsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/clubs" element={
+          <ProtectedRoute>
+            <AppLayout>
+              <ClubsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/clubs/:clubId" element={
+          <ProtectedRoute>
+            <AppLayout>
+              <ClubDetailPage />
+            </AppLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <AppLayout>
+              <NotificationsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/club-management" element={
+          <ProtectedRoute>
+            <AppLayout>
+              <ClubPresidentDashboard />
             </AppLayout>
           </ProtectedRoute>
         } />

@@ -1,11 +1,26 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { Home, Calendar, LayoutDashboard } from 'lucide-react';
+import { Bell, LayoutDashboard, Link as LinkIcon, ShieldCheck, UsersRound } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useNotificationStore } from '../../store/notificationStore';
+import { useClubStore } from '../../store/clubStore';
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, logout, user } = useAuthStore();
+  const { notifications, unreadCount, fetchNotifications, markAsRead } = useNotificationStore();
+  const { clubs: managedClubs, fetchManagedClubs } = useClubStore();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const isStudent = !!user?.roles.includes('ROLE_STUDENT');
+  const isClubPresident = isStudent && managedClubs.length > 0;
+
+  useEffect(() => {
+    if (isAuthenticated) fetchNotifications();
+  }, [isAuthenticated, fetchNotifications]);
+
+  useEffect(() => {
+    if (isAuthenticated && isStudent) fetchManagedClubs();
+  }, [fetchManagedClubs, isAuthenticated, isStudent]);
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-[#050510]">
@@ -40,15 +55,101 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           </motion.div>
           
           <div className="flex gap-2 items-center">
-            <Link to="/" className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Ana Sayfa">
-              <Home className="w-5 h-5 text-white/40 hover:text-white/70" />
-            </Link>
-            <Link to="/" className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Etkinlikler">
-              <Calendar className="w-5 h-5 text-white/40 hover:text-white/70" />
-            </Link>
             <Link to="/" className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Kontrol Paneli">
               <LayoutDashboard className="w-5 h-5 text-white/40 hover:text-white/70" />
             </Link>
+            <Link to="/clubs" className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Kulüpler">
+              <UsersRound className="w-5 h-5 text-white/40 hover:text-white/70" />
+            </Link>
+            {isClubPresident && (
+              <Link to="/club-management" className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Kulüp Yönetim Paneli">
+                <ShieldCheck className="w-5 h-5 text-white/40 hover:text-white/70" />
+              </Link>
+            )}
+            <div className="relative">
+              <button
+                onClick={() => setNotificationsOpen(prev => !prev)}
+                className="relative p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer"
+                title="Bildirimler"
+                type="button"
+              >
+                <Bell className="w-5 h-5 text-white/40 hover:text-white/70" />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 min-w-[18px] h-[18px] px-1 rounded-full bg-purple-500 border border-[#0c0c18] text-[10px] font-black leading-[16px] text-white text-center shadow-[0_0_16px_rgba(168,85,247,0.55)]">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              {notificationsOpen && (
+                <div className="absolute right-0 top-full mt-3 w-80 rounded-2xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden z-[100]"
+                     style={{ background: 'rgba(12, 12, 24, 0.98)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
+                  <div className="p-4 border-b border-white/10">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-bold text-white">Bildirimler</p>
+                      {unreadCount > 0 && (
+                        <span className="rounded-full bg-purple-500/20 border border-purple-300/25 px-2 py-1 text-[10px] font-black text-purple-100">
+                          {unreadCount} okunmamış
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto p-2">
+                    {notifications.slice(0, 8).map(notification => (
+                      <div
+                        key={notification.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => markAsRead(notification.id)}
+                        onKeyDown={event => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            markAsRead(notification.id);
+                          }
+                        }}
+                        className={`relative rounded-xl px-3 py-3 hover:bg-white/5 transition-colors cursor-pointer ${notification.read ? 'opacity-70' : 'bg-purple-500/[0.06] border border-purple-400/10'}`}
+                      >
+                        {!notification.read && (
+                          <span className="absolute right-3 top-3 w-2 h-2 rounded-full bg-purple-300 shadow-[0_0_12px_rgba(216,180,254,0.7)]" />
+                        )}
+                        {notification.imageUrl && (
+                          <img src={notification.imageUrl} alt={notification.title} className="mb-3 w-full h-28 object-cover rounded-xl border border-white/10" />
+                        )}
+                        <p className="text-sm font-semibold text-white/90">{notification.title}</p>
+                        <p className="text-[11px] font-semibold text-white/35 mt-1">
+                          Gönderen: <span className="text-white/55">{notification.createdByName || (notification.type === 'ANNOUNCEMENT' ? 'SKS Yönetimi' : 'Sistem')}</span>
+                        </p>
+                        <p className="text-xs text-white/45 mt-1 leading-relaxed">{notification.message}</p>
+                        {notification.linkUrl && (
+                          <a
+                            href={notification.linkUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={() => markAsRead(notification.id)}
+                            className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-cyan-200 hover:text-cyan-100"
+                          >
+                            <LinkIcon className="w-3.5 h-3.5" />
+                            {notification.linkLabel || 'Bağlantıyı aç'}
+                          </a>
+                        )}
+                        <p className="text-[11px] text-white/30 mt-2">{new Date(notification.createdAt).toLocaleString('tr-TR')}</p>
+                      </div>
+                    ))}
+                    {notifications.length === 0 && (
+                      <p className="px-3 py-6 text-sm text-white/40 text-center">Yeni bildirim yok.</p>
+                    )}
+                  </div>
+                  <div className="p-2 border-t border-white/10">
+                    <Link
+                      to="/notifications"
+                      onClick={() => setNotificationsOpen(false)}
+                      className="block w-full rounded-xl px-3 py-2.5 text-center text-sm font-bold text-purple-100 bg-purple-500/15 hover:bg-purple-500/25 transition-colors"
+                    >
+                      Tüm bildirimleri görüntüle
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {isAuthenticated && user && (
               <>

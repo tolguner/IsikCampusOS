@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -87,6 +88,9 @@ public class StudentManagementService {
      * Öğrenci listesi — sayfalı, filtrelenebilir.
      */
     public Page<StudentResponse> listStudents(int page, int size, String search, String status, String faculty) {
+        String normalizedSearch = search != null && !search.isBlank() ? search.trim().toLowerCase() : null;
+        String normalizedFaculty = faculty != null && !faculty.isBlank() ? faculty.trim() : null;
+
         UserStatus statusEnum = null;
         if (status != null && !status.isBlank()) {
             try {
@@ -96,12 +100,33 @@ public class StudentManagementService {
             }
         }
 
-        return userRepository.findStudents(
-                search,
-                statusEnum,
-                faculty,
-                PageRequest.of(page, size)
-        ).map(this::toResponse);
+        UserStatus finalStatusEnum = statusEnum;
+        Specification<User> specification = (root, query, criteriaBuilder) -> {
+            var predicate = criteriaBuilder.like(root.get("roles"), "%ROLE_STUDENT%");
+
+            if (normalizedSearch != null) {
+                String pattern = "%" + normalizedSearch + "%";
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.or(
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("firstName")), pattern),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("lastName")), pattern),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("studentNumber")), pattern),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), pattern)
+                ));
+            }
+
+            if (finalStatusEnum != null) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("status"), finalStatusEnum));
+            }
+
+            if (normalizedFaculty != null) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("faculty"), normalizedFaculty));
+            }
+
+            query.orderBy(criteriaBuilder.desc(root.get("createdAt")));
+            return predicate;
+        };
+
+        return userRepository.findAll(specification, PageRequest.of(page, size)).map(this::toResponse);
     }
 
     /**

@@ -5,7 +5,13 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "rsvps")
+@Table(
+    name = "rsvps",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_rsvp_event_user",
+        columnNames = {"event_id", "user_id"}
+    )
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,17 +21,27 @@ public class Rsvp {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(nullable = false)
+    @Column(name = "event_id", nullable = false)
     private String eventId;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private String userId;
+
+    @Column(name = "check_in_token", unique = true)
+    private String checkInToken;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RsvpStatus status;
 
     private LocalDateTime createdAt;
+    private LocalDateTime checkedInAt;
+    private String checkedInBy;
+    private LocalDateTime certificateSentAt;
+    private LocalDateTime paymentReviewedAt;
+    private String paymentReviewedBy;
+    @Column(length = 1000)
+    private String paymentRejectionReason;
 
     @PrePersist
     protected void onCreate() {
@@ -33,6 +49,6 @@ public class Rsvp {
     }
 
     public enum RsvpStatus {
-        CONFIRMED, WAITLISTED, CANCELLED, ATTENDED, NO_SHOW
+        PENDING_PAYMENT, CONFIRMED, WAITLISTED, CANCELLED, ATTENDED, NO_SHOW
     }
 }

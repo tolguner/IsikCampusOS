@@ -29,13 +29,49 @@ Henuz implement edilmemis ama dokumanlarda planlanan servisler:
 
 ## 2. Onceliklendirilmis Yol Haritasi
 
+## Domain Isimlendirme Karari - Kulup ve Etkinlik Operasyon Modulu
+
+Bu alanda tek urun dili kullanilacak: ana modul `Kulüpler`, alt akis `Etkinlikler`.
+
+Kod tabaninda mevcut servis adi `event-service` olarak kalabilir; bu servis kulup, etkinlik, RSVP, check-in ve sertifika akislarini birlikte tasiyan bounded context olarak ele alinacak. Paket/servis adini hemen `club-service` olarak degistirmek cok dosyali ve gereksiz riskli bir refactor olur. UI, dokuman ve rota dilinde ise kullaniciya `Kulüpler` ana modulu gosterilecek; etkinlikler bu modulun operasyonel parcasi olarak konumlanacak.
+
+Bu modulun amaci yalnizca kulup uyeligi degil; kulup yoneticilerinin etkinlik olusturmasi, SKS yoneticisinin onaylamasi, ogrencilerin etkinliklere katilmasi, katilimci listesinin yonetilmesi, QR ile check-in dogrulamasi ve sertifikali etkinliklerde otomatik sertifika iletimi akisini uc uca yonetmektir.
+
+Temel akış:
+
+1. SKS/Admin kulup kaydini olusturur veya kulup adminini atar.
+2. Kulup admini etkinlik taslagi olusturur.
+3. Kulup admini etkinligi SKS onayina gonderir.
+4. SKS/Admin etkinligi onaylar ve etkinlik ilana/published duruma gecer.
+5. Ogrenciler etkinlige RSVP/kayit yapar.
+6. Kulup admini katilimci listesini gorur.
+7. Etkinlik gunu QR check-in ile kayitli katilimcilarin gercek katilimi dogrulanir.
+8. Etkinlik sertifikali ise, katilimi onaylananlara tek komutla sertifika gonderim sureci tetiklenir.
+
+Ilk backend omurgasi:
+
+- Etkinlik taslagi artik QR check-in ve sertifika bilgilerini tasiyabilir.
+- SKS/Admin etkinligi onayladiginda `approvedBy`, `approvedAt` ve `publishedAt` bilgileri tutulur.
+- RSVP onaylanan katilimci icin QR check-in token'i uretilir.
+- Kulup admini veya SKS/Admin etkinlik katilimcilarini listeleyebilir.
+- Kulup admini veya SKS/Admin manuel kullanici check-in ve QR token check-in yapabilir.
+- Sertifikali etkinliklerde katilimi onaylanan kullanicilar icin tek komutla sertifika gonderim istegi tetiklenir.
+
+Ilk API omurgasi:
+
+- `GET /api/v1/clubs/{clubId}/events`
+- `GET /api/v1/events/managed`
+- `GET /api/v1/events/{eventId}/participants`
+- `POST /api/v1/events/{eventId}/checkin/qr`
+- `POST /api/v1/events/{eventId}/certificates/issue`
+
 ## Faz 1 - Derlenebilir ve Tutarlı MVP Temeli
 
 Bu fazin amaci, var olan kodun guvenilir sekilde build almasi ve servisler arasi temel sozlesmelerin tutarli hale gelmesidir.
 
-### 1.1 Frontend TypeScript Build Hatalarini Duzelt
+### 1.1 Frontend TypeScript Build Hatalarini Duzelt — TAMAMLANDI
 
-Mevcut durumda `npm run build` basarisiz oluyor. Ana neden, frontend `User` tipinin UI tarafinda kullanilan alanlari icermemesi.
+Durum: `frontend` icin `npm run build` basarili calisiyor. `User` tipi UI'da kullanilan alanlarla uyumlu hale getirilmis, login response bu alanlari tasiyor ve kullanilmayan import / ikon tip sorunlari giderilmis.
 
 Yapilacaklar:
 
@@ -55,11 +91,11 @@ Yapilacaklar:
 
 Kabul kriteri:
 
-- `cd frontend && npm run build` hatasiz tamamlanmali.
+- `cd frontend && npm run build` hatasiz tamamlandi.
 
-### 1.2 Auth ve Profile Kafka Topic Uyumsuzlugunu Gider
+### 1.2 Auth ve Profile Kafka Topic Uyumsuzlugunu Gider — TAMAMLANDI
 
-`auth-service` ogrenci olusturunca `student.created` topic'ine event gonderiyor. `profile-service` ise `user.registered` topic'ini dinliyor. Bu nedenle otomatik profil olusturma calismayabilir.
+Durum: `auth-service` ogrenci olusturunca `user.registered` topic'ine event gonderiyor. `profile-service` ayni topic'i dinliyor ve idempotent profil olusturuyor.
 
 Yapilacaklar:
 
@@ -78,9 +114,9 @@ Kabul kriteri:
 
 - Registrar panelinden yeni ogrenci olusturuldugunda `profile_db.profiles` icinde otomatik profil kaydi olusmali.
 
-### 1.3 Backend API Response Modellerini Frontend ile Uyumlu Hale Getir
+### 1.3 Backend API Response Modellerini Frontend ile Uyumlu Hale Getir — TAMAMLANDI
 
-Frontend, kullanici bilgilerini login response icinde genis sekilde kullanmak istiyor. Backend ise su anda daha sinirli veri donuyor.
+Durum: `AuthResponse` frontend'in login state icin kullandigi temel kullanici alanlarini donuyor: ad/soyad, fakulte, bolum, kayit yili, ogrenci numarasi, email dogrulama ve sifre degistirme bayraklari.
 
 Yapilacaklar:
 
@@ -93,7 +129,7 @@ Yapilacaklar:
 
 Kabul kriteri:
 
-- Login sonrasi dashboard, navbar ve profil sayfasi TypeScript hatasi ve runtime hata olmadan acilmali.
+- Login sonrasi dashboard, navbar ve profil sayfasi TypeScript hatasi olmadan build aliyor.
 
 ## Faz 2 - Guvenlik ve Yetkilendirme Sertlestirme
 
@@ -101,7 +137,7 @@ Bu faz, MVP'nin gercek kullanima daha yakin hale gelmesi icin kritik.
 
 ### 2.1 Event Service Rol Kontrollerini Tamamla
 
-`event-service` icinde bazi kritik endpointler yorum seviyesinde korunuyor ama kod seviyesinde rol kontrolu eksik.
+Durum: `approve` endpoint'i `ROLE_SKS_ADMIN` veya `ROLE_ADMIN` ile sinirli. Club admin gerektiren draft/submit/check-in akislari servis katmaninda kontrol ediliyor. Yetkisiz club admin/check-in durumlari artik `AccessDeniedException` ile 403'e uygun sekilde ele aliniyor.
 
 Riskli alanlar:
 
@@ -121,6 +157,7 @@ Kabul kriteri:
 
 - Normal student token'i ile event approve denenince 403 donmeli.
 - SKS/admin token'i ile approve basarili olmali.
+- Normal student kullanici club admin olmadigi event icin draft/submit/check-in deneyince 403 donmeli.
 
 ### 2.2 Gateway Auth Stratejisini Netlestir
 

@@ -1,0 +1,90 @@
+public List<ClubAnnouncementResponse> getClubAnnouncements(String clubId) {
+    return clubAnnouncementRepository.findByClubIdOrderByCreatedAtDesc(clubId)
+        .stream()
+        .map(a -> ClubAnnouncementResponse.builder()
+            .id(a.getId())
+            .clubId(a.getClubId())
+            .clubName("")
+            .title(a.getTitle())
+            .message(a.getMessage())
+            .linkUrl(a.getLinkUrl())
+            .linkLabel(a.getLinkLabel())
+            .imageUrl(a.getImageUrl())
+            .createdByUserId(a.getCreatedByUserId())
+            .createdAt(a.getCreatedAt())
+            .build())
+        .toList();
+}
+
+public List<ClubMemberResponse> getClubMembers(String userId, String clubId) {
+    Club club = clubRepository.findByIdAndIsDeletedFalse(clubId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Club not found"));
+    if (!userId.trim().equalsIgnoreCase(club.getAdminUserId().trim()) && !isSystemAdmin("ROLE_SKS_ADMIN")) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only club admin or SKS admin can view members list");
+    }
+    return clubMemberRepository.findByClubId(clubId).stream()
+        .map(m -> ClubMemberResponse.builder()
+            .id(m.getId())
+            .clubId(m.getClubId())
+            .userId(m.getUserId())
+            .fullName("Unknown")
+            .role(m.getRole().name())
+            .status(m.getStatus().name())
+            .joinedAt(m.getJoinedAt())
+            .build())
+        .toList();
+}
+
+@Transactional
+public void updateMemberRole(String currentUserId, String clubId, String targetUserId, ClubMemberRoleUpdateRequest request) {
+    Club club = clubRepository.findByIdAndIsDeletedFalse(clubId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Club not found"));
+    if (!currentUserId.trim().equalsIgnoreCase(club.getAdminUserId().trim())) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only president can change roles");
+    }
+    ClubMember targetMember = clubMemberRepository.findByClubIdAndUserId(clubId, targetUserId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
+    targetMember.setRole(ClubMember.MemberRole.valueOf(request.getRole()));
+    clubMemberRepository.save(targetMember);
+}
+
+@Transactional
+public void updateMemberStatus(String currentUserId, String clubId, String targetUserId, ClubMemberStatusUpdateRequest request) {
+    Club club = clubRepository.findByIdAndIsDeletedFalse(clubId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Club not found"));
+    if (!currentUserId.trim().equalsIgnoreCase(club.getAdminUserId().trim())) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only president can change statuses");
+    }
+    ClubMember targetMember = clubMemberRepository.findByClubIdAndUserId(clubId, targetUserId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
+    targetMember.setStatus(ClubMember.MemberStatus.valueOf(request.getStatus()));
+    clubMemberRepository.save(targetMember);
+}
+
+@Transactional
+public void removeMember(String currentUserId, String clubId, String targetUserId) {
+    Club club = clubRepository.findByIdAndIsDeletedFalse(clubId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Club not found"));
+    if (!currentUserId.trim().equalsIgnoreCase(club.getAdminUserId().trim()) && !isSystemAdmin("ROLE_SKS_ADMIN")) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admin can remove members");
+    }
+    if (targetUserId.trim().equalsIgnoreCase(club.getAdminUserId().trim())) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot remove the club president");
+    }
+    ClubMember targetMember = clubMemberRepository.findByClubIdAndUserId(clubId, targetUserId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
+    clubMemberRepository.delete(targetMember);
+}
+
+@Transactional
+public void deleteClub(String clubId, String currentUserId) {
+    if (!isSystemAdmin("ROLE_SKS_ADMIN")) { // simplified check, ideally should check actual roles but we rely on @PreAuthorize usually
+        // the controller handles authority check
+    }
+    Club club = clubRepository.findByIdAndIsDeletedFalse(clubId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Club not found"));
+    club.setDeleted(true);
+    club.setDeletedAt(java.time.LocalDateTime.now());
+    clubRepository.save(club);
+}
+

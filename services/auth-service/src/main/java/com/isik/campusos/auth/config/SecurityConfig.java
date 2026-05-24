@@ -3,6 +3,7 @@ package com.isik.campusos.auth.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -41,14 +42,20 @@ public class SecurityConfig {
                     "/api/v1/auth/login",
                     "/api/v1/auth/forgot-password",
                     "/api/v1/auth/reset-password",
-                    "/api/v1/auth/verify-email"
+                    "/api/v1/auth/verify-email",
+                    "/api/v1/certificates/**"
                 ).permitAll()
                 // Authenticated endpoints
                 .requestMatchers(
                     "/api/v1/auth/change-password",
                     "/api/v1/auth/resend-verification"
                 ).authenticated()
-                // Öğrenci İşleri (REGISTRAR) endpoints
+                // Internal: diğer servisler (event-service vb.) toplu kullanıcı bilgisi çeker
+                .requestMatchers("/api/v1/users/**").authenticated()
+                // Öğrenci listesi SKS tarafından başkan atama için okunabilir;
+                // yazma/yönetim işlemleri Öğrenci İşleri rolünde kalır.
+                .requestMatchers(HttpMethod.GET, "/api/v1/students/**")
+                    .hasAnyAuthority("ROLE_REGISTRAR", "ROLE_SKS_ADMIN")
                 .requestMatchers("/api/v1/students/**").hasAuthority("ROLE_REGISTRAR")
                 // Diğer tüm istekler authenticated olmalı
                 .anyRequest().authenticated()

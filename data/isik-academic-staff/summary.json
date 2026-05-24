@@ -1,0 +1,175 @@
+{
+  "generated_at": "2026-05-04T20:16:17.998Z",
+  "source": {
+    "sitemap_url": "https://www.isikun.edu.tr/sitemap.xml",
+    "robots_url": "https://www.isikun.edu.tr/robots.txt",
+    "official_site": "https://www.isikun.edu.tr"
+  },
+  "page_count": 44,
+  "raw_observation_count": 551,
+  "unique_person_count": 303,
+  "profile_pages_enriched": 178,
+  "counts_by_academic_title": [
+    {
+      "name": "Öğretim Görevlisi",
+      "count": 96
+    },
+    {
+      "name": "Dr. Öğr. Üyesi",
+      "count": 70
+    },
+    {
+      "name": "Prof. Dr.",
+      "count": 47
+    },
+    {
+      "name": "Araştırma Görevlisi",
+      "count": 33
+    },
+    {
+      "name": "Dr. Öğretim Görevlisi",
+      "count": 30
+    },
+    {
+      "name": "Doç. Dr.",
+      "count": 20
+    },
+    {
+      "name": "Emeritus Prof. Dr.",
+      "count": 5
+    },
+    {
+      "name": "Prof.",
+      "count": 2
+    }
+  ],
+  "counts_by_faculty_or_unit": [
+    {
+      "name": "Mühendislik ve Doğa Bilimleri Fakültesi",
+      "count": 73
+    },
+    {
+      "name": "İktisadi, İdari ve Sosyal Bilimler Fakültesi",
+      "count": 66
+    },
+    {
+      "name": "Sanat, Tasarım ve Mimarlık Fakültesi",
+      "count": 64
+    },
+    {
+      "name": "Meslek Yüksekokulu",
+      "count": 46
+    },
+    {
+      "name": "Yabancı Diller Okulu",
+      "count": 35
+    },
+    {
+      "name": "Lisansüstü Eğitim Enstitüsü",
+      "count": 19
+    }
+  ],
+  "top_departments": [
+    {
+      "name": "Yabancı Diller",
+      "count": 35
+    },
+    {
+      "name": "İç Mimarlık ve Çevre Tasarımı",
+      "count": 20
+    },
+    {
+      "name": "Lisansüstü Eğitim Enstitüsü Müdürlüğü",
+      "count": 19
+    },
+    {
+      "name": "Psikoloji",
+      "count": 19
+    },
+    {
+      "name": "İşletme",
+      "count": 16
+    },
+    {
+      "name": "Elektrik - Elektronik Mühendisliği",
+      "count": 15
+    },
+    {
+      "name": "Makine Mühendisliği",
+      "count": 15
+    },
+    {
+      "name": "Mimarlık",
+      "count": 14
+    },
+    {
+      "name": "Bilgisayar Mühendisliği",
+      "count": 13
+    },
+    {
+      "name": "İktisat",
+      "count": 10
+    },
+    {
+      "name": "Uluslararası İlişkiler",
+      "count": 10
+    },
+    {
+      "name": "Endüstri Mühendisliği",
+      "count": 9
+    },
+    {
+      "name": "Endüstriyel Tasarım",
+      "count": 9
+    },
+    {
+      "name": "Görsel İletişim Tasarımı",
+      "count": 9
+    },
+    {
+      "name": "Matematik",
+      "count": 9
+    },
+    {
+      "name": "Bilgisayar Programcılığı",
+      "count": 8
+    },
+    {
+      "name": "İnşaat Mühendisliği",
+      "count": 8
+    },
+    {
+      "name": "Sinema ve Televizyon",
+      "count": 8
+    },
+    {
+      "name": "Enformasyon Teknolojileri",
+      "count": 6
+    },
+    {
+      "name": "Grafik Tasarımı",
+      "count": 6
+    },
+    {
+      "name": "İnsan ve Toplum Bilimleri",
+      "count": 5
+    },
+    {
+      "name": "Tıbbi Görüntüleme Teknikleri",
+      "count": 5
+    },
+    {
+      "name": "Ameliyathane Hizmetleri",
+      "count": 4
+    },
+    {
+      "name": "Anestezi",
+      "count": 4
+    },
+    {
+      "name": "Fizik",
+      "count": 4
+    }
+  ],
+  "errors": []
+}

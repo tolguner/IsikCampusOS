@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../store/authStore';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Mail, Lock, Loader2, AlertCircle, Eye, EyeOff,
   Calendar, BookOpen, ArrowRight, CheckCircle2, Zap,
-  Car, Utensils, Briefcase, FolderKanban, Info, KeyRound
+  Car, Utensils, Briefcase, FolderKanban, Info, KeyRound, BadgeCheck
 } from 'lucide-react';
 
 type AuthMode = 'login' | 'forgot' | 'reset';
@@ -269,6 +269,12 @@ export const AuthPage = () => {
                   <Info className="w-4 h-4 text-indigo-400 shrink-0" />
                   <p className="text-[11px] text-white/40 text-left">Bu sistem Işık Üniversitesi mensuplarına özeldir. Hesap bilgileriniz için <span className="text-indigo-400 font-semibold">Öğrenci İşleri</span>'ne başvurun.</p>
                 </div>
+              )}
+              {mode === 'login' && (
+                <Link to="/certificates/verify" className="mt-3 flex items-center justify-center gap-2 text-xs font-bold text-purple-200 hover:text-purple-100 transition-colors">
+                  <BadgeCheck className="w-4 h-4" />
+                  Sertifika Kodu Kontrolü
+                </Link>
               )}
               {(mode === 'forgot' || mode === 'reset') && (
                 <p className="text-sm text-white/35 mt-3">

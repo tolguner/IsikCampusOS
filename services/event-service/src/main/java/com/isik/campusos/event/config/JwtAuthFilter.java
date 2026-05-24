@@ -25,8 +25,9 @@ import java.util.stream.Collectors;
  * Event Service JWT doğrulama filtresi.
  *
  * İki katmanlı güvenlik stratejisi:
- *  1. API Gateway — istek dışarıdan geliyorsa JWT doğrular ve X-User-Id/X-User-Roles header ekler.
- *  2. Bu filtre — servis iç ağdan doğrudan erişilse bile JWT yeniden doğrular.
+ * 1. API Gateway — istek dışarıdan geliyorsa JWT doğrular ve
+ * X-User-Id/X-User-Roles header ekler.
+ * 2. Bu filtre — servis iç ağdan doğrudan erişilse bile JWT yeniden doğrular.
  *
  * X-User-Roles header'ına kör güvenmek yerine JWT claims'den roller okunur.
  */
@@ -45,8 +46,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
 
@@ -72,8 +73,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userId, null,
+                        authorities);
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }

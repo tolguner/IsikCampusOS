@@ -39,6 +39,19 @@ spring:
           filters:
             - AuthenticationFilter
 
+        # Internal kullanıcı bilgisi — toplu kullanıcı sorgulama (event-service vb.)
+        - id: user-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+            - AuthenticationFilter
+
+        - id: certificate-verification-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v1/certificates/**
+
         - id: profile-service
           uri: lb://profile-service
           predicates:
@@ -57,6 +70,20 @@ spring:
           uri: lb://event-service
           predicates:
             - Path=/api/v1/clubs/**
+          filters:
+            - AuthenticationFilter
+
+        - id: notification-service
+          uri: lb://event-service
+          predicates:
+            - Path=/api/v1/notifications/**
+          filters:
+            - AuthenticationFilter
+
+        - id: academic-staff-service
+          uri: lb://event-service
+          predicates:
+            - Path=/api/v1/academic-staff/**
           filters:
             - AuthenticationFilter
 
