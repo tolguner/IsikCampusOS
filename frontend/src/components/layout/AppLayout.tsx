@@ -9,7 +9,7 @@ import { useClubStore } from '../../store/clubStore';
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, logout, user } = useAuthStore();
   const { notifications, unreadCount, fetchNotifications, markAsRead } = useNotificationStore();
-  const { clubs: managedClubs, fetchManagedClubs } = useClubStore();
+  const { managedClubs, fetchManagedClubs } = useClubStore();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const isStudent = !!user?.roles.includes('ROLE_STUDENT');
   const isClubPresident = isStudent && managedClubs.length > 0;
@@ -195,7 +195,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-3xl p-8 min-h-[80vh]"
+            className="w-full rounded-3xl p-4 sm:p-6 lg:p-8 min-h-[80vh]"
             style={{
               background: 'rgba(10, 10, 25, 0.45)',
               backdropFilter: 'blur(16px)',

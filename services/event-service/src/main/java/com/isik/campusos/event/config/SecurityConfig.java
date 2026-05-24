@@ -25,7 +25,7 @@ import java.util.List;
  * - POST /api/v1/events/draft → Kimlik doğrulayan herkes (club admin kontrolü
  * servis katmanında)
  * - POST /{id}/approve → Yalnızca ROLE_SKS_ADMIN veya ROLE_ADMIN
- * - POST /{id}/rsvp → Kimlik doğrulayan herkes
+ * - POST /{id}/rsvp → Yalnızca ROLE_STUDENT
  * - POST /{id}/checkin/{uid} → Kimlik doğrulayan herkes (club admin kontrolü
  * servis katmanında)
  */
@@ -65,7 +65,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000"));
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "http://localhost:8080",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:8080"
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

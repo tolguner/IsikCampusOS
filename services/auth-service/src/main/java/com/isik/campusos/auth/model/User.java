@@ -35,6 +35,7 @@ public class User {
     private String department;    // Bölüm
     private String departmentCode; // 4 harfli kısaltma: yobi
     private Integer enrollmentYear; // Kayıt yılı: 2023
+    private String nationalIdMasked; // TC/Pasaport tam değer saklanmaz, sadece maskeli görünüm tutulur
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

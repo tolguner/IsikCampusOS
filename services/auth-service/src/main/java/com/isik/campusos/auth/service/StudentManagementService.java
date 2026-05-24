@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -38,9 +40,9 @@ public class StudentManagementService {
             throw new RuntimeException("TC Kimlik No 11 haneli olmalıdır.");
         }
 
-        // E-posta üretimi: {öğrenciNo}@isik.edu.tr (Türkçe karakterler dönüştürülerek)
-        String transliteratedNumber = transliterate(request.getStudentNumber());
-        String email = transliteratedNumber.toLowerCase() + "@isik.edu.tr";
+        // E-posta uretimi: ogrenci numarasi sadece ASCII local-part ile kullanilir.
+        String normalizedStudentNumberForEmail = normalizeStudentNumberForEmail(request.getStudentNumber());
+        String email = normalizedStudentNumberForEmail + "@isik.edu.tr";
 
         if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("Bu öğrenci numarasına ait bir hesap zaten mevcut.");
@@ -59,8 +61,9 @@ public class StudentManagementService {
                 .studentNumber(request.getStudentNumber().toUpperCase(java.util.Locale.forLanguageTag("tr-TR")))
                 .faculty(request.getFaculty())
                 .department(request.getDepartment())
-                .departmentCode(request.getDepartmentCode() != null ? request.getDepartmentCode().toLowerCase() : null)
+                .departmentCode(request.getDepartmentCode() != null ? request.getDepartmentCode().toLowerCase(Locale.ROOT) : null)
                 .enrollmentYear(request.getEnrollmentYear())
+                .nationalIdMasked(maskNationalId(request.getTcKimlikNo()))
                 .status(UserStatus.ACTIVE)
                 .emailVerified(false)
                 .mustChangePassword(true)
@@ -71,8 +74,8 @@ public class StudentManagementService {
         // Kafka event: profil servisi boş profil oluşsun
         try {
             String payload = String.format(
-                    "{\"userId\":\"%s\", \"email\":\"%s\", \"firstName\":\"%s\", \"lastName\":\"%s\", \"studentNumber\":\"%s\"}",
-                    saved.getId(), saved.getEmail(), saved.getFirstName(), saved.getLastName(), saved.getStudentNumber()
+                    "{\"userId\":\"%s\", \"email\":\"%s\", \"firstName\":\"%s\", \"lastName\":\"%s\", \"studentNumber\":\"%s\", \"nationalIdMasked\":\"%s\"}",
+                    saved.getId(), saved.getEmail(), saved.getFirstName(), saved.getLastName(), saved.getStudentNumber(), saved.getNationalIdMasked()
             );
             kafkaTemplate.send("user.registered", saved.getId(), payload);
         } catch (Exception e) {
@@ -212,6 +215,7 @@ public class StudentManagementService {
         }
 
         user.setPassword(passwordEncoder.encode(tcKimlikNo));
+        user.setNationalIdMasked(maskNationalId(tcKimlikNo));
         user.setMustChangePassword(true);
         userRepository.save(user);
 
@@ -226,6 +230,7 @@ public class StudentManagementService {
                 .lastName(user.getLastName())
                 .fullName(user.getFullName())
                 .studentNumber(user.getStudentNumber())
+                .nationalIdMasked(user.getNationalIdMasked())
                 .faculty(user.getFaculty())
                 .department(user.getDepartment())
                 .departmentCode(user.getDepartmentCode())
@@ -245,5 +250,25 @@ public class StudentManagementService {
                     .replace("\u0131", "i").replace("\u0130", "I") // ı, İ
                     .replace("\u00F6", "o").replace("\u00D6", "O") // ö, Ö
                     .replace("\u00E7", "c").replace("\u00C7", "C"); // ç, Ç
+    }
+
+    private String normalizeStudentNumberForEmail(String studentNumber) {
+        String normalized = transliterate(studentNumber)
+                .trim()
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]", "");
+
+        if (normalized.isBlank()) {
+            throw new RuntimeException("Öğrenci numarası e-posta için geçerli karakter içermiyor.");
+        }
+
+        return normalized;
+    }
+
+    private String maskNationalId(String tcKimlikNo) {
+        if (tcKimlikNo == null || tcKimlikNo.length() < 5) {
+            return null;
+        }
+        return tcKimlikNo.substring(0, 5) + "******";
     }
 }

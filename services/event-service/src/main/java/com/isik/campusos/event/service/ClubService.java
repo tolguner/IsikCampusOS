@@ -220,11 +220,9 @@ public class ClubService {
 
         ClubMember existingMembership = clubMemberRepository.findByClubIdAndUserId(clubId, userId).orElse(null);
         if (existingMembership != null) {
-            if (existingMembership.getStatus() == ClubMember.MemberStatus.REJECTED
+            if (existingMembership.getStatus() != ClubMember.MemberStatus.ACTIVE
                     && existingMembership.getRole() != ClubMember.MemberRole.ADMIN) {
-                existingMembership.setStatus(club.isRequiresApproval()
-                        ? ClubMember.MemberStatus.PENDING
-                        : ClubMember.MemberStatus.ACTIVE);
+                existingMembership.setStatus(ClubMember.MemberStatus.ACTIVE);
                 return clubMemberRepository.save(existingMembership);
             }
             throw new ResponseStatusException(HttpStatus.CONFLICT, "User is already a member of this club");
@@ -234,7 +232,7 @@ public class ClubService {
                 .clubId(clubId)
                 .userId(userId)
                 .role(ClubMember.MemberRole.MEMBER)
-                .status(club.isRequiresApproval() ? ClubMember.MemberStatus.PENDING : ClubMember.MemberStatus.ACTIVE)
+                .status(ClubMember.MemberStatus.ACTIVE)
                 .build();
 
         return clubMemberRepository.save(membership);
@@ -716,12 +714,12 @@ public class ClubService {
     }
 
     @Transactional
-    public void updateMemberRole(String currentUserId, String clubId, String targetUserId,
+    public void updateMemberRole(String currentUserId, String roles, String clubId, String targetUserId,
             com.isik.campusos.event.dto.ClubMemberRoleUpdateRequest request) {
         Club club = clubRepository.findByIdAndIsDeletedFalse(clubId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Club not found"));
-        if (!currentUserId.trim().equalsIgnoreCase(club.getAdminUserId().trim())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only president can change roles");
+        if (!isSystemAdmin(roles)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only SKS admin can change member roles");
         }
         ClubMember targetMember = clubMemberRepository.findByClubIdAndUserId(clubId, targetUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
@@ -738,12 +736,12 @@ public class ClubService {
     }
 
     @Transactional
-    public void updateMemberStatus(String currentUserId, String clubId, String targetUserId,
+    public void updateMemberStatus(String currentUserId, String roles, String clubId, String targetUserId,
             com.isik.campusos.event.dto.ClubMemberStatusUpdateRequest request) {
         Club club = clubRepository.findByIdAndIsDeletedFalse(clubId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Club not found"));
-        if (!currentUserId.trim().equalsIgnoreCase(club.getAdminUserId().trim())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only president can change statuses");
+        if (!isSystemAdmin(roles)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only SKS admin can change member statuses");
         }
         ClubMember targetMember = clubMemberRepository.findByClubIdAndUserId(clubId, targetUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
@@ -781,8 +779,8 @@ public class ClubService {
     public void removeMember(String currentUserId, String roles, String clubId, String targetUserId) {
         Club club = clubRepository.findByIdAndIsDeletedFalse(clubId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Club not found"));
-        if (!currentUserId.trim().equalsIgnoreCase(club.getAdminUserId().trim()) && !isSystemAdmin(roles)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admin can remove members");
+        if (!isSystemAdmin(roles)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only SKS admin can remove members");
         }
         if (targetUserId.trim().equalsIgnoreCase(club.getAdminUserId().trim())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot remove the club president");

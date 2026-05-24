@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { useProfileStore } from '../store/profileStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAutoDismissMessage } from '../hooks/useAutoDismissMessage';
 import { 
@@ -10,6 +11,17 @@ import {
 
 export const ProfilePage = () => {
   const { user, changePassword, isLoading } = useAuthStore();
+  const {
+    profile,
+    changeRequests,
+    isLoading: profileLoading,
+    error: profileError,
+    successMessage: profileSuccess,
+    fetchMyProfile,
+    fetchMyChangeRequests,
+    requestProfileChange,
+    clearMessages: clearProfileMessages,
+  } = useProfileStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Local state for profile picture (UI only for now)
@@ -21,9 +33,33 @@ export const ProfilePage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passError, setPassError] = useState('');
   const [passSuccess, setPassSuccess] = useState('');
+  const [changeField, setChangeField] = useState('phoneNumber');
+  const [phoneCountryCode, setPhoneCountryCode] = useState('TR');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [residenceAddress, setResidenceAddress] = useState('');
+  const [bloodType, setBloodType] = useState('A Rh+');
+  const changeFieldOptions = [
+    { value: 'phoneNumber', label: 'Telefon' },
+    { value: 'residenceAddress', label: 'İkametgah' },
+    { value: 'bloodType', label: 'Kan grubu' },
+  ];
+  const bloodTypeOptions = ['A Rh+', 'A Rh-', 'B Rh+', 'B Rh-', 'AB Rh+', 'AB Rh-', '0 Rh+', '0 Rh-'];
+  const phoneCountryOptions = [
+    { code: 'TR', label: 'Türkiye', dialCode: '+90', digits: 10, placeholder: '5XXXXXXXXX', startsWith: ['5'] },
+    { code: 'US', label: 'ABD / Kanada', dialCode: '+1', digits: 10, placeholder: '5551234567' },
+    { code: 'GB', label: 'Birleşik Krallık', dialCode: '+44', digits: 10, placeholder: '7XXXXXXXXX', startsWith: ['7'] },
+    { code: 'DE', label: 'Almanya', dialCode: '+49', minDigits: 10, maxDigits: 11, placeholder: '15123456789' },
+    { code: 'FR', label: 'Fransa', dialCode: '+33', digits: 9, placeholder: '612345678', startsWith: ['6', '7'] },
+  ];
 
   useAutoDismissMessage(passError, () => setPassError(''));
   useAutoDismissMessage(passSuccess, () => setPassSuccess(''));
+
+  useEffect(() => {
+    if (!user) return;
+    fetchMyProfile();
+    fetchMyChangeRequests();
+  }, [fetchMyChangeRequests, fetchMyProfile, user]);
 
   if (!user) return null;
 
@@ -93,8 +129,49 @@ export const ProfilePage = () => {
     e.currentTarget.style.boxShadow = 'none'; 
   };
 
+  const displayValue = (value?: string | null) => value?.trim() || 'Kayıtlı bilgi yok';
+  const maskedIdValue = profile?.nationalIdMasked?.trim() || user.nationalIdMasked?.trim() || 'Yetkili birim tarafından doğrulanmalı';
+  const pendingChange = changeRequests.find(request => request.status === 'PENDING');
+  const selectedPhoneCountry = phoneCountryOptions.find(country => country.code === phoneCountryCode) || phoneCountryOptions[0];
+  const normalizedPhoneNumber = phoneNumber.replace(/\D/g, '');
+  const isPhoneLengthValid = selectedPhoneCountry.digits
+    ? normalizedPhoneNumber.length === selectedPhoneCountry.digits
+    : normalizedPhoneNumber.length >= (selectedPhoneCountry.minDigits || 0) && normalizedPhoneNumber.length <= (selectedPhoneCountry.maxDigits || 99);
+  const isPhonePrefixValid = !selectedPhoneCountry.startsWith || selectedPhoneCountry.startsWith.some(prefix => normalizedPhoneNumber.startsWith(prefix));
+  const isPhoneValid = normalizedPhoneNumber.length > 0 && isPhoneLengthValid && isPhonePrefixValid;
+  const phoneRuleText = selectedPhoneCountry.digits
+    ? `${selectedPhoneCountry.digits} hane`
+    : `${selectedPhoneCountry.minDigits}-${selectedPhoneCountry.maxDigits} hane`;
+  const phoneValidationMessage =
+    normalizedPhoneNumber.length === 0
+      ? ''
+      : !isPhoneLengthValid
+        ? `${selectedPhoneCountry.label} için telefon numarası ${phoneRuleText} olmalı.`
+        : !isPhonePrefixValid
+          ? `${selectedPhoneCountry.label} mobil numarası ${selectedPhoneCountry.startsWith?.join(' veya ')} ile başlamalı.`
+          : '';
+  const requestedProfileValue =
+    changeField === 'phoneNumber'
+      ? `${selectedPhoneCountry.dialCode} ${normalizedPhoneNumber}`.trim()
+      : changeField === 'residenceAddress'
+        ? residenceAddress.trim()
+        : bloodType;
+  const canSubmitProfileChange =
+    changeField === 'phoneNumber'
+      ? isPhoneValid
+      : requestedProfileValue.length > 0;
+
+  const handleProfileChangeRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmitProfileChange) return;
+    const ok = await requestProfileChange(changeField, requestedProfileValue);
+    if (!ok) return;
+    setPhoneNumber('');
+    setResidenceAddress('');
+  };
+
   return (
-    <div className="max-w-[1400px] w-full mx-auto pb-10 px-4 sm:px-6 lg:px-8">
+    <div className="w-full pb-10">
       
       {/* Banner & Header */}
       <motion.div 
@@ -179,7 +256,7 @@ export const ProfilePage = () => {
                 </div>
                 <div>
                   <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">Üniversite E-postası</p>
-                  <p className="text-sm text-white/90 font-medium">{user.email}</p>
+                  <p className="text-sm text-white/90 font-medium">{profile?.email || user.email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -188,7 +265,7 @@ export const ProfilePage = () => {
                 </div>
                 <div>
                   <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">Telefon</p>
-                  <p className="text-sm text-white/90 font-medium">+90 (555) 123 45 67</p>
+                  <p className="text-sm text-white/90 font-medium">{displayValue(profile?.phoneNumber)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -197,7 +274,7 @@ export const ProfilePage = () => {
                 </div>
                 <div>
                   <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">TC Kimlik / Pasaport No</p>
-                  <p className="text-sm text-white/90 font-medium font-mono">12345******</p>
+                  <p className="text-sm text-white/90 font-medium font-mono">{maskedIdValue}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -206,7 +283,7 @@ export const ProfilePage = () => {
                 </div>
                 <div>
                   <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">İkametgah Adresi</p>
-                  <p className="text-sm text-white/90 font-medium">Şile, İstanbul</p>
+                  <p className="text-sm text-white/90 font-medium">{displayValue(profile?.residenceAddress)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -215,10 +292,122 @@ export const ProfilePage = () => {
                 </div>
                 <div>
                   <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">Kan Grubu</p>
-                  <p className="text-sm text-white/90 font-medium">A Rh+</p>
+                  <p className="text-sm text-white/90 font-medium">{displayValue(profile?.bloodType)}</p>
                 </div>
               </div>
             </div>
+            <form onSubmit={handleProfileChangeRequest} className="mt-5 pt-5 border-t border-white/5 space-y-3">
+              <div>
+                <p className="text-sm font-bold text-white">Bilgi değişikliği bildir</p>
+                <p className="text-xs text-white/40 mt-1">Telefon, ikametgah ve kan grubu değişiklikleri yetkili onayına gönderilir.</p>
+              </div>
+              {(profileError || profileSuccess) && (
+                <div className={`rounded-xl px-3 py-2 text-xs font-semibold ${profileSuccess ? 'text-emerald-200 bg-emerald-500/10 border border-emerald-400/20' : 'text-red-200 bg-red-500/10 border border-red-400/20'}`}>
+                  {profileSuccess || profileError}
+                </div>
+              )}
+              {pendingChange && (
+                <div className="rounded-xl px-3 py-2 text-xs font-semibold text-amber-100 bg-amber-500/10 border border-amber-400/20">
+                  Bekleyen talep: {pendingChange.requestedValue}
+                </div>
+              )}
+              <div className="space-y-2">
+                <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-white/10 bg-white/[0.035] p-1.5">
+                  {changeFieldOptions.map(option => {
+                    const active = changeField === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          clearProfileMessages();
+                          setChangeField(option.value);
+                        }}
+                        className={`min-h-10 rounded-xl px-2 text-xs font-bold transition-colors ${active ? 'bg-indigo-500/85 text-white shadow-lg shadow-indigo-500/15' : 'text-white/50 hover:text-white hover:bg-white/[0.06]'}`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {changeField === 'phoneNumber' && (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-[96px_1fr] gap-2">
+                      <select
+                        value={phoneCountryCode}
+                        onChange={e => {
+                          clearProfileMessages();
+                          setPhoneCountryCode(e.target.value);
+                        }}
+                        className="rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2.5 text-sm font-bold text-white outline-none"
+                        aria-label="Ülke kodu"
+                      >
+                        {phoneCountryOptions.map(country => (
+                          <option key={country.code} value={country.code} className="bg-[#0f1123]">
+                            {country.dialCode} {country.code}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        value={phoneNumber}
+                        onChange={e => {
+                          clearProfileMessages();
+                          setPhoneNumber(e.target.value.replace(/[^\d\s()-]/g, ''));
+                        }}
+                        required
+                        className="rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/25"
+                        placeholder={selectedPhoneCountry.placeholder}
+                        inputMode="tel"
+                        maxLength={(selectedPhoneCountry.maxDigits || selectedPhoneCountry.digits || 12) + 4}
+                      />
+                    </div>
+                    <div className={`rounded-xl border px-3 py-2 text-xs font-semibold ${phoneValidationMessage ? 'border-red-400/20 bg-red-500/10 text-red-200' : 'border-white/10 bg-white/[0.025] text-white/40'}`}>
+                      {phoneValidationMessage || `${selectedPhoneCountry.label}: ${selectedPhoneCountry.dialCode} alan kodu, ${phoneRuleText}.`}
+                    </div>
+                  </div>
+                )}
+                {changeField === 'residenceAddress' && (
+                  <textarea
+                    value={residenceAddress}
+                    onChange={e => {
+                      clearProfileMessages();
+                      setResidenceAddress(e.target.value);
+                    }}
+                    required
+                    rows={3}
+                    className="w-full resize-none rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-white/25 outline-none"
+                    placeholder="Mahalle, cadde/sokak, ilçe ve şehir bilgisi"
+                  />
+                )}
+                {changeField === 'bloodType' && (
+                  <div className="grid grid-cols-4 gap-1.5 rounded-2xl border border-white/10 bg-white/[0.035] p-1.5">
+                    {bloodTypeOptions.map(option => {
+                      const active = bloodType === option;
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => {
+                            clearProfileMessages();
+                            setBloodType(option);
+                          }}
+                          className={`min-h-10 rounded-xl px-2 text-xs font-black transition-colors ${active ? 'bg-red-500/80 text-white shadow-lg shadow-red-500/15' : 'text-white/50 hover:text-white hover:bg-white/[0.06]'}`}
+                        >
+                          {option}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <button
+                type="submit"
+                disabled={profileLoading || !canSubmitProfileChange}
+                className="w-full rounded-xl px-4 py-2.5 text-sm font-bold text-white bg-indigo-500/80 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {profileLoading ? 'Gönderiliyor...' : 'Onaya gönder'}
+              </button>
+            </form>
           </motion.div>
 
           {/* Academic Info Card (Only for students) */}
@@ -239,7 +428,7 @@ export const ProfilePage = () => {
                     <User className="w-4 h-4 text-white/50" />
                     <span className="text-sm text-white/70">Öğrenci No</span>
                   </div>
-                  <span className="text-sm font-semibold text-white font-mono">{user.studentNumber || '23yobi1001'}</span>
+                  <span className="text-sm font-semibold text-white font-mono">{user.studentNumber || '-'}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
                   <div className="flex items-center gap-3">

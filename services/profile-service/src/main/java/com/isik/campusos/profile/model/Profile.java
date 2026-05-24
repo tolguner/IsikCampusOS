@@ -22,6 +22,10 @@ public class Profile {
     private String firstName;
     private String lastName;
     private String department;
+    private String phoneNumber;
+    private String residenceAddress;
+    private String bloodType;
+    private String nationalIdMasked;
     
     @Column(length = 1000)
     private String bio;

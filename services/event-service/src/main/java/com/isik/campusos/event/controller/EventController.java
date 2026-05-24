@@ -113,8 +113,9 @@ public class EventController {
         return ResponseEntity.ok(eventService.requestChangeRevision(auth.getName(), changeRequestId, request));
     }
 
-    /** RSVP oluştur — tüm authenticated kullanıcılar */
+    /** RSVP oluştur — yalnızca öğrenciler */
     @PostMapping("/{eventId}/rsvp")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<Rsvp> createRsvp(Authentication auth,
                                            @PathVariable String eventId) {
         return ResponseEntity.ok(eventRsvpService.createRsvp(auth.getName(), eventId));
@@ -122,12 +123,14 @@ public class EventController {
 
     /** RSVP iptal et */
     @PostMapping("/{eventId}/rsvp/cancel")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<Rsvp> cancelRsvp(Authentication auth,
                                            @PathVariable String eventId) {
         return ResponseEntity.ok(eventRsvpService.cancelRsvp(auth.getName(), eventId));
     }
 
     @GetMapping("/my-rsvps")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<List<Rsvp>> getMyRsvps(Authentication auth) {
         return ResponseEntity.ok(eventRsvpService.listMyRsvps(auth.getName()));
     }

@@ -82,26 +82,6 @@ public class DataSeeder implements CommandLineRunner {
             log.info("✅ Seed: SKS yöneticisi hesabı oluşturuldu — odul.celep@isikun.edu.tr / odul.celep");
         }
 
-        // Test öğrenci hesabı — senaryo testleri için doğrudan giriş yapılabilir durumda tutulur.
-        User testStudent = userRepository.findByEmail("23yobi1001@isik.edu.tr")
-                .orElseGet(() -> User.builder()
-                        .email("23yobi1001@isik.edu.tr")
-                        .firstName("Test")
-                        .lastName("Öğrenci")
-                        .studentNumber("23yobi1001")
-                        .faculty("İktisadi ve İdari Bilimler Fakültesi")
-                        .department("Yönetim Bilişim Sistemleri")
-                        .departmentCode("yobi")
-                        .enrollmentYear(2023)
-                        .build());
-        testStudent.setPassword(passwordEncoder.encode("12345678901"));
-        testStudent.setRoles("ROLE_STUDENT");
-        testStudent.setStatus(UserStatus.ACTIVE);
-        testStudent.setEmailVerified(true);
-        testStudent.setMustChangePassword(false);
-        userRepository.save(testStudent);
-        log.info("✅ Seed: Test öğrenci hesabı hazır — 23yobi1001@isik.edu.tr / 12345678901");
-
         // Mevcut örnek kulüp başkanı hesabı — kulüp yönetimi senaryoları için sabit giriş.
         userRepository.findByEmail("23yobi1053@isik.edu.tr").ifPresent(clubPresident -> {
             clubPresident.setPassword(passwordEncoder.encode("12345678901"));
@@ -109,6 +89,7 @@ public class DataSeeder implements CommandLineRunner {
             clubPresident.setStatus(UserStatus.ACTIVE);
             clubPresident.setEmailVerified(true);
             clubPresident.setMustChangePassword(false);
+            clubPresident.setNationalIdMasked("12345******");
             userRepository.save(clubPresident);
             log.info("✅ Seed: Kulüp başkanı test hesabı hazır — 23yobi1053@isik.edu.tr / 12345678901");
         });

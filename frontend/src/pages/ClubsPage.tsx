@@ -3,11 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { AlertCircle, CalendarDays, CheckCircle2, Loader2, Search, Sparkles, Users, X } from 'lucide-react';
 import { useClubStore } from '../store/clubStore';
+import { useAuthStore } from '../store/authStore';
 
 export const ClubsPage = () => {
   const { clubs, fetchClubs, joinClub, leaveClub, isLoading, error, successMessage, clearMessages } = useClubStore();
+  const user = useAuthStore(state => state.user);
   const [searchTerm, setSearchTerm] = useState('');
   const [leaveTarget, setLeaveTarget] = useState<{ id: string; name: string } | null>(null);
+  const isStudent = !!user?.roles.includes('ROLE_STUDENT');
 
   useEffect(() => {
     fetchClubs();
@@ -24,6 +27,9 @@ export const ClubsPage = () => {
     );
   }, [clubs, searchTerm]);
 
+  const managedClubs = useMemo(() => clubs.filter(club => club.currentUserRole === 'ADMIN'), [clubs]);
+  const managedClubNames = managedClubs.map(club => club.name).join(', ');
+
   const membershipBadge = (club: typeof clubs[number]) => {
     if (club.currentUserRole === 'ADMIN') {
       return <span className="px-3 py-1 rounded-full text-xs font-bold text-amber-200 bg-amber-500/10 border border-amber-500/20">Yönetici</span>;
@@ -37,7 +43,7 @@ export const ClubsPage = () => {
     if (club.currentUserStatus === 'REJECTED') {
       return <span className="px-3 py-1 rounded-full text-xs font-bold text-red-200 bg-red-500/10 border border-red-500/20">Reddedildi</span>;
     }
-    return <span className="px-3 py-1 rounded-full text-xs font-bold text-white/45 bg-white/5 border border-white/10">Keşfet</span>;
+    return null;
   };
 
   const membershipButtonLabel = (club: typeof clubs[number]) => {
@@ -46,6 +52,15 @@ export const ClubsPage = () => {
     if (club.currentUserStatus === 'REJECTED') return 'Tekrar başvur';
     return 'Üye ol';
   };
+
+  const clubInitials = (name: string) =>
+    name
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(part => part[0])
+      .join('')
+      .toLocaleUpperCase('tr-TR');
 
   const handleMembershipClick = async (clubId: string, clubName: string, isMember: boolean) => {
     if (!isMember) {
@@ -63,17 +78,16 @@ export const ClubsPage = () => {
   };
 
   return (
-    <div className="h-full flex flex-col gap-6 animate-fade-in max-w-7xl mx-auto w-full px-4 sm:px-6 py-6">
+    <div className="h-full flex flex-col gap-6 animate-fade-in w-full py-6">
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5">
         <div>
-          <p className="text-sm font-semibold text-indigo-300 mb-2">Kulüpler ve etkinlik operasyonları</p>
           <h1 className="text-4xl font-extrabold text-white mb-3">Kulüpler</h1>
           <p className="text-sm sm:text-base text-white/45 max-w-3xl leading-relaxed">
-            Kulüpleri keşfet, topluluklara katıl ve SKS onaylı etkinlik akışlarını tek yerden takip et.
+            Kulüpleri keşfet, topluluklara katıl ve etkinlik akışlarını tek yerden takip et.
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 min-w-full sm:min-w-[420px]">
+        <div className={`grid ${managedClubs.length > 0 ? 'grid-cols-3 sm:min-w-[420px]' : 'grid-cols-2 sm:min-w-[280px]'} gap-3 min-w-full`}>
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
             <div className="text-2xl font-black text-white">{clubs.length}</div>
             <div className="text-xs text-white/40">Aktif kulüp</div>
@@ -82,10 +96,12 @@ export const ClubsPage = () => {
             <div className="text-2xl font-black text-white">{clubs.filter(c => c.currentUserMember).length}</div>
             <div className="text-xs text-white/40">Üyelik</div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-            <div className="text-2xl font-black text-white">{clubs.filter(c => c.currentUserRole === 'ADMIN').length}</div>
-            <div className="text-xs text-white/40">Yönetim</div>
-          </div>
+          {managedClubs.length > 0 && (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 min-w-0">
+              <div className="text-sm font-black text-white truncate" title={managedClubNames}>{managedClubNames}</div>
+              <div className="text-xs text-white/40">Yönetim</div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -126,17 +142,25 @@ export const ClubsPage = () => {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.04 }}
-              className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 flex flex-col gap-5 min-h-[260px]"
+              className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 flex flex-col gap-5 min-h-[280px]"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 border border-white/15 flex items-center justify-center shrink-0 overflow-hidden">
+                    {club.logoUrl ? (
+                      <img src={club.logoUrl} alt={`${club.name} logosu`} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-lg font-black text-white">{clubInitials(club.name) || <Sparkles className="w-6 h-6 text-white" />}</span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-xl font-extrabold text-white leading-tight line-clamp-2">{club.name}</h2>
+                  </div>
                 </div>
                 {membershipBadge(club)}
               </div>
 
-              <div className="space-y-2 flex-1">
-                <h2 className="text-xl font-extrabold text-white leading-tight">{club.name}</h2>
+              <div className="space-y-3 flex-1">
                 <p className="text-sm text-white/45 leading-relaxed line-clamp-4">{club.shortDescription || 'Kısa açıklama bekleniyor.'}</p>
               </div>
 
@@ -155,13 +179,19 @@ export const ClubsPage = () => {
                 <Link to={`/clubs/${club.id}`} className="px-4 py-2.5 rounded-xl text-center text-sm font-bold text-white bg-white/[0.06] border border-white/10 hover:bg-white/[0.09] transition-colors">
                   Detay
                 </Link>
-                <button
-                  disabled={isLoading || club.currentUserRole === 'ADMIN' || club.currentUserStatus === 'PENDING'}
-                  onClick={() => handleMembershipClick(club.id, club.name, club.currentUserStatus === 'ACTIVE')}
-                  className={`px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed ${club.currentUserStatus === 'ACTIVE' ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-100 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-100' : 'gradient-btn'}`}
-                >
-                  {membershipButtonLabel(club)}
-                </button>
+                {isStudent ? (
+                  <button
+                    disabled={isLoading || club.currentUserRole === 'ADMIN' || club.currentUserStatus === 'PENDING'}
+                    onClick={() => handleMembershipClick(club.id, club.name, club.currentUserStatus === 'ACTIVE')}
+                    className={`px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed ${club.currentUserStatus === 'ACTIVE' ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-100 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-100' : 'gradient-btn'}`}
+                  >
+                    {membershipButtonLabel(club)}
+                  </button>
+                ) : (
+                  <span className="px-4 py-2.5 rounded-xl text-center text-xs font-bold text-white/35 bg-white/[0.03] border border-white/10">
+                    Öğrencilere açık
+                  </span>
+                )}
               </div>
 
               <AnimatePresence>

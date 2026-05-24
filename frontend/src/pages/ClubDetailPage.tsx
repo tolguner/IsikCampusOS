@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Banknote, Bell, CalendarDays, CheckCircle2, ChevronLeft, Clock, GraduationCap, Link as LinkIcon, Loader2, MapPin, Maximize2, Megaphone, Ticket, UserRound, Users, X } from 'lucide-react';
 import { useClubStore } from '../store/clubStore';
 import { useEventStore, type Event } from '../store/eventStore';
+import { useAuthStore } from '../store/authStore';
 
 const formatDate = (value?: string) => {
   if (!value) return 'Tarih bekleniyor';
@@ -18,6 +19,7 @@ const formatDate = (value?: string) => {
 
 export const ClubDetailPage = () => {
   const { clubId } = useParams();
+  const user = useAuthStore(state => state.user);
   const { selectedClub, clubEvents, fetchClub, fetchClubEvents, joinClub, leaveClub, isLoading } = useClubStore();
   const {
     isLoading: eventActionLoading,
@@ -32,13 +34,14 @@ export const ClubDetailPage = () => {
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
   const [expandedPosterEvent, setExpandedPosterEvent] = useState<Event | null>(null);
   const [qrTicket, setQrTicket] = useState<{ event: Event; dataUrl: string } | null>(null);
+  const isStudent = !!user?.roles.includes('ROLE_STUDENT');
 
   useEffect(() => {
     if (!clubId) return;
     fetchClub(clubId);
     fetchClubEvents(clubId);
-    fetchMyRsvps();
-  }, [clubId, fetchClub, fetchClubEvents, fetchMyRsvps]);
+    if (isStudent) fetchMyRsvps();
+  }, [clubId, fetchClub, fetchClubEvents, fetchMyRsvps, isStudent]);
 
   const filteredEvents = useMemo(() => {
     const now = new Date();
@@ -63,7 +66,7 @@ export const ClubDetailPage = () => {
 
   if (!selectedClub) {
     return (
-      <div className="max-w-4xl mx-auto py-10 text-white/45">
+      <div className="w-full py-10 text-white/45">
         Kulüp bulunamadı.
       </div>
     );
@@ -71,14 +74,6 @@ export const ClubDetailPage = () => {
 
   const isManager = selectedClub.currentUserRole === 'ADMIN';
   const vision = selectedClub.vision || selectedClub.description;
-  const membershipLabel =
-    selectedClub.currentUserStatus === 'ACTIVE'
-      ? 'Üyesin'
-      : selectedClub.currentUserStatus === 'PENDING'
-        ? 'Onay bekliyor'
-        : selectedClub.currentUserStatus === 'REJECTED'
-          ? 'Reddedildi'
-          : 'Misafir';
   const membershipButtonLabel =
     selectedClub.currentUserStatus === 'ACTIVE'
       ? 'Üyelikten çık'
@@ -160,7 +155,7 @@ export const ClubDetailPage = () => {
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="w-full py-6 space-y-6">
       <Link to="/clubs" className="inline-flex items-center gap-2 text-sm font-semibold text-white/50 hover:text-white transition-colors">
         <ChevronLeft className="w-4 h-4" /> Kulüplere dön
       </Link>
@@ -177,9 +172,6 @@ export const ClubDetailPage = () => {
                 )}
               </div>
               <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-bold text-indigo-200">
-                  Kulüp profili
-                </div>
                 <h1 className="text-4xl sm:text-5xl font-black text-white leading-tight">{selectedClub.name}</h1>
               </div>
             </div>
@@ -202,17 +194,19 @@ export const ClubDetailPage = () => {
                 <span className="text-sm text-white/40">Etkinlik sayısı</span>
                 <span className="text-2xl font-black text-white">{selectedClub.eventCount}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-white/40">Rolün</span>
-                <span className="text-sm font-bold text-indigo-200">{selectedClub.currentUserRole || membershipLabel}</span>
-              </div>
-              <button
-                disabled={isLoading || selectedClub.currentUserRole === 'ADMIN' || selectedClub.currentUserStatus === 'PENDING'}
-                onClick={handleMembershipClick}
-                className={`w-full py-3 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed ${selectedClub.currentUserStatus === 'ACTIVE' ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-100 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-100' : 'gradient-btn'}`}
-              >
-                {membershipButtonLabel}
-              </button>
+              {isStudent ? (
+                <button
+                  disabled={isLoading || selectedClub.currentUserRole === 'ADMIN' || selectedClub.currentUserStatus === 'PENDING'}
+                  onClick={handleMembershipClick}
+                  className={`w-full py-3 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed ${selectedClub.currentUserStatus === 'ACTIVE' ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-100 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-100' : 'gradient-btn'}`}
+                >
+                  {membershipButtonLabel}
+                </button>
+              ) : (
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center text-xs font-bold text-white/40">
+                  Üyelik işlemleri yalnızca öğrenciler içindir.
+                </div>
+              )}
               <AnimatePresence>
                 {isLeaveDialogOpen && (
                   <motion.div
@@ -375,7 +369,11 @@ export const ClubDetailPage = () => {
                   </div>
 
                   <div className="xl:w-44 space-y-2">
-                    {activeRsvp ? (
+                    {!isStudent ? (
+                      <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center text-xs font-bold text-white/40">
+                        Etkinlik katılımı yalnızca öğrenciler içindir.
+                      </div>
+                    ) : activeRsvp ? (
                       <>
                         {event.qrCheckInEnabled && activeRsvp.checkInToken && (
                           <button
