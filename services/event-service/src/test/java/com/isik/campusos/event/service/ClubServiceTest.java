@@ -68,7 +68,7 @@ class ClubServiceTest {
         when(clubRepository.findByIdAndIsDeletedFalse("club-1")).thenReturn(Optional.of(club));
         when(clubMemberRepository.findByClubIdAndUserId("club-1", "president-1")).thenReturn(Optional.of(president));
 
-        assertThatThrownBy(() -> clubService.updateMemberStatus("president-1", "club-1", "president-1", request))
+        assertThatThrownBy(() -> clubService.updateMemberStatus("sks-1", "ROLE_SKS_ADMIN", "club-1", "president-1", request))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
                 .isEqualTo(HttpStatus.CONFLICT);
@@ -86,7 +86,7 @@ class ClubServiceTest {
         when(clubRepository.findByIdAndIsDeletedFalse("club-1")).thenReturn(Optional.of(club));
         when(clubMemberRepository.findByClubIdAndUserId("club-1", "member-1")).thenReturn(Optional.of(member));
 
-        assertThatThrownBy(() -> clubService.updateMemberStatus("president-1", "club-1", "member-1", request))
+        assertThatThrownBy(() -> clubService.updateMemberStatus("sks-1", "ROLE_SKS_ADMIN", "club-1", "member-1", request))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
                 .isEqualTo(HttpStatus.BAD_REQUEST);
@@ -104,7 +104,7 @@ class ClubServiceTest {
         when(clubRepository.findByIdAndIsDeletedFalse("club-1")).thenReturn(Optional.of(club));
         when(clubMemberRepository.findByClubIdAndUserId("club-1", "member-1")).thenReturn(Optional.of(member));
 
-        assertThatThrownBy(() -> clubService.updateMemberRole("president-1", "club-1", "member-1", request))
+        assertThatThrownBy(() -> clubService.updateMemberRole("sks-1", "ROLE_SKS_ADMIN", "club-1", "member-1", request))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
                 .isEqualTo(HttpStatus.CONFLICT);

@@ -19,6 +19,7 @@ public class AuthResponse {
     private String department;
     private Integer enrollmentYear;
     private String studentNumber;
+    private String nationalIdMasked;
     private boolean mustChangePassword;
     private boolean emailVerified;
     private String status;

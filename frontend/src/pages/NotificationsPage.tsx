@@ -46,7 +46,7 @@ export const NotificationsPage = () => {
   }, [filter, notifications, searchTerm]);
 
   return (
-    <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 space-y-6 animate-fade-in">
+    <div className="w-full space-y-6 animate-fade-in">
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
         <div>
           <p className="text-sm font-semibold text-purple-300">İletişim merkezi</p>

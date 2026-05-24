@@ -20,6 +20,7 @@ public class StudentResponse {
     private String department;
     private String departmentCode;
     private Integer enrollmentYear;
+    private String nationalIdMasked;
     private String status;
     private boolean emailVerified;
     private String createdAt;

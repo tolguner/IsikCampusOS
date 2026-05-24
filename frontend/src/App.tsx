@@ -15,6 +15,7 @@ import { StudentDashboard } from './pages/StudentDashboard';
 import { ClubPresidentDashboard } from './pages/ClubPresidentDashboard';
 import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
 import { useAuthStore } from './store/authStore';
+import { useClubStore } from './store/clubStore';
 import { AutoClearMessages } from './components/AutoClearMessages';
 
 // Giriş sonrası yönlendirme mantığı:
@@ -38,6 +39,32 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   return <>{children}</>;
+};
+
+const ClubManagementRoute = () => {
+  const managedClubs = useClubStore(state => state.managedClubs);
+  const fetchManagedClubs = useClubStore(state => state.fetchManagedClubs);
+  const [checked, setChecked] = React.useState(false);
+
+  React.useEffect(() => {
+    let active = true;
+    fetchManagedClubs().finally(() => {
+      if (active) setChecked(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [fetchManagedClubs]);
+
+  if (!checked) {
+    return <div className="text-sm font-semibold text-white/45">Yükleniyor...</div>;
+  }
+
+  if (managedClubs.length === 0) {
+    return <Navigate to="/clubs" replace />;
+  }
+
+  return <ClubPresidentDashboard />;
 };
 
 function App() {
@@ -124,7 +151,7 @@ function App() {
         <Route path="/club-management" element={
           <ProtectedRoute>
             <AppLayout>
-              <ClubPresidentDashboard />
+              <ClubManagementRoute />
             </AppLayout>
           </ProtectedRoute>
         } />

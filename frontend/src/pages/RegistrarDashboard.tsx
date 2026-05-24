@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStudentStore } from '../store/studentStore';
-import { Search, Plus, MoreVertical, X, CheckCircle2, AlertCircle, Loader2, KeyRound, UserX, UserCheck, GraduationCap, Edit2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useProfileStore, type ProfileChangeRequest } from '../store/profileStore';
+import { Search, Plus, MoreVertical, X, CheckCircle2, AlertCircle, Loader2, KeyRound, UserX, UserCheck, GraduationCap, Edit2, ChevronLeft, ChevronRight, ClipboardCheck } from 'lucide-react';
 
 export const RegistrarDashboard = () => {
   const facultiesAndDepartments: Record<string, string[]> = {
@@ -88,12 +89,23 @@ export const RegistrarDashboard = () => {
 
 
   const { students, totalElements, totalPages, currentPage, fetchStudents, createStudent, updateStudent, changeStatus, resetPassword, isLoading, error, successMessage, clearMessages } = useStudentStore();
+  const {
+    pendingChangeRequests,
+    fetchPendingChangeRequests,
+    approveChangeRequest,
+    rejectChangeRequest,
+    isLoading: profileRequestLoading,
+    error: profileRequestError,
+    successMessage: profileRequestSuccess,
+    clearMessages: clearProfileRequestMessages,
+  } = useProfileStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
+  const [requestMenuOpenId, setRequestMenuOpenId] = useState<string | null>(null);
 
   // Add Form State
   const [formData, setFormData] = useState({
@@ -112,6 +124,10 @@ export const RegistrarDashboard = () => {
   useEffect(() => {
     fetchStudents(0, 10, searchTerm, statusFilter);
   }, [searchTerm, statusFilter]);
+
+  useEffect(() => {
+    fetchPendingChangeRequests();
+  }, [fetchPendingChangeRequests]);
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,10 +193,32 @@ export const RegistrarDashboard = () => {
     }
   };
 
+  const getFieldLabel = (fieldName: string) => {
+    if (fieldName === 'phoneNumber') return 'Telefon';
+    if (fieldName === 'residenceAddress') return 'İkametgah';
+    if (fieldName === 'bloodType') return 'Kan grubu';
+    return fieldName;
+  };
+
+  const getStudentRequests = (studentId: string) =>
+    pendingChangeRequests.filter(request => request.userId === studentId);
+
+  const handleApproveProfileRequest = async (requestId: string) => {
+    await approveChangeRequest(requestId);
+    setRequestMenuOpenId(null);
+  };
+
+  const handleRejectProfileRequest = async (request: ProfileChangeRequest) => {
+    const feedback = prompt(`${getFieldLabel(request.fieldName)} talebini reddetme gerekçesi:`);
+    if (feedback === null) return;
+    await rejectChangeRequest(request.id, feedback);
+    setRequestMenuOpenId(null);
+  };
+
   const inputStyle = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' };
 
   return (
-    <div className="h-full flex flex-col space-y-6 animate-fade-in pb-10 mt-6 max-w-7xl mx-auto w-full px-4 sm:px-6">
+    <div className="h-full flex flex-col space-y-6 animate-fade-in pb-10 mt-6 w-full">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -196,16 +234,16 @@ export const RegistrarDashboard = () => {
 
       {/* Messages */}
       <AnimatePresence>
-        {error && (
+        {(error || profileRequestError) && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="p-4 rounded-2xl flex items-center justify-between" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
-            <div className="flex items-center gap-3"><AlertCircle className="w-5 h-5 text-red-400" /><p className="text-sm text-red-400 font-medium">{error}</p></div>
-            <button onClick={clearMessages} className="text-red-400 hover:text-red-300"><X className="w-4 h-4"/></button>
+            <div className="flex items-center gap-3"><AlertCircle className="w-5 h-5 text-red-400" /><p className="text-sm text-red-400 font-medium">{error || profileRequestError}</p></div>
+            <button onClick={() => { clearMessages(); clearProfileRequestMessages(); }} className="text-red-400 hover:text-red-300"><X className="w-4 h-4"/></button>
           </motion.div>
         )}
-        {successMessage && (
+        {(successMessage || profileRequestSuccess) && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="p-4 rounded-2xl flex items-center justify-between" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-            <div className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-400" /><p className="text-sm text-emerald-400 font-medium">{successMessage}</p></div>
-            <button onClick={clearMessages} className="text-emerald-400 hover:text-emerald-300"><X className="w-4 h-4"/></button>
+            <div className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-400" /><p className="text-sm text-emerald-400 font-medium">{successMessage || profileRequestSuccess}</p></div>
+            <button onClick={() => { clearMessages(); clearProfileRequestMessages(); }} className="text-emerald-400 hover:text-emerald-300"><X className="w-4 h-4"/></button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -239,6 +277,7 @@ export const RegistrarDashboard = () => {
                   <th className="px-6 py-4 font-semibold">Fakülte / Bölüm</th>
                   <th className="px-6 py-4 font-semibold">Kayıt Yılı</th>
                   <th className="px-6 py-4 font-semibold">Durum</th>
+                  <th className="px-6 py-4 font-semibold">Talepler</th>
                   <th className="px-6 py-4 font-semibold text-right">İşlemler</th>
                 </tr>
               </thead>
@@ -264,6 +303,73 @@ export const RegistrarDashboard = () => {
                     </td>
                     <td className="px-6 py-4 text-sm text-white/60">{student.enrollmentYear}</td>
                     <td className="px-6 py-4">{getStatusBadge(student.status)}</td>
+                    <td className="px-6 py-4 relative">
+                      {getStudentRequests(student.id).length > 0 ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setRequestMenuOpenId(requestMenuOpenId === student.id ? null : student.id)}
+                            className="inline-flex items-center gap-2 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-100 hover:bg-amber-500/15 transition-colors"
+                          >
+                            <ClipboardCheck className="w-4 h-4" />
+                            {getStudentRequests(student.id).length} talep
+                          </button>
+                          <AnimatePresence>
+                            {requestMenuOpenId === student.id && (
+                              <>
+                                <div className="fixed inset-0 z-40" onClick={() => setRequestMenuOpenId(null)} />
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                                  exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                                  className="absolute left-6 top-14 z-50 w-80 rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+                                  style={{ background: 'rgba(15,15,30,0.98)', backdropFilter: 'blur(18px)' }}
+                                >
+                                  <div className="border-b border-white/10 px-4 py-3">
+                                    <p className="text-sm font-black text-white">Profil değişiklik talepleri</p>
+                                    <p className="text-xs text-white/35 mt-0.5">{student.fullName}</p>
+                                  </div>
+                                  <div className="max-h-80 overflow-y-auto p-2 space-y-2">
+                                    {getStudentRequests(student.id).map(request => (
+                                      <div key={request.id} className="rounded-xl border border-amber-400/15 bg-amber-500/[0.07] p-3">
+                                        <div className="flex items-start gap-2">
+                                          <ClipboardCheck className="w-4 h-4 text-amber-200 mt-0.5 shrink-0" />
+                                          <div className="min-w-0">
+                                            <p className="text-xs font-black text-amber-100">{getFieldLabel(request.fieldName)}</p>
+                                            <p className="text-xs text-white/45 mt-1">Mevcut: {request.currentValue || 'Kayıtlı değil'}</p>
+                                            <p className="text-xs text-white/85 mt-0.5 break-words">Yeni: {request.requestedValue}</p>
+                                          </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 mt-3">
+                                          <button
+                                            type="button"
+                                            disabled={profileRequestLoading}
+                                            onClick={() => handleApproveProfileRequest(request.id)}
+                                            className="rounded-lg px-3 py-1.5 text-xs font-bold text-emerald-100 bg-emerald-500/20 border border-emerald-400/20 hover:bg-emerald-500/30 disabled:opacity-50"
+                                          >
+                                            Onayla
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={profileRequestLoading}
+                                            onClick={() => handleRejectProfileRequest(request)}
+                                            className="rounded-lg px-3 py-1.5 text-xs font-bold text-red-100 bg-red-500/20 border border-red-400/20 hover:bg-red-500/30 disabled:opacity-50"
+                                          >
+                                            Reddet
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </motion.div>
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </>
+                      ) : (
+                        <span className="text-xs text-white/25">Talep yok</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 text-right relative">
                       <button onClick={() => setActionMenuOpenId(actionMenuOpenId === student.id ? null : student.id)} className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors cursor-pointer">
                         <MoreVertical className="w-4 h-4" />
@@ -294,7 +400,7 @@ export const RegistrarDashboard = () => {
                   </tr>
                 ))}
                 {students.length === 0 && !isLoading && (
-                  <tr><td colSpan={5} className="px-6 py-12 text-center text-white/30 text-sm">Arama kriterlerine uygun öğrenci bulunamadı.</td></tr>
+                  <tr><td colSpan={6} className="px-6 py-12 text-center text-white/30 text-sm">Arama kriterlerine uygun öğrenci bulunamadı.</td></tr>
                 )}
               </tbody>
             </table>
@@ -334,7 +440,7 @@ export const RegistrarDashboard = () => {
                   <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Ad</label><input required type="text" value={formData.firstName} onChange={e=>setFormData({...formData, firstName: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: Ali" /></div>
                   <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Soyad</label><input required type="text" value={formData.lastName} onChange={e=>setFormData({...formData, lastName: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: Yılmaz" /></div>
                   <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">TC Kimlik No</label><input required type="text" maxLength={11} minLength={11} value={formData.tcKimlikNo} onChange={e=>setFormData({...formData, tcKimlikNo: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="11 Haneli" /></div>
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Öğrenci No</label><input required type="text" value={formData.studentNumber} onChange={e=>setFormData({...formData, studentNumber: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: 23yobi1001" /></div>
+                  <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Öğrenci No</label><input required type="text" value={formData.studentNumber} onChange={e=>setFormData({...formData, studentNumber: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: 24yobi1234" /></div>
                   <div className="space-y-1.5 sm:col-span-2">
                     <label className="text-xs font-semibold text-white/60 ml-1">Fakülte</label>
                     <select required value={formData.faculty} onChange={e=>setFormData({...formData, faculty: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors cursor-pointer" style={inputStyle}>

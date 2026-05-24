@@ -30,6 +30,7 @@ public class UserEventConsumer {
                         .email(event.getEmail())
                         .firstName(event.getFirstName())
                         .lastName(event.getLastName())
+                        .nationalIdMasked(event.getNationalIdMasked())
                         .build();
                 profileRepository.save(profile);
                 log.info("Created profile for userId: {} ({} {})",
@@ -42,4 +43,3 @@ public class UserEventConsumer {
         }
     }
 }
-

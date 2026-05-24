@@ -11,7 +11,7 @@ import { MembersTab } from '../components/club-dashboard/MembersTab';
 
 export const ClubPresidentDashboard = () => {
   const {
-    clubs,
+    managedClubs,
     isLoading: clubsLoading,
     error: clubError,
     successMessage: clubSuccess,
@@ -33,14 +33,14 @@ export const ClubPresidentDashboard = () => {
   }, [fetchManagedClubs, fetchManagedEvents]);
 
   useEffect(() => {
-    if (!selectedClubId && clubs.length > 0) {
-      setSelectedClubId(clubs[0].id);
+    if (!selectedClubId && managedClubs.length > 0) {
+      setSelectedClubId(managedClubs[0].id);
     }
-  }, [clubs, selectedClubId]);
+  }, [managedClubs, selectedClubId]);
 
   const selectedClub = useMemo(
-    () => clubs.find(club => club.id === selectedClubId) || clubs[0] || null,
-    [clubs, selectedClubId]
+    () => managedClubs.find(club => club.id === selectedClubId) || managedClubs[0] || null,
+    [managedClubs, selectedClubId]
   );
 
   const tabs = [

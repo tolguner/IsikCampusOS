@@ -145,24 +145,27 @@ public class ClubController {
     }
 
     @PatchMapping("/{clubId}/members/{userId}/role")
+    @PreAuthorize("hasAnyAuthority('ROLE_SKS_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<Void> updateMemberRole(Authentication auth,
                                                  @PathVariable String clubId,
                                                  @PathVariable String userId,
                                                  @RequestBody ClubMemberRoleUpdateRequest request) {
-        clubService.updateMemberRole(auth.getName(), clubId, userId, request);
+        clubService.updateMemberRole(auth.getName(), auth.getAuthorities().toString(), clubId, userId, request);
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/{clubId}/members/{userId}/status")
+    @PreAuthorize("hasAnyAuthority('ROLE_SKS_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<Void> updateMemberStatus(Authentication auth,
                                                    @PathVariable String clubId,
                                                    @PathVariable String userId,
                                                    @RequestBody ClubMemberStatusUpdateRequest request) {
-        clubService.updateMemberStatus(auth.getName(), clubId, userId, request);
+        clubService.updateMemberStatus(auth.getName(), auth.getAuthorities().toString(), clubId, userId, request);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{clubId}/members/{userId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_SKS_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<Void> removeMember(Authentication auth,
                                              @PathVariable String clubId,
                                              @PathVariable String userId) {
@@ -171,12 +174,14 @@ public class ClubController {
     }
 
     @PostMapping("/{clubId}/join")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<ClubMember> joinClub(Authentication auth,
                                                @PathVariable String clubId) {
         return ResponseEntity.ok(clubService.joinClub(auth.getName(), clubId));
     }
 
     @DeleteMapping("/{clubId}/membership")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<Void> leaveClub(Authentication auth,
                                           @PathVariable String clubId) {
         clubService.leaveClub(auth.getName(), clubId);

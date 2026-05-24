@@ -65,6 +65,7 @@ public class AuthService {
                 user.getDepartment(),
                 user.getEnrollmentYear(),
                 user.getStudentNumber(),
+                user.getNationalIdMasked(),
                 user.isMustChangePassword(),
                 user.isEmailVerified(),
                 user.getStatus().name()

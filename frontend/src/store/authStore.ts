@@ -12,6 +12,7 @@ export interface User {
   department?: string;
   enrollmentYear?: number;
   studentNumber: string | null;
+  nationalIdMasked?: string;
   mustChangePassword: boolean;
   emailVerified: boolean;
   status: string;
@@ -89,6 +90,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         department,
         enrollmentYear,
         studentNumber,
+        nationalIdMasked,
         mustChangePassword,
         emailVerified,
         status,
@@ -105,6 +107,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         department,
         enrollmentYear,
         studentNumber,
+        nationalIdMasked,
         mustChangePassword,
         emailVerified,
         status,

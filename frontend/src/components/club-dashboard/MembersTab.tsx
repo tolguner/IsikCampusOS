@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { UsersRound, XCircle, ShieldCheck } from 'lucide-react';
+import { UsersRound, ShieldCheck } from 'lucide-react';
 import type { Club } from '../../store/clubStore';
 import { useClubStore } from '../../store/clubStore';
 
@@ -11,9 +11,6 @@ export const MembersTab = ({ selectedClub }: MembersTabProps) => {
   const {
     clubMembers,
     fetchClubMembers,
-    updateMemberRole,
-    updateMemberStatus,
-    removeClubMember,
   } = useClubStore();
 
   useEffect(() => {
@@ -28,7 +25,7 @@ export const MembersTab = ({ selectedClub }: MembersTabProps) => {
         </span>
         <div>
           <h2 className="text-2xl font-black text-white">Üye Yönetimi</h2>
-          <p className="text-sm text-white/50">Kulüp üyelerini ve onay bekleyenleri yönetin.</p>
+          <p className="text-sm text-white/50">Kulüp üyelerini görüntüle. Rol atamaları yalnızca SKS yönetimi tarafından yapılır.</p>
         </div>
       </div>
       <div className="space-y-4">
@@ -45,9 +42,6 @@ export const MembersTab = ({ selectedClub }: MembersTabProps) => {
                   <th className="pb-3 px-4 font-medium">Ad Soyad</th>
                   <th className="pb-3 px-4 font-medium">Öğrenci No</th>
                   <th className="pb-3 px-4 font-medium">Bölüm</th>
-                  <th className="pb-3 px-4 font-medium">Rol</th>
-                  <th className="pb-3 px-4 font-medium">Durum</th>
-                  <th className="pb-3 px-4 font-medium">İşlemler</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-white/80">
@@ -67,49 +61,6 @@ export const MembersTab = ({ selectedClub }: MembersTabProps) => {
                       </td>
                       <td className="py-3 px-4">{m.studentId || m.userId}</td>
                       <td className="py-3 px-4">{m.department || '-'}</td>
-                      <td className="py-3 px-4">
-                        {isAdmin ? (
-                          <span className="text-xs text-yellow-300/80 font-semibold">Yönetici</span>
-                        ) : (
-                          <select
-                            value={m.role}
-                            onChange={(e) => updateMemberRole(selectedClub.id, m.userId, e.target.value)}
-                            className="bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-xs outline-none focus:border-purple-400"
-                          >
-                            <option value="MEMBER">Üye</option>
-                            <option value="ADMIN">Yönetici</option>
-                          </select>
-                        )}
-                      </td>
-                      <td className="py-3 px-4">
-                        {isAdmin ? (
-                          <span className="text-xs text-green-400/80 font-semibold">Aktif</span>
-                        ) : (
-                          <select
-                            value={m.status}
-                            onChange={(e) => updateMemberStatus(selectedClub.id, m.userId, e.target.value)}
-                            className="bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-xs outline-none focus:border-purple-400"
-                          >
-                            <option value="PENDING">Onay Bekliyor</option>
-                            <option value="ACTIVE">Aktif Üye</option>
-                            <option value="REJECTED">Reddedildi</option>
-                          </select>
-                        )}
-                      </td>
-                      <td className="py-3 px-4">
-                        {isAdmin ? (
-                          <span className="text-xs text-white/30">—</span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => removeClubMember(selectedClub.id, m.userId)}
-                            className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                            title="Üyeyi Çıkar"
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </button>
-                        )}
-                      </td>
                     </tr>
                   );
                 })}

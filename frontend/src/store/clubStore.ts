@@ -76,6 +76,7 @@ type ClubProfileUpdateRequest = Pick<Club, 'name' | 'shortDescription' | 'vision
 
 interface ClubState {
   clubs: Club[];
+  managedClubs: Club[];
   selectedClub: Club | null;
   clubEvents: Event[];
   clubMembers: ClubMember[];
@@ -120,6 +121,7 @@ const getErrorMessage = (err: any, fallback: string) => {
 
 export const useClubStore = create<ClubState>((set, get) => ({
   clubs: [],
+  managedClubs: [],
   selectedClub: null,
   clubEvents: [],
   clubMembers: [],
@@ -203,8 +205,9 @@ export const useClubStore = create<ClubState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await api.get<Club[]>('/clubs/managed');
-      set({ clubs: res.data, isLoading: false });
+      set({ managedClubs: res.data, isLoading: false });
     } catch (err: any) {
+      set({ managedClubs: [] });
       set({ error: getErrorMessage(err, 'Yönettiğiniz kulüpler yüklenirken hata oluştu.'), isLoading: false });
     }
   },

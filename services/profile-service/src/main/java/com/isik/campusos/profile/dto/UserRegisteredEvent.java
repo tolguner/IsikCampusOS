@@ -11,5 +11,5 @@ public class UserRegisteredEvent {
     private String firstName;
     private String lastName;
     private String studentNumber;
+    private String nationalIdMasked;
 }
-
