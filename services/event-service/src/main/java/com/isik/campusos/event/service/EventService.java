@@ -4,11 +4,14 @@ import com.isik.campusos.event.dto.CreateEventRequest;
 import com.isik.campusos.event.dto.EventCancelRequest;
 import com.isik.campusos.event.dto.EventFeedbackRequest;
 import com.isik.campusos.event.dto.UpdateEventRequest;
+import com.isik.campusos.event.model.AuditLog;
 import com.isik.campusos.event.model.Club;
+import com.isik.campusos.event.model.ClubMember;
 import com.isik.campusos.event.model.Event;
 import com.isik.campusos.event.model.EventChangeRequest;
 import com.isik.campusos.event.model.Notification;
 import com.isik.campusos.event.model.Rsvp;
+import com.isik.campusos.event.repository.ClubMemberRepository;
 import com.isik.campusos.event.repository.ClubRepository;
 import com.isik.campusos.event.repository.EventChangeRequestRepository;
 import com.isik.campusos.event.repository.EventRepository;
@@ -21,7 +24,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,12 +36,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EventService {
 
+    private static final DateTimeFormatter NOTIFICATION_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+    private static final List<ClubMember.MemberStatus> ACTIVE_LIKE_MEMBER_STATUSES = List.of(
+            ClubMember.MemberStatus.ACTIVE,
+            ClubMember.MemberStatus.PENDING);
+
     private final EventRepository eventRepository;
     private final EventChangeRequestRepository eventChangeRequestRepository;
     private final ClubRepository clubRepository;
+    private final ClubMemberRepository clubMemberRepository;
     private final RsvpRepository rsvpRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final NotificationService notificationService;
+    private final AuditLogService auditLogService;
 
     public Event createEventDraft(String userId, CreateEventRequest request) {
         Club club = clubRepository.findById(request.getClubId())
@@ -84,7 +97,10 @@ public class EventService {
                 .status(Event.EventStatus.DRAFT)
                 .build();
 
-        return eventRepository.save(event);
+        Event saved = eventRepository.save(event);
+        auditLogService.record(AuditLog.EntityType.EVENT, saved.getId(), "EVENT_DRAFT_CREATED", userId, "CLUB_ADMIN",
+                saved.getClub().getName() + " kulübü " + saved.getTitle() + " etkinlik taslağını oluşturdu.");
+        return saved;
     }
 
     public Event submitForApproval(String userId, String eventId) {
@@ -100,7 +116,19 @@ public class EventService {
 
         event.setStatus(Event.EventStatus.PENDING_SKS_APPROVAL);
         event.setRejectionReason(null);
-        return eventRepository.save(event);
+        Event saved = eventRepository.save(event);
+        auditLogService.record(AuditLog.EntityType.EVENT, saved.getId(), "EVENT_SUBMITTED", userId, "CLUB_ADMIN",
+                saved.getTitle() + " etkinliği SKS onayına gönderildi.");
+
+        notificationService.notifySksEventApprovalRequest(
+                "Yeni etkinlik onay talebi",
+                saved.getClub().getName() + " kulübü \"" + saved.getTitle() + "\" etkinliği için SKS onayı istedi.",
+                userId,
+                saved.getClub().getName(),
+                saved.getId()
+        );
+
+        return saved;
     }
 
     /**
@@ -123,11 +151,22 @@ public class EventService {
         event.setApprovedAt(LocalDateTime.now());
         event.setPublishedAt(LocalDateTime.now());
         Event saved = eventRepository.save(event);
+        auditLogService.record(AuditLog.EntityType.EVENT, saved.getId(), "EVENT_APPROVED", adminId, "SKS",
+                saved.getTitle() + " etkinliği onaylandı ve yayınlandı.");
 
         // Kafka: bildirim servisi tetikle
         String payload = String.format("{\"eventId\":\"%s\", \"title\":\"%s\", \"approvedBy\":\"%s\"}",
                 saved.getId(), saved.getTitle(), adminId);
         kafkaTemplate.send("event.published", saved.getId(), payload);
+
+        notificationService.notifyUserWithType(
+                saved.getClub().getAdminUserId(),
+                "Etkinlik talebi onaylandı",
+                saved.getClub().getName() + " kulübünün \"" + saved.getTitle() + "\" etkinliği SKS tarafından onaylandı ve yayınlandı.",
+                saved.getId(),
+                Notification.NotificationType.EVENT_APPROVAL_REQUEST
+        );
+        notifyClubMembersAboutPublishedEvent(saved);
 
         return saved;
     }
@@ -147,12 +186,15 @@ public class EventService {
         event.setStatus(Event.EventStatus.REVISION_REQUESTED);
         event.setRejectionReason(request.getFeedback().trim());
         Event saved = eventRepository.save(event);
+        auditLogService.record(AuditLog.EntityType.EVENT, saved.getId(), "EVENT_REVISION_REQUESTED", adminId, "SKS",
+                saved.getTitle() + " etkinliği için revizyon istendi: " + saved.getRejectionReason());
 
-        notificationService.notifyUser(
+        notificationService.notifyUserWithType(
                 saved.getClub().getAdminUserId(),
                 "Etkinlik düzenleme talebi",
                 saved.getTitle() + " etkinliği için SKS düzenleme istedi: " + saved.getRejectionReason(),
-                saved.getId()
+                saved.getId(),
+                Notification.NotificationType.EVENT_REVISION_REQUEST
         );
 
         return saved;
@@ -193,6 +235,8 @@ public class EventService {
         event.setCurrentRsvpCount(0);
         event.setCurrentWaitlistCount(0);
         Event saved = eventRepository.save(event);
+        auditLogService.record(AuditLog.EntityType.EVENT, saved.getId(), "EVENT_CANCELLED", userId, roles, 
+                saved.getTitle() + " etkinliği iptal edildi. Gerekçe: " + reason);
 
         notificationService.notifyAudience(
                 Notification.TargetAudience.ALL_STUDENTS,
@@ -225,6 +269,8 @@ public class EventService {
         if (event.getStatus() == Event.EventStatus.PUBLISHED) {
             EventChangeRequest changeRequest = buildChangeRequest(event, userId, request);
             eventChangeRequestRepository.save(changeRequest);
+            auditLogService.record(AuditLog.EntityType.EVENT, event.getId(), "EVENT_CHANGE_REQUESTED", userId, "CLUB_ADMIN",
+                    event.getTitle() + " etkinliği için değişiklik talebi oluşturuldu.");
             return event;
         }
 
@@ -235,7 +281,10 @@ public class EventService {
         applyUpdate(event, request);
         event.setStatus(Event.EventStatus.DRAFT);
         event.setRejectionReason(null);
-        return eventRepository.save(event);
+        Event saved = eventRepository.save(event);
+        auditLogService.record(AuditLog.EntityType.EVENT, saved.getId(), "EVENT_UPDATED", userId, "CLUB_ADMIN",
+                saved.getTitle() + " etkinlik taslağı güncellendi.");
+        return saved;
     }
 
     public List<Event> getReviewQueue() {
@@ -270,6 +319,16 @@ public class EventService {
         changeRequest.setReviewedBy(adminId);
         changeRequest.setReviewedAt(LocalDateTime.now());
         eventChangeRequestRepository.save(changeRequest);
+        auditLogService.record(AuditLog.EntityType.EVENT, event.getId(), "EVENT_CHANGE_APPROVED", adminId, "SKS",
+                event.getTitle() + " etkinliği değişiklik talebi onaylandı.");
+
+        notificationService.notifyUserWithType(
+                event.getClub().getAdminUserId(),
+                "Etkinlik değişikliği onaylandı",
+                event.getTitle() + " etkinliği için gönderilen değişiklik talebi SKS tarafından onaylandı.",
+                event.getId(),
+                Notification.NotificationType.EVENT_APPROVAL_REQUEST
+        );
 
         return event;
     }
@@ -287,12 +346,15 @@ public class EventService {
         changeRequest.setReviewedBy(adminId);
         changeRequest.setReviewedAt(LocalDateTime.now());
         EventChangeRequest saved = eventChangeRequestRepository.save(changeRequest);
+        auditLogService.record(AuditLog.EntityType.EVENT, saved.getEvent().getId(), "EVENT_CHANGE_REVISION_REQUESTED", adminId, "SKS",
+                saved.getEvent().getTitle() + " etkinliği değişiklik talebi için revizyon istendi: " + saved.getFeedback());
 
-        notificationService.notifyUser(
+        notificationService.notifyUserWithType(
                 saved.getEvent().getClub().getAdminUserId(),
                 "Etkinlik değişikliği düzenleme talebi",
                 saved.getEvent().getTitle() + " etkinliği değişikliği için SKS düzenleme istedi: " + saved.getFeedback(),
-                saved.getEvent().getId()
+                saved.getEvent().getId(),
+                Notification.NotificationType.EVENT_REVISION_REQUEST
         );
 
         return saved;
@@ -318,6 +380,46 @@ public class EventService {
 
     public List<Event> getManagedEvents(String adminUserId) {
         return eventRepository.findByClub_AdminUserId(adminUserId);
+    }
+
+    private void notifyClubMembersAboutPublishedEvent(Event event) {
+        String clubId = event.getClub().getId();
+        String clubName = event.getClub().getName();
+        String startTime = event.getStartTime() != null
+                ? event.getStartTime().format(NOTIFICATION_DATE_FORMATTER)
+                : "Tarih belirtilmedi";
+        String location = resolveEventLocationForNotification(event);
+
+        clubMemberRepository.findByClubIdAndStatusIn(clubId, ACTIVE_LIKE_MEMBER_STATUSES)
+                .stream()
+                .map(ClubMember::getUserId)
+                .filter(userId -> userId != null && !userId.isBlank())
+                .distinct()
+                .forEach(userId -> notificationService.notifyUserAnnouncement(
+                        userId,
+                        "Kulübünün yeni etkinliği yayınlandı",
+                        clubName + " kulübü yeni bir etkinlik düzenliyor: " + event.getTitle()
+                                + "\n\nBaşlangıç: " + startTime
+                                + "\nKonum: " + location,
+                        "/clubs/" + clubId,
+                        "Etkinliği görüntüle",
+                        event.getPosterImageUrl(),
+                        event.getClub().getAdminUserId(),
+                        clubName
+                ));
+    }
+
+    private String resolveEventLocationForNotification(Event event) {
+        if (event.getEventMode() == Event.EventMode.ONLINE) {
+            return trimToNull(event.getOnlinePlatform()) != null ? event.getOnlinePlatform().trim() : "Online";
+        }
+        if (trimToNull(event.getLocationName()) != null) {
+            return event.getLocationName().trim();
+        }
+        if (trimToNull(event.getLocation()) != null) {
+            return event.getLocation().trim();
+        }
+        return "Konum belirtilmedi";
     }
 
     private EventChangeRequest buildChangeRequest(Event event, String userId, UpdateEventRequest request) {
@@ -424,6 +526,8 @@ public class EventService {
     private void validateEventRequest(CreateEventRequest request) {
         validateCoreEventFields(
                 request.getTitle(),
+                request.getStartTime(),
+                request.getEndTime(),
                 request.getEventMode(),
                 request.getOnlineMeetingUrl(),
                 request.getLocationName(),
@@ -432,13 +536,16 @@ public class EventService {
                 isCapacityLimited(request.isCapacityLimited(), request.isHasCapacityLimit()),
                 request.getCapacity(),
                 request.isPaid(),
-                request.getIban()
+                request.getIban(),
+                request.getPosterImageUrl()
         );
     }
 
     private void validateEventRequest(UpdateEventRequest request) {
         validateCoreEventFields(
                 request.getTitle(),
+                request.getStartTime(),
+                request.getEndTime(),
                 request.getEventMode(),
                 request.getOnlineMeetingUrl(),
                 request.getLocationName(),
@@ -447,11 +554,14 @@ public class EventService {
                 isCapacityLimited(request.isCapacityLimited(), request.isHasCapacityLimit()),
                 request.getCapacity(),
                 request.isPaid(),
-                request.getIban()
+                request.getIban(),
+                request.getPosterImageUrl()
         );
     }
 
     private void validateCoreEventFields(String title,
+                                         LocalDateTime startTime,
+                                         LocalDateTime endTime,
                                          Event.EventMode eventMode,
                                          String onlineMeetingUrl,
                                          String locationName,
@@ -460,13 +570,30 @@ public class EventService {
                                          boolean capacityLimited,
                                          int capacity,
                                          boolean paid,
-                                         String iban) {
+                                         String iban,
+                                         String posterImageUrl) {
         if (title == null || title.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event title is required");
+        }
+        if (startTime == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event start time is required");
+        }
+        if (endTime == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event end time is required");
+        }
+        LocalDateTime currentMinute = LocalDateTime.now().withSecond(0).withNano(0);
+        if (startTime.isBefore(currentMinute)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event start time cannot be in the past");
+        }
+        if (!endTime.isAfter(startTime)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event end time must be after start time");
         }
         Event.EventMode resolvedMode = eventMode != null ? eventMode : Event.EventMode.IN_PERSON;
         if (resolvedMode == Event.EventMode.ONLINE && (onlineMeetingUrl == null || onlineMeetingUrl.isBlank())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Online event meeting URL is required");
+        }
+        if (resolvedMode == Event.EventMode.ONLINE && !isHttpUrl(onlineMeetingUrl)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Online event meeting URL must start with http:// or https://");
         }
         if (resolvedMode == Event.EventMode.IN_PERSON
                 && (locationName == null || locationName.isBlank() || latitude == null || longitude == null)) {
@@ -478,6 +605,7 @@ public class EventService {
         if (paid && (iban == null || iban.isBlank())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "IBAN is required for paid events");
         }
+        validatePosterImage(posterImageUrl);
     }
 
     private String resolveLegacyLocation(CreateEventRequest request) {
@@ -492,6 +620,29 @@ public class EventService {
 
     private String trimToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private boolean isHttpUrl(String value) {
+        try {
+            URI uri = new URI(value.trim());
+            return ("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))
+                    && uri.getHost() != null;
+        } catch (URISyntaxException | NullPointerException ex) {
+            return false;
+        }
+    }
+
+    private void validatePosterImage(String posterImageUrl) {
+        String value = trimToNull(posterImageUrl);
+        if (value == null) {
+            return;
+        }
+        if (value.startsWith("data:image/png") || value.startsWith("data:image/jpeg")) {
+            return;
+        }
+        if (value.startsWith("data:")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event poster must be PNG or JPG");
+        }
     }
 
     private String normalizeReminderOffsets(List<Integer> offsets) {

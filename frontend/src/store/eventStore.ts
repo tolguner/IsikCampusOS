@@ -60,6 +60,10 @@ export interface EventParticipant {
   rsvpId: string;
   eventId: string;
   userId: string;
+  fullName?: string;
+  studentNumber?: string;
+  email?: string;
+  department?: string;
   status: 'PENDING_PAYMENT' | 'CONFIRMED' | 'WAITLISTED' | 'CANCELLED' | 'ATTENDED' | 'NO_SHOW';
   registeredAt: string;
   checkedInAt?: string;
@@ -73,12 +77,25 @@ export interface EventParticipant {
   certificateSentAt?: string;
 }
 
+export interface AuditLog {
+  id: string;
+  entityType: 'CLUB' | 'EVENT';
+  entityId: string;
+  action: string;
+  actorId: string;
+  actorRole?: string;
+  message: string;
+  metadata?: string;
+  createdAt: string;
+}
+
 interface EventState {
   events: Event[];
   managedEvents: Event[];
   participantsByEvent: Record<string, EventParticipant[]>;
   myRsvpsByEvent: Record<string, Rsvp>;
   reviewQueue: Event[];
+  auditLogsByEvent: Record<string, AuditLog[]>;
   isLoading: boolean;
   error: string | null;
   successMessage: string | null;
@@ -88,7 +105,7 @@ interface EventState {
   fetchManagedEvents: () => Promise<void>;
   fetchMyRsvps: () => Promise<void>;
   fetchReviewQueue: () => Promise<void>;
-  createEventDraft: (data: any) => Promise<boolean>;
+  createEventDraft: (data: any) => Promise<Event | null>;
   updateEvent: (eventId: string, data: any) => Promise<boolean>;
   submitForApproval: (eventId: string) => Promise<boolean>;
   approveEvent: (eventId: string) => Promise<boolean>;
@@ -102,6 +119,7 @@ interface EventState {
   approvePayment: (eventId: string, rsvpId: string) => Promise<boolean>;
   rejectPayment: (eventId: string, rsvpId: string) => Promise<boolean>;
   issueCertificates: (eventId: string) => Promise<boolean>;
+  fetchEventAuditLogs: (eventId: string, filters?: { action?: string; actorId?: string; from?: string; to?: string; search?: string }) => Promise<void>;
 }
 
 export const useEventStore = create<EventState>((set, get) => ({
@@ -110,6 +128,7 @@ export const useEventStore = create<EventState>((set, get) => ({
   participantsByEvent: {},
   myRsvpsByEvent: {},
   reviewQueue: [],
+  auditLogsByEvent: {},
   isLoading: false,
   error: null,
   successMessage: null,
@@ -164,13 +183,13 @@ export const useEventStore = create<EventState>((set, get) => ({
   createEventDraft: async (data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post('/events/draft', data);
+      const res = await api.post<Event>('/events/draft', data);
       set({ successMessage: 'Etkinlik taslağı başarıyla oluşturuldu.', isLoading: false });
       await get().fetchManagedEvents();
-      return true;
+      return res.data;
     } catch (err: any) {
       set({ error: err.response?.data?.message || 'Etkinlik oluşturulurken hata oluştu.', isLoading: false });
-      return false;
+      return null;
     }
   },
 
@@ -274,6 +293,8 @@ export const useEventStore = create<EventState>((set, get) => ({
     try {
       await api.post(`/events/${eventId}/checkin/${targetUserId}`);
       set({ successMessage: 'Öğrenci yoklaması alındı.', isLoading: false });
+      await get().fetchParticipants(eventId);
+      await get().fetchManagedEvents();
       return true;
     } catch (err: any) {
       set({ error: err.response?.data?.message || 'Yoklama alma işlemi başarısız.', isLoading: false });
@@ -299,10 +320,35 @@ export const useEventStore = create<EventState>((set, get) => ({
     set({ error: null });
     try {
       const res = await api.get<EventParticipant[]>(`/events/${eventId}/participants`);
+      let participants = res.data;
+      const userIds = [...new Set(participants.map(participant => participant.userId).filter(Boolean))];
+      if (userIds.length > 0) {
+        try {
+          const profileRes = await api.post('/users/batch', { userIds });
+          const profileMap = new Map<string, any>();
+          (profileRes.data || []).forEach((profile: any) => profileMap.set(profile.id, profile));
+          participants = participants.map(participant => {
+            const profile = profileMap.get(participant.userId);
+            return {
+              ...participant,
+              fullName: profile?.fullName || participant.fullName || participant.userId,
+              studentNumber: profile?.studentNumber || participant.studentNumber || participant.userId,
+              email: profile?.email || participant.email || '',
+              department: profile?.department || participant.department || '',
+            };
+          });
+        } catch {
+          participants = participants.map(participant => ({
+            ...participant,
+            fullName: participant.fullName || participant.userId,
+            studentNumber: participant.studentNumber || participant.userId,
+          }));
+        }
+      }
       set(state => ({
         participantsByEvent: {
           ...state.participantsByEvent,
-          [eventId]: res.data,
+          [eventId]: participants,
         },
       }));
     } catch (err: any) {
@@ -352,6 +398,21 @@ export const useEventStore = create<EventState>((set, get) => ({
     } catch (err: any) {
       set({ error: err.response?.data?.message || 'Sertifikalar oluşturulamadı.', isLoading: false });
       return false;
+    }
+  },
+
+  fetchEventAuditLogs: async (eventId, filters = {}) => {
+    set({ error: null });
+    try {
+      const res = await api.get<AuditLog[]>(`/events/${eventId}/audit-logs`, { params: filters });
+      set(state => ({
+        auditLogsByEvent: {
+          ...state.auditLogsByEvent,
+          [eventId]: res.data,
+        },
+      }));
+    } catch (err: any) {
+      set({ error: err.response?.data?.message || 'İşlem geçmişi yüklenirken hata oluştu.' });
     }
   }
 }));

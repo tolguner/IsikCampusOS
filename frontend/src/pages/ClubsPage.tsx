@@ -37,9 +37,6 @@ export const ClubsPage = () => {
     if (club.currentUserStatus === 'ACTIVE') {
       return <span className="px-3 py-1 rounded-full text-xs font-bold text-emerald-200 bg-emerald-500/10 border border-emerald-500/20">Üyesin</span>;
     }
-    if (club.currentUserStatus === 'PENDING') {
-      return <span className="px-3 py-1 rounded-full text-xs font-bold text-cyan-200 bg-cyan-500/10 border border-cyan-500/20">Onay bekliyor</span>;
-    }
     if (club.currentUserStatus === 'REJECTED') {
       return <span className="px-3 py-1 rounded-full text-xs font-bold text-red-200 bg-red-500/10 border border-red-500/20">Reddedildi</span>;
     }
@@ -48,7 +45,6 @@ export const ClubsPage = () => {
 
   const membershipButtonLabel = (club: typeof clubs[number]) => {
     if (club.currentUserStatus === 'ACTIVE') return 'Üyelikten çık';
-    if (club.currentUserStatus === 'PENDING') return 'Onay bekliyor';
     if (club.currentUserStatus === 'REJECTED') return 'Tekrar başvur';
     return 'Üye ol';
   };
@@ -181,7 +177,7 @@ export const ClubsPage = () => {
                 </Link>
                 {isStudent ? (
                   <button
-                    disabled={isLoading || club.currentUserRole === 'ADMIN' || club.currentUserStatus === 'PENDING'}
+                    disabled={isLoading || club.currentUserRole === 'ADMIN'}
                     onClick={() => handleMembershipClick(club.id, club.name, club.currentUserStatus === 'ACTIVE')}
                     className={`px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed ${club.currentUserStatus === 'ACTIVE' ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-100 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-100' : 'gradient-btn'}`}
                   >

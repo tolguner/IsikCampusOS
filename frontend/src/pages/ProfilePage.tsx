@@ -19,12 +19,12 @@ export const ProfilePage = () => {
     successMessage: profileSuccess,
     fetchMyProfile,
     fetchMyChangeRequests,
+    updateMyProfile,
     requestProfileChange,
     clearMessages: clearProfileMessages,
   } = useProfileStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Local state for profile picture (UI only for now)
   const [profilePic, setProfilePic] = useState<string | null>(null);
   
   // Local state for password change
@@ -76,12 +76,29 @@ export const ProfilePage = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // In a real app, upload to server here.
-      // For now, we just create a local object URL to preview it.
-      const imageUrl = URL.createObjectURL(file);
-      setProfilePic(imageUrl);
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      clearProfileMessages();
+      return;
     }
+
+    if (file.size > 1_500_000) {
+      clearProfileMessages();
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const imageUrl = String(reader.result || '');
+      if (!imageUrl) return;
+      setProfilePic(imageUrl);
+      const ok = await updateMyProfile({ profilePictureUrl: imageUrl }, 'Profil fotoğrafın güncellendi.');
+      if (!ok) {
+        setProfilePic(null);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -194,8 +211,8 @@ export const ProfilePage = () => {
             {/* Avatar with Upload */}
             <div className="relative group">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#0c0d1e] shadow-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-4xl font-bold text-white relative">
-                {profilePic ? (
-                  <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
+                {profilePic || profile?.profilePictureUrl ? (
+                  <img src={profilePic || profile?.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <span>{user.firstName?.[0]}{user.lastName?.[0]}</span>
                 )}
@@ -296,7 +313,7 @@ export const ProfilePage = () => {
                 </div>
               </div>
             </div>
-            <form onSubmit={handleProfileChangeRequest} className="mt-5 pt-5 border-t border-white/5 space-y-3">
+            <form onSubmit={handleProfileChangeRequest} className="mt-5 pt-5 border-t border-white/5 space-y-3 overflow-hidden">
               <div>
                 <p className="text-sm font-bold text-white">Bilgi değişikliği bildir</p>
                 <p className="text-xs text-white/40 mt-1">Telefon, ikametgah ve kan grubu değişiklikleri yetkili onayına gönderilir.</p>
@@ -332,14 +349,14 @@ export const ProfilePage = () => {
                 </div>
                 {changeField === 'phoneNumber' && (
                   <div className="space-y-2">
-                    <div className="grid grid-cols-[96px_1fr] gap-2">
+                    <div className="grid grid-cols-[5.75rem_minmax(0,1fr)] gap-2">
                       <select
                         value={phoneCountryCode}
                         onChange={e => {
                           clearProfileMessages();
                           setPhoneCountryCode(e.target.value);
                         }}
-                        className="rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2.5 text-sm font-bold text-white outline-none"
+                        className="w-full min-w-0 rounded-xl bg-white/[0.04] border border-white/10 px-2 py-2.5 text-sm font-bold text-white outline-none"
                         aria-label="Ülke kodu"
                       >
                         {phoneCountryOptions.map(country => (
@@ -355,7 +372,7 @@ export const ProfilePage = () => {
                           setPhoneNumber(e.target.value.replace(/[^\d\s()-]/g, ''));
                         }}
                         required
-                        className="rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/25"
+                        className="w-full min-w-0 rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/25"
                         placeholder={selectedPhoneCountry.placeholder}
                         inputMode="tel"
                         maxLength={(selectedPhoneCountry.maxDigits || selectedPhoneCountry.digits || 12) + 4}

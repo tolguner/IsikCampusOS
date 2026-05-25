@@ -26,6 +26,9 @@ public class Profile {
     private String residenceAddress;
     private String bloodType;
     private String nationalIdMasked;
+
+    @Column(columnDefinition = "TEXT")
+    private String profilePictureUrl;
     
     @Column(length = 1000)
     private String bio;

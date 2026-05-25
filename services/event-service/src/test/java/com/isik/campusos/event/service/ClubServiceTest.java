@@ -2,6 +2,7 @@ package com.isik.campusos.event.service;
 
 import com.isik.campusos.event.dto.ClubMemberRoleUpdateRequest;
 import com.isik.campusos.event.dto.ClubMemberStatusUpdateRequest;
+import com.isik.campusos.event.dto.ClubResponse;
 import com.isik.campusos.event.model.Club;
 import com.isik.campusos.event.model.ClubMember;
 import com.isik.campusos.event.repository.ClubAnnouncementRepository;
@@ -43,6 +44,8 @@ class ClubServiceTest {
     private NotificationService notificationService;
     @Mock
     private AcademicStaffService academicStaffService;
+    @Mock
+    private AuditLogService auditLogService;
 
     private ClubService clubService;
 
@@ -55,7 +58,8 @@ class ClubServiceTest {
                 eventRepository,
                 clubAnnouncementRepository,
                 notificationService,
-                academicStaffService);
+                academicStaffService,
+                auditLogService);
     }
 
     @Test
@@ -129,12 +133,29 @@ class ClubServiceTest {
     }
 
     @Test
-    void toResponseCountsOnlyActiveMembers() {
+    void getClubTreatsLegacyPendingMembershipAsActive() {
+        Club club = activeClub();
+        ClubMember pending = member("member-1", ClubMember.MemberRole.MEMBER, ClubMember.MemberStatus.PENDING);
+
+        when(clubRepository.findByIdAndIsDeletedFalse("club-1")).thenReturn(Optional.of(club));
+        when(clubMemberRepository.findByClubIdAndUserId("club-1", "member-1")).thenReturn(Optional.of(pending));
+        when(clubMemberRepository.countByClubIdAndStatusIn(org.mockito.ArgumentMatchers.eq("club-1"), any())).thenReturn(3L);
+        when(eventRepository.countByClub_Id("club-1")).thenReturn(2L);
+
+        ClubResponse response = clubService.getClub("member-1", "club-1");
+
+        assertThat(response.isCurrentUserMember()).isTrue();
+        assertThat(response.getCurrentUserStatus()).isEqualTo("ACTIVE");
+        assertThat(response.isRequiresApproval()).isFalse();
+    }
+
+    @Test
+    void toResponseCountsActiveLikeMembers() {
         Club club = activeClub();
 
         when(clubRepository.findByIdAndIsDeletedFalse("club-1")).thenReturn(Optional.of(club));
         when(clubMemberRepository.findByClubIdAndUserId("club-1", "member-1")).thenReturn(Optional.empty());
-        when(clubMemberRepository.countByClubIdAndStatus("club-1", ClubMember.MemberStatus.ACTIVE)).thenReturn(3L);
+        when(clubMemberRepository.countByClubIdAndStatusIn(org.mockito.ArgumentMatchers.eq("club-1"), any())).thenReturn(3L);
         when(eventRepository.countByClub_Id("club-1")).thenReturn(2L);
 
         assertThat(clubService.getClub("member-1", "club-1").getMemberCount()).isEqualTo(3L);

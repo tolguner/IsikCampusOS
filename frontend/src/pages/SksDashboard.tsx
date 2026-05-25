@@ -2,12 +2,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Bell,
+  Banknote,
   CalendarDays,
   CheckCircle2,
   ClipboardCheck,
+  Clock,
   ImagePlus,
   Link as LinkIcon,
   GraduationCap,
+  MapPin,
   Megaphone,
   Pencil,
   Plus,
@@ -27,7 +30,7 @@ import { useStudentStore, type Student } from '../store/studentStore';
 import { useAuthStore } from '../store/authStore';
 import { useAcademicStaffStore, type AcademicAdvisor } from '../store/academicStaffStore';
 
-type SksModule = 'clubs' | 'create' | 'profileRequests' | 'events' | 'announcements';
+type SksModule = 'clubs' | 'create' | 'profileRequests' | 'events' | 'announcements' | 'health';
 
 const panelStyle = {
   background: 'rgba(255,255,255,0.045)',
@@ -48,7 +51,6 @@ const initialClubForm = {
   shortDescription: '',
   vision: '',
   logoUrl: '',
-  requiresApproval: false,
   advisorSearch: '',
   advisorAcademicStaffId: '',
   advisorTitle: '',
@@ -85,6 +87,11 @@ const moduleMeta: Record<SksModule, { label: string; description: string; icon: 
     description: 'Öğrencilere ve kulüp başkanlarına toplu iletişim',
     icon: Megaphone,
   },
+  health: {
+    label: 'Sağlık',
+    description: 'Kulüp aktivite, risk ve takip görünümü',
+    icon: Bell,
+  },
 };
 
 export const SksDashboard = () => {
@@ -103,6 +110,13 @@ export const SksDashboard = () => {
     requestProfileChangeRevision,
     rejectProfileChangeRequest,
     deleteClub,
+    clubHealth,
+    clubAuditLogsByClub,
+    fetchClubHealth,
+    addClubHealthNote,
+    watchlistClub,
+    requestClubHealthAction,
+    fetchClubAuditLogs,
   } = useClubStore();
   const {
     reviewQueue,
@@ -145,7 +159,6 @@ export const SksDashboard = () => {
     vision: '',
     description: '',
     logoUrl: '',
-    requiresApproval: false,
     advisorAcademicStaffId: '',
     advisorTitle: '',
     advisorFullName: '',
@@ -167,15 +180,18 @@ export const SksDashboard = () => {
     targetAudience: 'ALL_STUDENTS' as 'ALL_STUDENTS' | 'CLUB_PRESIDENTS',
   });
   const [revisionTextByProfileRequest, setRevisionTextByProfileRequest] = useState<Record<string, string>>({});
+  const [healthMessageByClub, setHealthMessageByClub] = useState<Record<string, string>>({});
+  const [healthLogSearchByClub, setHealthLogSearchByClub] = useState<Record<string, string>>({});
   const announcementSenderName = currentUser?.fullName || currentUser?.email || 'SKS Yönetimi';
 
   useEffect(() => {
     fetchAdminClubs();
     fetchProfileChangeRequests();
     fetchReviewQueue();
+    fetchClubHealth();
     fetchStudents(0, 8, '', 'ACTIVE');
     searchAdvisors('');
-  }, [fetchAdminClubs, fetchProfileChangeRequests, fetchReviewQueue, fetchStudents, searchAdvisors]);
+  }, [fetchAdminClubs, fetchProfileChangeRequests, fetchReviewQueue, fetchClubHealth, fetchStudents, searchAdvisors]);
 
   useEffect(() => {
     if (activeModule !== 'create') return;
@@ -354,7 +370,6 @@ export const SksDashboard = () => {
       shortDescription: club.shortDescription || '',
       vision: club.vision || club.description || '',
       description: club.vision || club.description || '',
-        requiresApproval: club.requiresApproval || false,
       logoUrl: club.logoUrl || '',
       advisorAcademicStaffId: club.advisorAcademicStaffId || '',
       advisorTitle: club.advisorTitle || '',
@@ -387,7 +402,6 @@ export const SksDashboard = () => {
       name: clubEditForm.name,
       shortDescription: clubEditForm.shortDescription,
       vision: clubEditForm.vision,
-        requiresApproval: clubEditForm.requiresApproval,
       description: clubEditForm.description,
       logoUrl: clubEditForm.logoUrl,
       advisorAcademicStaffId: clubEditForm.advisorAcademicStaffId,
@@ -414,7 +428,6 @@ export const SksDashboard = () => {
       shortDescription: clubForm.shortDescription,
       vision: clubForm.vision,
       description: clubForm.vision,
-      requiresApproval: clubForm.requiresApproval,
       logoUrl: clubForm.logoUrl,
       advisorAcademicStaffId: clubForm.advisorAcademicStaffId,
       advisorTitle: clubForm.advisorTitle,
@@ -520,6 +533,22 @@ export const SksDashboard = () => {
     if (ok) setRevisionTextByEvent(prev => ({ ...prev, [event.id]: '' }));
   };
 
+  const formatEventDate = (value?: string) =>
+    value
+      ? new Intl.DateTimeFormat('tr-TR', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(new Date(value))
+      : 'Belirtilmedi';
+
+  const eventLocationLabel = (event: Event) =>
+    event.eventMode === 'ONLINE'
+      ? event.onlinePlatform || 'Online etkinlik'
+      : event.locationName || event.location || 'Konum belirtilmedi';
+
   const handleProfileChangeRevision = async (requestId: string) => {
     const feedback = revisionTextByProfileRequest[requestId]?.trim();
     if (!feedback) return;
@@ -609,6 +638,19 @@ export const SksDashboard = () => {
         <span className="rounded-full px-3 py-1 text-xs font-bold text-purple-200 bg-purple-500/10 border border-purple-400/20">
           {profileChangeRequests.length} talep
         </span>
+      );
+    }
+
+    if (activeModule === 'health') {
+      return (
+        <button
+          type="button"
+          onClick={fetchClubHealth}
+          className="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-white/70 bg-white/[0.06] hover:bg-white/[0.1] border border-white/10"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Yenile
+        </button>
       );
     }
 
@@ -731,21 +773,6 @@ export const SksDashboard = () => {
                           className={`${inputClass} resize-none`}
                         />
                                                   <p className="-mt-2 text-xs text-white/35">{fieldLimitText(clubEditForm.vision, VISION_MIN_LENGTH, VISION_MAX_LENGTH)}</p>
-                          <label className="flex items-center gap-3 cursor-pointer p-4 rounded-2xl bg-white/[0.025] hover:bg-white/[0.035] transition-colors border border-white/5">
-                            <div className="relative flex items-center">
-                              <input
-                                type="checkbox"
-                                checked={clubEditForm.requiresApproval}
-                                onChange={e => setClubEditForm(prev => ({ ...prev, requiresApproval: e.target.checked }))}
-                                className="w-5 h-5 appearance-none border-2 border-white/20 rounded-lg checked:bg-indigo-500 checked:border-indigo-500 transition-all peer cursor-pointer"
-                              />
-                              <CheckCircle2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" strokeWidth={3} />
-                            </div>
-                            <div>
-                              <div className="text-sm font-bold text-white">Kapalı Kulüp Yapısı</div>
-                              <div className="text-xs text-white/50">Üyeler başkan veya SKS onayından geçer.</div>
-                            </div>
-                          </label>
                       </section>
 
                       <aside className="space-y-4">
@@ -967,24 +994,6 @@ export const SksDashboard = () => {
             />
                           <p className="mt-2 text-xs text-white/35">{fieldLimitText(clubForm.vision, VISION_MIN_LENGTH, VISION_MAX_LENGTH)}</p>
             </div>
-            
-            <div className="lg:col-span-3 mb-2">
-              <label className="flex items-center gap-3 cursor-pointer p-5 rounded-2xl bg-[#111123] border border-white/10 hover:bg-white/[0.02] transition-colors">
-                <div className="relative flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={clubForm.requiresApproval}
-                    onChange={e => setClubForm(prev => ({ ...prev, requiresApproval: e.target.checked }))}
-                    className="w-5 h-5 appearance-none border-2 border-white/20 rounded-lg checked:bg-indigo-500 checked:border-indigo-500 transition-all peer cursor-pointer"
-                  />
-                  <CheckCircle2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" strokeWidth={3} />
-                </div>
-                <div>
-                  <div className="text-sm font-bold text-white">Kapalı Kulüp Yapısı (Onaylı Üyelik)</div>
-                  <div className="text-xs text-white/50 mt-1">Bu seçenek işaretlendiğinde kulüp üyeliği otomatik onaylanmaz. Katılım talepleri başkan veya SKS onayından geçmelidir.</div>
-                </div>
-              </label>
-            </div>
         </div>
 
         <div className="rounded-3xl border border-white/10 bg-white/[0.025] p-5 space-y-4">
@@ -1191,38 +1200,101 @@ export const SksDashboard = () => {
     <section className="space-y-5">
       <div className="space-y-4">
         {reviewQueue.map(event => (
-          <motion.div key={event.id} layout className="rounded-2xl p-4 bg-white/[0.035] border border-white/5">
+          <motion.div key={event.id} layout className="rounded-3xl p-5 bg-white/[0.035] border border-white/5">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1 space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-lg font-bold text-white">{event.title}</h3>
-                  <span className="rounded-full px-2.5 py-1 text-xs font-bold text-amber-200 bg-amber-500/10">{event.status}</span>
+                  <h3 className="text-xl font-black text-white">{event.title}</h3>
+                  <span className="rounded-full px-3 py-1 text-xs font-black text-purple-100 bg-purple-500/15 border border-purple-300/20">
+                    {event.club?.name || 'Kulüp bilgisi yok'}
+                  </span>
+                  <span className="rounded-full px-3 py-1 text-xs font-black text-cyan-100 bg-cyan-500/10 border border-cyan-300/15">
+                    {event.eventMode === 'ONLINE' ? 'Online' : 'Yüz yüze'}
+                  </span>
                 </div>
-                <p className="text-sm text-white/45 mt-2 line-clamp-2">{event.description}</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-4 text-xs text-white/45">
-                  <span>{event.club?.name}</span>
-                  <span>{event.eventMode === 'ONLINE' ? event.onlinePlatform || 'Online' : event.locationName || event.location || 'Konum belirtilmedi'}</span>
-                  <span>{event.startTime ? new Date(event.startTime).toLocaleString('tr-TR') : 'Tarih yok'}</span>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                  <div className="text-xs font-black uppercase tracking-wide text-white/35 mb-2">Etkinlik açıklaması</div>
+                  <p className="text-sm text-white/60 leading-relaxed whitespace-pre-line">{event.description || 'Açıklama belirtilmedi.'}</p>
                 </div>
-                {event.posterImageUrl && (
-                  <img src={event.posterImageUrl} alt={event.title} className="mt-4 w-full max-w-xs aspect-[297/420] object-cover rounded-2xl border border-white/10 bg-white/[0.025]" />
-                )}
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <span className="rounded-full px-2 py-1 text-xs bg-cyan-500/10 text-cyan-200">{event.eventMode === 'ONLINE' ? 'Online' : 'Yüz yüze'}</span>
-                  {event.qrCheckInEnabled && <span className="rounded-full px-2 py-1 text-xs bg-cyan-500/10 text-cyan-200">QR yoklama</span>}
-                  {event.certificateEnabled && <span className="rounded-full px-2 py-1 text-xs bg-purple-500/10 text-purple-200">Sertifikalı</span>}
-                  {event.hasCapacityLimit && <span className="rounded-full px-2 py-1 text-xs bg-white/10 text-white/60">Kapasite {event.capacity}</span>}
-                  {event.paid && <span className="rounded-full px-2 py-1 text-xs bg-amber-500/10 text-amber-200">Ücretli {event.feeAmount || 0} TL</span>}
+
+                <div className="grid grid-cols-1 xl:grid-cols-[12rem_1fr] gap-4">
+                  {event.posterImageUrl ? (
+                    <img src={event.posterImageUrl} alt={event.title} className="w-full max-w-xs xl:max-w-none aspect-[297/420] object-cover rounded-2xl border border-white/10 bg-white/[0.025]" />
+                  ) : (
+                    <div className="w-full max-w-xs xl:max-w-none aspect-[297/420] rounded-2xl border border-white/10 bg-white/[0.025] flex items-center justify-center text-xs font-bold text-white/30">
+                      Afiş yok
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-white/35 mb-3">
+                        <Clock className="w-4 h-4 text-indigo-200" />
+                        Zaman
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between gap-3"><span className="text-white/40">Başlangıç</span><strong className="text-white text-right">{formatEventDate(event.startTime)}</strong></div>
+                        <div className="flex justify-between gap-3"><span className="text-white/40">Bitiş</span><strong className="text-white text-right">{formatEventDate(event.endTime)}</strong></div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-white/35 mb-3">
+                        <MapPin className="w-4 h-4 text-emerald-200" />
+                        Konum
+                      </div>
+                      <div className="space-y-2 text-sm text-white/60">
+                        <p className="font-bold text-white">{eventLocationLabel(event)}</p>
+                        {event.eventMode === 'ONLINE' && event.onlineMeetingUrl && (
+                          <a href={event.onlineMeetingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-100 hover:text-cyan-50 break-all">
+                            <LinkIcon className="w-3.5 h-3.5 shrink-0" />
+                            {event.onlineMeetingUrl}
+                          </a>
+                        )}
+                        {event.eventMode === 'IN_PERSON' && (
+                          <>
+                            <p>{event.locationDetail || 'Konum detayı belirtilmedi.'}</p>
+                            {event.latitude && event.longitude && <p className="text-xs text-white/35">{event.latitude}, {event.longitude}</p>}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-white/35 mb-3">
+                        <Users className="w-4 h-4 text-cyan-200" />
+                        Katılım
+                      </div>
+                      <div className="space-y-2 text-sm text-white/60">
+                        <div className="flex justify-between gap-3"><span>Kontenjan</span><strong className="text-white">{event.hasCapacityLimit || event.capacityLimited ? `${event.capacity} kişi` : 'Sınırsız'}</strong></div>
+                        <div className="flex justify-between gap-3"><span>QR yoklama</span><strong className="text-white">{event.qrCheckInEnabled ? 'Açık' : 'Kapalı'}</strong></div>
+                        <div className="flex justify-between gap-3"><span>Sertifika</span><strong className="text-white">{event.certificateEnabled ? event.certificateTitle || 'Açık' : 'Kapalı'}</strong></div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-white/35 mb-3">
+                        <Banknote className="w-4 h-4 text-amber-200" />
+                        Ücret ve ödeme
+                      </div>
+                      {event.paid ? (
+                        <div className="space-y-2 text-sm text-amber-50/80">
+                          <div className="font-black">{event.feeAmount || 0} TL</div>
+                          <p className="break-all">IBAN: {event.iban || 'Belirtilmedi'}</p>
+                          <p>{event.paymentInstructions || 'Ödeme açıklaması yok.'}</p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-white/55">Ücretsiz etkinlik.</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                {event.eventMode === 'ONLINE' && event.onlineMeetingUrl && (
-                  <p className="mt-3 text-xs text-cyan-100 break-all">Toplantı linki: {event.onlineMeetingUrl}</p>
-                )}
-                {event.eventMode === 'IN_PERSON' && event.locationDetail && (
-                  <p className="mt-3 text-xs text-white/45">Konum detayı: {event.locationDetail}</p>
-                )}
-                {event.paid && (
-                  <p className="mt-3 text-xs text-amber-100/75 break-all">IBAN: {event.iban || 'Belirtilmedi'} · {event.paymentInstructions || 'Ödeme açıklaması yok'}</p>
-                )}
+
+                <div className="flex flex-wrap gap-2">
+                  {event.reminderEnabled && <span className="rounded-full px-3 py-1 text-xs font-bold bg-cyan-500/10 text-cyan-200">Hatırlatma: {event.reminderOffsetsMinutes || 'Planlandı'}</span>}
+                  {event.rejectionReason && <span className="rounded-full px-3 py-1 text-xs font-bold bg-amber-500/10 text-amber-200">Önceki SKS notu var</span>}
+                </div>
                 {event.rejectionReason && <p className="mt-3 text-sm text-amber-200">Son geri bildirim: {event.rejectionReason}</p>}
               </div>
 
@@ -1425,6 +1497,111 @@ export const SksDashboard = () => {
     </form>
   );
 
+  const renderHealthModule = () => (
+    <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      {clubHealth.map(item => {
+        const message = healthMessageByClub[item.clubId] || '';
+        const logSearch = healthLogSearchByClub[item.clubId] || '';
+        const logs = clubAuditLogsByClub[item.clubId] || [];
+        const statusClass =
+          item.healthStatus === 'Sağlıklı'
+            ? 'text-emerald-100 bg-emerald-500/15 border-emerald-300/20'
+            : item.healthStatus === 'Takip Edilmeli'
+              ? 'text-cyan-100 bg-cyan-500/15 border-cyan-300/20'
+              : item.healthStatus === 'Riskli'
+                ? 'text-amber-100 bg-amber-500/15 border-amber-300/20'
+                : 'text-red-100 bg-red-500/15 border-red-300/20';
+        return (
+          <article key={item.clubId} className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-black text-white">{item.clubName}</h3>
+                <p className="mt-1 text-xs text-white/40">{item.active ? 'Aktif kulüp' : 'Pasif kulüp'} · {item.memberCount} üye</p>
+              </div>
+              <span className={`rounded-full border px-3 py-1 text-xs font-black ${statusClass}`}>
+                {item.healthStatus}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                <div className="text-xl font-black text-white">{item.upcomingEventCount}</div>
+                <div className="text-[11px] text-white/35">Yaklaşan</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                <div className="text-xl font-black text-white">{item.pendingEventCount}</div>
+                <div className="text-[11px] text-white/35">Bekleyen etkinlik</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                <div className="text-xl font-black text-white">{item.pendingProfileRequestCount}</div>
+                <div className="text-[11px] text-white/35">Profil talebi</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                <div className="text-sm font-black text-white">{item.lastEventAt ? new Date(item.lastEventAt).toLocaleDateString('tr-TR') : '-'}</div>
+                <div className="text-[11px] text-white/35">Son etkinlik</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                <div className="text-sm font-black text-white">{item.lastAnnouncementAt ? new Date(item.lastAnnouncementAt).toLocaleDateString('tr-TR') : '-'}</div>
+                <div className="text-[11px] text-white/35">Son duyuru</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                <div className="text-sm font-black text-white">{item.attendanceAverage.toFixed(1)}</div>
+                <div className="text-[11px] text-white/35">Ort. katılım</div>
+              </div>
+            </div>
+
+            {item.latestNote && (
+              <p className="rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm text-white/55">
+                {item.latestNote}
+              </p>
+            )}
+
+            <textarea
+              value={message}
+              onChange={e => setHealthMessageByClub(prev => ({ ...prev, [item.clubId]: e.target.value }))}
+              placeholder="Gözlem notu veya kulüp yöneticisine gönderilecek aksiyon mesajı"
+              className={`${inputClass} min-h-24 resize-none`}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <button type="button" onClick={() => addClubHealthNote(item.clubId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-indigo-100 bg-indigo-500/15 hover:bg-indigo-500/25">Not Ekle</button>
+              <button type="button" onClick={() => watchlistClub(item.clubId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-amber-100 bg-amber-500/15 hover:bg-amber-500/25">Takibe Al</button>
+              <button type="button" onClick={() => requestClubHealthAction(item.clubId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-cyan-100 bg-cyan-500/15 hover:bg-cyan-500/25">Aksiyon İste</button>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3 space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <input
+                  value={logSearch}
+                  onChange={e => setHealthLogSearchByClub(prev => ({ ...prev, [item.clubId]: e.target.value }))}
+                  placeholder="Kulüp loglarında ara"
+                  className={`${inputClass} py-2.5`}
+                />
+                <button type="button" onClick={() => fetchClubAuditLogs(item.clubId, { search: logSearch })} className="rounded-2xl px-4 py-2.5 text-xs font-black text-white/70 bg-white/[0.06] hover:bg-white/[0.1]">
+                  Logları Aç
+                </button>
+              </div>
+              {logs.slice(0, 4).map(log => (
+                <div key={log.id} className="rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[11px] font-black text-purple-100">{log.action}</span>
+                    <span className="text-[11px] text-white/30">{new Date(log.createdAt).toLocaleString('tr-TR')}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-white/50">{log.message}</p>
+                </div>
+              ))}
+              {logs.length === 0 && <p className="text-xs text-white/35">Kulüp loglarını görmek için Logları Aç.</p>}
+            </div>
+          </article>
+        );
+      })}
+      {clubHealth.length === 0 && (
+        <p className="xl:col-span-2 rounded-3xl border border-white/10 bg-white/[0.025] p-8 text-center text-sm text-white/40">
+          Sağlık verisi bulunamadı.
+        </p>
+      )}
+    </section>
+  );
+
   const renderActiveModule = () => {
     switch (activeModule) {
       case 'create':
@@ -1435,6 +1612,8 @@ export const SksDashboard = () => {
         return renderProfileRequestsModule();
       case 'announcements':
         return renderAnnouncementsModule();
+      case 'health':
+        return renderHealthModule();
       case 'clubs':
       default:
         return renderClubsModule();
@@ -1468,24 +1647,24 @@ export const SksDashboard = () => {
         </div>
       )}
 
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <section className="grid grid-cols-[repeat(5,minmax(11rem,1fr))] gap-3 overflow-x-auto pb-1">
         {metricCards.map(card => {
           const Icon = card.icon;
           return (
-            <div key={card.label} className="rounded-3xl p-5 flex items-center justify-between gap-4" style={panelStyle}>
+            <div key={card.label} className="rounded-3xl p-4 min-w-44 flex items-center justify-between gap-3" style={panelStyle}>
               <div>
-                <div className="text-3xl font-black text-white">{card.value}</div>
-                <div className="text-sm text-white/40 mt-1">{card.label}</div>
+                <div className="text-2xl font-black text-white">{card.value}</div>
+                <div className="text-xs font-semibold text-white/40 mt-1">{card.label}</div>
               </div>
-              <div className={`w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/10 flex items-center justify-center ${card.accent}`}>
-                <Icon className="w-6 h-6" />
+              <div className={`w-10 h-10 rounded-2xl bg-white/[0.06] border border-white/10 flex items-center justify-center shrink-0 ${card.accent}`}>
+                <Icon className="w-5 h-5" />
               </div>
             </div>
           );
         })}
       </section>
 
-      <nav className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+      <nav className="grid grid-cols-[repeat(5,minmax(13rem,1fr))] gap-3 overflow-x-auto pb-1">
         {(Object.keys(moduleMeta) as SksModule[]).map(moduleKey => {
           const meta = moduleMeta[moduleKey];
           const Icon = meta.icon;
@@ -1495,15 +1674,15 @@ export const SksDashboard = () => {
               key={moduleKey}
               type="button"
               onClick={() => setActiveModule(moduleKey)}
-              className={`rounded-3xl p-4 text-left border transition-colors ${selected ? 'bg-purple-500/15 border-purple-400/35' : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06]'}`}
+              className={`h-20 rounded-3xl p-4 min-w-52 text-left border transition-colors overflow-hidden ${selected ? 'bg-purple-500/15 border-purple-400/35' : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06]'}`}
             >
               <div className="flex items-start gap-3">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border ${selected ? 'bg-purple-500/20 border-purple-300/30 text-purple-100' : 'bg-white/[0.04] border-white/10 text-white/55'}`}>
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border shrink-0 ${selected ? 'bg-purple-500/20 border-purple-300/30 text-purple-100' : 'bg-white/[0.04] border-white/10 text-white/55'}`}>
                   <Icon className="w-5 h-5" />
                 </div>
-                <div>
-                  <div className="text-sm font-black text-white">{meta.label}</div>
-                  <div className="text-xs text-white/40 mt-1 leading-relaxed">{meta.description}</div>
+                <div className="min-w-0">
+                  <div className="text-sm font-black text-white truncate">{meta.label}</div>
+                  <div className="text-xs text-white/40 mt-1 leading-snug line-clamp-2">{meta.description}</div>
                 </div>
               </div>
             </button>

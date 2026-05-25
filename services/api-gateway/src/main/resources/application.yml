@@ -84,6 +84,13 @@ spring:
           filters:
             - AuthenticationFilter
 
+        - id: event-admin-service
+          uri: lb://event-service
+          predicates:
+            - Path=/api/v1/admin/**
+          filters:
+            - AuthenticationFilter
+
         - id: academic-staff-service
           uri: lb://event-service
           predicates:

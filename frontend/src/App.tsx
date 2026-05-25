@@ -13,6 +13,7 @@ import { ClubDetailPage } from './pages/ClubDetailPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { ClubPresidentDashboard } from './pages/ClubPresidentDashboard';
+import { ClubEventManagementPage } from './pages/ClubEventManagementPage';
 import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
 import { useAuthStore } from './store/authStore';
 import { useClubStore } from './store/clubStore';
@@ -152,6 +153,14 @@ function App() {
           <ProtectedRoute>
             <AppLayout>
               <ClubManagementRoute />
+            </AppLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/club-management/events/:eventId" element={
+          <ProtectedRoute>
+            <AppLayout>
+              <ClubEventManagementPage />
             </AppLayout>
           </ProtectedRoute>
         } />

@@ -15,4 +15,7 @@ public class CertificateIssueRequestedEvent {
     private String certificateTitle;
     private String certificateCode;
     private String issuedAt;
+    private String eventDate;
+    private String eventLocation;
+    private String clubPresidentName;
 }

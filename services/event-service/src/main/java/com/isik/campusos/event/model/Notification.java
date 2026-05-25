@@ -49,7 +49,7 @@ public class Notification {
     }
 
     public enum NotificationType {
-        ANNOUNCEMENT, EVENT_REVISION_REQUEST, CERTIFICATE
+        ANNOUNCEMENT, EVENT_REVISION_REQUEST, EVENT_APPROVAL_REQUEST, PROFILE_APPROVAL_REQUEST, CERTIFICATE
     }
 
     public enum TargetAudience {

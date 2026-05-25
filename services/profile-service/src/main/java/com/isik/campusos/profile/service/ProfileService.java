@@ -37,6 +37,7 @@ public class ProfileService {
         if (updateDto.getFirstName() != null) profile.setFirstName(updateDto.getFirstName());
         if (updateDto.getLastName() != null) profile.setLastName(updateDto.getLastName());
         if (updateDto.getDepartment() != null) profile.setDepartment(updateDto.getDepartment());
+        if (updateDto.getProfilePictureUrl() != null) profile.setProfilePictureUrl(updateDto.getProfilePictureUrl());
         if (updateDto.getBio() != null) profile.setBio(updateDto.getBio());
         if (updateDto.getSkills() != null) profile.setSkills(updateDto.getSkills());
         

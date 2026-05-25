@@ -34,7 +34,7 @@ export const NotificationsPage = () => {
       const matchesFilter =
         filter === 'all' ||
         (filter === 'announcements' && notification.type === 'ANNOUNCEMENT') ||
-        (filter === 'events' && notification.type === 'EVENT_REVISION_REQUEST');
+        (filter === 'events' && ['EVENT_REVISION_REQUEST', 'EVENT_APPROVAL_REQUEST', 'PROFILE_APPROVAL_REQUEST', 'CERTIFICATE'].includes(notification.type));
 
       const matchesSearch = !normalized ||
         notification.title.toLocaleLowerCase('tr-TR').includes(normalized) ||
@@ -111,7 +111,7 @@ export const NotificationsPage = () => {
               <div className="flex-1 min-w-0 space-y-4">
                 <div className="flex flex-wrap gap-2">
                   <span className="rounded-full px-3 py-1 text-xs font-bold text-purple-100 bg-purple-500/15 border border-purple-400/20">
-                    {notification.type === 'ANNOUNCEMENT' ? 'Duyuru' : 'Etkinlik'}
+                    {notification.type === 'ANNOUNCEMENT' ? 'Duyuru' : notification.type === 'CERTIFICATE' ? 'Sertifika' : notification.type === 'PROFILE_APPROVAL_REQUEST' ? 'Profil Talebi' : 'Etkinlik'}
                   </span>
                   <span className="rounded-full px-3 py-1 text-xs font-bold text-cyan-100 bg-cyan-500/10 border border-cyan-400/20">
                     {targetAudienceLabel(notification.targetAudience)}
