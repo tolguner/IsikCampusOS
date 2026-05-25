@@ -77,9 +77,7 @@ export const ClubDetailPage = () => {
   const membershipButtonLabel =
     selectedClub.currentUserStatus === 'ACTIVE'
       ? 'Üyelikten çık'
-      : selectedClub.currentUserStatus === 'PENDING'
-        ? 'Onay bekliyor'
-        : selectedClub.currentUserStatus === 'REJECTED'
+      : selectedClub.currentUserStatus === 'REJECTED'
           ? 'Tekrar başvur'
           : 'Üye ol';
   const initials = selectedClub.name
@@ -91,9 +89,6 @@ export const ClubDetailPage = () => {
     .toLocaleUpperCase('tr-TR');
 
   const handleMembershipClick = async () => {
-    if (selectedClub.currentUserStatus === 'PENDING') {
-      return;
-    }
     if (selectedClub.currentUserStatus !== 'ACTIVE') {
       await joinClub(selectedClub.id);
       return;
@@ -196,7 +191,7 @@ export const ClubDetailPage = () => {
               </div>
               {isStudent ? (
                 <button
-                  disabled={isLoading || selectedClub.currentUserRole === 'ADMIN' || selectedClub.currentUserStatus === 'PENDING'}
+                  disabled={isLoading || selectedClub.currentUserRole === 'ADMIN'}
                   onClick={handleMembershipClick}
                   className={`w-full py-3 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed ${selectedClub.currentUserStatus === 'ACTIVE' ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-100 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-100' : 'gradient-btn'}`}
                 >
@@ -341,7 +336,7 @@ export const ClubDetailPage = () => {
                     {event.eventMode === 'ONLINE' && event.onlineMeetingUrl && (
                       <a href={event.onlineMeetingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-cyan-100 bg-cyan-500/10 border border-cyan-400/20 hover:bg-cyan-500/15">
                         <LinkIcon className="w-3.5 h-3.5" />
-                        Toplantı linki
+                        Online etkinliğe git
                       </a>
                     )}
 

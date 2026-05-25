@@ -52,13 +52,29 @@ public class NotificationService {
     }
 
     public NotificationResponse notifyUser(String userId, String title, String message, String relatedEventId) {
+        return notifyUserWithType(
+                userId,
+                title,
+                message,
+                relatedEventId,
+                Notification.NotificationType.EVENT_REVISION_REQUEST
+        );
+    }
+
+    public NotificationResponse notifyUserWithType(String userId,
+                                                   String title,
+                                                   String message,
+                                                   String relatedEventId,
+                                                   Notification.NotificationType type) {
         Notification notification = Notification.builder()
                 .title(title)
                 .message(message)
-                .type(Notification.NotificationType.EVENT_REVISION_REQUEST)
+                .type(type)
                 .targetAudience(Notification.TargetAudience.USER)
                 .recipientUserId(userId)
                 .relatedEventId(relatedEventId)
+                .linkUrl(resolveUserNotificationLink(type, relatedEventId))
+                .linkLabel(resolveUserNotificationLinkLabel(type))
                 .build();
         return toResponse(notificationRepository.save(notification), false);
     }
@@ -94,6 +110,42 @@ public class NotificationService {
                 .createdBy(createdBy)
                 .createdByName(createdByName)
                 .relatedEventId(relatedEventId)
+                .build();
+        return toResponse(notificationRepository.save(notification), false);
+    }
+
+    public NotificationResponse notifySksEventApprovalRequest(String title,
+                                                              String message,
+                                                              String createdBy,
+                                                              String createdByName,
+                                                              String relatedEventId) {
+        Notification notification = Notification.builder()
+                .title(title)
+                .message(message)
+                .type(Notification.NotificationType.EVENT_APPROVAL_REQUEST)
+                .targetAudience(Notification.TargetAudience.SKS_ADMINS)
+                .createdBy(createdBy)
+                .createdByName(createdByName)
+                .relatedEventId(relatedEventId)
+                .linkUrl("/")
+                .linkLabel("Etkinlik taleplerini aç")
+                .build();
+        return toResponse(notificationRepository.save(notification), false);
+    }
+
+    public NotificationResponse notifySksProfileApprovalRequest(String title,
+                                                                String message,
+                                                                String createdBy,
+                                                                String createdByName) {
+        Notification notification = Notification.builder()
+                .title(title)
+                .message(message)
+                .type(Notification.NotificationType.PROFILE_APPROVAL_REQUEST)
+                .targetAudience(Notification.TargetAudience.SKS_ADMINS)
+                .createdBy(createdBy)
+                .createdByName(createdByName)
+                .linkUrl("/")
+                .linkLabel("Profil taleplerini aç")
                 .build();
         return toResponse(notificationRepository.save(notification), false);
     }
@@ -201,5 +253,30 @@ public class NotificationService {
 
     private String normalizeOptional(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private String resolveUserNotificationLink(Notification.NotificationType type, String relatedEventId) {
+        if (relatedEventId == null || relatedEventId.isBlank()) {
+            return null;
+        }
+        if (type == Notification.NotificationType.EVENT_APPROVAL_REQUEST
+                || type == Notification.NotificationType.EVENT_REVISION_REQUEST) {
+            return "/club-management/events/" + relatedEventId;
+        }
+        if (type == Notification.NotificationType.PROFILE_APPROVAL_REQUEST) {
+            return "/club-management";
+        }
+        return null;
+    }
+
+    private String resolveUserNotificationLinkLabel(Notification.NotificationType type) {
+        if (type == Notification.NotificationType.EVENT_APPROVAL_REQUEST
+                || type == Notification.NotificationType.EVENT_REVISION_REQUEST) {
+            return "Etkinliği aç";
+        }
+        if (type == Notification.NotificationType.PROFILE_APPROVAL_REQUEST) {
+            return "Kulüp yönetimini aç";
+        }
+        return null;
     }
 }

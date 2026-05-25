@@ -2,6 +2,7 @@ package com.isik.campusos.event.service;
 
 import com.isik.campusos.event.dto.CertificateIssueResponse;
 import com.isik.campusos.event.dto.EventParticipantResponse;
+import com.isik.campusos.event.model.AuditLog;
 import com.isik.campusos.event.model.Event;
 import com.isik.campusos.event.model.Rsvp;
 import com.isik.campusos.event.repository.EventRepository;
@@ -27,6 +28,7 @@ public class EventRsvpService {
     private final RsvpRepository rsvpRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final NotificationService notificationService;
+    private final AuditLogService auditLogService;
 
     @Transactional
     public Rsvp createRsvp(String userId, String eventId) {
@@ -96,7 +98,7 @@ public class EventRsvpService {
     @Transactional
     public Rsvp checkInUser(String adminId, String roles, String eventId, String targetUserId) {
         Event event = getEventForClubManagement(adminId, eventId);
-        ensureEventIsNotPast(event, "Past events cannot accept check-ins");
+        ensureEventAcceptsCheckIns(event);
 
         Rsvp rsvp = rsvpRepository.findByEventIdAndUserId(eventId, targetUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "RSVP not found"));
@@ -106,7 +108,10 @@ public class EventRsvpService {
         }
 
         markAttended(rsvp, adminId);
-        return rsvpRepository.save(rsvp);
+        Rsvp saved = rsvpRepository.save(rsvp);
+        auditLogService.record(AuditLog.EntityType.EVENT, eventId, "MANUAL_CHECK_IN", adminId, roles,
+                targetUserId + " öğrencisinin yoklaması manuel alındı.");
+        return saved;
     }
 
     @Transactional
@@ -129,7 +134,10 @@ public class EventRsvpService {
         rsvp.setPaymentReviewedAt(LocalDateTime.now());
         rsvp.setPaymentReviewedBy(adminId);
         rsvp.setPaymentRejectionReason(null);
-        return rsvpRepository.save(rsvp);
+        Rsvp saved = rsvpRepository.save(rsvp);
+        auditLogService.record(AuditLog.EntityType.EVENT, eventId, "PAYMENT_APPROVED", adminId, roles,
+                rsvp.getUserId() + " öğrencisinin ödemesi onaylandı.");
+        return saved;
     }
 
     @Transactional
@@ -150,7 +158,10 @@ public class EventRsvpService {
         rsvp.setPaymentRejectionReason("Ödeme onaylanmadı");
         event.setCurrentRsvpCount(Math.max(0, event.getCurrentRsvpCount() - 1));
         eventRepository.save(event);
-        return rsvpRepository.save(rsvp);
+        Rsvp saved = rsvpRepository.save(rsvp);
+        auditLogService.record(AuditLog.EntityType.EVENT, eventId, "PAYMENT_REJECTED", adminId, roles,
+                rsvp.getUserId() + " öğrencisinin ödemesi reddedildi.");
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -169,7 +180,7 @@ public class EventRsvpService {
     @Transactional
     public Rsvp checkInWithQrToken(String adminId, String roles, String eventId, String token) {
         Event event = getEventForClubManagement(adminId, eventId);
-        ensureEventIsNotPast(event, "Past events cannot accept check-ins");
+        ensureEventAcceptsCheckIns(event);
 
         if (!event.isQrCheckInEnabled()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "QR check-in is not enabled for this event");
@@ -186,7 +197,10 @@ public class EventRsvpService {
         }
 
         markAttended(rsvp, adminId);
-        return rsvpRepository.save(rsvp);
+        Rsvp saved = rsvpRepository.save(rsvp);
+        auditLogService.record(AuditLog.EntityType.EVENT, eventId, "QR_CHECK_IN", adminId, roles,
+                rsvp.getUserId() + " öğrencisinin QR yoklaması alındı.");
+        return saved;
     }
 
     @Transactional
@@ -223,6 +237,8 @@ public class EventRsvpService {
             rsvpRepository.saveAll(eligible);
             event.setCertificatesIssuedAt(now);
             eventRepository.save(event);
+            auditLogService.record(AuditLog.EntityType.EVENT, eventId, "CERTIFICATES_ISSUED", adminId, roles,
+                    issued + " katılımcı için sertifika gönderimi başlatıldı.");
         }
 
         return new CertificateIssueResponse(eventId, eligible.size(), issued);
@@ -259,6 +275,19 @@ public class EventRsvpService {
         rsvp.setCheckedInAt(LocalDateTime.now());
     }
 
+    private void ensureEventAcceptsCheckIns(Event event) {
+        LocalDateTime startsAt = event.getStartTime();
+        LocalDateTime endsAt = event.getEndTime() != null ? event.getEndTime() : event.getStartTime();
+        LocalDateTime now = LocalDateTime.now();
+
+        if (startsAt != null && now.isBefore(startsAt.minusHours(1))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Check-ins open one hour before the event starts");
+        }
+        if (endsAt != null && now.isAfter(endsAt.plusHours(1))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Check-ins close one hour after the event ends");
+        }
+    }
+
     private void ensureEventIsNotPast(Event event, String message) {
         LocalDateTime boundary = event.getEndTime() != null ? event.getEndTime() : event.getStartTime();
         if (boundary != null && boundary.isBefore(LocalDateTime.now())) {
@@ -275,15 +304,33 @@ public class EventRsvpService {
 
     private String certificatePayload(Event event, Rsvp rsvp, String certificateCode, LocalDateTime issuedAt) {
         return String.format(
-                "{\"eventId\":\"%s\",\"eventTitle\":\"%s\",\"clubName\":\"%s\",\"userId\":\"%s\",\"certificateTitle\":\"%s\",\"certificateCode\":\"%s\",\"issuedAt\":\"%s\"}",
+                "{\"eventId\":\"%s\",\"eventTitle\":\"%s\",\"clubName\":\"%s\",\"userId\":\"%s\",\"certificateTitle\":\"%s\",\"certificateCode\":\"%s\",\"issuedAt\":\"%s\",\"eventDate\":\"%s\",\"eventLocation\":\"%s\",\"clubPresidentName\":\"%s\"}",
                 json(event.getId()),
                 json(event.getTitle()),
                 json(event.getClub().getName()),
                 json(rsvp.getUserId()),
                 json(certificateTitle(event)),
                 json(certificateCode),
-                json(issuedAt.toString())
+                json(issuedAt.toString()),
+                json(event.getStartTime() != null ? event.getStartTime().toString() : ""),
+                json(certificateLocation(event)),
+                json(event.getClub().getPresidentFullName())
         );
+    }
+
+    private String certificateLocation(Event event) {
+        if (event.getLocationName() != null && !event.getLocationName().isBlank()) {
+            return event.getLocationName().trim();
+        }
+        if (event.getLocation() != null && !event.getLocation().isBlank()) {
+            return event.getLocation().trim();
+        }
+        if (event.getEventMode() == Event.EventMode.ONLINE) {
+            return event.getOnlinePlatform() != null && !event.getOnlinePlatform().isBlank()
+                    ? event.getOnlinePlatform().trim()
+                    : "Online Etkinlik";
+        }
+        return "FMV Işık Üniversitesi";
     }
 
     private String certificateTitle(Event event) {

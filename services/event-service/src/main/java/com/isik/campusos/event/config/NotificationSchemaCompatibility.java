@@ -28,7 +28,7 @@ public class NotificationSchemaCompatibility implements ApplicationRunner {
                             DROP CONSTRAINT IF EXISTS notifications_type_check;
                         ALTER TABLE notifications
                             ADD CONSTRAINT notifications_type_check
-                            CHECK (type IN ('ANNOUNCEMENT', 'EVENT_REVISION_REQUEST', 'CERTIFICATE'));
+                            CHECK (type IN ('ANNOUNCEMENT', 'EVENT_REVISION_REQUEST', 'EVENT_APPROVAL_REQUEST', 'PROFILE_APPROVAL_REQUEST', 'CERTIFICATE'));
                     END IF;
 
                     IF to_regclass('public.events') IS NOT NULL THEN

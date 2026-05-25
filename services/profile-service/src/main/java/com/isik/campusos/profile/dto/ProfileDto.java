@@ -7,6 +7,7 @@ public class ProfileDto {
     private String firstName;
     private String lastName;
     private String department;
+    private String profilePictureUrl;
     private String bio;
     private String skills;
 }

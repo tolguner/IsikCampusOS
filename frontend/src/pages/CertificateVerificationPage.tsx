@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, BadgeCheck, CheckCircle2, Loader2, Search } from 'lucide-react';
 import { authApi } from '../lib/api';
 
@@ -16,14 +16,14 @@ type CertificateVerificationResponse = {
 };
 
 export const CertificateVerificationPage = () => {
+  const [searchParams] = useSearchParams();
   const [certificateCode, setCertificateCode] = useState('');
   const [result, setResult] = useState<CertificateVerificationResponse | null>(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const verifyCertificate = async (event: FormEvent) => {
-    event.preventDefault();
-    const code = certificateCode.trim();
+  const verifyCode = async (rawCode: string) => {
+    const code = rawCode.trim();
     if (!code) return;
 
     setIsLoading(true);
@@ -37,6 +37,18 @@ export const CertificateVerificationPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (!code) return;
+    setCertificateCode(code);
+    verifyCode(code);
+  }, [searchParams]);
+
+  const verifyCertificate = async (event: FormEvent) => {
+    event.preventDefault();
+    verifyCode(certificateCode);
   };
 
   return (

@@ -5,14 +5,19 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useNotificationStore } from '../../store/notificationStore';
 import { useClubStore } from '../../store/clubStore';
+import { useProfileStore } from '../../store/profileStore';
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, logout, user } = useAuthStore();
   const { notifications, unreadCount, fetchNotifications, markAsRead } = useNotificationStore();
   const { managedClubs, fetchManagedClubs } = useClubStore();
+  const { profile, fetchMyProfile } = useProfileStore();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const isStudent = !!user?.roles.includes('ROLE_STUDENT');
   const isClubPresident = isStudent && managedClubs.length > 0;
+  const userInitials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}` ||
+    user?.fullName?.split(' ').map(part => part[0]).slice(0, 2).join('') ||
+    '?';
 
   useEffect(() => {
     if (isAuthenticated) fetchNotifications();
@@ -21,6 +26,10 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (isAuthenticated && isStudent) fetchManagedClubs();
   }, [fetchManagedClubs, isAuthenticated, isStudent]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) fetchMyProfile();
+  }, [fetchMyProfile, isAuthenticated, user]);
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-[#050510]">
@@ -157,8 +166,16 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 
                 <div className="relative group">
                   <div className="flex items-center gap-3 p-1.5 pr-3 rounded-full cursor-pointer hover:bg-white/5 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-lg border border-white/10">
-                      {user.firstName?.[0]}{user.lastName?.[0]}
+                    <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-lg border border-white/10 overflow-hidden">
+                      {profile?.profilePictureUrl ? (
+                        <img
+                          src={profile.profilePictureUrl}
+                          alt={user.fullName || 'Profil'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span>{userInitials}</span>
+                      )}
                     </div>
                     <span className="text-sm font-medium text-white/90">{user.fullName}</span>
                   </div>

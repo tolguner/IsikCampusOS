@@ -12,10 +12,13 @@ export interface Profile {
   residenceAddress?: string;
   bloodType?: string;
   nationalIdMasked?: string;
+  profilePictureUrl?: string;
   bio?: string;
   skills?: string;
   trustScore?: number;
 }
+
+type ProfileUpdate = Partial<Pick<Profile, 'firstName' | 'lastName' | 'department' | 'profilePictureUrl' | 'bio' | 'skills'>>;
 
 export interface ProfileChangeRequest {
   id: string;
@@ -38,6 +41,7 @@ interface ProfileState {
   fetchMyProfile: () => Promise<void>;
   fetchMyChangeRequests: () => Promise<void>;
   fetchPendingChangeRequests: () => Promise<void>;
+  updateMyProfile: (data: ProfileUpdate, successMessage?: string) => Promise<boolean>;
   requestProfileChange: (fieldName: string, requestedValue: string) => Promise<boolean>;
   approveChangeRequest: (requestId: string) => Promise<boolean>;
   rejectChangeRequest: (requestId: string, feedback?: string) => Promise<boolean>;
@@ -83,6 +87,18 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       set({ pendingChangeRequests: res.data, isLoading: false });
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Profil değişiklik talepleri yüklenemedi.'), isLoading: false });
+    }
+  },
+
+  updateMyProfile: async (data, successMessage = 'Profil bilgileri güncellendi.') => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      const res = await api.patch<Profile>('/profiles/me', data);
+      set({ profile: res.data, isLoading: false, successMessage });
+      return true;
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Profil bilgileri güncellenemedi.'), isLoading: false });
+      return false;
     }
   },
 

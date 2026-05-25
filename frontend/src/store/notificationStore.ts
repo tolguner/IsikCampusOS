@@ -8,7 +8,7 @@ export interface Notification {
   linkUrl?: string;
   linkLabel?: string;
   imageUrl?: string;
-  type: 'ANNOUNCEMENT' | 'EVENT_REVISION_REQUEST';
+  type: 'ANNOUNCEMENT' | 'EVENT_REVISION_REQUEST' | 'EVENT_APPROVAL_REQUEST' | 'PROFILE_APPROVAL_REQUEST' | 'CERTIFICATE';
   targetAudience: 'USER' | 'ALL_STUDENTS' | 'CLUB_PRESIDENTS' | 'SKS_ADMINS';
   relatedEventId?: string;
   createdBy?: string;

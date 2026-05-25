@@ -11,8 +11,11 @@ import java.util.List;
 public interface ClubMemberRepository extends JpaRepository<ClubMember, String> {
     Optional<ClubMember> findByClubIdAndUserId(String clubId, String userId);
     List<ClubMember> findByClubId(String clubId);
+    List<ClubMember> findByClubIdAndStatus(String clubId, ClubMember.MemberStatus status);
+    List<ClubMember> findByClubIdAndStatusIn(String clubId, List<ClubMember.MemberStatus> statuses);
     List<ClubMember> findByClubIdAndRole(String clubId, ClubMember.MemberRole role);
     boolean existsByClubIdAndUserId(String clubId, String userId);
     long countByClubId(String clubId);
     long countByClubIdAndStatus(String clubId, ClubMember.MemberStatus status);
+    long countByClubIdAndStatusIn(String clubId, List<ClubMember.MemberStatus> statuses);
 }

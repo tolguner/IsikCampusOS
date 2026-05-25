@@ -9,6 +9,7 @@ import com.isik.campusos.event.dto.CreateClubRequest;
 import com.isik.campusos.event.dto.EventFeedbackRequest;
 import com.isik.campusos.event.dto.UpdateClubProfileRequest;
 import com.isik.campusos.event.model.AcademicStaff;
+import com.isik.campusos.event.model.AuditLog;
 import com.isik.campusos.event.model.Club;
 import com.isik.campusos.event.model.ClubMember;
 import com.isik.campusos.event.model.ClubProfileChangeRequest;
@@ -33,6 +34,9 @@ public class ClubService {
     private static final int SHORT_DESCRIPTION_MAX_LENGTH = 180;
     private static final int VISION_MIN_LENGTH = 80;
     private static final int VISION_MAX_LENGTH = 3000;
+    private static final List<ClubMember.MemberStatus> ACTIVE_LIKE_MEMBER_STATUSES = List.of(
+            ClubMember.MemberStatus.ACTIVE,
+            ClubMember.MemberStatus.PENDING);
 
     private final ClubRepository clubRepository;
     private final ClubMemberRepository clubMemberRepository;
@@ -41,6 +45,7 @@ public class ClubService {
     private final ClubAnnouncementRepository clubAnnouncementRepository;
     private final NotificationService notificationService;
     private final AcademicStaffService academicStaffService;
+    private final AuditLogService auditLogService;
 
     public List<ClubResponse> listActiveClubs(String userId) {
         return clubRepository.findByIsActiveTrueAndIsDeletedFalseOrderByNameAsc().stream()
@@ -125,7 +130,7 @@ public class ClubService {
                 .advisorEmail(advisor.email())
                 .advisorDepartment(advisor.department())
                 .isActive(true)
-                .requiresApproval(request.isRequiresApproval())
+                .requiresApproval(false)
                 .isDeleted(false)
                 .build());
 
@@ -133,8 +138,11 @@ public class ClubService {
                 .clubId(club.getId())
                 .userId(club.getAdminUserId())
                 .role(ClubMember.MemberRole.ADMIN)
+                .status(ClubMember.MemberStatus.ACTIVE)
                 .build();
         clubMemberRepository.save(adminMembership);
+        auditLogService.record(AuditLog.EntityType.CLUB, club.getId(), "CLUB_CREATED", club.getAdminUserId(), "SKS",
+                club.getName() + " kulübü oluşturuldu.");
 
         return toResponse(club, club.getAdminUserId());
     }
@@ -174,7 +182,7 @@ public class ClubService {
         club.setShortDescription(request.getShortDescription().trim());
         club.setDescription(vision);
         club.setLogoUrl(request.getLogoUrl() != null ? request.getLogoUrl().trim() : null);
-        club.setRequiresApproval(request.isRequiresApproval());
+        club.setRequiresApproval(false);
         club.setAdvisorAcademicStaffId(advisor.academicStaffId());
         club.setAdvisorTitle(advisor.title());
         club.setAdvisorFullName(advisor.fullName());
@@ -194,7 +202,12 @@ public class ClubService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Club not found"));
 
         club.setActive(request.isActive());
-        return toResponse(clubRepository.save(club), currentUserId);
+        Club saved = clubRepository.save(club);
+        auditLogService.record(AuditLog.EntityType.CLUB, clubId,
+                request.isActive() ? "CLUB_ACTIVATED" : "CLUB_DEACTIVATED",
+                currentUserId, "SKS",
+                saved.getName() + " kulübü " + (request.isActive() ? "aktif" : "pasif") + " duruma alındı.");
+        return toResponse(saved, currentUserId);
     }
 
     @Transactional
@@ -207,7 +220,10 @@ public class ClubService {
         validatePresidentAvailable(newPresidentId, clubId);
         updatePresident(club, newPresidentId, request.getFullName(), request.getEmail());
 
-        return toResponse(clubRepository.save(club), currentUserId);
+        Club saved = clubRepository.save(club);
+        auditLogService.record(AuditLog.EntityType.CLUB, clubId, "PRESIDENT_ASSIGNED", currentUserId, "SKS",
+                saved.getName() + " kulübü başkanı güncellendi.");
+        return toResponse(saved, currentUserId);
     }
 
     @Transactional
@@ -283,6 +299,8 @@ public class ClubService {
                         .logoUrl(request.getLogoUrl() != null ? request.getLogoUrl().trim() : null)
                         .status(ClubProfileChangeRequest.ChangeStatus.PENDING)
                         .build());
+        auditLogService.record(AuditLog.EntityType.CLUB, clubId, "PROFILE_UPDATE_REQUESTED", userId, "CLUB_ADMIN",
+                club.getName() + " kulübü için profil güncelleme talebi oluşturuldu.");
 
         String message = String.format("""
                 %s kulübü için profil güncelleme talebi oluşturuldu.
@@ -299,13 +317,11 @@ public class ClubService {
                 request.getLogoUrl() == null || request.getLogoUrl().isBlank() ? "Değişiklik yok / boş"
                         : request.getLogoUrl());
 
-        notificationService.notifyAudience(
-                Notification.TargetAudience.SKS_ADMINS,
+        notificationService.notifySksProfileApprovalRequest(
                 "Kulüp profil güncelleme talebi",
                 message.trim(),
                 userId,
-                club.getName(),
-                clubId);
+                club.getName());
 
         return toProfileChangeResponse(changeRequest, userId);
     }
@@ -342,12 +358,15 @@ public class ClubService {
         request.setReviewedBy(reviewedBy);
         request.setReviewedAt(java.time.LocalDateTime.now());
         ClubProfileChangeRequest saved = clubProfileChangeRequestRepository.save(request);
+        auditLogService.record(AuditLog.EntityType.CLUB, club.getId(), "PROFILE_UPDATE_APPROVED", reviewedBy, "SKS",
+                club.getName() + " kulübü profil güncellemesi onaylandı.");
 
-        notificationService.notifyUser(
+        notificationService.notifyUserWithType(
                 club.getAdminUserId(),
                 "Kulüp profil talebi onaylandı",
                 club.getName() + " kulübü profil güncellemesi SKS tarafından onaylandı.",
-                club.getId());
+                club.getId(),
+                Notification.NotificationType.PROFILE_APPROVAL_REQUEST);
 
         return toProfileChangeResponse(saved, reviewedBy);
     }
@@ -414,6 +433,8 @@ public class ClubService {
                 request.getImageUrl(),
                 userId,
                 club.getName()));
+        auditLogService.record(AuditLog.EntityType.CLUB, clubId, "ANNOUNCEMENT_SENT", userId, "CLUB_ADMIN",
+                club.getName() + " kulübü duyuru gönderdi: " + request.getTitle().trim());
     }
 
     private ClubResponse toResponse(Club club, String currentUserId) {
@@ -436,12 +457,15 @@ public class ClubService {
                 .advisorEmail(club.getAdvisorEmail())
                 .advisorDepartment(club.getAdvisorDepartment())
                 .active(club.isActive())
-                .requiresApproval(club.isRequiresApproval())
-                .memberCount(clubMemberRepository.countByClubIdAndStatus(club.getId(), ClubMember.MemberStatus.ACTIVE))
+                .requiresApproval(false)
+                .memberCount(clubMemberRepository.countByClubIdAndStatusIn(club.getId(), ACTIVE_LIKE_MEMBER_STATUSES))
                 .eventCount(eventRepository.countByClub_Id(club.getId()))
-                .currentUserMember(membership != null && membership.getStatus() == ClubMember.MemberStatus.ACTIVE)
+                .currentUserMember(membership != null && (membership.getStatus() == ClubMember.MemberStatus.ACTIVE
+                        || membership.getStatus() == ClubMember.MemberStatus.PENDING))
                 .currentUserRole(membership != null ? membership.getRole().name() : null)
-                .currentUserStatus(membership != null ? membership.getStatus().name() : null)
+                .currentUserStatus(membership != null && membership.getStatus() == ClubMember.MemberStatus.PENDING
+                        ? ClubMember.MemberStatus.ACTIVE.name()
+                        : membership != null ? membership.getStatus().name() : null)
                 .build();
     }
 
@@ -488,12 +512,19 @@ public class ClubService {
         request.setReviewedBy(reviewedBy);
         request.setReviewedAt(java.time.LocalDateTime.now());
         ClubProfileChangeRequest saved = clubProfileChangeRequestRepository.save(request);
+        auditLogService.record(AuditLog.EntityType.CLUB, saved.getClub().getId(),
+                nextStatus == ClubProfileChangeRequest.ChangeStatus.REJECTED
+                        ? "PROFILE_UPDATE_REJECTED"
+                        : "PROFILE_UPDATE_REVISION_REQUESTED",
+                reviewedBy, "SKS",
+                saved.getClub().getName() + " kulübü profil talebi için SKS notu: " + saved.getFeedback());
 
-        notificationService.notifyUser(
+        notificationService.notifyUserWithType(
                 saved.getClub().getAdminUserId(),
                 title,
                 saved.getClub().getName() + " kulübü profil talebi için SKS notu: " + saved.getFeedback(),
-                saved.getClub().getId());
+                saved.getClub().getId(),
+                Notification.NotificationType.PROFILE_APPROVAL_REQUEST);
 
         return toProfileChangeResponse(saved, reviewedBy);
     }

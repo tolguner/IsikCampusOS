@@ -22,8 +22,39 @@ export interface Club {
   eventCount: number;
   currentUserMember: boolean;
   currentUserRole: 'MEMBER' | 'ADMIN' | null;
-  currentUserStatus: 'PENDING' | 'ACTIVE' | 'REJECTED' | null;
-  requiresApproval: boolean;
+  currentUserStatus: 'ACTIVE' | 'REJECTED' | null;
+  requiresApproval?: boolean;
+}
+
+export interface AuditLog {
+  id: string;
+  entityType: 'CLUB' | 'EVENT';
+  entityId: string;
+  action: string;
+  actorId: string;
+  actorRole?: string;
+  message: string;
+  metadata?: string;
+  createdAt: string;
+}
+
+export interface ClubHealth {
+  clubId: string;
+  clubName: string;
+  active: boolean;
+  memberCount: number;
+  activeEventCount: number;
+  upcomingEventCount: number;
+  pendingEventCount: number;
+  pendingProfileRequestCount: number;
+  lastEventAt?: string;
+  lastAnnouncementAt?: string;
+  attendanceAverage: number;
+  healthStatus: 'Sağlıklı' | 'Takip Edilmeli' | 'Riskli' | 'Pasifleşmeye Aday';
+  watchlisted: boolean;
+  latestNote?: string;
+  latestNoteBy?: string;
+  latestNoteAt?: string;
 }
 
 export interface ClubAnnouncement {
@@ -67,7 +98,7 @@ export interface ClubProfileChangeRequest {
   updatedAt: string;
 }
 
-type ClubProfileUpdate = Pick<Club, 'name' | 'shortDescription' | 'vision' | 'description' | 'logoUrl' | 'advisorAcademicStaffId' | 'advisorTitle' | 'advisorFullName' | 'advisorEmail' | 'advisorDepartment' | 'requiresApproval'> & {
+type ClubProfileUpdate = Pick<Club, 'name' | 'shortDescription' | 'vision' | 'description' | 'logoUrl' | 'advisorAcademicStaffId' | 'advisorTitle' | 'advisorFullName' | 'advisorEmail' | 'advisorDepartment'> & {
   adminUserId?: string;
   presidentFullName?: string;
   presidentEmail?: string;
@@ -82,6 +113,8 @@ interface ClubState {
   clubMembers: ClubMember[];
   clubAnnouncements: ClubAnnouncement[];
   profileChangeRequests: ClubProfileChangeRequest[];
+  clubHealth: ClubHealth[];
+  clubAuditLogsByClub: Record<string, AuditLog[]>;
   isLoading: boolean;
   error: string | null;
   successMessage: string | null;
@@ -109,6 +142,11 @@ interface ClubState {
   updateMemberStatus: (clubId: string, userId: string, status: string) => Promise<boolean>;
   removeClubMember: (clubId: string, userId: string) => Promise<boolean>;
   fetchClubAnnouncements: (clubId: string) => Promise<void>;
+  fetchClubHealth: () => Promise<void>;
+  addClubHealthNote: (clubId: string, message: string) => Promise<boolean>;
+  watchlistClub: (clubId: string, message: string) => Promise<boolean>;
+  requestClubHealthAction: (clubId: string, message: string) => Promise<boolean>;
+  fetchClubAuditLogs: (clubId: string, filters?: { action?: string; actorId?: string; from?: string; to?: string; search?: string }) => Promise<void>;
 }
 
 const getErrorMessage = (err: any, fallback: string) => {
@@ -127,6 +165,8 @@ export const useClubStore = create<ClubState>((set, get) => ({
   clubMembers: [],
   clubAnnouncements: [],
   profileChangeRequests: [],
+  clubHealth: [],
+  clubAuditLogsByClub: {},
   isLoading: false,
   error: null,
   successMessage: null,
@@ -434,6 +474,72 @@ export const useClubStore = create<ClubState>((set, get) => ({
       set({ clubAnnouncements: response.data, isLoading: false });
     } catch (error: any) {
       set({ error: getErrorMessage(error, 'Duyurular yüklenemedi'), isLoading: false });
+    }
+  },
+
+  fetchClubHealth: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.get<ClubHealth[]>('/admin/clubs/health');
+      set({ clubHealth: response.data, isLoading: false });
+    } catch (error: any) {
+      set({ error: getErrorMessage(error, 'Kulüp sağlık görünümü yüklenemedi'), isLoading: false });
+    }
+  },
+
+  addClubHealthNote: async (clubId, message) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      await api.post(`/admin/clubs/${clubId}/health-notes`, { message });
+      set({ successMessage: 'Gözlem notu eklendi.', isLoading: false });
+      await get().fetchClubHealth();
+      await get().fetchClubAuditLogs(clubId);
+      return true;
+    } catch (error: any) {
+      set({ error: getErrorMessage(error, 'Gözlem notu eklenemedi'), isLoading: false });
+      return false;
+    }
+  },
+
+  watchlistClub: async (clubId, message) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      await api.post(`/admin/clubs/${clubId}/watchlist`, { message });
+      set({ successMessage: 'Kulüp takip listesine alındı.', isLoading: false });
+      await get().fetchClubHealth();
+      await get().fetchClubAuditLogs(clubId);
+      return true;
+    } catch (error: any) {
+      set({ error: getErrorMessage(error, 'Kulüp takip listesine alınamadı'), isLoading: false });
+      return false;
+    }
+  },
+
+  requestClubHealthAction: async (clubId, message) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      await api.post(`/admin/clubs/${clubId}/action-request`, { message });
+      set({ successMessage: 'Aksiyon bildirimi kulüp yöneticisine gönderildi.', isLoading: false });
+      await get().fetchClubAuditLogs(clubId);
+      return true;
+    } catch (error: any) {
+      set({ error: getErrorMessage(error, 'Aksiyon bildirimi gönderilemedi'), isLoading: false });
+      return false;
+    }
+  },
+
+  fetchClubAuditLogs: async (clubId, filters = {}) => {
+    set({ error: null });
+    try {
+      const response = await api.get<AuditLog[]>(`/clubs/${clubId}/audit-logs`, { params: filters });
+      set(state => ({
+        clubAuditLogsByClub: {
+          ...state.clubAuditLogsByClub,
+          [clubId]: response.data,
+        },
+      }));
+    } catch (error: any) {
+      set({ error: getErrorMessage(error, 'Kulüp işlem geçmişi yüklenemedi') });
     }
   },
 }));

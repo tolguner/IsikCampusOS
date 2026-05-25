@@ -22,8 +22,8 @@ export const emptyEventForm = {
   onlineMeetingUrl: '',
   locationName: '',
   locationDetail: '',
-  latitude: 41.029,
-  longitude: 29.033,
+  latitude: 41.168846,
+  longitude: 29.563973,
   posterImageUrl: '',
   hasCapacityLimit: false,
   capacity: 0,
@@ -87,6 +87,15 @@ export const participantStatusLabel: Record<EventParticipant['status'], string> 
 export const isPastEvent = (event: Event) => {
   const boundary = event.endTime || event.startTime;
   return Boolean(boundary && new Date(boundary) < new Date());
+};
+
+export const isCheckInWindowOpen = (event: Event) => {
+  if (!event.startTime) return false;
+  const startTime = new Date(event.startTime).getTime();
+  const endTime = new Date(event.endTime || event.startTime).getTime();
+  const now = Date.now();
+  const oneHour = 60 * 60 * 1000;
+  return now >= startTime - oneHour && now <= endTime + oneHour;
 };
 
 /** Crop & resize an image file to a 512×512 square PNG data-URL. */
