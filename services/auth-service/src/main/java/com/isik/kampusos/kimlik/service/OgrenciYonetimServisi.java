@@ -163,8 +163,23 @@ public class OgrenciYonetimServisi {
         if (request.getSoyad() != null) kullanici.setSoyad(request.getSoyad());
         if (request.getFakulte() != null) kullanici.setFakulte(request.getFakulte());
         if (request.getBolum() != null) kullanici.setBolum(request.getBolum());
- 
+
         Kullanici saved = kullaniciDeposu.save(kullanici);
+
+        // Kafka event: profil servisi projeksiyonunu güncel tutsun (source-of-truth: kullanicilar)
+        try {
+            java.util.Map<String, Object> payloadMap = new java.util.HashMap<>();
+            payloadMap.put("kullaniciId", saved.getId());
+            payloadMap.put("eposta", saved.getEposta());
+            payloadMap.put("ad", saved.getAd());
+            payloadMap.put("soyad", saved.getSoyad());
+            payloadMap.put("bolum", saved.getBolum());
+            String payload = objectMapper.writeValueAsString(payloadMap);
+            kafkaTemplate.send("kullanici.guncellendi", saved.getId(), payload);
+        } catch (Exception e) {
+            log.warn("Kafka event gönderilemedi (kullanici.guncellendi): {}", e.getMessage());
+        }
+
         log.info("Öğrenci güncellendi: {} - {} {}", saved.getOgrenciNumarasi(), saved.getAd(), saved.getSoyad());
         return yanitOlustur(saved);
     }
