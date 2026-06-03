@@ -46,6 +46,26 @@ public class KullaniciOlayTuketicisi {
         }
     }
  
+    @KafkaListener(topics = "kullanici.guncellendi", groupId = "profil-servisi-guncelleme-grubu")
+    public void consumeKullaniciGuncelleme(String mesaj) {
+        log.info("kullanici.guncellendi olayı alındı: {}", mesaj);
+        try {
+            KullaniciKayitOlayi olay = objectMapper.readValue(mesaj, KullaniciKayitOlayi.class);
+            // Projeksiyonu güncelle — kaynak doğru (source-of-truth) auth servisindeki kullanicilar tablosudur.
+            profilDeposu.findByKullaniciId(olay.getKullaniciId()).ifPresent(profil -> {
+                if (olay.getAd() != null) profil.setAd(olay.getAd());
+                if (olay.getSoyad() != null) profil.setSoyad(olay.getSoyad());
+                if (olay.getEposta() != null) profil.setEposta(olay.getEposta());
+                if (olay.getBolum() != null) profil.setBolum(olay.getBolum());
+                profilDeposu.save(profil);
+                log.info("Kullanıcı profili güncellendi. Kullanıcı ID: {} ({} {})",
+                        olay.getKullaniciId(), olay.getAd(), olay.getSoyad());
+            });
+        } catch (Exception e) {
+            log.error("kullanici.guncellendi olayı işlenirken hata oluştu: {}", mesaj, e);
+        }
+    }
+
     @KafkaListener(topics = "kullanici.silindi", groupId = "profil-servisi-silme-grubu")
     public void consumeKullaniciSilme(String mesaj) {
         log.info("kullanici.silindi olayı alındı: {}", mesaj);

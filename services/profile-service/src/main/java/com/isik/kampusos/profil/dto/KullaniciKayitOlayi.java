@@ -10,6 +10,7 @@ public class KullaniciKayitOlayi {
     private String eposta;
     private String ad;
     private String soyad;
+    private String bolum;
     private String ogrenciNumarasi;
     private String tcKimlikMaskeli;
     private String telefonNumarasi;
