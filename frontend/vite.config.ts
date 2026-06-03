@@ -6,9 +6,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
+    allowedHosts: ['frontend'],
+    watch: {
+      usePolling: true,
+    },
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8080',
+        target: process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8080',
         changeOrigin: true,
       },
     },

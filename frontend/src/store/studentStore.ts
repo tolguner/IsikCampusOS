@@ -19,7 +19,7 @@ export interface Student {
 }
 
 interface PageData {
-  content: Student[];
+  content: any[];
   totalElements: number;
   totalPages: number;
   number: number;
@@ -39,8 +39,49 @@ interface StudentState {
   updateStudent: (id: string, data: any) => Promise<boolean>;
   changeStatus: (id: string, status: string) => Promise<boolean>;
   resetPassword: (id: string, tcKimlikNo: string) => Promise<boolean>;
+  deleteStudent: (id: string) => Promise<boolean>;
   clearMessages: () => void;
 }
+
+const mapStatusToEnglish = (status: string): 'ACTIVE' | 'INACTIVE' | 'GRADUATED' | 'EXPELLED' => {
+  if (status === 'AKTIF') return 'ACTIVE';
+  if (status === 'PASIF') return 'INACTIVE';
+  if (status === 'MEZUN') return 'GRADUATED';
+  if (status === 'ILISIGI_KESILMIS') return 'EXPELLED';
+  return 'ACTIVE';
+};
+
+const mapStatusToTurkish = (status: string): string => {
+  if (status === 'ACTIVE') return 'AKTIF';
+  if (status === 'INACTIVE') return 'PASIF';
+  if (status === 'GRADUATED') return 'MEZUN';
+  if (status === 'EXPELLED') return 'ILISIGI_KESILMIS';
+  return '';
+};
+
+const mapStudentResponse = (data: any): Student => {
+  return {
+    id: data.id,
+    email: data.eposta,
+    firstName: data.ad,
+    lastName: data.soyad,
+    fullName: data.tamAd,
+    studentNumber: data.ogrenciNumarasi,
+    faculty: data.fakulte,
+    department: data.bolum,
+    departmentCode: data.bolumKodu || '',
+    enrollmentYear: data.kayitYili,
+    status: mapStatusToEnglish(data.durum),
+    emailVerified: data.epostaDogrulandi,
+    createdAt: data.olusturulmaTarihi,
+    lastLoginAt: data.sonGirisTarihi,
+  };
+};
+
+const getDepartmentCode = (studentNumber: string): string => {
+  const match = studentNumber.match(/\d+([a-zA-Z]+)\d+/);
+  return match ? match[1].toLowerCase() : '';
+};
 
 export const useStudentStore = create<StudentState>((set, get) => ({
   students: [],
@@ -56,11 +97,17 @@ export const useStudentStore = create<StudentState>((set, get) => ({
   fetchStudents: async (page = 0, size = 10, search = '', status = '') => {
     set({ isLoading: true, error: null });
     try {
-      const res = await api.get<PageData>('/students', {
-        params: { page, size, search, status }
+      const apiStatus = mapStatusToTurkish(status);
+      const res = await api.get<PageData>('/ogrenciler', {
+        params: {
+          sayfa: page,
+          boyut: size,
+          arama: search,
+          durum: apiStatus || undefined,
+        }
       });
       set({ 
-        students: res.data.content, 
+        students: res.data.content.map(mapStudentResponse), 
         totalElements: res.data.totalElements,
         totalPages: res.data.totalPages,
         currentPage: res.data.number,
@@ -74,7 +121,20 @@ export const useStudentStore = create<StudentState>((set, get) => ({
   createStudent: async (data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post('/students', data);
+      const payload = {
+        ad: data.firstName,
+        soyad: data.lastName,
+        ogrenciNumarasi: data.studentNumber,
+        tcKimlikNo: data.tcKimlikNo,
+        fakulte: data.faculty,
+        bolum: data.department,
+        bolumKodu: getDepartmentCode(data.studentNumber),
+        kayitYili: data.enrollmentYear,
+        telefonNumarasi: data.phoneNumber || '',
+        ikametAdresi: data.residenceAddress || '',
+        kanGrubu: data.bloodType || 'A Rh+'
+      };
+      await api.post('/ogrenciler', payload);
       set({ successMessage: 'Öğrenci başarıyla eklendi.', isLoading: false });
       get().fetchStudents(get().currentPage);
       return true;
@@ -87,7 +147,13 @@ export const useStudentStore = create<StudentState>((set, get) => ({
   updateStudent: async (id, data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.put(`/students/${id}`, data);
+      const payload = {
+        ad: data.firstName,
+        soyad: data.lastName,
+        fakulte: data.faculty,
+        bolum: data.department,
+      };
+      await api.put(`/ogrenciler/${id}`, payload);
       set({ successMessage: 'Öğrenci bilgileri güncellendi.', isLoading: false });
       get().fetchStudents(get().currentPage);
       return true;
@@ -100,7 +166,11 @@ export const useStudentStore = create<StudentState>((set, get) => ({
   changeStatus: async (id, status) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.patch(`/students/${id}/status`, { newStatus: status });
+      const apiStatus = mapStatusToTurkish(status);
+      await api.patch(`/ogrenciler/${id}/durum`, {
+        yeniDurum: apiStatus,
+        neden: 'Durum güncellemesi',
+      });
       set({ successMessage: 'Öğrenci durumu güncellendi.', isLoading: false });
       get().fetchStudents(get().currentPage);
       return true;
@@ -113,11 +183,24 @@ export const useStudentStore = create<StudentState>((set, get) => ({
   resetPassword: async (id, tcKimlikNo) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post(`/students/${id}/reset-password`, { tcKimlikNo });
+      await api.post(`/ogrenciler/${id}/sifre-sifirla`, { tcKimlikNo });
       set({ successMessage: 'Öğrencinin şifresi başarıyla TC Kimlik Numarasına sıfırlandı.', isLoading: false });
       return true;
     } catch (err: any) {
       set({ error: err.response?.data?.message || 'Şifre sıfırlama başarısız.', isLoading: false });
+      return false;
+    }
+  },
+ 
+  deleteStudent: async (id) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      await api.delete(`/ogrenciler/${id}`);
+      set({ successMessage: 'Öğrenci başarıyla silindi.', isLoading: false });
+      get().fetchStudents(get().currentPage);
+      return true;
+    } catch (err: any) {
+      set({ error: err.response?.data?.message || 'Öğrenci silinemedi.', isLoading: false });
       return false;
     }
   }

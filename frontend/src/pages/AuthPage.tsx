@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../store/authStore';
 import { Link, useNavigate } from 'react-router-dom';
+import { YOLLAR } from '../utils/paths';
 import {
   Mail, Lock, Loader2, AlertCircle, Eye, EyeOff,
   Calendar, BookOpen, ArrowRight, CheckCircle2, Zap,
@@ -271,7 +272,7 @@ export const AuthPage = () => {
                 </div>
               )}
               {mode === 'login' && (
-                <Link to="/certificates/verify" className="mt-3 flex items-center justify-center gap-2 text-xs font-bold text-purple-200 hover:text-purple-100 transition-colors">
+                <Link to={YOLLAR.sertifikaDogrula} className="mt-3 flex items-center justify-center gap-2 text-xs font-bold text-purple-200 hover:text-purple-100 transition-colors">
                   <BadgeCheck className="w-4 h-4" />
                   Sertifika Kodu Kontrolü
                 </Link>

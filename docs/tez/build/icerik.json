@@ -1,0 +1,1742 @@
+{
+ "baslik": "IsikCampusOS: Bütünleşik Bir Akıllı Kampüs Platformu",
+ "altbaslik": "Üniversite İçi Sosyal ve Pratik Süreçlerin Mikroservis Mimarisi Tabanlı Bir Süper-Uygulama ile Bütünleştirilmesi",
+ "ad": "Tolga Olguner",
+ "ogrNo": "23YÖBİ1053",
+ "danisman": "Dr. Şahin Aydın",
+ "tarih": "Haziran 2026",
+ "adanan": "Her zaman iyi bir insan olma felsefesiyle beni yetiştiren aileme…",
+ "ozetTR": [
+  "Üniversite kampüslerinde öğrencilerin akademik olmayan sosyal ve pratik ihtiyaçları —kulüp ve etkinlik takibi, spor tesisi rezervasyonu, yemek siparişi, ulaşım, proje ekibi ve kısa süreli iş bulma— çoğunlukla birbirinden kopuk, kurumsal denetimden yoksun ve tutarsız kullanıcı deneyimleri sunan dağınık kanallar üzerinden karşılanmaktadır. Bu parçalanmışlık, öğrenci üzerinde bilişsel yük oluşturmakta ve kurumsal güveni zayıflatmaktadır. Bu tez çalışmasında, söz konusu süreçleri tek bir kapalı, güvenli ve tutarlı dijital platform altında birleştiren IsikCampusOS bütünleşik akıllı kampüs platformu tasarlanmış ve geliştirilmiştir.",
+  "Platform, kampüs yaşamının altı fonksiyonel alanını —kulüp ve etkinlik yönetimi, spor tesisi rezervasyonu, çevrimiçi yemek siparişi, planlı paylaşımlı yolculuk, beceri tabanlı proje eşleştirme ve kampüs içi mikro iş pazarı— ortak bir altyapı üzerinde bütünleştirmektedir. Sistem, mikroservis mimarisi ile geliştirilmiş; API Gateway üzerinden merkezî kimlik doğrulama (JWT), servis keşfi, Apache Kafka tabanlı olay güdümlü iletişim ve servis başına veri tabanı izolasyonu yaklaşımlarını bir araya getirmektedir. Tasarım kararları, eğitim bilimleri (öğrenci katılımı ve kalıcılığı) ve insan-bilgisayar etkileşimi (bilişsel yük, arayüz tutarlılığı) kuramlarıyla; teknik tercihler ise güncel yazılım mimarisi literatürüyle gerekçelendirilmiştir.",
+  "Çalışmanın değerlendirmesi, işlevsel doğrulama ve senaryo temelli inceleme yöntemiyle yürütülmüş; platformun belirlenen işlevsel gereksinimleri ve tasarım hedeflerini karşıladığı ortaya konmuştur. Çalışmanın özgün katkısı, kampüs süreçlerinin bütünleştirilmesine yönelik sunduğu gerekçelendirilmiş ve genişletilebilir mimari model ile ticari uygulamaların üniversite bağlamına özgü biçimde (kapalı topluluk güveni, çift yönlü itibar) uyarlanmasıdır. Gerçek kullanıcı kitlesiyle saha çalışması ve algoritmaların büyük ölçekli değerlendirilmesi gelecek çalışma olarak önerilmiştir."
+ ],
+ "ozetKW": "Anahtar Kelimeler: Akıllı kampüs, mikroservis mimarisi, bütünleşik platform, kullanıcı deneyimi, dijital dönüşüm",
+ "abstractEN": [
+  "In university campuses, students' non-academic social and practical needs —tracking clubs and events, sports facility reservation, food ordering, transportation, project team formation, and finding short-term jobs— are mostly met through fragmented channels that are disconnected from one another, lack institutional oversight, and provide inconsistent user experiences. This fragmentation imposes a cognitive load on students and weakens institutional trust. In this thesis, IsikCampusOS, an integrated smart campus platform that unifies these processes under a single closed, secure, and consistent digital platform, has been designed and developed.",
+  "The platform integrates six functional areas of campus life —club and event management, sports facility reservation, online food ordering, planned ride-sharing, skill-based project matching, and an on-campus micro-job marketplace— on a common infrastructure. The system is developed with a microservices architecture, combining centralized authentication (JWT) through an API Gateway, service discovery, Apache Kafka-based event-driven communication, and database-per-service isolation. Design decisions are justified through theories of educational science (student involvement and retention) and human-computer interaction (cognitive load, interface consistency), while technical choices are grounded in current software architecture literature.",
+  "The evaluation of the study was conducted using functional verification and scenario-based analysis; it was demonstrated that the platform meets the defined functional requirements and design goals. The original contribution of the study lies in the justified and extensible architectural model it offers for integrating campus processes, and in adapting commercial application patterns to the university context (closed-community trust, two-sided reputation). Field study with a real user base and large-scale evaluation of the algorithms are proposed as future work."
+ ],
+ "abstractKW": "Keywords: Smart campus, microservices architecture, integrated platform, user experience, digital transformation",
+ "tesekkur": [
+  "Bu tezin ortaya çıkmasında emeği geçen, yalnızca akademik bir danışman olmanın çok ötesinde, üniversite hayatım boyunca bana yol gösteren ve gerçek bir akıl hocası olan değerli danışmanım Dr. Şahin Aydın'a en içten şükranlarımı sunarım. Onun bilgisi, sabrı ve her koşulda hissettirdiği desteği, bu çalışmanın her aşamasında bana güç verdi. Yalnızca bilgisini değil, bir mesleğe ve hayata bakış açısını da paylaşan; karşılaştığım her zorlukta yanımda olduğunu bilmenin huzurunu yaşatan bu kıymetli insanın öğrencisi olmaktan onur duyuyorum.",
+  "Bugünlere gelmemde en büyük paya sahip olan, bana her zaman dürüstlüğü, çalışkanlığı ve her şeyden önce iyi bir insan olmayı öğreten aileme; karşılıksız sevgileri ve sarsılmaz inançları için minnettarım. Bu yolculuğun her anında yanımda olan tüm dostlarıma da teşekkür ederim.",
+  "Tolga Olguner",
+  "İstanbul, Haziran 2026"
+ ],
+ "kisalt": [
+  [
+   "API",
+   "Application Programming Interface (Uygulama Programlama Arayüzü)"
+  ],
+  [
+   "CORS",
+   "Cross-Origin Resource Sharing (Kaynaklar Arası Kaynak Paylaşımı)"
+  ],
+  [
+   "CRUD",
+   "Create, Read, Update, Delete (Oluştur, Oku, Güncelle, Sil)"
+  ],
+  [
+   "ER",
+   "Entity-Relationship (Varlık-İlişki)"
+  ],
+  [
+   "HTTP",
+   "Hypertext Transfer Protocol (Köprü Metni Aktarım Protokolü)"
+  ],
+  [
+   "IoT",
+   "Internet of Things (Nesnelerin İnterneti)"
+  ],
+  [
+   "JWT",
+   "JSON Web Token"
+  ],
+  [
+   "LMS",
+   "Learning Management System (Öğrenme Yönetim Sistemi)"
+  ],
+  [
+   "P2P",
+   "Peer-to-Peer (Akranlar Arası)"
+  ],
+  [
+   "QR",
+   "Quick Response (Hızlı Yanıt Kodu)"
+  ],
+  [
+   "RBAC",
+   "Role-Based Access Control (Rol Bazlı Erişim Kontrolü)"
+  ],
+  [
+   "REST",
+   "Representational State Transfer"
+  ],
+  [
+   "RSVP",
+   "Répondez s'il vous plaît (Katılım Bildirimi)"
+  ],
+  [
+   "SIS",
+   "Student Information System (Öğrenci Bilgi Sistemi)"
+  ],
+  [
+   "SKS",
+   "Sağlık, Kültür ve Spor Daire Başkanlığı"
+  ],
+  [
+   "SPA (mimari)",
+   "Single Page Application (Tek Sayfa Uygulaması)"
+  ],
+  [
+   "SPA (algoritma)",
+   "Student-Project Allocation (Öğrenci-Proje Atama)"
+  ],
+  [
+   "SPA-T",
+   "Student-Project Allocation with Ties (Eşitlikli Öğrenci-Proje Atama)"
+  ],
+  [
+   "SSO",
+   "Single Sign-On (Tek Oturum Açma)"
+  ],
+  [
+   "SQL",
+   "Structured Query Language (Yapılandırılmış Sorgu Dili)"
+  ],
+  [
+   "UI",
+   "User Interface (Kullanıcı Arayüzü)"
+  ],
+  [
+   "UTAUT",
+   "Unified Theory of Acceptance and Use of Technology (Birleşik Teknoloji Kabul ve Kullanım Teorisi)"
+  ],
+  [
+   "UUID",
+   "Universally Unique Identifier (Evrensel Benzersiz Tanımlayıcı)"
+  ],
+  [
+   "UX",
+   "User Experience (Kullanıcı Deneyimi)"
+  ]
+ ],
+ "govde": [
+  {
+   "k": "h",
+   "lv": 1,
+   "t": "BÖLÜM 1: GİRİŞ (INTRODUCTION)"
+  },
+  {
+   "k": "p",
+   "t": "Bu bölümde, IsikCampusOS bütünleşik akıllı kampüs platformunun ortaya çıkış gerekçeleri, üzerine inşa edildiği problem alanı ile projenin kapsamı ve amacı sunulmaktadır. Bölüm, yükseköğretim kurumlarındaki dijital dönüşüm bağlamından başlayarak öğrencilerin ders dışı sosyal ve pratik süreçlerindeki parçalanmışlığı tanımlamakta ve bu parçalanmışlığı tek bir güvenli kullanıcı deneyimi omurgasında çözmeyi hedefleyen bütünleşik platform yaklaşımının çerçevesini çizmektedir."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "1.1. Arka Plan ve Motivasyon"
+  },
+  {
+   "k": "p",
+   "t": "Üniversiteler, yalnızca akademik bilginin üretildiği ve aktarıldığı kurumlar değil; aynı zamanda öğrencilerin sosyalleştiği, iş birliği kurduğu, günlük pratik ihtiyaçlarını karşıladığı ve topluluk aidiyeti geliştirdiği karmaşık sosyal ekosistemlerdir. Çağdaş yükseköğretimde bu ekosistemin işleyişi, giderek artan ölçüde dijital araçlara bağımlı hale gelmiştir. Ders kayıtlarından not takibine, kulüp etkinliklerinden tesis kullanımına kadar pek çok süreç dijital kanallar üzerinden yürütülmektedir. Ancak bu dijitalleşmenin akademik ve idari süreçlerde gösterdiği olgunluk, öğrencinin ders dışı sosyal ve pratik yaşamında aynı düzeyde karşılık bulmamaktadır."
+  },
+  {
+   "k": "p",
+   "t": "Yükseköğretimde dijital dönüşüm, mevcut iş akışlarının yalnızca elektronik ortama taşınması değil; kurumun hizmet sunum biçiminin, veri akışlarının ve kullanıcı deneyiminin bütüncül olarak yeniden tasarlanması sürecidir (Castro Benavides vd., 2020). Bu süreç başarılı yürütüldüğünde, kurumsal verimliliği artırmanın yanı sıra öğrencinin kuruma olan bağını ve memnuniyetini de güçlendirir. Buna karşın, dijital dönüşümün parçalı ve koordinasyonsuz ilerlemesi; birbirinden kopuk portalların, tekrar eden kimlik doğrulama adımlarının ve tutarsız arayüz standartlarının ortaya çıkmasına neden olur. Sonuçta öğrenci, ihtiyaç duyduğu bilgiye ulaşmak için birden çok sisteme dağılmak zorunda kalır ve bu durum dijital dönüşümün vaat ettiği kolaylığı zayıflatır."
+  },
+  {
+   "k": "p",
+   "t": "Öğrenme ve gelişim teorileri açısından bakıldığında, öğrencinin kampüs yaşamına kattığı fiziksel ve psikolojik enerjinin akademik başarı ve kişisel gelişimle doğrudan ilişkili olduğu uzun süredir bilinmektedir (Astin, 1984). Benzer biçimde, öğrencinin akademik ve sosyal entegrasyon düzeyi, kurumda kalma kararını belirleyen en önemli etkenler arasında gösterilmektedir (Tinto, 1975). Bu çerçevede dijital altyapı yalnızca operasyonel bir araç değil; öğrencinin kampüs topluluğuna katılımını ve aidiyetini doğrudan etkileyen stratejik bir bileşendir. Öğrencinin enerjisini idari sürtünmelerle tüketmesini engelleyen, sosyal ve pratik ihtiyaçlarını kolaylaştıran bütünleşik bir dijital ortam, katılımı ve kurumsal bağlılığı destekleme potansiyeline sahiptir."
+  },
+  {
+   "k": "p",
+   "t": "Bu projenin temel motivasyonu, üniversitelerde akademik süreçler için çoğunlukla kurumsal otomasyon sistemleri bulunmasına karşın, ders dışı sosyal ve pratik ihtiyaçların büyük ölçüde dağınık, denetimsiz ve güvenlik açısından kırılgan harici kanallara bırakılmış olmasıdır. Kulüp duyuruları sosyal medya hesapları ve mesajlaşma gruplarında dolaşıma girmekte; spor tesisi rezervasyonları çoğu zaman ilgili idari birimle e-posta veya telefon yoluyla manuel olarak yürütülmekte; kampüs içi yemek siparişleri düzensiz iletişim ağları üzerinden işlenmekte; ulaşım için yapılan paylaşımlı yolculuk koordinasyonu ve proje ekibi arayışları ise tamamen kurum dışı platformlara taşınmaktadır. Bu dağınık yapı, her bir ihtiyaç için ayrı bir arayüz, ayrı bir hesap ve ayrı bir güven değerlendirmesi gerektirdiğinden öğrenci üzerinde belirgin bir bilişsel yük oluşturur. İnsan belleğinin işleme kapasitesinin sınırlı olduğu ve gereksiz dışsal yükün öğrenme ve karar verme performansını düşürdüğü göz önüne alındığında (Sweller, 1988), kampüs yaşamının bu parçalı dijital deneyimi öğrenci açısından somut bir verimlilik kaybına dönüşmektedir. Bu çalışmanın çıkış noktası, söz konusu parçalanmışlığı tek ve güvenilir bir dijital çatı altında toplama ihtiyacıdır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "1.2. Problem Tanımı"
+  },
+  {
+   "k": "p",
+   "t": "Yukarıda çizilen bağlam, bu tezin ele aldığı temel problemi açığa çıkarmaktadır: Üniversite öğrencilerinin akademik olmayan sosyal ve pratik ihtiyaçları, birbirinden kopuk, kurumsal denetimden yoksun ve tutarsız kullanıcı deneyimleri sunan çok sayıda dağınık kanal üzerinden karşılanmaktadır. Bu durum hem öğrenci verimliliğini hem de kurumsal güveni olumsuz etkilemektedir."
+  },
+  {
+   "k": "p",
+   "t": "Mevcut kampüs bilgi sistemleri tipik olarak akademik odaklıdır; ders kaydı, not görüntüleme ve müfredat takibi gibi işlevleri başarıyla yerine getirir. Ancak bu sistemler, öğrencinin kulüp faaliyetleri, tesis kullanımı, beslenme, ulaşım ve akranlar arası iş birliği gibi ihtiyaçlarını büyük ölçüde kapsam dışında bırakır. Kurum içinde kalan çözümler ise çoğunlukla birbirinden bağımsız \"veri siloları\" biçiminde geliştirilmiştir: Her sistem kendi verisini kendi sınırları içinde tutar, sistemler arası veri paylaşımı sınırlıdır ve ortak bir kullanıcı deneyimi tasarımı bulunmaz. Bu silo yapısının iki temel sonucu vardır. Birincisi, öğrenci aynı kişisel bilgileri farklı sistemlere tekrar tekrar girmek ve her sistemde ayrı bir oturum açmak zorunda kalır. İkincisi, her sistemin kendine özgü arayüz mantığı, öğrencinin sistemden sisteme geçerken yeni bir kullanım şemasını öğrenmesini gerektirir. Farklı görsel diller ve etkileşim kalıpları arasında sürekli geçiş yapmak, kullanıcının çalışan belleğine ek bir yük bindirir ve toplam etkileşim maliyetini yükseltir."
+  },
+  {
+   "k": "p",
+   "t": "Parçalı yapının bu soyut maliyetleri, öğrencinin günlük yaşamında somut sürtünmelere dönüşür. Bir spor tesisini kullanmak isteyen öğrenci, uygunluk bilgisini anlık göremediği için manuel yazışmalara başvurmak ve yanıt beklemek zorunda kalır; bu da çakışmalara ve kaynak israfına yol açar. Kampüs içinde yemek temin etmek isteyen öğrenci, sipariş durumunu izleyemediği için fiziki kuyruklarla ve belirsiz bekleme süreleriyle karşılaşır. Kampüs dışı yerleşkelere ulaşımda maliyet paylaşmak isteyen öğrenci, güvenilir ve doğrulanmış bir eşleştirme ortamı bulamadığı için ya kurum dışı riskli kanallara yönelir ya da bu olanaktan tümüyle vazgeçer. Proje ekibi veya kısa süreli iş gücü arayan öğrenci ise, akranlarının yetkinliklerini ve geçmiş güvenilirliğini değerlendirebileceği kurumsal bir referans çerçevesinden yoksundur. Bu problemlerin ortak paydası, çözümün teknik olarak mümkün olmasına rağmen tek ve güvenilir bir dijital çatı altında toplanmamış olmasıdır; ihtiyaçların her biri ayrı ayrı çözülebilir, ancak bu ayrı çözümlerin yarattığı dağınıklık öğrenci açısından sorunun kendisi haline gelmektedir."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "1.3. Projenin Kapsamı ve Amacı"
+  },
+  {
+   "k": "p",
+   "t": "Bu tezin temel amacı, üniversite öğrencilerinin ve personelinin akademik olmayan sosyal ve pratik ihtiyaçlarını tek bir güvenli, tutarlı ve genişletilebilir dijital platform altında birleştiren bütünleşik bir akıllı kampüs sistemi (IsikCampusOS) tasarlamak ve geliştirmektir. Platform, yalnızca doğrulanmış üniversite üyelerine açık kapalı bir ekosistem olarak kurgulanmış; tek oturumla erişilen, ortak bir tasarım diline sahip ve modüler biçimde genişleyebilen bir yapı olarak hedeflenmiştir. Bu genel amaç doğrultusunda proje; güvenli kimlik doğrulama ve rol tabanlı yetkilendirme altyapısı kurmayı, tüm modüllerde tutarlı bir kullanıcı deneyimi sağlayarak modüller arası bilişsel geçiş maliyetini en aza indirmeyi, bağımsız geliştirilebilir ve ölçeklenebilir bir mikroservis mimarisi tasarlamayı, servisler arası iletişimi olay güdümlü (event-driven) bir yaklaşımla dayanıklı kılmayı ve kapalı topluluk güvenine dayalı akranlar arası (P2P) etkileşimlerde hesap verebilirliği desteklemeyi hedeflemektedir."
+  },
+  {
+   "k": "p",
+   "t": "Proje, IsikCampusOS platformunu altı temel fonksiyonel modül ve bunları destekleyen çekirdek altyapı etrafında ele almaktadır. Çekirdek altyapı; kimlik doğrulama ve yetkilendirme, kullanıcı profili yönetimi, merkezi yönlendirme (API Gateway), servis keşfi, asenkron mesajlaşma ve bildirim bileşenlerini kapsar. Bu altyapı üzerine inşa edilen altı fonksiyonel modül ise şunlardır: Kulüp ve Etkinlik Yönetimi — ClubHub (kulüp kuruluşu, üyelik, etkinlik planlama, onay akışları ve katılım takibi); Spor Tesisleri Rezervasyon Sistemi — SpotReserve (kaynak listeleme, uygunluk yönetimi, çakışmasız rezervasyon ve check-in); Kampüs Çevrimiçi Yemek Sipariş ve Yönetim Sistemi — UniEats (satıcı ve menü yönetimi, sipariş alma ve sipariş durumunun asenkron takibi); Paylaşımlı Yolculuk Sistemi — CampusRide (sürücü/yolcu ilanları, rota ve uygunluk temelli eşleştirme, kapalı topluluk güven sinyalleri); Proje Eşleştirme Sistemi — ProjectMatch (beceri profilleri, proje ilanları ve uyum temelli akran eşleştirme); ve Kampüs İçi Mikro İş Pazarı — MicroJob (kısa süreli iş ilanları, teklif ve anlaşma süreçleri ile itibar temelli güven göstergeleri). Platform, duyarlı (responsive) bir web uygulaması olarak tasarlanmış olup masaüstü ve mobil tarayıcılarda kullanılabilir biçimde kurgulanmıştır."
+  },
+  {
+   "k": "p",
+   "t": "Projenin kapsamı, sınırlı bir bitirme projesi süresi içinde tutarlı ve savunulabilir bir derinlikte tamamlanabilmesi amacıyla belirli sınırlar içinde tutulmuştur. Öğrenci Bilgi Sistemi (SIS) ve Öğrenme Yönetim Sistemi (LMS) gibi mevcut akademik otomasyonlarla canlı veri entegrasyonu, yerel (native) mobil uygulama geliştirme, turnike veya sensör gibi IoT ve fiziksel donanım entegrasyonları ile gerçek finansal işlem ve ödeme ağ geçidi entegrasyonları bu çalışmanın kapsamı dışında bırakılmıştır. Platform, akademik süreçlere değil; öğrencinin sosyal ve pratik kampüs yaşamına odaklanan bir çözüm olarak konumlandırılmıştır."
+  },
+  {
+   "k": "h",
+   "lv": 1,
+   "t": "BÖLÜM 2: LİTERATÜR TARAMASI (LITERATURE REVIEW)"
+  },
+  {
+   "k": "p",
+   "t": "Bu bölümde, IsikCampusOS bütünleşik akıllı kampüs platformunun dayandığı kuramsal ve uygulamalı temeller akademik literatür ışığında incelenmektedir. İnceleme, projenin teknik gerçekleştirim araçlarından çok, ele aldığı problem alanına odaklanmaktadır. Bu doğrultuda bölüm; yükseköğretimde dijital dönüşüm ve akıllı kampüs bağlamından başlayarak kampüs yaşamındaki dijital parçalanma sorununu ve bunun bütünleştirilmesine yönelik yaklaşımları, bütünleşik platformların benimsenmesini belirleyen kullanıcı deneyimi ve güven boyutlarını, platformun kapsadığı kampüs hizmet alanlarına yönelik mevcut çözümleri ve son olarak alanyazındaki boşluğu ele almaktadır. Bölüm, bu boşluk karşısında çalışmanın konumunun belirlenmesiyle tamamlanmaktadır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "2.1. Yükseköğretimde Dijital Dönüşüm ve Akıllı Kampüs"
+  },
+  {
+   "k": "p",
+   "t": "Yükseköğretimde dijital dönüşüm, kurumsal süreçlerin yalnızca elektronik ortama aktarılmasının ötesinde; hizmet sunumunun, veri akışlarının ve kullanıcı deneyiminin bütüncül biçimde yeniden tasarlanmasını ifade eden çok boyutlu bir olgudur. Castro Benavides vd. (2020), 1980–2019 arasındaki çalışmaları inceledikleri sistematik literatür taramasında, yükseköğretim kurumlarındaki dijital dönüşüm girişimlerinin önemli bir bölümünün parçalı kaldığını ve bütünsel (holistic) bir boyutta ele alınmadığını saptamıştır. Bu bulgu, kurumların dijitalleşme çabalarının çoğunlukla tekil süreçlere odaklandığını ve kampüs ekosistemini bir bütün olarak kavrayan entegre yaklaşımların eksik kaldığını göstermektedir."
+  },
+  {
+   "k": "p",
+   "t": "Bisri vd. (2023), yükseköğretimde dijital dönüşüm üzerine yürüttükleri sistematik literatür taramasında dönüşümün başarısını belirleyen kilit etkenleri tanımlamış ve özellikle kurumsal liderliğin, tutarlı stratejilerin ve altyapısal entegrasyonun belirleyici olduğunu vurgulamıştır. Dönüşümün önündeki temel engellerden biri olarak gösterilen altyapısal dağınıklık ve birbirinden kopuk sistemler, kurumsal dijitalleşme olgunluğunu sınırlayan başlıca unsurlar arasında yer almaktadır. Xiao (2019), üniversitelerin kalkınma planlarını dijital dönüşüm açısından eleştirel biçimde analiz ettiği çalışmasında, dönüşümü yalnızca teknolojik altyapı edinimine indirgeyen yaklaşımların yetersiz kaldığını; başarılı dönüşümün kurumsal bağlamı ve kullanıcı ihtiyaçlarını merkeze alan bütünsel bir tasarım gerektirdiğini öne sürmektedir."
+  },
+  {
+   "k": "p",
+   "t": "Dijital dönüşümün kampüs ölçeğindeki en kapsamlı tezahürü \"akıllı kampüs\" (smart campus) kavramıdır. Polin vd. (2023), akıllı kampüs alanyazınını sistematik biçimde inceledikleri kavramsal çerçeve çalışmasında, akıllı kampüsleri akıllı şehirlerin küçük ölçekli birer modeli olarak nitelendirmekte ve toplum, ekonomi, çevre ve yönetişim olmak üzere dört temel alan etrafında sınıflandırmaktadır. Yazarlar, bu dört alanı bütünleşik biçimde ele alan gerçek dünya uygulamalarının alanyazında oldukça sınırlı olduğunu; akıllı kampüs uygulamalarının çoğunlukla tekil ve parçalı kaldığını belirtmektedir. Zhang vd. (2022) ise akıllı kampüs teknoloji ve uygulamalarını insan-merkezli bir bakış açısıyla inceledikleri sistematik derlemede, teknolojinin kendisinden ziyade öğrenci ve personel deneyiminin akıllı kampüs başarısının asıl belirleyicisi olduğunu vurgulamaktadır. Bu tespitler, kampüs yaşamının farklı boyutlarını tek bir tutarlı ve kullanıcı odaklı platformda birleştiren bütünleşik çözümlere duyulan ihtiyacı doğrudan desteklemektedir."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "2.2. Kampüs Yaşamında Dijital Parçalanma ve Bütünleştirme İhtiyacı"
+  },
+  {
+   "k": "p",
+   "t": "Yükseköğretim kurumlarında akademik süreçler için çoğunlukla kurumsal otomasyon sistemleri bulunmasına karşın, öğrencinin ders dışı sosyal ve pratik ihtiyaçları büyük ölçüde birbirinden kopuk kanallara dağılmış durumdadır. Kulüp duyuruları, tesis kullanımı, beslenme, ulaşım ve akranlar arası iş birliği gibi süreçlerin her biri ayrı bir araç, ayrı bir hesap ve ayrı bir etkileşim mantığı gerektirir. Bu \"dijital parçalanma\", öğrencinin aynı bilgileri tekrar tekrar girmesine, sistemden sisteme geçerken yeni arayüzler öğrenmesine ve toplam etkileşim maliyetinin yükselmesine yol açar. Castro Benavides vd. (2020) ve Polin vd. (2023) tarafından ortaya konan, kampüs sistemlerinin bütünsellikten uzak ve parçalı yapısına ilişkin bulgular, bu parçalanmanın yalnızca öğrenci deneyimini değil, kurumsal dijitalleşme olgunluğunu da sınırladığını göstermektedir."
+  },
+  {
+   "k": "p",
+   "t": "Bu parçalanmaya yönelik en yaygın yanıt, dağınık hizmetlerin tek bir arayüz altında birleştirilmesini savunan \"tek duraklı hizmet\" (one-stop service) modelidir. Bu modelin çağdaş ve gelişmiş bir biçimi olan süper-uygulama (super-app) yaklaşımı, çok sayıda hizmeti tek bir uygulama çatısı ve tek bir kimlik altında sunarak kullanıcının farklı platformlara dağılmasını engellemeyi amaçlar. Bu yaklaşımın öğrenci açısından neden değerli olduğu, öğrenci gelişimi literatürünün iki temel modeliyle gerekçelendirilebilir. Astin (1984) tarafından geliştirilen Öğrenci Katılımı Teorisi (Student Involvement Theory), öğrencinin elde ettiği akademik ve kişisel gelişimin, kampüs yaşamına yatırdığı fiziksel ve psikolojik enerjinin niceliği ve niteliğiyle doğrudan ilişkili olduğunu savunmaktadır. Bu çerçevede, öğrencinin enerjisini idari sürtünmelerle ve dağınık araçlarla tüketmesini engelleyen bütünleşik bir ortam, bu enerjinin nitelikli katılıma yönlendirilmesine olanak tanır. Tinto (1975) tarafından önerilen ve öğrencilerin kurumdan ayrılma eğilimlerini açıklayan kuramsal sentez ise, öğrencinin akademik ve sosyal entegrasyon düzeyinin kurumda kalma kararını belirleyen en önemli etkenler arasında olduğunu ortaya koymaktadır. Akranlar arası etkileşimi ve topluluk aidiyetini güvenilir bir çerçevede destekleyen bütünleşik bir platform, öğrencinin kuruma olan bağını güçlendirme potansiyeli taşımaktadır."
+  },
+  {
+   "k": "p",
+   "t": "IsikCampusOS, bu kuramsal temeller doğrultusunda, öğrencinin akademik olmayan sosyal ve pratik ihtiyaçlarını tek oturumla erişilen, ortak bir arayüze sahip kapalı bir platformda birleştiren bir tek duraklı hizmet modeli olarak konumlanmaktadır. Platformun yalnızca doğrulanmış üniversite üyelerine açık olması, onu genel ticari süper-uygulamalardan ayıran ve kampüs bağlamına özgü bir güven sınırı tanımlayan temel niteliğidir."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "2.3. Bütünleşik Platformlarda Kullanıcı Deneyimi, Güven ve Benimsenme"
+  },
+  {
+   "k": "p",
+   "t": "Bütünleşik bir platformun başarısı, sunduğu işlevlerin çokluğuyla değil; bu işlevlerin kullanıcı tarafından benimsenip benimsenmediğiyle ölçülür. Bu nedenle platformun kullanıcı deneyimi (UX), güven inşası ve teknoloji kabulü boyutları, tasarımın merkezinde yer almalıdır."
+  },
+  {
+   "k": "p",
+   "t": "Bilişsel yük ve arayüz tutarlılığı. Çok sayıda modülü tek bir arayüzde toplayan bir sistemde, kullanıcının modüller arasında geçiş yaparken karşılaştığı bilişsel maliyetin yönetilmesi kritik önem taşır. Bilişsel Yük Teorisi (Cognitive Load Theory), insanın çalışan belleğinin sınırlı bir işleme kapasitesine sahip olduğunu ve performansın bu kapasitenin verimli kullanımına bağlı olduğunu öne sürer (Sweller, 1988). Her modül için farklı bir görsel dil kullanılması, kullanıcının her geçişte yeni bir arayüz şemasını öğrenmesini gerektirerek gereksiz dışsal yük oluşturur. Bu nedenle bütünleşik platformlarda ortak tasarım belirteçleriyle (tutarlı tipografi, renk hiyerarşisi ve bileşen düzeni) sağlanan arayüz tutarlılığı, modüller arası bilişsel geçiş maliyetini azaltan temel bir tasarım ilkesidir. Etkileşim öğelerinin tasarımına yön veren iki klasik ilke, bu tutarlılığı tamamlar: Fitts Yasası (Fitts, 1954), sık kullanılan kritik eylem öğelerinin yeterince büyük ve erişilebilir konumda olması gerektiğini; Hick Yasası (Hick, 1952) ise karar süresinin sunulan seçenek sayısıyla logaritmik olarak arttığını, dolayısıyla seçeneklerin gruplandırılarak kademeli sunulması gerektiğini ortaya koyar."
+  },
+  {
+   "k": "p",
+   "t": "Duygusal tasarım ve aidiyet. Norman (2004), Duygusal Tasarım (Emotional Design) çerçevesinde kullanıcı deneyimini içgüdüsel (estetik ilk izlenim), davranışsal (kullanım kolaylığı ve performans) ve düşünsel (kullanıcının sistemle kurduğu kimliksel bağ) olmak üzere üç düzeyde ele alır. Bir kampüs platformunun yalnızca doğrulanmış üniversite üyelerine açık, kuruma ait kapalı bir topluluk ortamı olarak tasarlanması, özellikle düşünsel düzeyde öğrencinin kurumsal aidiyet duygusunu desteklemektedir."
+  },
+  {
+   "k": "p",
+   "t": "Katılım ve bildirim. Bütünleşik platformların kullanıcıyı aktif tutması, katılımı destekleyen mekanizmalara bağlıdır. Pechenkina vd. (2017), oyunlaştırılmış bir mobil uygulamanın öğrenci katılımı ve kalıcılığı üzerindeki olumlu etkilerini deneysel olarak göstermiştir. Mumcu ve Çebi (2025) ise anlık bildirimlerin (push notifications) öğrenci katılımındaki rolünü incelediği çalışmasında, bildirimlerin katılımı destekleyebildiğini, ancak aşırı ve filtrelenmemiş bildirimlerin olumsuz etkiler doğurabileceğini; bu nedenle bildirim yönetiminin dikkatli tasarlanması gerektiğini ortaya koymuştur."
+  },
+  {
+   "k": "p",
+   "t": "Güven ve teknoloji kabulü. Akranlar arası (P2P) etkileşim içeren modüllerde —paylaşımlı yolculuk ve mikro iş gibi— platformun benimsenmesinin önündeki en büyük engel güven sorunudur. ter Huurne vd. (2017), paylaşım ekonomisinde güvenin öncüllerini inceledikleri sistematik derlemede, güvenin yalnızca itibar (reputation) sistemlerine indirgenemeyecek kadar çok boyutlu olduğunu; itibarın yanı sıra platforma duyulan güvenin ve etkileşim deneyiminin de belirleyici olduğunu ortaya koymuştur. Bu bulgu, kapalı bir topluluk içinde yürütülen akranlar arası işlemlerde hem itibar göstergelerinin hem de platformun kurumsal güvencesinin önemini vurgulamaktadır. Teknolojinin benimsenmesini açıklayan en yaygın çerçevelerden biri olan Birleşik Teknoloji Kabul ve Kullanım Teorisi (UTAUT), kullanıcının bir bilişim sistemini kullanma niyetini performans beklentisi, çaba beklentisi, sosyal etki ve kolaylaştırıcı koşullar üzerinden açıklamaktadır (Venkatesh vd., 2003). Bu çerçeve, bütünleşik bir kampüs platformunun benimsenmesinde algılanan fayda ve kullanım kolaylığının kritik rol oynadığını göstermekte ve platformun UX-odaklı tasarım önceliğini gerekçelendirmektedir."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "2.4. Kampüs Hizmet Alanlarına Yönelik Mevcut Çözümler"
+  },
+  {
+   "k": "p",
+   "t": "IsikCampusOS platformunun kapsadığı altı hizmet alanının her biri, alanyazında ayrı birer araştırma konusu olarak ele alınmıştır. Bu bölümde, bu alanlara yönelik mevcut çözümler incelenmekte ve ortak özellikleri olan parçalı/izole yapıları vurgulanmaktadır."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "2.4.1. Kulüp ve Etkinlik Yönetimi (ClubHub)"
+  },
+  {
+   "k": "p",
+   "t": "Öğrenci kulüpleri ve düzenledikleri etkinlikler, öğrencinin ders dışı sosyalleşmesinin ve topluluk aidiyetinin temel araçlarıdır. Bu sürecin dijitalleştirilmesine yönelik çalışmalardan biri olan CU-EVENTS sistemi (Chaturvedi vd., 2024), üniversite etkinliklerinin organizasyonunu, kayıt (RSVP) süreçlerini ve gerçek zamanlı katılım takibini tek bir platformda merkezileştirerek öğrenci organizasyonlarındaki manuel iş yükünü azaltmayı amaçlamaktadır. Bu tür sistemler, etkinlik onayı, kapasite yönetimi ve katılım takibi gibi işlevleri başarıyla dijitalleştirmekle birlikte, yalnızca etkinlik yönetimine odaklanan bağımsız uygulamalar olarak tasarlanmış; kampüsün diğer sosyal ve pratik hizmetlerinden yalıtılmış biçimde kalmıştır."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "2.4.2. Spor Tesisleri Rezervasyon Sistemi (SpotReserve)"
+  },
+  {
+   "k": "p",
+   "t": "Kampüs kaynaklarının adil ve verimli paylaşımı, özellikle spor tesisleri gibi sınırlı kaynaklarda çakışmasız bir rezervasyon yönetimini gerektirir. Manuel ve dağınık süreçlerle yürütülen rezervasyonlar, çakışmalara ve kaynak israfına yol açmaktadır. German vd. (2021), yükseköğretim kurumları için geliştirdikleri bütünleşik oda rezervasyon sisteminde, fiziksel mekânların ve kullanım kurallarının yazılımda modellenerek uygunluk ve çakışma kontrollerinin otomatikleştirilmesinin rezervasyon verimliliğini artırdığını ve çakışmaları azalttığını ortaya koymuştur. Bu tür sistemler tesis tahsisini etkin biçimde yönetmekle birlikte, çoğunlukla yalnızca rezervasyon işlevine adanmış tekil çözümler olarak geliştirilmekte ve kampüsün bütünleşik hizmet ekosisteminden bağımsız çalışmaktadır."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "2.4.3. Kampüs Çevrimiçi Yemek Sipariş ve Yönetim Sistemi (UniEats)"
+  },
+  {
+   "k": "p",
+   "t": "Kampüs içi yemek süreçlerinin dijitalleştirilmesi, fiziki kuyrukların ve yoğunluğun azaltılmasına yönelik bir araştırma konusudur. Ramiah ve Nagowah (2021), bir üniversite kampüsü için geliştirdikleri akıllı kantin sisteminde, çevrimiçi sipariş panelleri ile mutfak tarafındaki hazırlık süreçleri arasında kurulan asenkron durum köprüsünün, öğrencilerin sipariş durumunu gerçek zamanlı izleyebilmesini ve kantinlerdeki insan yoğunluğunun azaltılmasını sağladığını ortaya koymuştur. Bu yaklaşım, siparişin durumunun öğrenciye dinamik olarak yansıtılmasını ve teslim sürecinin fiziki kuyruk gerektirmeden yürütülmesini mümkün kılmaktadır. Ancak bu sistemler de tipik olarak yemek hizmetine özgü bağımsız uygulamalar olarak tasarlanmakta; öğrencinin kampüs içindeki diğer hizmetlerle aynı arayüz ve kimlik altında bütünleşmemektedir."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "2.4.4. Paylaşımlı Yolculuk Sistemi (CampusRide)"
+  },
+  {
+   "k": "p",
+   "t": "Kampüs ulaşımında maliyet paylaşımı ve otopark yoğunluğunun azaltılması, sürdürülebilir kampüs mobilitesi literatürünün konusudur. AlQuhtani (2022), banliyö üniversitelerinde paylaşımlı yolculuğun (ridesharing) sürdürülebilir bir ulaşım alternatifi olma potansiyelini incelediği çalışmasında, bu sistemlerin tek kişilik araç kullanımını ve buna bağlı çevresel etkileri azaltma kapasitesine dikkat çekmektedir. Paylaşımlı yolculuk sistemlerinin verimliliğini artıran tasarım yaklaşımlarından biri, yolcuların kapıdan kapıya alınması yerine ortak buluşma noktalarına yönlendirilmesidir; Stiglic vd. (2015), buluşma noktalarının (meeting points) kullanılmasının sürücülerin rota sapmalarını azaltarak ve sürücü-yolcu eşleşme olasılığını artırarak sistem verimliliğini iyileştirdiğini ortaya koymuştur. Eşleştirme ve rota optimizasyonu boyutunda Arslan ve Hoffmann (2025), talep temelli paylaşımlı yolculuğun mikroskobik trafik akışı simülasyonuna entegrasyonunu inceleyerek bu sistemlerin dinamik rota planlaması açısından modellenmesine katkı sunmuştur. Bu alandaki çözümlerin benimsenmesinin önündeki temel engel ise güven sorunudur; paylaşım ekonomisi literatürü (ter Huurne vd., 2017), bu tür P2P sistemlerin ancak güçlü bir güven çerçevesiyle sürdürülebilir olduğunu göstermektedir. Bu durum, CampusRide gibi modüllerin kurum dışı ticari uygulamalar yerine, kapalı topluluk güveni sağlayan kurumsal bir platform içinde sunulmasının önemini ortaya koymaktadır."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "2.4.5. Proje Eşleştirme Sistemi (ProjectMatch)"
+  },
+  {
+   "k": "p",
+   "t": "Öğrencilerin yetkinlik ve ilgi alanlarına göre proje ekiplerine atanması, kararlı (stable) eşleştirme problemleri literatürüyle yakından ilişkilidir. Bu alanın temelini oluşturan Gale ve Shapley (1962), iki taraflı tercihlerin çakışmadan ve kararlı biçimde eşleştirilmesini sağlayan kararlı eşleştirme (stable matching) algoritmasını ortaya koymuştur. Bu yaklaşım öğrenci-proje atama (Student-Project Allocation) problemine uyarlanmıştır: Abraham vd. (2007), öğrencilerin ve projelerin tercih listelerine dayalı olarak kararlı atamalar üreten verimli algoritmalar geliştirmiştir. Tercih listelerinde eşitlik (ties) bulunması durumunda kararlılığın korunması sorununu ele alan Olaosebikan ve Manlove (2022) ise, eşitlikli öğrenci-proje atama probleminde süper-kararlılık (super-stability) sağlayan algoritmalar önermiştir. Beceri temelli ekip oluşturma boyutunda Hamidi Rad vd. (2020), uzmanlık alanlarına göre dengeli ekipler kurmaya yönelik öğrenme tabanlı bir yaklaşım geliştirmiştir. Bu çalışmalar güçlü algoritmik temeller sunmakla birlikte, çoğunlukla soyut eşleştirme problemleri olarak ele alınmakta; öğrencinin kampüs içindeki sosyal kimliği, profili ve diğer etkileşimleriyle bütünleşik bir platform bağlamında değerlendirilmemektedir."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "2.4.6. Kampüs İçi Mikro İş Pazarı (MicroJob)"
+  },
+  {
+   "k": "p",
+   "t": "Kampüs içi kısa süreli işlerin akranlar arası bir pazaryerinde yönetilmesi, gig ekonomisi literatürüyle ilişkilidir. Wood vd. (2019), küresel gig ekonomisinde özerklik ve algoritmik kontrol arasındaki dengeyi inceledikleri çalışmalarında, dijital iş platformlarında itibar ve değerlendirme sistemlerinin platform yönetişimindeki merkezi rolüne ve bu sistemlerin çalışanlar üzerindeki etkilerine dikkat çekmiştir. Paylaşım ekonomisinde güvenin öncüllerini inceleyen ter Huurne vd. (2017) ise, P2P işlemlerde güvenin itibar göstergeleri, platform güveni ve etkileşim deneyimi gibi çok boyutlu öncüllere dayandığını ortaya koymaktadır. Bu bulgular, kampüs içi bir mikro iş pazarının ancak güçlü güven sinyalleri ve kurumsal bir güvence çerçevesiyle işleyebileceğini göstermektedir. Mevcut gig ekonomisi platformları ise genel ve açık nitelikte olup, bir üniversite topluluğunun kapalı güven sınırından ve kurumsal kimlik doğrulamasından yoksundur."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "2.5. Alanyazındaki Boşluk ve Çalışmanın Konumu"
+  },
+  {
+   "k": "p",
+   "t": "Literatür incelendiğinde iki temel örüntü ortaya çıkmaktadır. Birincisi, yükseköğretimde dijital dönüşüm ve akıllı kampüs çalışmaları, kampüs yaşamının farklı boyutlarını bütünsel biçimde ele alan uygulamaların sınırlı kaldığını; girişimlerin çoğunlukla tekil ve parçalı süreçlere odaklandığını tutarlı biçimde raporlamaktadır (Castro Benavides vd., 2020; Polin vd., 2023; Zhang vd., 2022). İkincisi, kulüp yönetimi (Chaturvedi vd., 2024), tesis rezervasyonu (German vd., 2021), yemek siparişi (Ramiah & Nagowah, 2021), paylaşımlı yolculuk (AlQuhtani, 2022; Stiglic vd., 2015) ve proje eşleştirme (Abraham vd., 2007; Olaosebikan & Manlove, 2022) gibi alanların her biri kendi alanyazınında başarıyla ele alınmış; ancak bu çözümler birbirinden bağımsız, izole uygulamalar olarak geliştirilmiştir. Bu iki örüntü birlikte değerlendirildiğinde, ortaya çıkan temel boşluk şudur: Kampüsün akademik olmayan sosyal ve pratik hizmetlerinin tamamını, tek bir kapalı, güvenli ve kullanıcı deneyimi açısından tutarlı platformda birleştiren bütünleşik bir çalışmaya alanyazında rastlanmamıştır."
+  },
+  {
+   "k": "p",
+   "t": "IsikCampusOS, bu boşluğu doldurmayı amaçlamaktadır. Çalışma; kampüsün ders dışı sosyal ve pratik süreçlerini, kuramsal olarak öğrenci katılımı ve kalıcılığı (Astin, 1984; Tinto, 1975) ile gerekçelendirilmiş, kullanıcı deneyimi açısından bilişsel yükü en aza indirecek biçimde tasarlanmış (Sweller, 1988; Norman, 2004) ve akranlar arası etkileşimlerde güven sorununu kapalı topluluk güvencesiyle ele alan (ter Huurne vd., 2017) tek bir bütünleşik platformda birleştirmesiyle alanyazına özgün bir katkı sunmaktadır. Bu platformun gerçekleştiriminde kullanılan dağıtık sistem mimarisi, kimlik doğrulama altyapısı ve olay güdümlü entegrasyon yaklaşımları ise bir sonraki bölümde, sistemin metodolojisi ve tasarımı kapsamında ayrıntılı olarak ele alınmaktadır."
+  },
+  {
+   "k": "h",
+   "lv": 1,
+   "t": "BÖLÜM 3: METODOLOJİ VE SİSTEM TASARIMI (METHODOLOGY & SYSTEM DESIGN)"
+  },
+  {
+   "k": "p",
+   "t": "Bu bölümde, IsikCampusOS bütünleşik akıllı kampüs platformunun geliştirilmesinde izlenen yazılım mühendisliği metodolojisi ile sistemin teknik tasarımı sunulmaktadır. Bölüm; geliştirme yaklaşımından başlayarak dağıtık sistem mimarisini, kimlik doğrulama ve güvenlik altyapısını, olay güdümlü servis entegrasyonunu, veri tabanı tasarımını ve platformun barındırdığı fonksiyonel modüllerin tasarım modellerini ele almaktadır. Tasarım kararları, Bölüm 2'de ortaya konan kuramsal temeller (bütünleşik portal, bilişsel yük, kapalı topluluk güveni) ile gerekçelendirilmekte; teknik tercihler ise ilgili yazılım mimarisi literatürüne dayandırılmaktadır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "3.1. Geliştirme Metodolojisi"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.1.1. Yinelemeli ve Artımlı Geliştirme Yaklaşımı"
+  },
+  {
+   "k": "p",
+   "t": "IsikCampusOS, çok modüllü ve geniş kapsamlı bir platform olduğundan, gereksinimlerin baştan eksiksiz tanımlanmasını gerektiren doğrusal (waterfall) modeller yerine yinelemeli ve artımlı (iterative and incremental) bir geliştirme yaklaşımı benimsenmiştir. Bu yaklaşımda platform, tek seferde değil; çalışan ve gösterilebilir parçalar halinde, art arda gelen geliştirme döngüleriyle inşa edilmiştir. Her döngüde önce çekirdek altyapı, ardından bu altyapı üzerine oturan fonksiyonel bir modül uçtan uca (backend + ön yüz) tamamlanmıştır."
+  },
+  {
+   "k": "p",
+   "t": "Bu yaklaşım, çevik gereksinim mühendisliği ilkeleriyle uyumludur (Daun vd., 2023). Modüller arasındaki bağımlılıkların erken aşamada görünür kılınması, gereksinim değişikliklerinin sınırlı bir kapsamda yönetilebilmesini sağlamıştır. Akademik bağlamda yürütülen yazılım projelerinde bu tür artımlı yaklaşımların, hem teknik riski hem de kapsam belirsizliğini azalttığı gösterilmiştir (Mahnič, 2012)."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.1.2. Geliştirme Döngüsünün Yapısı"
+  },
+  {
+   "k": "p",
+   "t": "Geliştirme süreci, her biri belirli bir teslimat hedefi olan döngüler halinde yürütülmüştür:"
+  },
+  {
+   "k": "np",
+   "t": "1.  Çekirdek altyapı döngüsü: Servis keşfi (Eureka), API Gateway, container orkestrasyonu (Docker Compose) ve mesajlaşma altyapısı (Kafka) kurulmuştur."
+  },
+  {
+   "k": "np",
+   "t": "2.  Kimlik ve profil döngüsü: Kullanıcı kimliği, üniversite e-postası doğrulaması ve profil yönetimi tamamlanmıştır."
+  },
+  {
+   "k": "np",
+   "t": "3.  Modül döngüleri: Her fonksiyonel modül (kulüp/etkinlik, tesis rezervasyon, yemek, paylaşımlı yolculuk, proje eşleştirme, mikro iş) sırayla, kendi içinde uçtan uca çalışır biçimde geliştirilmiştir."
+  },
+  {
+   "k": "p",
+   "t": "Her döngünün sonunda, üretilen yazılım parçası çalışır durumda gösterilebilir hâle getirilmiş; bir sonraki döngünün kapsamı, ortaya çıkan teknik gerçeklikler ışığında güncellenmiştir."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.1.3. Tasarım Odaklı Düşünce ve Kullanıcı Deneyimi"
+  },
+  {
+   "k": "p",
+   "t": "Platformun ön yüz tasarımında, Bölüm 2'de ele alınan bilişsel yük (Sweller, 1988) ve arayüz tutarlılığı ilkeleri doğrultusunda kullanıcı odaklı bir tasarım yaklaşımı izlenmiştir. Tüm modüller ortak bir tasarım dili (ortak bileşenler, tutarlı renk ve tipografi hiyerarşisi, standart kart ve liste düzenleri) üzerine inşa edilerek, kullanıcının modüller arası geçişte karşılaştığı bilişsel maliyet en aza indirilmiştir."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "3.2. Sistem Mimarisi"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.2.1. Mimari Yaklaşım: Mikroservisler"
+  },
+  {
+   "k": "p",
+   "t": "IsikCampusOS, mikroservis mimarisi ile tasarlanmıştır. Bu tercih; bağımsız geliştirilebilirlik, hata izolasyonu ve modül bazlı ölçeklenebilirlik gerekçeleriyle yapılmıştır (Newman, 2021; Di Francesco vd., 2019). Her fonksiyonel domain, kendi iş mantığına, kendi veri tabanına ve kendi dağıtım birimine sahip bağımsız bir Spring Boot servisi olarak gerçekleştirilmiştir."
+  },
+  {
+   "k": "p",
+   "t": "Monolitik ve mikroservis mimarilerini karşılaştıran çalışmalar, mikroservis yaklaşımının yatay ölçeklenme ve bağımsız dağıtım açısından avantaj sağladığını; buna karşılık dağıtık yapının operasyonel karmaşıklık getirdiğini göstermektedir (Blinowski vd., 2022). Bu farkındalıkla, platformdaki servis sayısı domain sınırlarına göre ölçülü tutulmuş ve yalnızca anlamlı sınırlarda servis ayrımına gidilmiştir."
+  },
+  {
+   "k": "p",
+   "t": "Proje, tüm servislerin tek bir Git deposunda yönetildiği monorepo yapısında kurgulanmıştır. Bu yapı, servisler arası ortak sözleşmelerin tek yerde yönetilmesini ve geliştirme koordinasyonunu kolaylaştırmıştır."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.2.2. Servis Kataloğu"
+  },
+  {
+   "k": "p",
+   "t": "Platform, altyapı servisleri ve domain servisleri olmak üzere iki katmandan oluşur. Servislerin sorumlulukları ve port atamaları Tablo 3.1'de sunulmuştur."
+  },
+  {
+   "k": "tbl",
+   "rows": [
+    [
+     "Katman",
+     "Servis",
+     "Port",
+     "Sorumluluk"
+    ],
+    [
+     "Altyapı",
+     "eureka-server",
+     "8761",
+     "Servis kayıt ve keşfi"
+    ],
+    [
+     "Altyapı",
+     "api-gateway",
+     "8080",
+     "Yönlendirme, merkezi JWT doğrulama, CORS"
+    ],
+    [
+     "Domain",
+     "auth-service",
+     "8081",
+     "Kimlik, JWT üretimi, e-posta doğrulama, kullanıcı yönetimi"
+    ],
+    [
+     "Domain",
+     "profile-service",
+     "8082",
+     "Profil yönetimi, beceri etiketleri"
+    ],
+    [
+     "Domain",
+     "facility-service",
+     "8086",
+     "Tesis ve kaynak rezervasyonu, çakışma kontrolü"
+    ],
+    [
+     "Domain",
+     "food-service",
+     "8087",
+     "Satıcı, menü ve sipariş yönetimi"
+    ],
+    [
+     "Domain",
+     "ride-service",
+     "8088",
+     "Paylaşımlı yolculuk ilanı ve eşleştirme"
+    ],
+    [
+     "Domain",
+     "event-service",
+     "8089",
+     "Kulüp, etkinlik, RSVP, bildirim"
+    ],
+    [
+     "Domain",
+     "projectmatch-service",
+     "8090",
+     "Beceri tabanlı proje ekip eşleştirme"
+    ],
+    [
+     "Domain",
+     "microjob-service",
+     "8091",
+     "Kampüs içi mikro iş ilanı ve teklif"
+    ]
+   ],
+   "cap": {
+    "num": "3.1",
+    "title": "Servis Kataloğu"
+   }
+  },
+  {
+   "k": "p",
+   "t": "Altyapı bileşenleri olarak ayrıca PostgreSQL (servis başına veri tabanı), Apache Kafka ve Zookeeper (asenkron mesajlaşma), Redis (önbellek ve hız sınırlama) ve Zipkin (dağıtık izleme) kullanılmıştır."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.2.3. Genel Mimari Şeması"
+  },
+  {
+   "k": "p",
+   "t": "Sistemin genel mimarisi; istemciden gelen isteklerin API Gateway üzerinden domain servislerine yönlendirilmesini, servislerin Eureka üzerinden birbirini keşfetmesini ve Kafka üzerinden asenkron olarak haberleşmesini içerir. Genel mimari Şekil 3.1'de gösterilmektedir."
+  },
+  {
+   "k": "fig",
+   "num": "3.1",
+   "title": "Genel Sistem Mimarisi",
+   "img": "C:\\Users\\tolga\\Desktop\\IsikCampusOS\\docs\\tez\\build\\diagrams\\sekil_3_1.png"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.2.4. Spring Cloud Entegrasyon Katmanı"
+  },
+  {
+   "k": "p",
+   "t": "Servisler arası ağ trafiği ve dış dünyadan gelen istekler, Spring Cloud bileşenleriyle yönetilmiştir:"
+  },
+  {
+   "k": "li",
+   "t": "API Gateway (Spring Cloud Gateway): İstemci hiçbir domain servisine doğrudan erişemez. Tüm istekler /api/v1/... temel yolu üzerinden Gateway tarafından karşılanır. Gateway; rota eşleme, CORS politikaları, kimlik doğrulama filtresi ve hız sınırlama (rate limiting) sorumluluklarını üstlenir. Gateway'in yönlendirme yapısı Türkçe yol adları üzerine kuruludur (örneğin /api/v1/kimlik/ → auth-service, /api/v1/kulupler/ → event-service, /api/v1/tesisler/** → facility-service)."
+  },
+  {
+   "k": "li",
+   "t": "Eureka (Service Registry & Discovery): Tüm servisler başlangıçta Eureka'ya kendi adları ve ağ konumlarıyla kaydolur. Servisler birbirini sabit IP adresi yerine servis adıyla bulur; bu, dinamik ölçeklenmeyi kolaylaştırır."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.2.5. Mimari Karar: Bildirim Sorumluluğunun Konumu"
+  },
+  {
+   "k": "p",
+   "t": "Mikroservis mimarisinde \"her işlev için ayrı servis\" yaklaşımı her zaman doğru değildir; gereksiz servis ayrımı operasyonel karmaşıklığı artırır (Taibi vd., 2017). Bu farkındalıkla, bildirim (in-app notification) işlevi ayrı bir servise çıkarılmak yerine, mevcut sürümde bildirimin yegâne tüketicisi olan event-service içinde konumlandırılmıştır. Bu, kanıta dayalı bilinçli bir tasarım kararıdır: bildirim üreten ikinci bir modül devreye girdiğinde, bildirim olay güdümlü bağımsız bir servise ayrılacak biçimde tasarlanmıştır. Bu yaklaşım, mimari kararların gereksinimlerle birlikte evrildiği artımlı geliştirme felsefesiyle tutarlıdır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "3.3. Kimlik Doğrulama ve Güvenlik Tasarımı"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.3.1. Merkezi Kimlik Doğrulama ve Tek Oturum (SSO)"
+  },
+  {
+   "k": "p",
+   "t": "Süper-uygulama modelinde kullanıcı, tüm modüllere tek bir oturumla erişebilmelidir. Bu deneyimi sağlamak için durumsuz (stateless) kimlik doğrulama mimarisi kurulmuştur. Mikroservis mimarilerinde kimlik doğrulama ve yetkilendirme üzerine yapılan sistematik incelemeler, API Gateway ve JSON Web Token (JWT) bileşenlerinin bu bağlamda en yaygın ve uygun çözümler olduğunu ortaya koymaktadır (de Almeida & Canedo, 2022). Platformun güvenlik akışı şu adımlardan oluşur:"
+  },
+  {
+   "k": "np",
+   "t": "1.  Kullanıcı, auth-service üzerinden üniversite e-postası ve şifresiyle giriş yapar. Şifreler bcrypt ile özetlenerek saklanır."
+  },
+  {
+   "k": "np",
+   "t": "2.  auth-service, kullanıcının kimliğini ve rollerini içeren, kriptografik olarak imzalanmış bir JWT üretir ve istemciye döner."
+  },
+  {
+   "k": "np",
+   "t": "3.  İstemci, sonraki tüm isteklerinde bu token'ı Authorization: Bearer <token> başlığıyla API Gateway'e gönderir."
+  },
+  {
+   "k": "np",
+   "t": "4.  API Gateway, korumalı rotalarda token'ın imzasını merkezî olarak doğrular. Geçerli istekte token içindeki kullanıcı kimliği ve roller çözümlenerek downstream servise X-User-Id ve X-User-Roles HTTP başlıkları olarak iletilir."
+  },
+  {
+   "k": "np",
+   "t": "5.  Downstream servis, ek bir veri tabanı sorgusu yapmadan bu başlıkları okuyarak rol bazlı yetkilendirmeyi gerçekleştirir."
+  },
+  {
+   "k": "p",
+   "t": "Bu yaklaşım, Spring Security tabanlı mikroservislerde merkezî bir güvenlik katmanıyla API'lerin korunmasına ilişkin uygulamalı çalışmalarla da uyumludur (Chatterjee & Prinz, 2022). Bu akış Şekil 3.2'de gösterilmektedir."
+  },
+  {
+   "k": "fig",
+   "num": "3.2",
+   "title": "JWT Tabanlı Kimlik Doğrulama Akışı",
+   "img": "C:\\Users\\tolga\\Desktop\\IsikCampusOS\\docs\\tez\\build\\diagrams\\sekil_3_2.png"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.3.2. Rol Bazlı Erişim Kontrolü (RBAC)"
+  },
+  {
+   "k": "p",
+   "t": "Yetkilendirme, rol bazlı erişim kontrolü (RBAC) ile sağlanır. Roller JWT içinde taşınır ve iki türde ele alınır:"
+  },
+  {
+   "k": "li",
+   "t": "Sistem rolleri: ROLESTUDENT, ROLEREGISTRAR, ROLESKSADMIN, ROLEFACILITYADMIN, ROLEADMIN gibi kalıcı roller."
+  },
+  {
+   "k": "li",
+   "t": "Domain rolü: Bir kaynağa özgü, üyelik kaydında tutulan rol (örneğin kulüp başkanlığı). Bu, sistem rolü değildir; ilgili servisin kendi veri modelinde yönetilir."
+  },
+  {
+   "k": "p",
+   "t": "Yetki yalnızca role göre değil; sahiplik (ownership), kaynak durumu ve bağlam dikkate alınarak da kontrol edilir. Örneğin bir kulüp başkanı yalnızca kendi kulübünün etkinliklerini yönetebilir; bir öğrenci yalnızca kendi rezervasyonunu iptal edebilir. Bu çok katmanlı yetkilendirme, her servisin kendi domain katmanında uygulanır."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.3.3. Kapalı Topluluk ve Güvenlik Önlemleri"
+  },
+  {
+   "k": "p",
+   "t": "Platform, yalnızca doğrulanmış üniversite üyelerine açık kapalı bir ekosistem olarak tasarlanmıştır. Bu, Bölüm 2'de ele alınan kapalı topluluk güveni (ter Huurne vd., 2017) ilkesinin teknik karşılığıdır. Temel güvenlik önlemleri şunlardır:"
+  },
+  {
+   "k": "li",
+   "t": "Üniversite e-posta alan adı kontrolü ve zorunlu e-posta doğrulaması."
+  },
+  {
+   "k": "li",
+   "t": "İlk girişte zorunlu şifre değiştirme akışı."
+  },
+  {
+   "k": "li",
+   "t": "Kritik aksiyonların denetim günlüğüne (audit log) kaydedilmesi."
+  },
+  {
+   "k": "li",
+   "t": "Mantıksal silme (soft-delete) ile geçmişe dönük izlenebilirliğin korunması."
+  },
+  {
+   "k": "li",
+   "t": "Hassas yapılandırma değerlerinin (JWT imza anahtarı vb.) ortam değişkenleri üzerinden yönetilmesi."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "3.4. Olay Güdümlü Entegrasyon"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.4.1. Asenkron İletişim Gereksinimi"
+  },
+  {
+   "k": "p",
+   "t": "Dağıtık sistemlerde servisler arası senkron (REST) çağrı zincirleri, gecikme birikmesine ve zincirleme hatalara (cascading failures) yol açabilir. Servisleri gevşek bağlı (loosely coupled) tutmak ve ana iş akışını bloklamadan yan etkileri (bildirim, profil oluşturma, sertifika üretimi) yürütmek amacıyla Apache Kafka tabanlı olay güdümlü mimari benimsenmiştir (Newman, 2021)."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.4.2. Olay Akışları ve Topic Tasarımı"
+  },
+  {
+   "k": "p",
+   "t": "Servisler, ürettikleri durum değişikliklerini Kafka topic'lerine birer domain olayı olarak yayar; ilgilenen servisler bu topic'lere abone olarak olayları tüketir. Platformda kullanılan başlıca olay akışları Tablo 3.2'de sunulmuştur."
+  },
+  {
+   "k": "tbl",
+   "rows": [
+    [
+     "Olay (Topic)",
+     "Üreten",
+     "Tüketen",
+     "Amaç"
+    ],
+    [
+     "kullanici.kaydedildi",
+     "auth-service",
+     "profile-service",
+     "Yeni kullanıcı için otomatik profil oluşturma"
+    ],
+    [
+     "kullanici.silindi",
+     "auth-service",
+     "profile-service",
+     "Profil kaydının senkron tutulması"
+    ],
+    [
+     "etkinlik.yayinlandi",
+     "event-service",
+     "(ilgili tüketiciler)",
+     "Etkinlik yayını bildirimi"
+    ],
+    [
+     "etkinlik.iptal-edildi",
+     "event-service",
+     "(ilgili tüketiciler)",
+     "Etkinlik iptali bildirimi"
+    ],
+    [
+     "etkinlik.sertifika.olusturma-talep-edildi",
+     "event-service",
+     "auth-service",
+     "Sertifika üretim ve teslimat süreci"
+    ]
+   ],
+   "cap": {
+    "num": "3.2",
+    "title": "Kafka Olay Akışları"
+   }
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.4.3. Örnek Akış: Kullanıcı Kaydı ve Otomatik Profil Oluşturma"
+  },
+  {
+   "k": "p",
+   "t": "Olay güdümlü mimarinin somut bir örneği, yeni kullanıcı kaydı sürecidir. auth-service kullanıcıyı kendi veri tabanına yazar ve kullanici.kaydedildi olayını yayar. profile-service bu olayı tüketerek kullanıcı için boş bir profil kaydı oluşturur. Böylece iki servis, birbirine senkron bağımlı olmadan tutarlı bir duruma ulaşır. Bu akış Şekil 3.3'te gösterilmektedir."
+  },
+  {
+   "k": "fig",
+   "num": "3.3",
+   "title": "Olay Güdümlü Kullanıcı Kaydı Akışı",
+   "img": "C:\\Users\\tolga\\Desktop\\IsikCampusOS\\docs\\tez\\build\\diagrams\\sekil_3_3.png"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.4.4. Güvenilirlik İlkeleri"
+  },
+  {
+   "k": "p",
+   "t": "Olay tüketimi, tekrar denemeye dayanıklı (retry-safe) ve idempotent olacak biçimde tasarlanmıştır: aynı olayın birden çok kez işlenmesi, mükerrer kayıt oluşturmaz (örneğin profil oluşturma, kullanıcı kimliği üzerinden tekillik kontrolüyle yapılır). Servis içi tutarlılık, JPA @Transactional sınırları içinde sağlanır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "3.5. Veri Tabanı Tasarımı"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.5.1. Servis Başına Veri Tabanı (Database-per-Service)"
+  },
+  {
+   "k": "p",
+   "t": "Veri katmanında, mikroservis mimarisinin temel ilkelerinden biri olan servis başına veri tabanı stratejisi uygulanmıştır (Newman, 2021). Her servis kendi PostgreSQL veri tabanına sahiptir ve başka bir servisin tablolarına doğrudan SQL ile erişemez. Servisler arası veri ihtiyacı, REST çağrısı veya Kafka olayı ile karşılanır. Bu izolasyon, bir servisteki şema değişikliğinin diğer servisleri etkilemesini önler ve domain sınırlarını veri katmanında da güvence altına alır."
+  },
+  {
+   "k": "p",
+   "t": "Veri tabanı dağılımı Tablo 3.3'te sunulmuştur."
+  },
+  {
+   "k": "tbl",
+   "rows": [
+    [
+     "Servis",
+     "Veri Tabanı"
+    ],
+    [
+     "auth-service",
+     "authdb"
+    ],
+    [
+     "profile-service",
+     "profiledb"
+    ],
+    [
+     "event-service",
+     "eventdb"
+    ],
+    [
+     "facility-service",
+     "facilitydb"
+    ],
+    [
+     "food-service",
+     "fooddb"
+    ],
+    [
+     "ride-service",
+     "ridedb"
+    ],
+    [
+     "projectmatch-service",
+     "projectmatchdb"
+    ],
+    [
+     "microjob-service",
+     "microjobdb"
+    ]
+   ],
+   "cap": {
+    "num": "3.3",
+    "title": "Servis–Veri Tabanı Eşleşmesi"
+   }
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.5.2. Şema Yönetimi ve Veri Standartları"
+  },
+  {
+   "k": "p",
+   "t": "Veri tabanı şeması, sürüm kontrollü göç (migration) betikleriyle Flyway üzerinden yönetilmektedir. Her servis kendi db/migration dizininde versiyonlanmış SQL betiklerine sahiptir ve uygulama başlangıcında Hibernate ddl-auto: validate ayarıyla şema yalnızca doğrulanır; otomatik şema değişikliği yapılmaz. Bu, geliştirme ile üretim ortamları arasında şema tutarlılığını güvence altına alır."
+  },
+  {
+   "k": "p",
+   "t": "Ortak veri standartları şunlardır:"
+  },
+  {
+   "k": "li",
+   "t": "Birincil anahtarlar: Dağıtık ortamda çakışmasız kimlik üretimi için UUID temelli anahtarlar."
+  },
+  {
+   "k": "li",
+   "t": "Mantıksal silme (soft-delete): Fiziksel silme yerine silindi/silinmetarihi alanlarıyla mantıksal silme; aktif kayıtlar bu alanlar üzerinden filtrelenir."
+  },
+  {
+   "k": "li",
+   "t": "Denetim izi: Kritik aksiyonlar denetim günlüğüne yazılır."
+  },
+  {
+   "k": "li",
+   "t": "İndeksleme: Sık sorgulanan filtre alanları üzerinde performans indeksleri tanımlanmıştır."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.5.3. Kavramsal Veri Modeli"
+  },
+  {
+   "k": "p",
+   "t": "Platformun çekirdek varlıkları ve ilişkileri, modüller arası kullaniciId referansı üzerinden kurulur; modüller kullanıcı nesnesini kopyalamaz, yalnızca kimlik referansını tutar. Çekirdek varlıkların ilişki modeli Şekil 3.4'te sunulmaktadır."
+  },
+  {
+   "k": "fig",
+   "num": "3.4",
+   "title": "Kavramsal Varlık-İlişki (ER) Diyagramı",
+   "img": "C:\\Users\\tolga\\Desktop\\IsikCampusOS\\docs\\tez\\build\\diagrams\\sekil_3_4.png"
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "3.6. Fonksiyonel Modüllerin Tasarımı"
+  },
+  {
+   "k": "p",
+   "t": "Bu bölümde, platformun altı fonksiyonel modülünün tasarımı ve temel iş kuralları sunulmaktadır. Modüller ortak bir altyapı (kimlik, profil, bildirim, olay akışı) üzerine oturur; her biri kendi domain mantığını kapsar. Ayrıca ProjectMatch ve MicroJob modüllerinin paylaştığı etiket tabanlı eşleştirme altyapısı, ayrı bir ortak bileşen olarak (3.6.5) ele alınmaktadır."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.6.1. Kulüp ve Etkinlik Yönetimi (ClubHub)"
+  },
+  {
+   "k": "p",
+   "t": "Bu modül, kulüp yaşam döngüsünü ve etkinlik organizasyonunu kapsar. Tasarımın merkezinde, kulüp yönetiminin SKS (Sağlık, Kültür ve Spor) onayına tabi olduğu bir onay iş akışı bulunur."
+  },
+  {
+   "k": "p",
+   "t": "Temel iş kuralları:"
+  },
+  {
+   "k": "li",
+   "t": "Kulüp oluşturma ve başkan atama yetkisi SKS'ye aittir."
+  },
+  {
+   "k": "li",
+   "t": "Bir öğrenci aynı anda yalnızca bir kulübün başkanı olabilir; bir akademik danışman yalnızca bir kulübe atanabilir."
+  },
+  {
+   "k": "li",
+   "t": "Kulüp başkanı etkinlik taslağı oluşturur; etkinlik, SKS onayı olmadan yayınlanamaz."
+  },
+  {
+   "k": "li",
+   "t": "Etkinliğe katılım (RSVP) kapasiteyle sınırlıdır; kapasite dolduğunda bekleme listesi (waitlist) devreye girer. Bir katılımcı kaydını iptal ettiğinde, bekleme listesindeki ilk öğrenci otomatik olarak ana listeye yükseltilir."
+  },
+  {
+   "k": "li",
+   "t": "Etkinlik günü QR kod ile katılım doğrulanır; sertifikalı etkinliklerde, katılımı onaylanan öğrencilere otomatik sertifika üretim süreci tetiklenir."
+  },
+  {
+   "k": "p",
+   "t": "Etkinlik, tanımlı bir durum makinesi (state machine) ile yönetilir. Etkinlik yaşam döngüsü Şekil 3.5'te gösterilmektedir."
+  },
+  {
+   "k": "fig",
+   "num": "3.5",
+   "title": "Etkinlik Durum Makinesi",
+   "img": "C:\\Users\\tolga\\Desktop\\IsikCampusOS\\docs\\tez\\build\\diagrams\\sekil_3_5.png"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.6.2. Spor Tesisleri Rezervasyon Sistemi (SpotReserve)"
+  },
+  {
+   "k": "p",
+   "t": "Bu modül, kampüs spor tesislerinin çakışmasız ve adil biçimde rezerve edilmesini sağlar. Tasarımın merkezinde çakışma kontrolü (conflict detection) bulunur: aynı kaynak ve aynı zaman aralığı için iki aktif rezervasyon oluşturulamaz. Modül ayrıca tesis bazlı uygunluk kuralları (çalışma saatleri, minimum ön bildirim süresi) ve rezervasyon sonrası check-in/yoklama kaydını destekler."
+  },
+  {
+   "k": "p",
+   "t": "Rezervasyon oluşturma sırasındaki çakışma kontrolü mantığı Şekil 3.6'da gösterilmektedir."
+  },
+  {
+   "k": "fig",
+   "num": "3.6",
+   "title": "Rezervasyon Çakışma Kontrolü Akışı",
+   "img": "C:\\Users\\tolga\\Desktop\\IsikCampusOS\\docs\\tez\\build\\diagrams\\sekil_3_6.png"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.6.3. Kampüs Çevrimiçi Yemek Sipariş ve Yönetim Sistemi (UniEats)"
+  },
+  {
+   "k": "p",
+   "t": "Bu modül, kampüs içi satıcıların menülerini yönetmesini ve öğrencilerin sipariş verip durumunu gerçek zamanlı izlemesini sağlar. Tasarımın amacı, fiziki kuyrukları azaltmaktır (Ramiah & Nagowah, 2021). Sipariş, bir durum makinesi ile yönetilir: sipariş verildi → satıcı kabul etti → hazırlanıyor → teslime hazır → teslim alındı. Sipariş hazır olduğunda öğrenciye asenkron bildirim gönderilir ve öğrenci teslim kodu ile siparişini alır."
+  },
+  {
+   "k": "p",
+   "t": "Sipariş yaşam döngüsü Şekil 3.7'de gösterilmektedir."
+  },
+  {
+   "k": "fig",
+   "num": "3.7",
+   "title": "Sipariş Durum Makinesi",
+   "img": "C:\\Users\\tolga\\Desktop\\IsikCampusOS\\docs\\tez\\build\\diagrams\\sekil_3_7.png"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.6.4. Paylaşımlı Yolculuk Sistemi (CampusRide)"
+  },
+  {
+   "k": "p",
+   "t": "Bu modül, kampüse ulaşımda öğrencilerin sürücü/yolcu olarak eşleştirilmesini sağlar. Modül, önceden planlı paylaşımlı yolculuk (carpooling) modeline dayanır: sürücüler, belirli bir kalkış–varış güzergâhı, tarih ve saat için ilan açar; yolcular bu ilanlara başvurur. Bu yaklaşım, anlık/konum-tabanlı otostop modellerinden farklı olarak, öğrencilerin düzenli kampüs ulaşımı (commute) ihtiyacına uygundur ve Bölüm 2'de incelenen kampüs carpooling literatürüyle örtüşür (AlQuhtani, 2022). Tasarım ayrıca iki ilkeye dayanır: rota verimliliği için buluşma noktası (meeting point) yaklaşımı (Stiglic vd., 2015) ve eşleştirmenin kapalı topluluk güveni içinde yürütülmesi (ter Huurne vd., 2017)."
+  },
+  {
+   "k": "p",
+   "t": "Hibrit konum modeli: İlanlarda kalkış ve varış konumu iki biçimde belirtilebilir. Öğrencilerin yoğun olarak geldiği merkezî bölgeler (örneğin Çekmeköy, Şile, Ümraniye, Kadıköy, Maslak, Sultangazi gibi) önceden tanımlı popüler toplanma noktaları olarak listede hazır sunulur; böylece sık kullanılan güzergâhlarda hızlı ilan oluşturma ve yüksek eşleşme olasılığı sağlanır. Bunun yanında, bu listede bulunmayan bölgelerden (örneğin Ağva veya Caddebostan) gelen bir öğrenci serbest/esnek konum girerek kendi güzergâhı için ilan açabilir. Bu hibrit yaklaşım, hem yoğun güzergâhlarda standartlaşmanın getirdiği verimliliği hem de seyrek güzergâhlarda esnekliği bir arada sunarak öğrencilerin her bölgeye ulaşımını kapsar."
+  },
+  {
+   "k": "p",
+   "t": "İlan keşfi ve bildirim: Öğrenciler, yayımlanan tüm ilanları listeleyebilir; kalkış ve varış konumuna göre ilan araması yapabilir. Ayrıca belirli bir güzergâh (belirli bir kalkış noktasından belirli bir varış noktasına) için bildirim aboneliği oluşturabilir; bu güzergâhta yeni bir ilan yayımlandığında ilgili öğrenciye bildirim iletilir. Bu, Bölüm 2'de ele alınan bildirim yorgunluğunu önleme ilkesiyle uyumlu olarak yalnızca ilgili güzergâhlara odaklı bir bilgilendirme sağlar (Mumcu & Çebi, 2025)."
+  },
+  {
+   "k": "p",
+   "t": "Eşleştirme yaklaşımı: Bir sürücünün rotasına yolcu eklenmesi, sürücünün katlanacağı rota sapmasının (detour) belirli bir tolerans sınırını aşmaması koşuluna bağlanır. Bu sapma oranı, sürücünün yolcusuz rota maliyeti ile yolcuyu alıp bırakarak oluşan yeni rota maliyetinin oranı olarak modellenir; oran, önceden tanımlı bir tolerans eşiğinin altında kalmalıdır. Mümkün olan durumlarda yolcular, kapıdan kapıya alınmak yerine güzergâh üzerindeki ortak buluşma noktalarına yönlendirilerek sürücünün sapması en aza indirilir."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.6.5. Etiket Tabanlı İlgi Alanı ve Beceri Altyapısı (Ortak Bileşen)"
+  },
+  {
+   "k": "p",
+   "t": "ProjectMatch ve MicroJob modüllerinin her ikisi de, öğrencileri ilgi ve yeteneklerine göre eşleştirmek için ortak bir etiket (tag) altyapısı üzerine kurulmuştur. Bu altyapı, iki modülde tutarlılığı sağlamak ve mükerrer tasarımı önlemek amacıyla tek bir paylaşılan kavram olarak ele alınmıştır."
+  },
+  {
+   "k": "p",
+   "t": "Altyapının temel öğeleri şunlardır:"
+  },
+  {
+   "k": "li",
+   "t": "İlgi alanı / beceri etiketleri: Öğrenciler, profillerine serbestçe seçebildikleri ayrıntılı, \"hashtag\" tarzı etiketler ekler (örneğin #yazilim, #mobil-gelistirme, #grafik-tasarim, #istatistik, #ceviri). Bu etiketler hem ilgi alanını hem de yetkinlik alanını ifade eder."
+  },
+  {
+   "k": "li",
+   "t": "İlan etiketleri: Bir ilan açan öğrenci, ilanın hedeflediği etiketleri seçer. Böylece ilan, ilgili etiketlere sahip öğrencilerle ilişkilendirilebilir."
+  },
+  {
+   "k": "li",
+   "t": "Görünürlük tercihi: Her ilan iki görünürlük düzeyinden biriyle yayımlanır: herkese açık (tüm öğrencilere görünür) veya etiket bazlı niş (yalnızca ilgili etiketlere sahip öğrencilere yönelik). Bu, ilanın doğru kitleye ulaşmasını sağlar ve gereksiz bilgi kalabalığını azaltır (Sweller, 1988)."
+  },
+  {
+   "k": "li",
+   "t": "Bildirim filtreleme tercihi: Öğrenci, yeni ilan bildirimlerini iki düzeyde alabilir: tüm ilanlar veya yalnızca ilgi alanı etiketleriyle eşleşen ilanlar. Bu tercih, Bölüm 2'de ele alınan bildirim yorgunluğunu önleme ilkesiyle uyumludur (Mumcu & Çebi, 2025)."
+  },
+  {
+   "k": "p",
+   "t": "Bu ortak altyapı, etiket eşleşmesini iki modülün eşleştirme mantığının temel sinyali hâline getirir."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.6.6. Proje Eşleştirme Sistemi (ProjectMatch)"
+  },
+  {
+   "k": "p",
+   "t": "Bu modül, öğrencileri proje ekipleriyle buluşturan, LinkedIn iş ilanları mantığında çalışan bir ekip kurma platformudur. Tipik bir kullanım senaryosu şöyledir: bir TÜBİTAK projesi yürütmek isteyen öğrenci, projesi için bir yazılımcıya veya belirli bir yetkinliğe sahip ekip arkadaşlarına ihtiyaç duyar; bu doğrultuda bir proje ilanı açar, beklediği etiketleri (aranan yetkinlikler) seçer ve ilanı uygun görünürlük düzeyiyle yayımlar. İlgilenen öğrenciler ilana başvurur ve taraflar iletişime geçerek ekip kurar."
+  },
+  {
+   "k": "p",
+   "t": "Temel iş akışı:"
+  },
+  {
+   "k": "np",
+   "t": "1.  Öğrenci, profilinde ilgi alanı/beceri etiketlerini tanımlar (3.6.5)."
+  },
+  {
+   "k": "np",
+   "t": "2.  Proje sahibi, aranan yetkinlik etiketlerini ve görünürlüğü (herkese açık / etiket bazlı niş) belirleyerek ilan açar."
+  },
+  {
+   "k": "np",
+   "t": "3.  İlan, görünürlük tercihine ve öğrencilerin bildirim filtrelerine göre ilgili kitleye ulaşır."
+  },
+  {
+   "k": "np",
+   "t": "4.  Öğrenciler ilana başvurur; başvurular proje sahibi tarafından değerlendirilir."
+  },
+  {
+   "k": "np",
+   "t": "5.  Kabul edilen aday ekibe katılır; iletişim platform üzerinden başlatılır."
+  },
+  {
+   "k": "p",
+   "t": "İsteğe bağlı uyum sıralaması (öneri): Başvurular değerlendirilirken, sistem adayların profil etiketleri ile ilanın aradığı etiketler arasındaki örtüşmeyi bir uyum skoru olarak hesaplayıp adayları sıralayabilir. Ekip kurma sürecinin daha ileri bir aşamada — birden çok proje ve aday arasında dengeli ve kararlı (stable) bir dağıtım gerektiğinde — kararlı eşleştirme teorisine (Gale & Shapley, 1962) ve öğrenci-proje atama (SPA) modellerine (Abraham vd., 2007; Olaosebikan & Manlove, 2022) dayalı bir algoritma kullanılması önerilmektedir. Bu uyum skoru ve kararlı eşleştirme formülasyonu Bölüm 3.7'de sunulmaktadır."
+  },
+  {
+   "k": "note",
+   "t": "Tasarım notu: ProjectMatch'in temel akışı başvuru-tabanlıdır (LinkedIn modeli); kararlı eşleştirme algoritması, çok sayıda aday ve projenin toplu olarak dağıtıldığı senaryolar için önerilen bir genişlemedir."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.6.7. Kampüs İçi Mikro İş Pazarı (MicroJob)"
+  },
+  {
+   "k": "p",
+   "t": "Bu modül, öğrencilerin hem yeteneklerini/ürünlerini pazarlayabildiği hem de ihtiyaç duydukları hizmet veya ürünler için ilan açabildiği, iki taraflı bir kampüs içi pazaryeridir. Tasarım, armut.com benzeri hizmet pazaryeri modelini temel alır; ancak kapalı bir üniversite topluluğu bağlamına özgü biçimde uyarlanmıştır. Tasarımın merkezinde, kapalı toplulukta güven inşası için çift yönlü itibar (reputation) göstergeleri bulunur (Wood vd., 2019; ter Huurne vd., 2017)."
+  },
+  {
+   "k": "p",
+   "t": "İki ilan türü, tek pazaryeri: Modül, tek bir pazaryeri altında iki ilan türünü destekler:"
+  },
+  {
+   "k": "li",
+   "t": "Arz ilanı (hizmet/ürün sunumu): Öğrenci, sunabileceği bir yeteneği veya ürünü vitrinler (örneğin \"logo tasarlarım\", \"matematik özel dersi veririm\"). İlgilenen kullanıcılar bu ilana teklif/iletişim talebiyle yaklaşır."
+  },
+  {
+   "k": "li",
+   "t": "Talep ilanı (ihtiyaç): Öğrenci, ihtiyaç duyduğu bir hizmet veya ürün için ilan açar (örneğin \"sunum tasarlayacak birini arıyorum\"). İlgili yetkinliğe sahip öğrenciler bu ilana teklif verir."
+  },
+  {
+   "k": "p",
+   "t": "Her iki ilan türü de ortak etiket altyapısını (3.6.5) ve görünürlük tercihini kullanır. İlanlar, ücret türü açısından iki seçenek sunar: ücretli (tutar/koşullar taraflar arasında serbestçe görüşülür) veya gönüllü (karşılıksız yardım). Platform gerçek bir ödeme aracısı değildir; ücret yalnızca bir bilgi alanı olarak tutulur ve ödeme tarafların kendi arasında gerçekleşir (bkz. Bölüm 1, kapsam dışı alanlar)."
+  },
+  {
+   "k": "p",
+   "t": "Temel iş akışı: ilan (arz/talep) → teklif/iletişim → anlaşma → teslim → çift yönlü puanlama. Bir iş tamamlandığında her iki taraf da birbirini puanlar; bu çift yönlü değerlendirme, tek yönlü ticari pazaryerlerinden farklı olarak kapalı toplulukta simetrik bir hesap verebilirlik sağlar (Wood vd., 2019). Toplanan puanlar kullanıcının itibar göstergesini besler ve sonraki etkileşimlerde güven sinyali olarak sunulur."
+  },
+  {
+   "k": "p",
+   "t": "MicroJob ilanının yaşam döngüsü Şekil 3.8'de gösterilmektedir."
+  },
+  {
+   "k": "fig",
+   "num": "3.8",
+   "title": "MicroJob İlan Durum Makinesi",
+   "img": "C:\\Users\\tolga\\Desktop\\IsikCampusOS\\docs\\tez\\build\\diagrams\\sekil_3_8.png"
+  },
+  {
+   "k": "note",
+   "t": "Tasarım notu (özgün katkı): MicroJob, armut.com'un iki taraflı pazaryeri iskeletini temel alır; ancak üç noktada kampüse özgü biçimde farklılaşır: (1) kapalı üniversite topluluğuna özgü çift yönlü itibar sistemi, (2) ücretli/gönüllü ayrımıyla karşılıksız yardımın da desteklenmesi, (3) ProjectMatch ile paylaşılan ortak etiket altyapısı. Bu uyarlamalar, modülü ticari bir uygulamanın kopyası olmaktan çıkarıp üniversite bağlamına özgü bir çözüme dönüştürür."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "3.7. Önerilen Algoritmik Tasarımlar ve Matematiksel Modeller"
+  },
+  {
+   "k": "p",
+   "t": "Bu bölümde, eşleştirme ve optimizasyon gerektiren modüllerin (ProjectMatch, CampusRide) dayandığı matematiksel modeller akademik formülasyonlarıyla sunulmaktadır. Bu modeller, ilgili modüllerin tasarım temelini oluşturur."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.7.1. Beceri Tabanlı Kararlı Eşleştirme (ProjectMatch)"
+  },
+  {
+   "k": "p",
+   "t": "Eşleştirme problemi, öğrenci kümesi S = \\s1, s2, …, sn\\ ve proje kümesi P = \\p1, p2, …, pm\\ üzerinde tanımlanır. Her projenin pj bir kontenjanı cj vardır."
+  },
+  {
+   "k": "p",
+   "t": "Her öğrencinin profili bir etiket kümesi E(si) ile, her projenin aradığı yetkinlikler ise etiket kümesi E(pj) ile temsil edilir (3.6.5). Bir öğrencinin si bir proje pj için uyum skoru, öğrencinin etiketleri ile projenin aradığı etiketler arasındaki ağırlıklı örtüşme olarak hesaplanır:"
+  },
+  {
+   "k": "eq",
+   "t": "Uyum(si, pj) = Σr ∈ E(pj) ∩ E(si) w(r)"
+  },
+  {
+   "k": "p",
+   "t": "Burada w(r), projenin r etiketine atadığı önem ağırlığıdır. Etiket örtüşmesi arttıkça uyum skoru yükselir. Proje sahibi, başvuran öğrencileri bu skora göre sıralayarak değerlendirebilir."
+  },
+  {
+   "k": "p",
+   "t": "Bir eşleştirme M'nin kararlı sayılabilmesi için engelleyici çift içermemesi gerekir. Bir (si, pj) çifti, eğer si mevcut eşleştiği projeye kıyasla pj'yi tercih ediyor ve pj ya kontenjan boşluğuna sahip ya da en düşük uyumlu mevcut öğrencisine kıyasla si'yi tercih ediyorsa, engelleyici çift oluşturur. Gale-Shapley temelli algoritma, eşitlikli tercihlerin (ties) bulunduğu durumlarda dahi kararlı bir eşleştirme üretir (Olaosebikan & Manlove, 2022)."
+  },
+  {
+   "k": "p",
+   "t": "SPA-T eşleştirme algoritmasının çalışma mantığı Şekil 3.9'da gösterilmektedir."
+  },
+  {
+   "k": "fig",
+   "num": "3.9",
+   "title": "Kararlı Eşleştirme (SPA-T) Akış Şeması",
+   "img": "C:\\Users\\tolga\\Desktop\\IsikCampusOS\\docs\\tez\\build\\diagrams\\sekil_3_9.png"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "3.7.2. Rota Sapması ile Eşleştirme (CampusRide)"
+  },
+  {
+   "k": "p",
+   "t": "Kampüs ulaşım ağı, yönlü bir çizge (graph) G = (V, E) olarak modellenir; burada V kavşak ve durak noktalarını, E ise yol kesitlerini temsil eder. Her yol kesitinin e geçiş maliyeti, kesitin geçiş süresi te ile anlık trafik yoğunluk katsayısı Te ≥ 1 çarpımıyla ağırlıklandırılır:"
+  },
+  {
+   "k": "eq",
+   "t": "w(e) = te · Te"
+  },
+  {
+   "k": "p",
+   "t": "İki nokta arasındaki en düşük maliyetli rota, ağırlıklandırılmış en kısa yol algoritmasıyla (Dijkstra) hesaplanır. Bir sürücünün başlangıç–varış maliyeti C(OD, DD) iken, bir yolcuyu OP noktasından alıp DP noktasında bırakması durumunda oluşan yeni rota maliyeti şöyledir:"
+  },
+  {
+   "k": "eq",
+   "t": "Csapma = C(OD, OP) + C(OP, DP) + C(DP, DD)"
+  },
+  {
+   "k": "p",
+   "t": "Sistemin bu eşleşmeyi önerebilmesi için sapma oranının, önceden tanımlı tolerans parametresi β sınırını aşmaması gerekir:"
+  },
+  {
+   "k": "eq",
+   "t": "CsapmaC(OD, DD) ≤ 1 + β"
+  },
+  {
+   "k": "p",
+   "t": "Birden çok uygun yolcu bulunması durumunda, en düşük sapma oranına ve en yüksek karşılıklı güven uyumuna sahip eşleşmeye öncelik verilir."
+  },
+  {
+   "k": "h",
+   "lv": 1,
+   "t": "BÖLÜM 4: GELİŞTİRME (IMPLEMENTATION)"
+  },
+  {
+   "k": "p",
+   "t": "Bu bölümde, Bölüm 3'te tasarımı sunulan IsikCampusOS platformunun gerçekleştirim süreci ele alınmaktadır. Bölüm; geliştirmede izlenen yaklaşımı ve kullanılan temel teknolojileri, çekirdek altyapının ve fonksiyonel modüllerin hayata geçirilmesini, kullanıcı arayüzünün geliştirilmesini ve süreç boyunca karşılaşılan teknik zorlukları ve bunlara üretilen çözümleri anlatı biçiminde sunmaktadır. Amaç, satır düzeyinde kod ayrıntısı vermek değil; tasarım kararlarının uygulamada nasıl somutlaştığını ve hangi mühendislik tercihlerinin yapıldığını ortaya koymaktır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "4.1. Geliştirme Yaklaşımı ve Temel Teknolojiler"
+  },
+  {
+   "k": "p",
+   "t": "Platform, Bölüm 3'te açıklanan yinelemeli ve artımlı yaklaşımla geliştirilmiştir. Her geliştirme döngüsünde önce çekirdek altyapı sağlamlaştırılmış, ardından bir fonksiyonel modül arka uç ve ön yüz tarafıyla birlikte uçtan uca çalışır hâle getirilmiştir. Tüm servisler ve kullanıcı arayüzü, tek bir kod deposunda (monorepo) yönetilmiş; bu sayede ortak sözleşmeler tek yerde tutulmuş ve geliştirme koordinasyonu kolaylaşmıştır."
+  },
+  {
+   "k": "p",
+   "t": "Arka uç tarafında Java ve Spring Boot ekosistemi tercih edilmiştir. Bu tercihin nedeni; Spring Cloud bileşenlerinin (Gateway, Eureka) mikroservis mimarisini doğrudan desteklemesi ve olgun bir topluluk ekosistemine sahip olmasıdır. Servisler arası asenkron iletişim için Apache Kafka, veri saklama için servis başına ayrı PostgreSQL veri tabanı, kullanıcı arayüzü için React kullanılmıştır. Tüm bileşenler Docker ile konteynerleştirilerek tutarlı bir geliştirme ve dağıtım ortamı sağlanmıştır. Projede kullanılan temel teknolojiler ve kullanım amaçları Tablo 4.1'de özetlenmiştir."
+  },
+  {
+   "k": "tbl",
+   "rows": [
+    [
+     "Katman",
+     "Teknoloji",
+     "Kullanım Amacı"
+    ],
+    [
+     "Arka uç",
+     "Java 21 / Spring Boot 3",
+     "Mikroservislerin geliştirildiği ana platform"
+    ],
+    [
+     "API Katmanı",
+     "Spring Cloud Gateway",
+     "Tek giriş noktası, yönlendirme ve merkezi kimlik doğrulama"
+    ],
+    [
+     "Servis Keşfi",
+     "Spring Cloud Netflix Eureka",
+     "Servislerin birbirini dinamik olarak bulması"
+    ],
+    [
+     "Mesajlaşma",
+     "Apache Kafka",
+     "Servisler arası olay güdümlü asenkron iletişim"
+    ],
+    [
+     "Güvenlik",
+     "Spring Security + JWT",
+     "Kimlik doğrulama ve rol bazlı yetkilendirme"
+    ],
+    [
+     "Veri",
+     "PostgreSQL (servis başına) + Flyway",
+     "İlişkisel veri saklama ve sürüm kontrollü şema yönetimi"
+    ],
+    [
+     "Ön yüz",
+     "React + TypeScript",
+     "Tek sayfa uygulaması (SPA) arayüzü"
+    ],
+    [
+     "Dağıtım",
+     "Docker & Docker Compose",
+     "Konteynerleştirme ve yerel orkestrasyon"
+    ]
+   ],
+   "cap": {
+    "num": "4.1",
+    "title": "Temel Teknoloji Yığını"
+   }
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "4.2. Çekirdek Altyapının Gerçekleştirimi"
+  },
+  {
+   "k": "p",
+   "t": "Platformun tüm modülleri, ortak bir çekirdek altyapı üzerine inşa edilmiştir. Bu altyapının ilk bileşeni, servislerin birbirini bulmasını sağlayan servis keşif katmanıdır: her servis başlangıçta Eureka sunucusuna kaydolur ve diğer servislere sabit ağ adresleri yerine mantıksal servis adlarıyla erişilir. Bu yapı, servislerin konumdan bağımsız çalışmasını ve ileride ölçeklenmesini kolaylaştırmıştır."
+  },
+  {
+   "k": "p",
+   "t": "İkinci ve en kritik bileşen, tüm dış isteklerin geçtiği API Gateway'dir. İstemci hiçbir servise doğrudan erişemez; tüm trafik Gateway üzerinden akar. Gateway, gelen isteğin taşıdığı JWT'yi merkezî olarak doğrular, geçerli ise token içindeki kullanıcı kimliği ile rolleri çözümler ve bu bilgiyi ilgili servise özel HTTP başlıkları (X-User-Id, X-User-Roles) olarak iletir. Bu sayede her servis, ayrı ayrı kimlik doğrulama yükü taşımadan, yalnızca yetkilendirme kararına odaklanır. Bu merkezî doğrulama yaklaşımı, mikroservis mimarilerinde önerilen yaygın bir desendir (de Almeida & Canedo, 2022)."
+  },
+  {
+   "k": "p",
+   "t": "Üçüncü bileşen, servisleri birbirine gevşek bağlayan olay akışıdır. Bir serviste gerçekleşen önemli bir durum değişikliği, Apache Kafka üzerinden bir olay olarak yayımlanır ve bu olayla ilgilenen diğer servisler onu asenkron biçimde tüketir. Bunun en belirgin örneği kullanıcı kaydıdır: kimlik servisi yeni bir kullanıcı oluşturduğunda bir kayıt olayı yayar, profil servisi bu olayı dinleyerek ilgili kullanıcı için otomatik olarak boş bir profil oluşturur. İki servis, birbirine senkron biçimde bağımlı olmadan tutarlı bir duruma ulaşır. Olay tüketimi, aynı olayın birden çok kez işlenmesi durumunda mükerrer kayıt oluşmasını önleyecek biçimde (idempotent) tasarlanmıştır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "4.3. Fonksiyonel Modüllerin Gerçekleştirimi"
+  },
+  {
+   "k": "p",
+   "t": "Çekirdek altyapı üzerine, platformun altı fonksiyonel modülü sırayla geliştirilmiştir. Modüllerin tümü aynı katmanlı yapıyı (denetleyici – servis – veri erişimi – veri modeli) izlemiş; böylece her yeni modül, önceki modüllerin oturmuş şablonu üzerinden tutarlı biçimde inşa edilmiştir."
+  },
+  {
+   "k": "p",
+   "t": "Kulüp ve etkinlik modülü, platformun en kapsamlı parçası olarak geliştirilmiştir. Bu modülde kulüp yaşam döngüsü, SKS onay akışları, etkinlik durum geçişleri, katılım (RSVP) ve bekleme listesi yönetimi, QR kod ile katılım doğrulaması ve sertifika üretimi gerçekleştirilmiştir. Öne çıkan teknik çözümlerden biri, kapasitesi dolan etkinliklerde devreye giren bekleme listesi mekanizmasıdır: bir katılımcı kaydını iptal ettiğinde, bekleme listesindeki ilk öğrenci ana listeye otomatik olarak yükseltilir. Bir diğer çözüm, belirli aralıklarla çalışan bir zamanlayıcının yaklaşan etkinlikler için katılımcılara otomatik hatırlatma göndermesi ve gönderdiği hatırlatmaları kaydederek tekrarı önlemesidir."
+  },
+  {
+   "k": "p",
+   "t": "Tesis rezervasyon modülünde, kampüs kaynaklarının çakışmasız rezerve edilmesi merkezî gereksinimdir. Bu modülde, bir rezervasyon talebi önce tesis politikasına (minimum ön bildirim süresi, azami rezervasyon süresi gibi) göre, ardından aynı kaynak ve zaman aralığında etkin bir rezervasyon bulunup bulunmadığına göre iki aşamalı olarak doğrulanır. Zaman bilgisinin tutarlılığını korumak için tarih-saat alanları, zaman dilimi bilgisini saklayan bir veri tipiyle tutulmuştur."
+  },
+  {
+   "k": "p",
+   "t": "Yemek sipariş modülü, satıcıların menü yönetimi ile öğrencilerin sipariş takibini bir araya getirir. Sipariş, tanımlı bir durum makinesi boyunca ilerler ve her durum değişikliğinde öğrenciye asenkron bildirim iletilir; teslim aşamasında öğrenci bir teslim koduyla siparişini alır. Paylaşımlı yolculuk modülü, önceden planlı carpooling ilanlarını harita üzerinde görselleştirir. Kalkış ve varış konumu, yoğun güzergâhlar için önceden tanımlı popüler toplanma noktalarından seçilebildiği gibi, seyrek güzergâhlar için serbest konum girişiyle de belirlenebilir (hibrit model). Öğrenciler ilanları konuma göre arayabilir ve belirli bir güzergâh için bildirim aboneliği oluşturabilir; eşleştirmede sürücünün rota sapması tolerans sınırı içinde tutulur."
+  },
+  {
+   "k": "p",
+   "t": "Proje eşleştirme ve mikro iş modülleri, ortak bir etiket altyapısı üzerine kurulmuştur. Öğrencilerin profillerine ekledikleri ilgi alanı ve beceri etiketleri, ilanların hedef etiketleriyle eşleştirilerek hem ilan görünürlüğü (herkese açık ya da yalnızca ilgili etiketlere sahip kullanıcılara yönelik) hem de bildirim filtreleme tercihi bu altyapı üzerinden yönetilir. Mikro iş modülü ayrıca, hizmet/ürün sunan ve talep eden öğrencileri tek bir pazaryerinde buluşturur ve tamamlanan işlerde çift yönlü puanlamaya dayalı bir itibar göstergesi üretir."
+  },
+  {
+   "k": "p",
+   "t": "Modüller arası bağlantı noktalarında, bildirim üretimi gibi ortak işlevler tekrar tekrar kodlanmak yerine merkezî biçimde ele alınmıştır. Bildirim işlevinin, bağımsız bir servise ayrılmak yerine mevcut sürümde etkinlik servisi içinde konumlandırılması, Bölüm 3'te gerekçelendirilen bilinçli bir tasarım kararıdır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "4.4. Kullanıcı Arayüzünün Geliştirilmesi"
+  },
+  {
+   "k": "p",
+   "t": "Kullanıcı arayüzü, React ve TypeScript ile tek sayfa uygulaması (SPA) olarak geliştirilmiştir. Uygulama durumu, her domain için ayrı tutulan hafif durum depolarıyla yönetilmiş; arka uç ile iletişim, her isteğe oturum token'ını otomatik ekleyen merkezî bir HTTP istemcisi üzerinden sağlanmıştır."
+  },
+  {
+   "k": "p",
+   "t": "Arayüzün güvenlik mantığı, korumalı rota yaklaşımıyla kurulmuştur. Bir kullanıcı korumalı bir sayfaya erişmeye çalıştığında üç aşamalı bir denetimden geçer: oturumu yoksa giriş sayfasına, e-postası doğrulanmamışsa doğrulama sayfasına, ilk giriş şifre değişikliği bekliyorsa şifre değiştirme sayfasına yönlendirilir. Bu adımları tamamlayan kullanıcı, rolüne göre uygun panele (SKS yöneticisi, öğrenci işleri, tesis yöneticisi veya öğrenci paneli) otomatik olarak yönlendirilir."
+  },
+  {
+   "k": "p",
+   "t": "Tasarımın bütününde, Bölüm 2'de ele alınan bilişsel yük azaltma ilkesi gözetilmiştir. Tüm modüller ortak arayüz bileşenleri (kart, liste, form, durum etiketi) ve tutarlı bir renk ve tipografi düzeni üzerine kurulmuş; böylece kullanıcı bir modülden diğerine geçtiğinde aynı etkileşim kalıplarıyla karşılaşmış ve modüller arası bilişsel geçiş maliyeti en aza indirilmiştir."
+  },
+  {
+   "k": "p",
+   "t": "Platformun çalışan arayüzünden seçilmiş ekranlar aşağıdaki şekillerde sunulmaktadır."
+  },
+  {
+   "k": "fig",
+   "num": "4.1",
+   "title": "Giriş ve Kimlik Doğrulama Ekranı",
+   "img": null
+  },
+  {
+   "k": "fig",
+   "num": "4.2",
+   "title": "Öğrenci Ana Paneli",
+   "img": null
+  },
+  {
+   "k": "fig",
+   "num": "4.3",
+   "title": "Kulüp ve Etkinlik Ekranları (liste, etkinlik detayı ve RSVP)",
+   "img": null
+  },
+  {
+   "k": "fig",
+   "num": "4.4",
+   "title": "Tesis Rezervasyon Ekranı",
+   "img": null
+  },
+  {
+   "k": "fig",
+   "num": "4.5",
+   "title": "SKS Onay Paneli",
+   "img": null
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "4.5. Karşılaşılan Zorluklar ve Çözümler"
+  },
+  {
+   "k": "p",
+   "t": "Geliştirme süreci boyunca, mikroservis mimarisinin doğasından kaynaklanan birkaç teknik zorlukla karşılaşılmış ve bunlara somut çözümler üretilmiştir."
+  },
+  {
+   "k": "p",
+   "t": "İlk zorluk, servisler arası veri tutarlılığıdır. Servislerin kendi veri tabanlarına sahip olması, bir servisteki değişikliğin diğerine yansıtılmasını gerektirmiştir. Bu, senkron çağrı zincirleri yerine Kafka tabanlı asenkron olaylarla çözülmüş; böylece bir servisin geçici olarak erişilemez olması, diğer servisin ana işleyişini durdurmamıştır."
+  },
+  {
+   "k": "p",
+   "t": "İkinci zorluk, kimlik doğrulamanın her serviste tekrarlanması riskidir. Her servisin ayrı ayrı token doğrulaması hem kod tekrarı hem de tutarsızlık doğururdu. Bu sorun, doğrulamanın API Gateway katmanında merkezîleştirilmesi ve sonucun güvenilir HTTP başlıklarıyla servislere iletilmesiyle çözülmüştür."
+  },
+  {
+   "k": "p",
+   "t": "Üçüncü zorluk, şema tutarlılığının korunmasıdır. Geliştirme sırasında otomatik şema güncellemesine güvenmek, ortamlar arası farklılıklara ve veri kaybı riskine yol açabilirdi. Bu nedenle her serviste şema, sürüm kontrollü göç (migration) betikleriyle yönetilmiş ve uygulama başlangıcında yalnızca doğrulama yapacak biçimde yapılandırılmıştır."
+  },
+  {
+   "k": "p",
+   "t": "Dördüncü olarak, eşzamanlı işlemlerden kaynaklanan tutarsızlık riski ele alınmıştır. Özellikle etkinlik katılımı ve tesis rezervasyonu gibi yarışmalı işlemlerde, mükerrer kayıt veya çakışma oluşmaması için hem veri tabanı düzeyinde tekillik kısıtları tanımlanmış hem de ilgili işlemler işlem (transaction) sınırları içinde yürütülmüştür."
+  },
+  {
+   "k": "p",
+   "t": "Son olarak, modül sayısının artmasıyla mimari karmaşıklığın yönetilmesi bir denge sorunu olarak ortaya çıkmıştır. Her işlevi ayrı bir servise bölmek yerine, yalnızca anlamlı domain sınırlarında servis ayrımına gidilmiş; bildirim gibi tek tüketicisi olan işlevler, gereksiz dağıtık karmaşıklıktan kaçınmak için mevcut servis içinde tutulmuştur. Bu denge, geliştirme ve bakım maliyetini kontrol altında tutmuştur."
+  },
+  {
+   "k": "h",
+   "lv": 1,
+   "t": "BÖLÜM 5: DEĞERLENDİRME VE SONUÇLAR (EVALUATION AND RESULTS)"
+  },
+  {
+   "k": "p",
+   "t": "Bu bölümde, geliştirilen IsikCampusOS platformunun başlangıçta belirlenen amaç ve gereksinimler karşısında değerlendirilmesi sunulmaktadır. Değerlendirme; platformun karşıladığı işlevsel gereksinimlerin, tasarım hedeflerinin ve seçilen mimari kararların sonuçları üzerinden yürütülmüştür. Ardından, elde edilen sonuçlar literatür ve proje hedefleri ışığında tartışılmakta; platformun güçlü yönleri ile sınırları ortaya konmaktadır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "5.1. Sonuçlar"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "5.1.1. İşlevsel Gereksinimlerin Karşılanması"
+  },
+  {
+   "k": "p",
+   "t": "Projenin temel çıktısı, Bölüm 1'de tanımlanan problemi — kampüs içi sosyal ve pratik süreçlerin dağınık, denetimsiz kanallara bırakılmış olmasını — tek bir kapalı platform altında çözen, çalışır bir bütünleşik sistemdir. Bölüm 3 ve 4'te tasarımı ve gerçekleştirimi sunulan platform, başlangıçta hedeflenen işlevsel kapsamı karşılamıştır. Karşılanan başlıca gereksinimler Tablo 5.1'de özetlenmiştir."
+  },
+  {
+   "k": "tbl",
+   "rows": [
+    [
+     "Gereksinim",
+     "Karşılanma Durumu"
+    ],
+    [
+     "Üniversite e-postası ile güvenli kimlik doğrulama ve rol bazlı erişim",
+     "Karşılandı"
+    ],
+    [
+     "Tek oturumla tüm modüllere erişim (SSO deneyimi)",
+     "Karşılandı"
+    ],
+    [
+     "Otomatik profil oluşturma ve profil yönetimi",
+     "Karşılandı"
+    ],
+    [
+     "Kulüp ve etkinlik yönetimi, SKS onay akışı, RSVP ve bekleme listesi",
+     "Karşılandı"
+    ],
+    [
+     "Etkinlik QR check-in ve sertifika üretimi",
+     "Karşılandı"
+    ],
+    [
+     "Çakışmasız tesis rezervasyonu ve yoklama",
+     "Karşılandı"
+    ],
+    [
+     "Yemek sipariş ve durum takibi",
+     "Karşılandı"
+    ],
+    [
+     "Planlı paylaşımlı yolculuk (hibrit konum, ilan arama, güzergâh bildirimi)",
+     "Karşılandı"
+    ],
+    [
+     "Etiket tabanlı proje eşleştirme (ilan, görünürlük, başvuru)",
+     "Karşılandı"
+    ],
+    [
+     "İki taraflı mikro iş pazarı ve çift yönlü itibar",
+     "Karşılandı"
+    ],
+    [
+     "In-app bildirim ve okundu takibi",
+     "Karşılandı"
+    ]
+   ],
+   "cap": {
+    "num": "5.1",
+    "title": "İşlevsel Gereksinimlerin Karşılanma Durumu"
+   }
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "5.1.2. Tasarım Hedeflerinin Karşılanması"
+  },
+  {
+   "k": "p",
+   "t": "İşlevselliğin ötesinde, platform Bölüm 1 ve 2'de ortaya konan üst düzey tasarım hedeflerini de karşılamıştır:"
+  },
+  {
+   "k": "li",
+   "t": "Bütünleştirme (tek duraklı hizmet): Daha önce ayrı kanallara dağılmış olan kulüp, tesis, yemek, ulaşım, proje ve mikro iş süreçleri tek bir arayüz ve tek bir kimlik altında toplanmıştır. Böylece öğrencinin farklı sistemler arasında geçiş yapma ve tekrar tekrar kimlik doğrulama ihtiyacı ortadan kaldırılmıştır."
+  },
+  {
+   "k": "li",
+   "t": "Bilişsel yükün azaltılması: Tüm modüllerin ortak bir tasarım dili, ortak bileşenler ve tutarlı etkileşim kalıpları üzerine kurulması, modüller arası geçiş maliyetini en aza indirme hedefini desteklemiştir (Sweller, 1988; Norman, 2004)."
+  },
+  {
+   "k": "li",
+   "t": "Kapalı topluluk güveni: Platforma yalnızca doğrulanmış üniversite üyelerinin erişebilmesi ve özellikle akranlar arası (P2P) modüllerde (paylaşımlı yolculuk, mikro iş) çift yönlü itibar mekanizmalarının kullanılması, güvenli bir etkileşim ortamı hedefini karşılamıştır (ter Huurne vd., 2017)."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "5.1.3. Mimari Kararların Sonuçları"
+  },
+  {
+   "k": "p",
+   "t": "Seçilen mikroservis mimarisi, projenin modüler biçimde geliştirilebilmesini somut olarak mümkün kılmıştır. Her modülün bağımsız bir servis olarak ele alınması sayesinde, yeni bir modül eklenirken mevcut servisler etkilenmemiş; her servis kendi veri tabanı ve domain mantığıyla yalıtılmış biçimde geliştirilebilmiştir. API Gateway üzerinden merkezî kimlik doğrulama, güvenlik mantığının tek bir noktada toplanmasını sağlayarak servislerdeki kod tekrarını önlemiştir. Apache Kafka tabanlı olay güdümlü iletişim ise servisleri gevşek bağlı tutarak, bir servisteki işlemin diğer servisin kullanılabilirliğine sıkı biçimde bağımlı olmasını engellemiştir."
+  },
+  {
+   "k": "p",
+   "t": "Bu mimari yaklaşımın bilinen bedeli, dağıtık sistemlerin getirdiği operasyonel karmaşıklıktır (Blinowski vd., 2022). Bu karmaşıklık, servis sayısının domain sınırlarıyla ölçülü tutulması ve bildirim gibi tek tüketicili işlevlerin ayrı servise bölünmemesi gibi bilinçli kararlarla yönetilmiştir."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "5.1.4. Değerlendirme Yöntemine İlişkin Not"
+  },
+  {
+   "k": "p",
+   "t": "Bu çalışmanın değerlendirmesi, geliştirilen sistemin belirlenen gereksinimleri ve tasarım hedeflerini karşılama düzeyi üzerinden, işlevsel doğrulama ve senaryo temelli inceleme yöntemiyle yürütülmüştür. Platformun gerçek kullanıcı kitlesiyle saha ortamında ölçülmesi (kullanım istatistikleri, memnuniyet anketleri, performans karşılaştırmaları gibi nicel veriler) bu tezin kapsamı dışında tutulmuş; bu tür ampirik değerlendirme, Bölüm 6'da gelecek çalışma olarak önerilmiştir. Bu yaklaşım, çalışmanın bir sistem tasarımı ve geliştirme projesi niteliğiyle tutarlıdır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "5.2. Tartışma"
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "5.2.1. Bulguların Yorumlanması"
+  },
+  {
+   "k": "p",
+   "t": "Elde edilen sonuçlar, kampüs içi dağınık süreçlerin tek bir platformda bütünleştirilmesinin teknik olarak uygulanabilir olduğunu göstermektedir. Bölüm 2'de incelenen literatür, kampüs dijitalleşmesinin çoğunlukla parçalı kaldığını ve bütünsel uygulamaların sınırlı olduğunu ortaya koymuştu (Castro Benavides vd., 2020; Polin vd., 2023). Bu çalışma, söz konusu boşluğa somut bir yanıt üreterek; kulüp, tesis, yemek, ulaşım, proje ve mikro iş gibi birbirinden farklı altı domaini tek bir tutarlı kullanıcı deneyimi ve ortak bir güvenlik omurgası altında birleştiren bir mimarinin kurulabileceğini göstermiştir."
+  },
+  {
+   "k": "p",
+   "t": "Platformun en belirgin katkısı, modüllerin birbirinden yalıtılmış teknik parçalar olarak değil; ortak altyapıyı (kimlik, profil, bildirim, etiket sistemi) paylaşan bir bütünün parçaları olarak tasarlanmasıdır. Örneğin proje eşleştirme ve mikro iş modüllerinin aynı etiket altyapısını paylaşması, hem geliştirme tekrarını önlemiş hem de kullanıcı açısından tutarlı bir deneyim sağlamıştır. Benzer biçimde, kullanıcı kaydı gibi bir olayın birden çok servisi (profil oluşturma) tetiklemesi, bütünleşik platform vizyonunun teknik düzeydeki karşılığını oluşturmuştur."
+  },
+  {
+   "k": "h",
+   "lv": 5,
+   "t": "5.2.2. Güçlü Yönler"
+  },
+  {
+   "k": "p",
+   "t": "Çalışmanın öne çıkan güçlü yönleri şunlardır:"
+  },
+  {
+   "k": "li",
+   "t": "Gerçek bir kampüs problemine domain-odaklı yaklaşım: Platform, yüzeysel bir kayıt-okuma (CRUD) uygulamasının ötesinde; SKS onay akışı, kapasite/bekleme listesi yönetimi, rezervasyon çakışma kontrolü ve çift yönlü itibar gibi gerçek iş kurallarını modellemiştir."
+  },
+  {
+   "k": "li",
+   "t": "Modern ve ölçeklenebilir mimari: Mikroservisler, API Gateway, servis keşfi ve olay güdümlü iletişimin tek bir projede bir arada uygulanması, sistemin gelecekte yeni modüllerle genişlemesine olanak tanıyan sağlam bir temel oluşturmuştur."
+  },
+  {
+   "k": "li",
+   "t": "Bağlama özgü uyarlama: Paylaşımlı yolculuk ve mikro iş gibi modüller, mevcut ticari uygulamaların birebir kopyası olmak yerine üniversite bağlamına uyarlanmıştır (kapalı topluluk güveni, hibrit konum modeli, ücretli/gönüllü ayrımı, çift yönlü puanlama). Bu uyarlamalar çalışmanın özgün değerini oluşturmaktadır."
+  },
+  {
+   "k": "li",
+   "t": "Kullanıcı deneyimi tutarlılığı: Tasarımın baştan itibaren bilişsel yük ve arayüz tutarlılığı ilkeleriyle ilişkilendirilmesi, teknik kararların kullanıcı odaklı bir çerçeveye oturtulmasını sağlamıştır."
+  },
+  {
+   "k": "p",
+   "t": "Bütün olarak değerlendirildiğinde elde edilen bulgular, IsikCampusOS'un tanımlanan problemi karşıladığını ve belirlenen işlevsel ve tasarımsal hedefleri sağladığını göstermektedir. Çalışmanın değeri, yalnızca üretilen yazılımda değil; aynı zamanda kampüs süreçlerinin bütünleştirilmesine dair sunduğu gerekçelendirilmiş mimari modelde yatmaktadır. Çalışmanın sınırlılıkları ve bu sınırlılıkların işaret ettiği gelecek çalışma yönelimleri, bir sonraki bölümde ayrıntılı olarak ele alınmaktadır."
+  },
+  {
+   "k": "h",
+   "lv": 1,
+   "t": "BÖLÜM 6: SONUÇ VE GELECEK YÖNELİMLERİ (CONCLUSION AND FUTURE DIRECTIONS)"
+  },
+  {
+   "k": "p",
+   "t": "Bu bölümde, çalışmanın geneli özetlenmekte; ulaşılan sonuçlar ana hatlarıyla değerlendirilmekte ve elde edilen katkılar ortaya konmaktadır. Ardından çalışmanın sınırlılıkları tanımlanmakta ve bu sınırlılıkların aşılmasına yönelik gelecek çalışma önerileri sunulmaktadır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "6.1. Genel Sonuç"
+  },
+  {
+   "k": "p",
+   "t": "Bu tez çalışmasında, üniversite öğrencilerinin ve personelinin akademik olmayan sosyal ve pratik ihtiyaçlarının dağınık, denetimsiz ve birbirinden kopuk kanallara bırakılmış olması problemi ele alınmış; bu problemi tek bir kapalı, güvenli ve tutarlı dijital platform altında çözen IsikCampusOS bütünleşik kampüs platformu tasarlanmış ve geliştirilmiştir."
+  },
+  {
+   "k": "p",
+   "t": "Çalışma, kampüs yaşamının altı farklı domainini — kulüp ve etkinlik yönetimi, spor tesisleri rezervasyonu, çevrimiçi yemek siparişi, planlı paylaşımlı yolculuk, beceri tabanlı proje eşleştirme ve kampüs içi mikro iş pazarı — ortak bir altyapı üzerinde birleştirmiştir. Bölüm 2'de incelenen literatür, kampüs dijitalleşmesinin çoğunlukla parçalı kaldığını ve bu domainleri bütünsel biçimde bir araya getiren uygulamaların sınırlı olduğunu ortaya koymuştu. Bu çalışma, söz konusu boşluğa somut bir yanıt üreterek, birbirinden farklı süreçlerin tek bir kullanıcı deneyimi ve ortak bir güvenlik omurgası altında bütünleştirilebileceğini göstermiştir."
+  },
+  {
+   "k": "p",
+   "t": "Teknik açıdan platform; mikroservis mimarisi, API Gateway üzerinden merkezî kimlik doğrulama, servis keşfi, olay güdümlü asenkron iletişim ve servis başına veri tabanı izolasyonu gibi modern dağıtık sistem yaklaşımlarını gerçek bir bağlamda bir arada uygulamıştır. Bu yaklaşımların ölçülü ve gerekçeli biçimde kullanılması — örneğin servis sayısının domain sınırlarıyla sınırlandırılması ve bildirim gibi tek tüketicili işlevlerin ayrı servise bölünmemesi — mimari karmaşıklığın kontrol altında tutulmasını sağlamıştır."
+  },
+  {
+   "k": "p",
+   "t": "Çalışmanın özgün değeri iki düzeyde ortaya çıkmaktadır. Birincisi, üretilen çalışan yazılımın kendisidir; ikincisi ve daha kalıcı olanı ise, kampüs süreçlerinin bütünleştirilmesine ilişkin sunduğu, gerekçelendirilmiş ve genişletilebilir mimari modeldir. Paylaşımlı yolculuk ve mikro iş gibi modüllerin ticari uygulamaların birebir kopyası olmak yerine üniversite bağlamına uyarlanması (kapalı topluluk güveni, hibrit konum modeli, ücretli/gönüllü ayrımı, çift yönlü itibar) ve eğitim bilimleri ile insan-bilgisayar etkileşimi kuramlarıyla (Astin, 1984; Tinto, 1975; Sweller, 1988; Norman, 2004) ilişkilendirilmesi, çalışmayı salt bir yazılım geliştirme egzersizinin ötesine taşımaktadır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "6.2. Çalışmanın Sınırlılıkları"
+  },
+  {
+   "k": "p",
+   "t": "Çalışmanın sonuçları, belirli sınırlar çerçevesinde değerlendirilmelidir."
+  },
+  {
+   "k": "p",
+   "t": "Saha doğrulamasının bulunmaması. Platform, gerçek bir kullanıcı kitlesiyle saha ortamında test edilmemiştir. Dolayısıyla benimsenme oranı, kullanıcı memnuniyeti, gerçek kullanım yoğunluğu ve sistem performansına ilişkin nicel kanıtlar bu çalışmanın kapsamında yer almamaktadır. Değerlendirme, işlevsel doğrulama ve senaryo temelli inceleme ile sınırlı tutulmuştur."
+  },
+  {
+   "k": "p",
+   "t": "Bilinçli kapsam sınırlaması. Çalışma, sınırlı bir proje süresi içinde tutarlı bir derinliğe ulaşabilmek amacıyla kapsamı kasıtlı olarak sınırlandırmıştır. Gerçek finansal işlem ve ödeme ağ geçidi entegrasyonu, akademik bilgi sistemleriyle (SIS/LMS) canlı veri entegrasyonu, yerel (native) mobil uygulama ve fiziksel donanım/IoT bağlantıları kapsam dışında bırakılmıştır."
+  },
+  {
+   "k": "p",
+   "t": "Algoritmaların ölçeklenmemiş olması. Paylaşımlı yolculuk modülündeki rota sapması optimizasyonu ile proje eşleştirme modülündeki kararlı eşleştirme yaklaşımı, tasarım ve modelleme düzeyinde ele alınmıştır. Bu algoritmaların büyük ölçekli ve gerçek veri üzerinde başarımının (çalışma süresi, eşleşme kalitesi) ölçülmesi gerçekleştirilmemiştir."
+  },
+  {
+   "k": "p",
+   "t": "Operasyonel olgunluk. Platform, bir geliştirme ve demo ortamında çalışır durumdadır; üretim ölçeğinde dağıtım, yük altında dayanıklılık, kapsamlı otomatik test kapsamı ve sürekli izleme gibi operasyonel olgunluk unsurları tam olarak ele alınmamıştır."
+  },
+  {
+   "k": "h",
+   "lv": 3,
+   "t": "6.3. Gelecek Çalışmalar"
+  },
+  {
+   "k": "p",
+   "t": "Yukarıda tanımlanan sınırlılıklar, doğrudan gelecek çalışma yönelimlerine işaret etmektedir."
+  },
+  {
+   "k": "p",
+   "t": "Saha çalışması ve ampirik değerlendirme. En öncelikli gelecek çalışma, platformun gerçek öğrenci ve personel kitlesiyle pilot olarak devreye alınması ve nicel yöntemlerle değerlendirilmesidir. Kullanım istatistikleri, memnuniyet anketleri (örneğin teknoloji kabul modelleri temelinde), modüllerin benimsenme oranları ve mevcut dağınık yönteme kıyasla sağladığı zaman/verimlilik kazanımı ölçülebilir. Bu, çalışmanın işlevsel doğrulamasını ampirik kanıtla tamamlayacaktır."
+  },
+  {
+   "k": "p",
+   "t": "Algoritmaların geliştirilmesi ve değerlendirilmesi. Eşleştirme ve optimizasyon gerektiren modüllerin algoritmaları, gerçek veya benzetilmiş (simüle edilmiş) büyük veri kümeleri üzerinde değerlendirilebilir. Paylaşımlı yolculukta rota ve trafik verisiyle eşleşme kalitesi, proje eşleştirmede ise farklı atama stratejilerinin (etiket örtüşmesi, kararlı eşleştirme) karşılaştırılması incelenebilir."
+  },
+  {
+   "k": "p",
+   "t": "Kapsamın genişletilmesi. Bilinçli olarak kapsam dışı bırakılan alanlar ileride ele alınabilir: güvenli bir ödeme altyapısının entegrasyonu, akademik bilgi sistemleriyle (SIS/LMS) entegrasyon yoluyla daha zengin bir kullanıcı bağlamı, ve yerel mobil uygulama geliştirilerek anlık bildirim ve konum tabanlı özelliklerin güçlendirilmesi."
+  },
+  {
+   "k": "p",
+   "t": "Veri odaklı özellikler ve yönetişim. Platformun ürettiği olay verileri temel alınarak, yöneticiler için analitik gösterge panelleri (kullanım, doluluk, katılım metrikleri) ve akranlar arası modüllerde içerik denetimi (moderation) yetenekleri geliştirilebilir. İlerleyen aşamada, öğrencilerin ilgi ve geçmiş etkinlik verilerine dayalı kişiselleştirilmiş öneri (etkinlik, proje, ilan önerisi) mekanizmaları araştırılabilir."
+  },
+  {
+   "k": "p",
+   "t": "Ölçeklenebilirlik ve operasyonel olgunluk. Platformun üretim ortamına taşınması için kapsamlı otomatik test altyapısı, yük testleri, gözlemlenebilirlik (izleme ve uyarı) bileşenleri ve çoklu kampüs (multi-tenant) desteği gibi geliştirmeler hedeflenebilir. Böylece sistem, tek bir kurumdan çok sayıda kuruma uyarlanabilen bir \"kampüs işletim sistemi\" ürününe dönüşebilir."
+  },
+  {
+   "k": "p",
+   "t": "Sonuç olarak, IsikCampusOS bu tez kapsamında tanımlanan problemi karşılayan, tasarım hedeflerini sağlayan ve genişlemeye açık bir temel olarak ortaya konmuştur. Burada sunulan mimari model ve gelecek çalışma yönelimleri, hem bu platformun olgunlaştırılması hem de benzer bağlamlarda bütünleşik kampüs sistemleri geliştirmek isteyen çalışmalar için bir başlangıç noktası sunmaktadır."
+  },
+  {
+   "k": "h",
+   "lv": 1,
+   "t": "KAYNAKÇA (REFERENCES)"
+  },
+  {
+   "k": "p",
+   "t": "Abraham, D. J., Irving, R. W., & Manlove, D. F. (2007). Two algorithms for the student-project allocation problem. Journal of Discrete Algorithms, 5(1), 73–90. https://doi.org/10.1016/j.jda.2006.03.006"
+  },
+  {
+   "k": "p",
+   "t": "AlQuhtani, S. (2022). Ridesharing as a potential sustainable transportation alternative in suburban universities: The case of Najran University, Saudi Arabia. Sustainability, 14(8), 4392. https://doi.org/10.3390/su14084392"
+  },
+  {
+   "k": "p",
+   "t": "Arslan, O., & Hoffmann, S. (2025). Integration of on-demand ride-pooling into a microscopic traffic flow simulation environment. Proceedings of the 11th International Conference on Vehicle Technology and Intelligent Transport Systems (VEHITS 2025), 506–513. https://doi.org/10.5220/0013341400003941"
+  },
+  {
+   "k": "p",
+   "t": "Astin, A. W. (1984). Student involvement: A developmental theory for higher education. Journal of College Student Personnel, 25(4), 297–308."
+  },
+  {
+   "k": "p",
+   "t": "Bisri, A., Putri, A., & Rosmansyah, Y. (2023). A systematic literature review on digital transformation in higher education: Revealing key success factors. International Journal of Emerging Technologies in Learning (iJET), 18(14), 164–187. https://doi.org/10.3991/ijet.v18i14.40201"
+  },
+  {
+   "k": "p",
+   "t": "Blinowski, G., Ojdowska, A., & Przybyłek, A. (2022). Monolithic vs. microservice architecture: A performance and scalability evaluation. IEEE Access, 10, 20357–20374. https://doi.org/10.1109/ACCESS.2022.3152803"
+  },
+  {
+   "k": "p",
+   "t": "Castro Benavides, L. M., Tamayo Arias, J. A., Arango Serna, M. D., Branch Bedoya, J. W., & Burgos, D. (2020). Digital transformation in higher education institutions: A systematic literature review. Sensors, 20(11), 3291. https://doi.org/10.3390/s20113291"
+  },
+  {
+   "k": "p",
+   "t": "Chatterjee, A., & Prinz, A. (2022). Applying Spring Security framework with KeyCloak-based OAuth2 to protect microservice architecture APIs: A case study. Sensors, 22(5), 1703. https://doi.org/10.3390/s22051703"
+  },
+  {
+   "k": "p",
+   "t": "Chaturvedi, A., Sharma, K., Dua, A., & Gupta, A. (2024). CU-EVENTS: A comprehensive event management system for university. International Journal for Research in Applied Science and Engineering Technology (IJRASET), 12(11), 223–229. https://doi.org/10.22214/ijraset.2024.65020"
+  },
+  {
+   "k": "p",
+   "t": "Daun, M., Grubb, A. M., Stenkova, V., & Tenbergen, B. (2023). A systematic literature review of requirements engineering education. Requirements Engineering, 28(2), 145–175. https://doi.org/10.1007/s00766-022-00381-9"
+  },
+  {
+   "k": "p",
+   "t": "de Almeida, M. G., & Canedo, E. D. (2022). Authentication and authorization in microservices architecture: A systematic literature review. Applied Sciences, 12(6), 3023. https://doi.org/10.3390/app12063023"
+  },
+  {
+   "k": "p",
+   "t": "Di Francesco, P., Lago, P., & Malavolta, I. (2019). Architecting with microservices: A systematic mapping study. Journal of Systems and Software, 150, 77–97. https://doi.org/10.1016/j.jss.2019.01.001"
+  },
+  {
+   "k": "p",
+   "t": "Fitts, P. M. (1954). The information capacity of the human motor system in controlling the amplitude of movement. Journal of Experimental Psychology, 47(6), 381–391. https://doi.org/10.1037/h0055392"
+  },
+  {
+   "k": "p",
+   "t": "Gale, D., & Shapley, L. S. (1962). College admissions and the stability of marriage. The American Mathematical Monthly, 69(1), 9–15. https://doi.org/10.1080/00029890.1962.11989827"
+  },
+  {
+   "k": "p",
+   "t": "German, J. D., Yap, D. C. G., & Binoya, G. O. (2021). Design and development of an integrated room reservation system for higher education institutions. 2021 IEEE 8th International Conference on Industrial Engineering and Applications (ICIEA), 231–236. https://doi.org/10.1109/ICIEA52957.2021.9436766"
+  },
+  {
+   "k": "p",
+   "t": "Hamidi Rad, R., Fani, H., Kargar, M., Szlichta, J., & Bagheri, E. (2020). Learning to form skill-based teams of experts. Proceedings of the 29th ACM International Conference on Information and Knowledge Management (CIKM '20), 2049–2052. https://doi.org/10.1145/3340531.3412140"
+  },
+  {
+   "k": "p",
+   "t": "Hick, W. E. (1952). On the rate of gain of information. Quarterly Journal of Experimental Psychology, 4(1), 11–26. https://doi.org/10.1080/17470215208416600"
+  },
+  {
+   "k": "p",
+   "t": "Mahnič, V. (2012). A capstone course on agile software development using Scrum. IEEE Transactions on Education, 55(1), 99–106. https://doi.org/10.1109/TE.2011.2142311"
+  },
+  {
+   "k": "p",
+   "t": "Mumcu, B. B., & Çebi, A. (2025). You have a notification: The role of push notifications in shaping students' engagement, self-regulation and academic procrastination. International Journal of Educational Technology in Higher Education, 22(1), Article 36. https://doi.org/10.1186/s41239-025-00537-x"
+  },
+  {
+   "k": "p",
+   "t": "Newman, S. (2021). Building microservices: Designing fine-grained systems (2nd ed.). O'Reilly Media."
+  },
+  {
+   "k": "p",
+   "t": "Norman, D. A. (2004). Emotional design: Why we love (or hate) everyday things. Basic Books."
+  },
+  {
+   "k": "p",
+   "t": "Olaosebikan, S., & Manlove, D. (2022). Super-stability in the student-project allocation problem with ties. Journal of Combinatorial Optimization, 43(5), 1203–1239. https://doi.org/10.1007/s10878-020-00632-x"
+  },
+  {
+   "k": "p",
+   "t": "Pechenkina, E., Laurence, D., Oates, G., Eldridge, D., & Hunter, D. (2017). Using a gamified mobile app to increase student engagement, retention and academic achievement. International Journal of Educational Technology in Higher Education, 14(1), Article 31. https://doi.org/10.1186/s41239-017-0069-7"
+  },
+  {
+   "k": "p",
+   "t": "Polin, K., Yigitcanlar, T., Limb, M., & Washington, T. (2023). The making of smart campus: A review and conceptual framework. Buildings, 13(4), 891. https://doi.org/10.3390/buildings13040891"
+  },
+  {
+   "k": "p",
+   "t": "Ramiah, J. L., & Nagowah, S. D. (2021). Implementation of a smart canteen system for a university campus. 2021 IEEE 23rd International Conference on High Performance Computing & Communications (HPCC/DSS/SmartCity/DependSys), 1896–1901. https://doi.org/10.1109/HPCC-DSS-SmartCity-DependSys53884.2021.00283"
+  },
+  {
+   "k": "p",
+   "t": "Stiglic, M., Agatz, N., Savelsbergh, M., & Gradišar, M. (2015). The benefits of meeting points in ride-sharing systems. Transportation Research Part B: Methodological, 82, 36–53. https://doi.org/10.1016/j.trb.2015.07.025"
+  },
+  {
+   "k": "p",
+   "t": "Taibi, D., Lenarduzzi, V., & Pahl, C. (2017). Processes, motivations, and issues for migrating to microservices architectures: An empirical investigation. IEEE Cloud Computing, 4(5), 22–32. https://doi.org/10.1109/MCC.2017.4250931"
+  },
+  {
+   "k": "p",
+   "t": "ter Huurne, M., Ronteltap, A., Corten, R., & Buskens, V. (2017). Antecedents of trust in the sharing economy: A systematic review. Journal of Consumer Behaviour, 16(6), 485–498. https://doi.org/10.1002/cb.1667"
+  },
+  {
+   "k": "p",
+   "t": "Tinto, V. (1975). Dropout from higher education: A theoretical synthesis of recent research. Review of Educational Research, 45(1), 89–125. https://doi.org/10.3102/00346543045001089"
+  },
+  {
+   "k": "p",
+   "t": "Venkatesh, V., Morris, M. G., Davis, G. B., & Davis, F. D. (2003). User acceptance of information technology: Toward a unified view. MIS Quarterly, 27(3), 425–478. https://doi.org/10.2307/30036540"
+  },
+  {
+   "k": "p",
+   "t": "Wood, A. J., Graham, M., Lehdonvirta, V., & Hjorth, I. (2019). Good gig, bad gig: Autonomy and algorithmic control in the global gig economy. Work, Employment and Society, 33(1), 56–75. https://doi.org/10.1177/0950017018785616"
+  },
+  {
+   "k": "p",
+   "t": "Xiao, J. (2019). Digital transformation in higher education: Critiquing the five-year development plans (2016–2020) of 75 Chinese universities. Distance Education, 40(4), 515–533. https://doi.org/10.1080/01587919.2019.1680272"
+  },
+  {
+   "k": "p",
+   "t": "Zhang, Y., Yip, C., Lu, E., & Dong, Z. Y. (2022). A systematic review on technologies and applications in smart campus: A human-centered case study. IEEE Access, 10, 16134–16149. https://doi.org/10.1109/ACCESS.2022.3148735"
+  }
+ ]
+}

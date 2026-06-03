@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, BadgeCheck, CheckCircle2, Loader2, Search } from 'lucide-react';
 import { authApi } from '../lib/api';
+import { YOLLAR } from '../utils/paths';
 
 type CertificateVerificationResponse = {
   valid: boolean;
@@ -14,6 +15,28 @@ type CertificateVerificationResponse = {
   issuedAt?: string;
   sentAt?: string;
 };
+
+type CertificateVerificationApiResponse = {
+  gecerli: boolean;
+  sertifikaKodu: string;
+  aliciAdi?: string;
+  etkinlikBasligi?: string;
+  kulupAdi?: string;
+  sertifikaBasligi?: string;
+  verilmeTarihi?: string;
+  gonderilmeTarihi?: string;
+};
+
+const mapCertificateVerification = (data: CertificateVerificationApiResponse): CertificateVerificationResponse => ({
+  valid: data.gecerli,
+  certificateCode: data.sertifikaKodu,
+  recipientName: data.aliciAdi,
+  eventTitle: data.etkinlikBasligi,
+  clubName: data.kulupAdi,
+  certificateTitle: data.sertifikaBasligi,
+  issuedAt: data.verilmeTarihi,
+  sentAt: data.gonderilmeTarihi,
+});
 
 export const CertificateVerificationPage = () => {
   const [searchParams] = useSearchParams();
@@ -30,8 +53,8 @@ export const CertificateVerificationPage = () => {
     setError('');
     setResult(null);
     try {
-      const res = await authApi.get<CertificateVerificationResponse>(`/certificates/verify/${encodeURIComponent(code)}`);
-      setResult(res.data);
+      const res = await authApi.get<CertificateVerificationApiResponse>(`/sertifikalar/dogrula/${encodeURIComponent(code)}`);
+      setResult(mapCertificateVerification(res.data));
     } catch (err: any) {
       setError(err.response?.data?.message || 'Sertifika kodu kontrol edilemedi.');
     } finally {
@@ -60,14 +83,14 @@ export const CertificateVerificationPage = () => {
       </div>
 
       <nav className="relative z-10 mx-5 mt-5 px-6 py-3.5 rounded-3xl flex justify-between items-center border border-white/10 bg-white/[0.035] backdrop-blur-xl">
-        <Link to="/login" className="flex items-center gap-3">
+        <Link to={YOLLAR.giris} className="flex items-center gap-3">
           <img src="/isik-ikon.png" alt="Işık Üniversitesi İkon" className="w-7 h-7 object-contain" />
           <div>
             <span className="font-bold text-lg text-white">Işık<span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">CampusOS</span></span>
             <p className="text-[11px] text-white/40 -mt-0.5">Sertifika Kontrolü</p>
           </div>
         </Link>
-        <Link to="/login" className="inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-bold text-white/70 bg-white/[0.06] hover:bg-white/[0.1] border border-white/10">
+        <Link to={YOLLAR.giris} className="inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-bold text-white/70 bg-white/[0.06] hover:bg-white/[0.1] border border-white/10">
           <ArrowLeft className="w-4 h-4" />
           Giriş
         </Link>

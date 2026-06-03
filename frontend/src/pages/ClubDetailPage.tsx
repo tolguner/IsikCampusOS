@@ -6,6 +6,8 @@ import { Banknote, Bell, CalendarDays, CheckCircle2, ChevronLeft, Clock, Graduat
 import { useClubStore } from '../store/clubStore';
 import { useEventStore, type Event } from '../store/eventStore';
 import { useAuthStore } from '../store/authStore';
+import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../utils/roles';
+import { YOLLAR } from '../utils/paths';
 
 const formatDate = (value?: string) => {
   if (!value) return 'Tarih bekleniyor';
@@ -34,7 +36,7 @@ export const ClubDetailPage = () => {
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
   const [expandedPosterEvent, setExpandedPosterEvent] = useState<Event | null>(null);
   const [qrTicket, setQrTicket] = useState<{ event: Event; dataUrl: string } | null>(null);
-  const isStudent = !!user?.roles.includes('ROLE_STUDENT');
+  const isStudent = yetkilerdenBiriVarMi(user?.roles, YETKI_GRUPLARI.ogrenci);
 
   useEffect(() => {
     if (!clubId) return;
@@ -75,11 +77,13 @@ export const ClubDetailPage = () => {
   const isManager = selectedClub.currentUserRole === 'ADMIN';
   const vision = selectedClub.vision || selectedClub.description;
   const membershipButtonLabel =
-    selectedClub.currentUserStatus === 'ACTIVE'
-      ? 'Üyelikten çık'
-      : selectedClub.currentUserStatus === 'REJECTED'
-          ? 'Tekrar başvur'
-          : 'Üye ol';
+    selectedClub.currentUserRole === 'ADMIN'
+      ? 'Yöneticisisin'
+      : selectedClub.currentUserStatus === 'ACTIVE'
+          ? 'Üyesiniz'
+          : selectedClub.currentUserStatus === 'REJECTED'
+              ? 'Tekrar başvur'
+              : 'Üye ol';
   const initials = selectedClub.name
     .split(' ')
     .filter(Boolean)
@@ -151,7 +155,7 @@ export const ClubDetailPage = () => {
 
   return (
     <div className="w-full py-6 space-y-6">
-      <Link to="/clubs" className="inline-flex items-center gap-2 text-sm font-semibold text-white/50 hover:text-white transition-colors">
+      <Link to={YOLLAR.kulupler} className="inline-flex items-center gap-2 text-sm font-semibold text-white/50 hover:text-white transition-colors">
         <ChevronLeft className="w-4 h-4" /> Kulüplere dön
       </Link>
 
@@ -193,9 +197,22 @@ export const ClubDetailPage = () => {
                 <button
                   disabled={isLoading || selectedClub.currentUserRole === 'ADMIN'}
                   onClick={handleMembershipClick}
-                  className={`w-full py-3 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed ${selectedClub.currentUserStatus === 'ACTIVE' ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-100 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-100' : 'gradient-btn'}`}
+                  className={`w-full py-3 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed group ${
+                    selectedClub.currentUserRole === 'ADMIN'
+                      ? 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
+                      : selectedClub.currentUserStatus === 'ACTIVE'
+                        ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-200 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-100'
+                        : 'gradient-btn'
+                  }`}
                 >
-                  {membershipButtonLabel}
+                  {selectedClub.currentUserStatus === 'ACTIVE' ? (
+                    <>
+                      <span className="group-hover:hidden">Üyesiniz</span>
+                      <span className="hidden group-hover:inline">Üyelikten çık</span>
+                    </>
+                  ) : (
+                    membershipButtonLabel
+                  )}
                 </button>
               ) : (
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center text-xs font-bold text-white/40">

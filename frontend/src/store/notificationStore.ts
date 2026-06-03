@@ -36,6 +36,51 @@ interface NotificationState {
   }) => Promise<boolean>;
 }
 
+const mapType = (type: string): Notification['type'] => {
+  switch (type) {
+    case 'DUYURU': return 'ANNOUNCEMENT';
+    case 'ETKINLIK_REVIZYON_TALEBI': return 'EVENT_REVISION_REQUEST';
+    case 'ETKINLIK_ONAY_TALEBI': return 'EVENT_APPROVAL_REQUEST';
+    case 'PROFIL_ONAY_TALEBI': return 'PROFILE_APPROVAL_REQUEST';
+    case 'SERTIFIKA': return 'CERTIFICATE';
+    default: return type as any;
+  }
+};
+
+const mapReverseAudience = (aud: string): string => {
+  switch (aud) {
+    case 'ALL_STUDENTS': return 'TUM_OGRENCILER';
+    case 'CLUB_PRESIDENTS': return 'KULUP_BASKANLARI';
+    default: return aud;
+  }
+};
+
+const mapAudience = (aud: string): Notification['targetAudience'] => {
+  switch (aud) {
+    case 'KULLANICI': return 'USER';
+    case 'TUM_OGRENCILER': return 'ALL_STUDENTS';
+    case 'KULUP_BASKANLARI': return 'CLUB_PRESIDENTS';
+    case 'SKS_YONETICILERI': return 'SKS_ADMINS';
+    default: return aud as any;
+  }
+};
+
+const mapNotification = (data: any): Notification => ({
+  id: data.id,
+  title: data.baslik,
+  message: data.mesaj,
+  linkUrl: data.baglantiUrl,
+  linkLabel: data.baglantiEtiketi,
+  imageUrl: data.resimUrl,
+  type: mapType(data.tur),
+  targetAudience: mapAudience(data.hedefKitle),
+  relatedEventId: data.ilgiliEtkinlikId,
+  createdBy: data.olusturan,
+  createdByName: data.olusturanAdi,
+  read: data.okundu,
+  createdAt: data.olusturulmaTarihi
+});
+
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
   unreadCount: 0,
@@ -47,8 +92,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   fetchNotifications: async () => {
     set({ isLoading: true, error: null });
     try {
-      const res = await api.get<Notification[]>('/notifications');
-      set({ notifications: res.data, unreadCount: countUnread(res.data), isLoading: false });
+      const res = await api.get<any[]>('/bildirimler');
+      const mapped = res.data.map(mapNotification);
+      set({ notifications: mapped, unreadCount: countUnread(mapped), isLoading: false });
     } catch (err: any) {
       set({ error: err.response?.data?.message || 'Bildirimler yüklenirken hata oluştu.', isLoading: false });
     }
@@ -67,9 +113,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     set({ notifications: optimisticNotifications, unreadCount: countUnread(optimisticNotifications) });
 
     try {
-      const res = await api.patch<Notification>(`/notifications/${notificationId}/read`);
+      const res = await api.patch<any>(`/bildirimler/${notificationId}/oku`);
       const confirmedNotifications = get().notifications.map(notification =>
-        notification.id === notificationId ? res.data : notification
+        notification.id === notificationId ? mapNotification(res.data) : notification
       );
       set({ notifications: confirmedNotifications, unreadCount: countUnread(confirmedNotifications) });
     } catch (err: any) {
@@ -84,7 +130,16 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   createAnnouncement: async (data) => {
     set({ isLoading: true, error: null });
     try {
-      await api.post('/notifications/announcements', data);
+      const payload = {
+        baslik: data.title,
+        mesaj: data.message,
+        baglantiUrl: data.linkUrl,
+        baglantiEtiketi: data.linkLabel,
+        resimUrl: data.imageUrl,
+        olusturanAdi: data.createdByName,
+        hedefKitle: mapReverseAudience(data.targetAudience)
+      };
+      await api.post('/bildirimler/duyurular', payload);
       await get().fetchNotifications();
       set({ isLoading: false });
       return true;

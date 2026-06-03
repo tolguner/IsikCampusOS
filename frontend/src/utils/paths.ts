@@ -1,0 +1,17 @@
+export const YOLLAR = {
+  anaSayfa: '/',
+  giris: '/giris',
+  sertifikaDogrula: '/sertifikalar/dogrula',
+  epostaDogrula: '/eposta-dogrula',
+  sifreDegistir: '/sifre-degistir',
+  profil: '/profil',
+  ayarlar: '/ayarlar',
+  kulupler: '/kulupler',
+  kulupDetay: (kulupId: string) => `/kulupler/${kulupId}`,
+  bildirimler: '/bildirimler',
+  kulupYonetimi: '/kulup-yonetimi',
+  kulupEtkinlikYonetimi: (etkinlikId: string) => `/kulup-yonetimi/etkinlikler/${etkinlikId}`,
+  tesisYonetimi: '/tesis-yonetimi',
+  tesisRezervasyon: '/tesis-rezervasyon',
+  rezervasyonlarim: '/rezervasyonlarim',
+} as const;

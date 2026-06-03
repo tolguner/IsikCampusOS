@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStudentStore } from '../store/studentStore';
 import { useProfileStore, type ProfileChangeRequest } from '../store/profileStore';
-import { Search, Plus, MoreVertical, X, CheckCircle2, AlertCircle, Loader2, KeyRound, UserX, UserCheck, GraduationCap, Edit2, ChevronLeft, ChevronRight, ClipboardCheck } from 'lucide-react';
+import { Search, Plus, MoreVertical, X, CheckCircle2, AlertCircle, Loader2, KeyRound, UserX, UserCheck, GraduationCap, Edit2, ChevronLeft, ChevronRight, ClipboardCheck, Trash2 } from 'lucide-react';
 
 export const RegistrarDashboard = () => {
   const facultiesAndDepartments: Record<string, string[]> = {
@@ -88,7 +89,7 @@ export const RegistrarDashboard = () => {
   };
 
 
-  const { students, totalElements, totalPages, currentPage, fetchStudents, createStudent, updateStudent, changeStatus, resetPassword, isLoading, error, successMessage, clearMessages } = useStudentStore();
+  const { students, totalElements, totalPages, currentPage, fetchStudents, createStudent, updateStudent, changeStatus, resetPassword, deleteStudent, isLoading, error, successMessage, clearMessages } = useStudentStore();
   const {
     pendingChangeRequests,
     fetchPendingChangeRequests,
@@ -109,7 +110,8 @@ export const RegistrarDashboard = () => {
 
   // Add Form State
   const [formData, setFormData] = useState({
-    firstName: '', lastName: '', studentNumber: '', tcKimlikNo: '', faculty: '', department: '', enrollmentYear: new Date().getFullYear()
+    firstName: '', lastName: '', studentNumber: '', tcKimlikNo: '', faculty: '', department: '', enrollmentYear: new Date().getFullYear(),
+    phoneNumber: '', residenceAddress: '', bloodType: 'A Rh+'
   });
 
   // Reset department when faculty changes
@@ -134,7 +136,10 @@ export const RegistrarDashboard = () => {
     const ok = await createStudent(formData);
     if (ok) {
       setIsAddModalOpen(false);
-      setFormData({ firstName: '', lastName: '', studentNumber: '', tcKimlikNo: '', faculty: '', department: '', enrollmentYear: new Date().getFullYear() });
+      setFormData({ 
+        firstName: '', lastName: '', studentNumber: '', tcKimlikNo: '', faculty: '', department: '', enrollmentYear: new Date().getFullYear(),
+        phoneNumber: '', residenceAddress: '', bloodType: 'A Rh+'
+      });
     }
   };
 
@@ -161,7 +166,10 @@ export const RegistrarDashboard = () => {
       tcKimlikNo: '',
       faculty: student.faculty,
       department: student.department,
-      enrollmentYear: student.enrollmentYear
+      enrollmentYear: student.enrollmentYear,
+      phoneNumber: '',
+      residenceAddress: '',
+      bloodType: 'A Rh+'
     });
     setEditingId(student.id);
     setIsEditModalOpen(true);
@@ -181,6 +189,16 @@ export const RegistrarDashboard = () => {
       alert("Geçersiz TC Kimlik Numarası!");
     }
     setActionMenuOpenId(null);
+  };
+
+  const handleDeleteStudent = async (id: string, fullName: string) => {
+    const confirmDelete = window.confirm(`Öğrenciyi sistemden kalıcı olarak silmek istediğinize emin misiniz? (${fullName})`);
+    if (confirmDelete) {
+      const ok = await deleteStudent(id);
+      if (ok) {
+        setActionMenuOpenId(null);
+      }
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -391,6 +409,7 @@ export const RegistrarDashboard = () => {
                                 {student.status !== 'EXPELLED' && <button onClick={() => handleStatusChange(student.id, 'EXPELLED')} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-400 hover:bg-white/5 rounded-lg w-full text-left cursor-pointer transition-colors"><AlertCircle className="w-3.5 h-3.5"/> İlişiği Kes</button>}
                                 <div className="h-px bg-white/10 my-1" />
                                 <button onClick={() => handleResetPassword(student.id)} className="flex items-center gap-2 px-3 py-2 text-xs text-amber-400 hover:bg-white/5 rounded-lg w-full text-left cursor-pointer transition-colors"><KeyRound className="w-3.5 h-3.5"/> Şifreyi Sıfırla</button>
+                                <button onClick={() => handleDeleteStudent(student.id, student.fullName)} className="flex items-center gap-2 px-3 py-2 text-xs text-red-500 hover:bg-red-500/10 rounded-lg w-full text-left cursor-pointer transition-colors"><Trash2 className="w-3.5 h-3.5"/> Öğrenciyi Sil</button>
                               </div>
                             </motion.div>
                           </>
@@ -422,109 +441,126 @@ export const RegistrarDashboard = () => {
       </div>
 
       {/* Add Modal */}
-      <AnimatePresence>
-        {isAddModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsAddModalOpen(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl rounded-3xl p-8 border border-white/10 shadow-2xl overflow-y-auto max-h-[90vh]"
-              style={{ background: 'rgba(15,15,30,0.95)', backdropFilter: 'blur(24px)' }}>
-              
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white">Yeni Öğrenci Ekle</h2>
-                <button onClick={() => setIsAddModalOpen(false)} className="p-2 rounded-xl text-white/40 hover:bg-white/10 transition-colors cursor-pointer"><X className="w-5 h-5"/></button>
-              </div>
-
-              <form onSubmit={handleAddSubmit} className="space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Ad</label><input required type="text" value={formData.firstName} onChange={e=>setFormData({...formData, firstName: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: Ali" /></div>
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Soyad</label><input required type="text" value={formData.lastName} onChange={e=>setFormData({...formData, lastName: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: Yılmaz" /></div>
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">TC Kimlik No</label><input required type="text" maxLength={11} minLength={11} value={formData.tcKimlikNo} onChange={e=>setFormData({...formData, tcKimlikNo: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="11 Haneli" /></div>
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Öğrenci No</label><input required type="text" value={formData.studentNumber} onChange={e=>setFormData({...formData, studentNumber: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: 24yobi1234" /></div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-xs font-semibold text-white/60 ml-1">Fakülte</label>
-                    <select required value={formData.faculty} onChange={e=>setFormData({...formData, faculty: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors cursor-pointer" style={inputStyle}>
-                      <option value="" disabled className="bg-[#0f1123]">Fakülte Seçiniz</option>
-                      {Object.keys(facultiesAndDepartments).map(faculty => (
-                        <option key={faculty} value={faculty} className="bg-[#0f1123]">{faculty}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-xs font-semibold text-white/60 ml-1">Bölüm / Program</label>
-                    <select required value={formData.department} onChange={e=>setFormData({...formData, department: e.target.value})} disabled={!formData.faculty} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors cursor-pointer disabled:opacity-50" style={inputStyle}>
-                      <option value="" disabled className="bg-[#0f1123]">Önce Fakülte Seçiniz</option>
-                      {formData.faculty && facultiesAndDepartments[formData.faculty]?.map(dept => (
-                        <option key={dept} value={dept} className="bg-[#0f1123]">{dept}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2"><label className="text-xs font-semibold text-white/60 ml-1">Kayıt Yılı</label><input required type="number" min={2000} value={formData.enrollmentYear} onChange={e=>setFormData({...formData, enrollmentYear: parseInt(e.target.value)})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} /></div>
-                </div>
+      {createPortal(
+        <AnimatePresence>
+          {isAddModalOpen && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsAddModalOpen(false)} />
+              <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-2xl rounded-3xl p-8 border border-white/10 shadow-2xl overflow-y-auto max-h-[90vh]"
+                style={{ background: 'rgba(15,15,30,0.95)', backdropFilter: 'blur(24px)' }}>
                 
-                <div className="pt-4 flex justify-end gap-3">
-                  <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 rounded-xl text-sm font-semibold text-white/70 hover:bg-white/5 transition-colors cursor-pointer">İptal</button>
-                  <button type="submit" disabled={isLoading} className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white shadow-lg cursor-pointer disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Öğrenciyi Kaydet'}
-                  </button>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-white">Yeni Öğrenci Ekle</h2>
+                  <button onClick={() => setIsAddModalOpen(false)} className="p-2 rounded-xl text-white/40 hover:bg-white/10 transition-colors cursor-pointer"><X className="w-5 h-5"/></button>
                 </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+
+                <form onSubmit={handleAddSubmit} className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Ad</label><input required type="text" value={formData.firstName} onChange={e=>setFormData({...formData, firstName: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: Ali" /></div>
+                    <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Soyad</label><input required type="text" value={formData.lastName} onChange={e=>setFormData({...formData, lastName: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: Yılmaz" /></div>
+                    <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">TC Kimlik No</label><input required type="text" maxLength={11} minLength={11} value={formData.tcKimlikNo} onChange={e=>setFormData({...formData, tcKimlikNo: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="11 Haneli" /></div>
+                    <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Öğrenci No</label><input required type="text" value={formData.studentNumber} onChange={e=>setFormData({...formData, studentNumber: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: 24yobi1234" /></div>
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <label className="text-xs font-semibold text-white/60 ml-1">Fakülte</label>
+                      <select required value={formData.faculty} onChange={e=>setFormData({...formData, faculty: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors cursor-pointer" style={inputStyle}>
+                        <option value="" disabled className="bg-[#0f1123]">Fakülte Seçiniz</option>
+                        {Object.keys(facultiesAndDepartments).map(faculty => (
+                          <option key={faculty} value={faculty} className="bg-[#0f1123]">{faculty}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <label className="text-xs font-semibold text-white/60 ml-1">Bölüm / Program</label>
+                      <select required value={formData.department} onChange={e=>setFormData({...formData, department: e.target.value})} disabled={!formData.faculty} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors cursor-pointer disabled:opacity-50" style={inputStyle}>
+                        <option value="" disabled className="bg-[#0f1123]">Önce Fakülte Seçiniz</option>
+                        {formData.faculty && facultiesAndDepartments[formData.faculty]?.map(dept => (
+                          <option key={dept} value={dept} className="bg-[#0f1123]">{dept}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-2"><label className="text-xs font-semibold text-white/60 ml-1">Kayıt Yılı</label><input required type="number" min={2000} value={formData.enrollmentYear} onChange={e=>setFormData({...formData, enrollmentYear: parseInt(e.target.value)})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} /></div>
+                    
+                    <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Telefon Numarası</label><input type="text" value={formData.phoneNumber} onChange={e=>setFormData({...formData, phoneNumber: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: 5XXXXXXXXX" /></div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-white/60 ml-1">Kan Grubu</label>
+                      <select value={formData.bloodType} onChange={e=>setFormData({...formData, bloodType: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors cursor-pointer" style={inputStyle}>
+                        {['A Rh+', 'A Rh-', 'B Rh+', 'B Rh-', 'AB Rh+', 'AB Rh-', '0 Rh+', '0 Rh-'].map(bt => (
+                          <option key={bt} value={bt} className="bg-[#0f1123]">{bt}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-2"><label className="text-xs font-semibold text-white/60 ml-1">İkametgah Adresi</label><textarea value={formData.residenceAddress} onChange={e=>setFormData({...formData, residenceAddress: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} placeholder="Örn: Meşrutiyet Mh. Üniversite Sk. No: 2" /></div>
+                  </div>
+                  
+                  <div className="pt-4 flex justify-end gap-3">
+                    <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 rounded-xl text-sm font-semibold text-white/70 hover:bg-white/5 transition-colors cursor-pointer">İptal</button>
+                    <button type="submit" disabled={isLoading} className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white shadow-lg cursor-pointer disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Öğrenciyi Kaydet'}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Edit Modal */}
-      <AnimatePresence>
-        {isEditModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl rounded-3xl p-8 border border-white/10 shadow-2xl overflow-y-auto max-h-[90vh]"
-              style={{ background: 'rgba(15,15,30,0.95)', backdropFilter: 'blur(24px)' }}>
-              
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white">Öğrenci Bilgilerini Düzenle</h2>
-                <button onClick={() => setIsEditModalOpen(false)} className="p-2 rounded-xl text-white/40 hover:bg-white/10 transition-colors cursor-pointer"><X className="w-5 h-5"/></button>
-              </div>
-
-              <form onSubmit={handleEditSubmit} className="space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Ad</label><input required type="text" value={formData.firstName} onChange={e=>setFormData({...formData, firstName: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-colors" style={inputStyle} /></div>
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Soyad</label><input required type="text" value={formData.lastName} onChange={e=>setFormData({...formData, lastName: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-colors" style={inputStyle} /></div>
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Öğrenci No (Değiştirilemez)</label><input disabled type="text" value={formData.studentNumber} className="w-full px-4 py-3 rounded-xl text-sm text-white/50 bg-white/5 outline-none cursor-not-allowed" style={inputStyle} /></div>
-                  <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Kayıt Yılı (Değiştirilemez)</label><input disabled type="number" value={formData.enrollmentYear} className="w-full px-4 py-3 rounded-xl text-sm text-white/50 bg-white/5 outline-none cursor-not-allowed" style={inputStyle} /></div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-xs font-semibold text-white/60 ml-1">Fakülte</label>
-                    <select required value={formData.faculty} onChange={e=>setFormData({...formData, faculty: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-colors cursor-pointer" style={inputStyle}>
-                      <option value="" disabled className="bg-[#0f1123]">Fakülte Seçiniz</option>
-                      {Object.keys(facultiesAndDepartments).map(faculty => (
-                        <option key={faculty} value={faculty} className="bg-[#0f1123]">{faculty}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-xs font-semibold text-white/60 ml-1">Bölüm / Program</label>
-                    <select required value={formData.department} onChange={e=>setFormData({...formData, department: e.target.value})} disabled={!formData.faculty} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-colors cursor-pointer disabled:opacity-50" style={inputStyle}>
-                      <option value="" disabled className="bg-[#0f1123]">Önce Fakülte Seçiniz</option>
-                      {formData.faculty && facultiesAndDepartments[formData.faculty]?.map(dept => (
-                        <option key={dept} value={dept} className="bg-[#0f1123]">{dept}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+      {createPortal(
+        <AnimatePresence>
+          {isEditModalOpen && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)} />
+              <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-2xl rounded-3xl p-8 border border-white/10 shadow-2xl overflow-y-auto max-h-[90vh]"
+                style={{ background: 'rgba(15,15,30,0.95)', backdropFilter: 'blur(24px)' }}>
                 
-                <div className="pt-4 flex justify-end gap-3">
-                  <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-3 rounded-xl text-sm font-semibold text-white/70 hover:bg-white/5 transition-colors cursor-pointer">İptal</button>
-                  <button type="submit" disabled={isLoading} className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white shadow-lg cursor-pointer disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}>
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Değişiklikleri Kaydet'}
-                  </button>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-white">Öğrenci Bilgilerini Düzenle</h2>
+                  <button onClick={() => setIsEditModalOpen(false)} className="p-2 rounded-xl text-white/40 hover:bg-white/10 transition-colors cursor-pointer"><X className="w-5 h-5"/></button>
                 </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+
+                <form onSubmit={handleEditSubmit} className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Ad</label><input required type="text" value={formData.firstName} onChange={e=>setFormData({...formData, firstName: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-colors" style={inputStyle} /></div>
+                    <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Soyad</label><input required type="text" value={formData.lastName} onChange={e=>setFormData({...formData, lastName: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-colors" style={inputStyle} /></div>
+                    <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Öğrenci No (Değiştirilemez)</label><input disabled type="text" value={formData.studentNumber} className="w-full px-4 py-3 rounded-xl text-sm text-white/50 bg-white/5 outline-none cursor-not-allowed" style={inputStyle} /></div>
+                    <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Kayıt Yılı (Değiştirilemez)</label><input disabled type="number" value={formData.enrollmentYear} className="w-full px-4 py-3 rounded-xl text-sm text-white/50 bg-white/5 outline-none cursor-not-allowed" style={inputStyle} /></div>
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <label className="text-xs font-semibold text-white/60 ml-1">Fakülte</label>
+                      <select required value={formData.faculty} onChange={e=>setFormData({...formData, faculty: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-colors cursor-pointer" style={inputStyle}>
+                        <option value="" disabled className="bg-[#0f1123]">Fakülte Seçiniz</option>
+                        {Object.keys(facultiesAndDepartments).map(faculty => (
+                          <option key={faculty} value={faculty} className="bg-[#0f1123]">{faculty}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <label className="text-xs font-semibold text-white/60 ml-1">Bölüm / Program</label>
+                      <select required value={formData.department} onChange={e=>setFormData({...formData, department: e.target.value})} disabled={!formData.faculty} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-colors cursor-pointer disabled:opacity-50" style={inputStyle}>
+                        <option value="" disabled className="bg-[#0f1123]">Önce Fakülte Seçiniz</option>
+                        {formData.faculty && facultiesAndDepartments[formData.faculty]?.map(dept => (
+                          <option key={dept} value={dept} className="bg-[#0f1123]">{dept}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 flex justify-end gap-3">
+                    <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-3 rounded-xl text-sm font-semibold text-white/70 hover:bg-white/5 transition-colors cursor-pointer">İptal</button>
+                    <button type="submit" disabled={isLoading} className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white shadow-lg cursor-pointer disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}>
+                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Değişiklikleri Kaydet'}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };

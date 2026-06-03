@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { Bell, LayoutDashboard, Link as LinkIcon, ShieldCheck, UsersRound } from 'lucide-react';
+import { Bell, Building2, LayoutDashboard, Link as LinkIcon, ShieldCheck, UsersRound, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useNotificationStore } from '../../store/notificationStore';
 import { useClubStore } from '../../store/clubStore';
 import { useProfileStore } from '../../store/profileStore';
+import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../../utils/roles';
+import { YOLLAR } from '../../utils/paths';
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, logout, user } = useAuthStore();
@@ -13,7 +15,8 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { managedClubs, fetchManagedClubs } = useClubStore();
   const { profile, fetchMyProfile } = useProfileStore();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const isStudent = !!user?.roles.includes('ROLE_STUDENT');
+  const isStudent = yetkilerdenBiriVarMi(user?.roles, YETKI_GRUPLARI.ogrenci);
+  const isFacilityAdmin = yetkilerdenBiriVarMi(user?.roles, YETKI_GRUPLARI.tesisYonetimi);
   const isClubPresident = isStudent && managedClubs.length > 0;
   const userInitials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}` ||
     user?.fullName?.split(' ').map(part => part[0]).slice(0, 2).join('') ||
@@ -67,12 +70,27 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <Link to="/" className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Kontrol Paneli">
               <LayoutDashboard className="w-5 h-5 text-white/40 hover:text-white/70" />
             </Link>
-            <Link to="/clubs" className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Kulüpler">
+            <Link to={YOLLAR.kulupler} className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Kulüpler">
               <UsersRound className="w-5 h-5 text-white/40 hover:text-white/70" />
             </Link>
+            {isStudent && (
+              <>
+                <Link to={YOLLAR.tesisRezervasyon} className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Tesis Rezerve Et">
+                  <Calendar className="w-5 h-5 text-white/40 hover:text-white/70" />
+                </Link>
+                <Link to={YOLLAR.rezervasyonlarim} className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Tesis Rezervasyonlarım">
+                  <Building2 className="w-5 h-5 text-white/40 hover:text-white/70" />
+                </Link>
+              </>
+            )}
             {isClubPresident && (
-              <Link to="/club-management" className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Kulüp Yönetim Paneli">
+              <Link to={YOLLAR.kulupYonetimi} className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Kulüp Yönetim Paneli">
                 <ShieldCheck className="w-5 h-5 text-white/40 hover:text-white/70" />
+              </Link>
+            )}
+            {isFacilityAdmin && (
+              <Link to={YOLLAR.tesisYonetimi} className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Tesis Yönetim Paneli">
+                <Building2 className="w-5 h-5 text-white/40 hover:text-white/70" />
               </Link>
             )}
             <div className="relative">
@@ -149,7 +167,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                   </div>
                   <div className="p-2 border-t border-white/10">
                     <Link
-                      to="/notifications"
+                      to={YOLLAR.bildirimler}
                       onClick={() => setNotificationsOpen(false)}
                       className="block w-full rounded-xl px-3 py-2.5 text-center text-sm font-bold text-purple-100 bg-purple-500/15 hover:bg-purple-500/25 transition-colors"
                     >
@@ -185,10 +203,10 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                     <div className="w-52 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden border border-white/10"
                          style={{ background: 'rgba(12, 12, 24, 0.98)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
                       <div className="p-2 flex flex-col gap-1">
-                        <Link to="/profile" className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-left">
+                        <Link to={YOLLAR.profil} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-left">
                           Profil
                         </Link>
-                        <Link to="/settings" className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-left">
+                        <Link to={YOLLAR.ayarlar} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-left">
                           Ayarlar
                         </Link>
                         <div className="h-px bg-white/10 my-1 mx-2" />
