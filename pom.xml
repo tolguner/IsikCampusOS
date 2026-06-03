@@ -23,11 +23,13 @@
     </properties>
 
     <modules>
+        <module>services/common-security</module>
         <module>services/eureka-server</module>
         <module>services/api-gateway</module>
         <module>services/auth-service</module>
         <module>services/profile-service</module>
         <module>services/event-service</module>
+        <module>services/facility-service</module>
     </modules>
 
     <dependencyManagement>

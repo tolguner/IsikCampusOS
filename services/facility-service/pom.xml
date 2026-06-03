@@ -9,9 +9,9 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>auth-service</artifactId>
-    <name>auth-service</name>
-    <description>Authentication Service for IsikCampusOS</description>
+    <artifactId>facility-service</artifactId>
+    <name>facility-service</name>
+    <description>Smart Facility Booking Service for IsikCampusOS</description>
 
     <dependencies>
         <dependency>
@@ -21,17 +21,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-
-        <!-- Ortak güvenlik bileşenleri (JWT doğrulama filtresi, CORS) -->
-        <dependency>
-            <groupId>com.isik.campusos</groupId>
-            <artifactId>common-security</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -47,27 +36,15 @@
             <artifactId>flyway-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-mail</artifactId>
+            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+
+        <!-- Ortak güvenlik bileşenleri (JWT filtresi, CORS, REST hata yakalayıcı) -->
         <dependency>
-            <groupId>io.github.openhtmltopdf</groupId>
-            <artifactId>openhtmltopdf-pdfbox</artifactId>
-            <version>1.1.37</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>core</artifactId>
-            <version>3.5.3</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>javase</artifactId>
-            <version>3.5.3</version>
+            <groupId>com.isik.campusos</groupId>
+            <artifactId>common-security</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -97,5 +74,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
 </project>
