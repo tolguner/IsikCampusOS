@@ -4,6 +4,8 @@ import com.isik.kampusos.etkinlik.dto.*;
 import com.isik.kampusos.etkinlik.model.Etkinlik;
 import com.isik.kampusos.etkinlik.model.KulupUyesi;
 import com.isik.kampusos.etkinlik.service.KulupServisi;
+import com.isik.kampusos.etkinlik.service.KulupUyelikServisi;
+import com.isik.kampusos.etkinlik.service.KulupProfilTalepServisi;
 import com.isik.kampusos.etkinlik.service.EtkinlikServisi;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,8 @@ import java.util.List;
 public class KulupDenetleyicisi {
 
     private final KulupServisi kulupServisi;
+    private final KulupUyelikServisi kulupUyelikServisi;
+    private final KulupProfilTalepServisi kulupProfilTalepServisi;
     private final EtkinlikServisi etkinlikServisi;
 
     @GetMapping
@@ -64,20 +68,20 @@ public class KulupDenetleyicisi {
     public ResponseEntity<KulupProfilDegisiklikIstegiYaniti> requestProfileUpdate(Authentication auth,
                                                                                  @PathVariable String kulupId,
                                                                                  @RequestBody KulupProfilGuncellemeTalebi talep) {
-        return ResponseEntity.ok(kulupServisi.profilGuncellemeTalepEt(auth.getName(), kulupId, talep));
+        return ResponseEntity.ok(kulupProfilTalepServisi.profilGuncellemeTalepEt(auth.getName(), kulupId, talep));
     }
 
     @GetMapping("/profil-guncelleme-talepleri")
     @PreAuthorize("hasAnyAuthority('ROLE_SKS_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<List<KulupProfilDegisiklikIstegiYaniti>> getProfileChangeQueue(Authentication auth) {
-        return ResponseEntity.ok(kulupServisi.profilDegisiklikKuyrugunuGetir(auth.getName()));
+        return ResponseEntity.ok(kulupProfilTalepServisi.profilDegisiklikKuyrugunuGetir(auth.getName()));
     }
 
     @PostMapping("/profil-guncelleme-talepleri/{requestId}/onayla")
     @PreAuthorize("hasAnyAuthority('ROLE_SKS_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<KulupProfilDegisiklikIstegiYaniti> approveProfileChange(Authentication auth,
                                                                                  @PathVariable String requestId) {
-        return ResponseEntity.ok(kulupServisi.profilDegisikliginiOnayla(requestId, auth.getName()));
+        return ResponseEntity.ok(kulupProfilTalepServisi.profilDegisikliginiOnayla(requestId, auth.getName()));
     }
 
     @PostMapping("/profil-guncelleme-talepleri/{requestId}/revizyon-talebi")
@@ -86,7 +90,7 @@ public class KulupDenetleyicisi {
             Authentication auth,
             @PathVariable String requestId,
             @RequestBody EtkinlikGeriBildirimTalebi talep) {
-        return ResponseEntity.ok(kulupServisi.profilDegisikligiIcinRevizyonIste(requestId, auth.getName(), talep));
+        return ResponseEntity.ok(kulupProfilTalepServisi.profilDegisikligiIcinRevizyonIste(requestId, auth.getName(), talep));
     }
 
     @PostMapping("/profil-guncelleme-talepleri/{requestId}/reddet")
@@ -95,7 +99,7 @@ public class KulupDenetleyicisi {
             Authentication auth,
             @PathVariable String requestId,
             @RequestBody EtkinlikGeriBildirimTalebi talep) {
-        return ResponseEntity.ok(kulupServisi.profilDegisikliginiReddet(requestId, auth.getName(), talep));
+        return ResponseEntity.ok(kulupProfilTalepServisi.profilDegisikliginiReddet(requestId, auth.getName(), talep));
     }
 
     @GetMapping("/{kulupId}/duyurular")
@@ -141,7 +145,7 @@ public class KulupDenetleyicisi {
 
     @GetMapping("/{kulupId}/uyeler")
     public ResponseEntity<List<KulupUyeYaniti>> getClubMembers(Authentication auth, @PathVariable String kulupId) {
-        return ResponseEntity.ok(kulupServisi.kulupUyeleriniGetir(auth.getName(), auth.getAuthorities().toString(), kulupId));
+        return ResponseEntity.ok(kulupUyelikServisi.kulupUyeleriniGetir(auth.getName(), auth.getAuthorities().toString(), kulupId));
     }
 
     @PatchMapping("/{kulupId}/uyeler/{userId}/rol")
@@ -150,7 +154,7 @@ public class KulupDenetleyicisi {
                                                  @PathVariable String kulupId,
                                                  @PathVariable String userId,
                                                  @RequestBody KulupUyeRolGuncellemeTalebi talep) {
-        kulupServisi.uyeRolunuGuncelle(auth.getName(), auth.getAuthorities().toString(), kulupId, userId, talep);
+        kulupUyelikServisi.uyeRolunuGuncelle(auth.getName(), auth.getAuthorities().toString(), kulupId, userId, talep);
         return ResponseEntity.ok().build();
     }
 
@@ -160,7 +164,7 @@ public class KulupDenetleyicisi {
                                                    @PathVariable String kulupId,
                                                    @PathVariable String userId,
                                                    @RequestBody KulupUyeDurumGuncellemeTalebi talep) {
-        kulupServisi.uyeDurumunuGuncelle(auth.getName(), auth.getAuthorities().toString(), kulupId, userId, talep);
+        kulupUyelikServisi.uyeDurumunuGuncelle(auth.getName(), auth.getAuthorities().toString(), kulupId, userId, talep);
         return ResponseEntity.ok().build();
     }
 
@@ -169,7 +173,7 @@ public class KulupDenetleyicisi {
     public ResponseEntity<Void> removeMember(Authentication auth,
                                              @PathVariable String kulupId,
                                              @PathVariable String userId) {
-        kulupServisi.uyeyiCikar(auth.getName(), auth.getAuthorities().toString(), kulupId, userId);
+        kulupUyelikServisi.uyeyiCikar(auth.getName(), auth.getAuthorities().toString(), kulupId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -177,14 +181,14 @@ public class KulupDenetleyicisi {
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<KulupUyesi> joinClub(Authentication auth,
                                               @PathVariable String kulupId) {
-        return ResponseEntity.ok(kulupServisi.kulupeKatil(auth.getName(), kulupId));
+        return ResponseEntity.ok(kulupUyelikServisi.kulupeKatil(auth.getName(), kulupId));
     }
 
     @DeleteMapping("/{kulupId}/uyelik")
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<Void> leaveClub(Authentication auth,
                                          @PathVariable String kulupId) {
-        kulupServisi.kuluptenAyril(auth.getName(), kulupId);
+        kulupUyelikServisi.kuluptenAyril(auth.getName(), kulupId);
         return ResponseEntity.noContent().build();
     }
 }
