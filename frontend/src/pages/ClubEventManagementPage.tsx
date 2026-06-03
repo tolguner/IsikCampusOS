@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useClubStore } from '../store/clubStore';
 import { useEventStore, type EventParticipant } from '../store/eventStore';
+import { YOLLAR } from '../utils/paths';
 import {
   isCheckInWindowOpen,
   isPastEvent,
@@ -117,7 +118,7 @@ export const ClubEventManagementPage = () => {
   }, [eventId, fetchParticipants, fetchEventAuditLogs]);
 
   if (!eventId) {
-    return <Navigate to="/club-management" replace />;
+    return <Navigate to={YOLLAR.kulupYonetimi} replace />;
   }
 
   if (!checked) {
@@ -125,7 +126,7 @@ export const ClubEventManagementPage = () => {
   }
 
   if (managedClubs.length === 0 && managedEvents.length === 0) {
-    return <Navigate to="/clubs" replace />;
+    return <Navigate to={YOLLAR.kulupler} replace />;
   }
 
   if (!event) {
@@ -134,7 +135,7 @@ export const ClubEventManagementPage = () => {
         <p className="text-sm font-semibold text-white/45">Etkinlik yükleniyor veya bu etkinliği yönetme yetkin yok.</p>
         <button
           type="button"
-          onClick={() => navigate('/club-management')}
+          onClick={() => navigate(YOLLAR.kulupYonetimi)}
           className="mt-4 rounded-2xl px-4 py-2.5 text-sm font-bold text-white/80 bg-white/[0.06] hover:bg-white/[0.1] border border-white/10"
         >
           Kulüp yönetimine dön
@@ -216,7 +217,7 @@ export const ClubEventManagementPage = () => {
     <section className="space-y-5">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div>
-          <Link to="/club-management" className="inline-flex items-center gap-2 text-sm font-bold text-white/45 hover:text-white">
+          <Link to={YOLLAR.kulupYonetimi} className="inline-flex items-center gap-2 text-sm font-bold text-white/45 hover:text-white">
             <ArrowLeft className="w-4 h-4" />
             Etkinlik akışına dön
           </Link>

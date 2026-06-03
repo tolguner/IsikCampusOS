@@ -10,7 +10,7 @@ spring:
     password: campusospassword
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -28,7 +28,6 @@ spring:
 eureka:
   instance:
     prefer-ip-address: true
-    ip-address: 127.0.0.1
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
@@ -36,4 +35,4 @@ eureka:
 security:
   jwt:
     # Auth Service ve API Gateway ile AYNI değer olmalı
-    secret: ${JWT_SECRET:campusos_super_secret_key_change_in_production_min32ch}
+    secret: ${JWT_SECRET:3cfa76ef14937c1c0ea519f8fc29b945279b945279b945279b945279b945279b}

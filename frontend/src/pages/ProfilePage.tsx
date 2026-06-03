@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/authStore';
 import { useProfileStore } from '../store/profileStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAutoDismissMessage } from '../hooks/useAutoDismissMessage';
+import { yetkilerdenBiriVarMi, YETKI_GRUPLARI, YETKILER } from '../utils/roles';
 import { 
   User, Mail, GraduationCap, Building2, Calendar, 
   Camera, Lock, CheckCircle2, AlertCircle, Loader2,
@@ -63,9 +64,9 @@ export const ProfilePage = () => {
 
   if (!user) return null;
 
-  const isStudent = user.roles.includes('ROLE_STUDENT');
-  const isRegistrar = user.roles.includes('ROLE_REGISTRAR');
-  const isAdmin = user.roles.includes('ROLE_ADMIN');
+  const isStudent = yetkilerdenBiriVarMi(user.roles, YETKI_GRUPLARI.ogrenci);
+  const isRegistrar = yetkilerdenBiriVarMi(user.roles, YETKI_GRUPLARI.ogrenciIsleri);
+  const isAdmin = yetkilerdenBiriVarMi(user.roles, [YETKILER.SISTEM_YONETICISI]);
 
   const getRoleName = () => {
     if (isAdmin) return 'Sistem Yöneticisi';
@@ -467,17 +468,6 @@ export const ProfilePage = () => {
                     <span className="text-sm text-white/70">Kayıt Yılı</span>
                   </div>
                   <span className="text-sm font-semibold text-white">{user.enrollmentYear || '2023'}</span>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-bold text-emerald-400">3.45</span>
-                    <span className="text-[10px] uppercase tracking-wider text-emerald-400/70 font-semibold mt-1">GNO</span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-bold text-blue-400">120</span>
-                    <span className="text-[10px] uppercase tracking-wider text-blue-400/70 font-semibold mt-1">Kredi</span>
-                  </div>
                 </div>
               </div>
             </motion.div>

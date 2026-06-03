@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import type { Club } from '../../store/clubStore';
 import { useEventStore, type Event } from '../../store/eventStore';
+import { YOLLAR } from '../../utils/paths';
 import {
   inputClass,
   textareaClass,
@@ -439,6 +440,7 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
               latitude={eventForm.latitude}
               longitude={eventForm.longitude}
               onChange={(latitude, longitude) => setEventForm(prev => ({ ...prev, latitude, longitude }))}
+              onLocationSelect={(name) => setEventForm(prev => ({ ...prev, locationName: name }))}
             />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
               <input value={eventForm.locationName} onChange={e => setEventForm(prev => ({ ...prev, locationName: e.target.value }))} className={inputClass} placeholder="Konum adı / bina / salon" />
@@ -468,21 +470,84 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <label className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-white/70">
-            <input type="checkbox" checked={eventForm.hasCapacityLimit} onChange={e => setEventForm(prev => ({ ...prev, hasCapacityLimit: e.target.checked }))} className="mr-2" />
-            Sınırlı kontenjan
+          <label className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-white/70 flex flex-col gap-2">
+            <div className="flex items-center">
+              <input type="checkbox" checked={eventForm.hasCapacityLimit} onChange={e => setEventForm(prev => ({ ...prev, hasCapacityLimit: e.target.checked }))} className="mr-2" />
+              Sınırlı kontenjan
+            </div>
             {eventForm.hasCapacityLimit && (
-              <input type="number" value={eventForm.capacity} onChange={e => setEventForm(prev => ({ ...prev, capacity: Number(e.target.value) }))} className={`${inputClass} mt-3`} min={1} placeholder="Kontenjan" />
+              <div className="flex items-center gap-1 bg-[#0c0c1c] border border-white/10 rounded-xl p-1 w-full max-w-[200px] mt-1">
+                <button
+                  type="button"
+                  onClick={() => setEventForm(prev => ({ ...prev, capacity: Math.max(1, (prev.capacity || 0) - 1) }))}
+                  className="w-9 h-9 rounded-lg bg-white/[0.04] text-white hover:bg-white/[0.08] active:scale-95 transition-all font-extrabold flex items-center justify-center text-base select-none cursor-pointer"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  value={eventForm.capacity || ''}
+                  onChange={e => {
+                    const val = e.target.value === '' ? '' : Math.max(1, Number(e.target.value));
+                    setEventForm(prev => ({ ...prev, capacity: val as any }));
+                  }}
+                  onBlur={() => {
+                    if (!eventForm.capacity) setEventForm(prev => ({ ...prev, capacity: 1 }));
+                  }}
+                  className="flex-1 bg-transparent text-center font-extrabold text-white text-sm outline-none"
+                  min={1}
+                />
+                <button
+                  type="button"
+                  onClick={() => setEventForm(prev => ({ ...prev, capacity: (prev.capacity || 0) + 1 }))}
+                  className="w-9 h-9 rounded-lg bg-white/[0.04] text-white hover:bg-white/[0.08] active:scale-95 transition-all font-extrabold flex items-center justify-center text-base select-none cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
             )}
           </label>
-          <label className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-white/70">
-            <input type="checkbox" checked={eventForm.paid} onChange={e => setEventForm(prev => ({ ...prev, paid: e.target.checked }))} className="mr-2" />
-            Ücretli etkinlik
+          <label className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-white/70 flex flex-col gap-2">
+            <div className="flex items-center">
+              <input type="checkbox" checked={eventForm.paid} onChange={e => setEventForm(prev => ({ ...prev, paid: e.target.checked }))} className="mr-2" />
+              Ücretli etkinlik
+            </div>
             {eventForm.paid && (
-              <div className="space-y-3 mt-3">
-                <input type="number" value={eventForm.feeAmount} onChange={e => setEventForm(prev => ({ ...prev, feeAmount: Number(e.target.value) }))} className={inputClass} min={0} placeholder="Ücret" />
+              <div className="space-y-3 mt-1">
+                <div className="flex items-center gap-1 bg-[#0c0c1c] border border-white/10 rounded-xl p-1 w-full max-w-[200px]">
+                  <button
+                    type="button"
+                    onClick={() => setEventForm(prev => ({ ...prev, feeAmount: Math.max(0, (prev.feeAmount || 0) - 10) }))}
+                    className="w-9 h-9 rounded-lg bg-white/[0.04] text-white hover:bg-white/[0.08] active:scale-95 transition-all font-extrabold flex items-center justify-center text-base select-none cursor-pointer"
+                  >
+                    −
+                  </button>
+                  <div className="flex-1 flex items-center justify-center gap-1">
+                    <input
+                      type="number"
+                      value={eventForm.feeAmount === 0 ? '0' : (eventForm.feeAmount || '')}
+                      onChange={e => {
+                        const val = e.target.value === '' ? '' : Math.max(0, Number(e.target.value));
+                        setEventForm(prev => ({ ...prev, feeAmount: val as any }));
+                      }}
+                      onBlur={() => {
+                        if (!eventForm.feeAmount && eventForm.feeAmount !== 0) setEventForm(prev => ({ ...prev, feeAmount: 0 }));
+                      }}
+                      className="w-12 bg-transparent text-right font-extrabold text-white text-sm outline-none"
+                      min={0}
+                    />
+                    <span className="text-white/45 text-xs font-bold pr-1">TL</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEventForm(prev => ({ ...prev, feeAmount: (prev.feeAmount || 0) + 10 }))}
+                    className="w-9 h-9 rounded-lg bg-white/[0.04] text-white hover:bg-white/[0.08] active:scale-95 transition-all font-extrabold flex items-center justify-center text-base select-none cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
                 <input value={eventForm.iban} onChange={e => setEventForm(prev => ({ ...prev, iban: e.target.value }))} className={inputClass} placeholder="IBAN" />
-                <textarea value={eventForm.paymentInstructions} onChange={e => setEventForm(prev => ({ ...prev, paymentInstructions: e.target.value }))} className={`${inputClass} min-h-20 resize-none`} placeholder="Ödeme açıklaması / açıklama kodu" />
+                <textarea value={eventForm.paymentInstructions} onChange={e => setEventForm(prev => ({ ...prev, paymentInstructions: e.target.value }))} className={`${textareaClass}`} placeholder="Ödeme açıklaması / açıklama kodu" />
               </div>
             )}
           </label>
@@ -616,7 +681,7 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
               </div>
               {showActionPanel && (
                 <div className="flex flex-col gap-2 lg:w-44">
-                  <Link to={`/club-management/events/${event.id}`} className="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-cyan-100 bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/15">
+                  <Link to={YOLLAR.kulupEtkinlikYonetimi(event.id)} className="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-cyan-100 bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/15">
                     Detay
                   </Link>
                   {canEditEvent && (
@@ -689,7 +754,7 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
                         ? 'Etkinlik sona erdi; yoklama +1 saat esnekliği içinde açık kalır.'
                         : 'Geçmiş etkinliklerde düzenleme, yoklama ve iptal kapalıdır.'}
                   </p>
-                  <Link to={`/club-management/events/${event.id}`} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-2.5 text-xs font-black text-purple-50 bg-purple-500/70 hover:bg-purple-500">
+                  <Link to={YOLLAR.kulupEtkinlikYonetimi(event.id)} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-2.5 text-xs font-black text-purple-50 bg-purple-500/70 hover:bg-purple-500">
                     Detayları Yönet
                   </Link>
                 </div>

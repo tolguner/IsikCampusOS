@@ -26,6 +26,19 @@ interface AcademicStaffState {
 const getErrorMessage = (err: any, fallback: string) =>
   err?.response?.data?.message || err?.message || fallback;
 
+const mapAdvisor = (data: any): AcademicAdvisor => ({
+  id: data.id,
+  academicTitle: data.akademikUnvan,
+  fullName: data.adSoyad,
+  displayName: data.gorunenAd,
+  email: data.eposta,
+  facultyOrUnit: data.fakulteVeyaBirim,
+  department: data.bolum,
+  role: data.rol,
+  profileUrl: data.profilUrl,
+  lastSyncedAt: data.sonSenkronizasyonTarihi
+});
+
 export const useAcademicStaffStore = create<AcademicStaffState>((set, get) => ({
   advisors: [],
   isLoading: false,
@@ -37,10 +50,10 @@ export const useAcademicStaffStore = create<AcademicStaffState>((set, get) => ({
     const normalized = query.trim();
     set({ isLoading: true, error: null });
     try {
-      const res = await api.get<AcademicAdvisor[]>('/academic-staff/advisors', {
-        params: { query: normalized, limit: 12 },
+      const res = await api.get<any[]>('/akademik-kadro/danismanlar', {
+        params: { sorgu: normalized, limit: 12 },
       });
-      set({ advisors: res.data, isLoading: false });
+      set({ advisors: res.data.map(mapAdvisor), isLoading: false });
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Akademik danışmanlar yüklenemedi.'), isLoading: false });
     }
@@ -49,7 +62,7 @@ export const useAcademicStaffStore = create<AcademicStaffState>((set, get) => ({
   syncAdvisors: async () => {
     set({ isLoading: true, error: null });
     try {
-      await api.post('/academic-staff/sync');
+      await api.post('/akademik-kadro/senkronizasyon');
       set({ isLoading: false });
       await get().searchAdvisors('');
       return true;

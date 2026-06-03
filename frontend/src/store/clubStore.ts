@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
-import type { Event } from './eventStore';
+import { type Event, mapEventResponse } from './eventStore';
 
 export interface Club {
   id: string;
@@ -98,7 +98,7 @@ export interface ClubProfileChangeRequest {
   updatedAt: string;
 }
 
-type ClubProfileUpdate = Pick<Club, 'name' | 'shortDescription' | 'vision' | 'description' | 'logoUrl' | 'advisorAcademicStaffId' | 'advisorTitle' | 'advisorFullName' | 'advisorEmail' | 'advisorDepartment'> & {
+type ClubProfileUpdate = Pick<Club, 'name' | 'shortDescription' | 'vision' | 'description' | 'logoUrl' | 'advisorAcademicStaffId' | 'advisorTitle' | 'advisorFullName' | 'advisorEmail' | 'advisorDepartment' | 'requiresApproval'> & {
   adminUserId?: string;
   presidentFullName?: string;
   presidentEmail?: string;
@@ -157,6 +157,114 @@ const getErrorMessage = (err: any, fallback: string) => {
   return err?.response?.data?.message || err?.message || fallback;
 };
 
+const mapClubResponse = (data: any): Club => {
+  return {
+    id: data.id,
+    name: data.ad,
+    shortDescription: data.kisaAciklama,
+    vision: data.vizyon,
+    description: data.aciklama,
+    adminUserId: data.yoneticiKullaniciId,
+    presidentFullName: data.baskanAdSoyad,
+    presidentEmail: data.baskanEposta,
+    logoUrl: data.logoUrl,
+    advisorAcademicStaffId: data.danismanAkademikKadroId,
+    advisorTitle: data.danismanUnvani,
+    advisorFullName: data.danismanAdSoyad,
+    advisorEmail: data.danismanEposta,
+    advisorDepartment: data.danismanBolumu,
+    active: data.aktif,
+    requiresApproval: data.onayGerektirir,
+    memberCount: Number(data.uyeSayisi || 0),
+    eventCount: Number(data.etkinlikSayisi || 0),
+    currentUserMember: data.mevcutKullaniciUyeMi,
+    currentUserRole: data.mevcutKullaniciRol === 'YONETICI' ? 'ADMIN' : (data.mevcutKullaniciRol === 'UYE' ? 'MEMBER' : data.mevcutKullaniciRol),
+    currentUserStatus: data.mevcutKullaniciDurum === 'AKTIF' ? 'ACTIVE' : (data.mevcutKullaniciDurum === 'REDDEDILDI' ? 'REJECTED' : data.mevcutKullaniciDurum)
+  };
+};
+
+const mapClubProfileChangeRequestResponse = (data: any): ClubProfileChangeRequest => {
+  return {
+    id: data.id,
+    club: mapClubResponse(data.kulup),
+    requestedBy: data.talepEden,
+    name: data.ad,
+    shortDescription: data.kisaAciklama,
+    vision: data.vizyon,
+    logoUrl: data.logoUrl,
+    status: data.durum,
+    feedback: data.geriBildirim,
+    reviewedBy: data.inceleyen,
+    reviewedAt: data.incelemeTarihi,
+    createdAt: data.olusturulmaTarihi,
+    updatedAt: data.guncellenmeTarihi
+  };
+};
+
+const mapClubMemberResponse = (data: any): ClubMember => {
+  return {
+    id: data.id,
+    clubId: data.kulupId,
+    userId: data.kullaniciId,
+    fullName: data.adSoyad,
+    role: data.rol === 'YONETICI' ? 'ADMIN' : (data.rol === 'UYE' ? 'MEMBER' : data.rol),
+    status: data.durum,
+    joinedAt: data.katilmaTarihi
+  };
+};
+
+const mapClubHealthResponse = (data: any): ClubHealth => {
+  return {
+    clubId: data.kulupId,
+    clubName: data.kulupAdi,
+    active: data.aktif,
+    memberCount: Number(data.uyeSayisi || 0),
+    activeEventCount: Number(data.aktifEtkinlikSayisi || 0),
+    upcomingEventCount: Number(data.gelecekEtkinlikSayisi || 0),
+    pendingEventCount: Number(data.onayBekleyenEtkinlikSayisi || 0),
+    pendingProfileRequestCount: Number(data.onayBekleyenProfilTalebiSayisi || 0),
+    lastEventAt: data.sonEtkinlikTarihi,
+    lastAnnouncementAt: data.sonDuyuruTarihi,
+    attendanceAverage: Number(data.katilimOrtalamasi || 0),
+    healthStatus: data.saglikDurumu,
+    watchlisted: data.gozetimAltinda,
+    latestNote: data.sonNot,
+    latestNoteBy: data.sonNotuYazan,
+    latestNoteAt: data.sonNotTarihi
+  };
+};
+
+const mapClubAnnouncementResponse = (data: any): ClubAnnouncement => {
+  return {
+    id: data.id,
+    clubId: data.kulupId,
+    clubName: data.kulupAdi,
+    title: data.baslik,
+    message: data.mesaj,
+    linkUrl: data.baglantiUrl,
+    linkLabel: data.baglantiEtiketi,
+    imageUrl: data.resimUrl,
+    createdByUserId: data.olusturanKullaniciId,
+    createdAt: data.olusturulmaTarihi
+  };
+};
+
+const mapAuditLogResponse = (data: any): AuditLog => {
+  let entityType: 'CLUB' | 'EVENT' = 'CLUB';
+  if (data.varlikTuru === 'ETKINLIK') entityType = 'EVENT';
+  return {
+    id: data.id,
+    entityType,
+    entityId: data.varlikId,
+    action: data.islem,
+    actorId: data.islemYapanId,
+    actorRole: data.islemYapanRol,
+    message: data.mesaj,
+    metadata: data.metaVeri,
+    createdAt: data.olusturulmaTarihi
+  };
+};
+
 export const useClubStore = create<ClubState>((set, get) => ({
   clubs: [],
   managedClubs: [],
@@ -176,8 +284,8 @@ export const useClubStore = create<ClubState>((set, get) => ({
   fetchClubs: async () => {
     set({ isLoading: true, error: null });
     try {
-      const res = await api.get<Club[]>('/clubs');
-      set({ clubs: res.data, isLoading: false });
+      const res = await api.get<any[]>('/kulupler');
+      set({ clubs: res.data.map(mapClubResponse), isLoading: false });
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Kulüpler yüklenirken hata oluştu.'), isLoading: false });
     }
@@ -186,8 +294,8 @@ export const useClubStore = create<ClubState>((set, get) => ({
   fetchClub: async (clubId) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await api.get<Club>(`/clubs/${clubId}`);
-      set({ selectedClub: res.data, isLoading: false });
+      const res = await api.get<any>(`/kulupler/${clubId}`);
+      set({ selectedClub: mapClubResponse(res.data), isLoading: false });
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Kulüp detayı yüklenirken hata oluştu.'), isLoading: false });
     }
@@ -196,8 +304,8 @@ export const useClubStore = create<ClubState>((set, get) => ({
   fetchClubEvents: async (clubId) => {
     set({ error: null });
     try {
-      const res = await api.get<Event[]>(`/clubs/${clubId}/events`);
-      set({ clubEvents: res.data });
+      const res = await api.get<any[]>(`/kulupler/${clubId}/etkinlikler`);
+      set({ clubEvents: res.data.map(mapEventResponse) });
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Kulüp etkinlikleri yüklenirken hata oluştu.') });
     }
@@ -206,7 +314,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   joinClub: async (clubId) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post(`/clubs/${clubId}/join`);
+      await api.post(`/kulupler/${clubId}/katil`);
       set({ successMessage: 'Kulübe katılımın alındı.', isLoading: false });
       await get().fetchClubs();
       await get().fetchClub(clubId);
@@ -220,7 +328,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   leaveClub: async (clubId) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.delete(`/clubs/${clubId}/membership`);
+      await api.delete(`/kulupler/${clubId}/uyelik`);
       set({ successMessage: 'Kulüp üyeliğin sonlandırıldı.', isLoading: false });
       await get().fetchClubs();
       await get().fetchClub(clubId);
@@ -234,8 +342,8 @@ export const useClubStore = create<ClubState>((set, get) => ({
   fetchAdminClubs: async () => {
     set({ isLoading: true, error: null });
     try {
-      const res = await api.get<Club[]>('/clubs/admin');
-      set({ clubs: res.data, isLoading: false });
+      const res = await api.get<any[]>('/kulupler/admin');
+      set({ clubs: res.data.map(mapClubResponse), isLoading: false });
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Kulüp yönetim listesi yüklenirken hata oluştu.'), isLoading: false });
     }
@@ -244,8 +352,8 @@ export const useClubStore = create<ClubState>((set, get) => ({
   fetchManagedClubs: async () => {
     set({ isLoading: true, error: null });
     try {
-      const res = await api.get<Club[]>('/clubs/managed');
-      set({ managedClubs: res.data, isLoading: false });
+      const res = await api.get<any[]>('/kulupler/yonetilen');
+      set({ managedClubs: res.data.map(mapClubResponse), isLoading: false });
     } catch (err: any) {
       set({ managedClubs: [] });
       set({ error: getErrorMessage(err, 'Yönettiğiniz kulüpler yüklenirken hata oluştu.'), isLoading: false });
@@ -255,7 +363,23 @@ export const useClubStore = create<ClubState>((set, get) => ({
   createClub: async (data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post('/clubs', data);
+      const payload = {
+        ad: data.name,
+        kisaAciklama: data.shortDescription,
+        vizyon: data.vision,
+        aciklama: data.description,
+        yoneticiKullaniciId: data.adminUserId,
+        baskanAdSoyad: data.presidentFullName,
+        baskanEposta: data.presidentEmail,
+        logoUrl: data.logoUrl,
+        danismanAkademikKadroId: data.advisorAcademicStaffId,
+        danismanUnvani: data.advisorTitle,
+        danismanAdSoyad: data.advisorFullName,
+        danismanEposta: data.advisorEmail,
+        danismanBolumu: data.advisorDepartment,
+        onayGerektirir: data.requiresApproval
+      };
+      await api.post('/kulupler', payload);
       set({ successMessage: 'Kulüp oluşturuldu.', isLoading: false });
       await get().fetchAdminClubs();
       return true;
@@ -268,7 +392,23 @@ export const useClubStore = create<ClubState>((set, get) => ({
   updateClubProfile: async (clubId, data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.patch(`/clubs/${clubId}/profile`, data);
+      const payload = {
+        ad: data.name,
+        kisaAciklama: data.shortDescription,
+        vizyon: data.vision,
+        aciklama: data.description,
+        logoUrl: data.logoUrl,
+        yoneticiKullaniciId: data.adminUserId,
+        baskanAdSoyad: data.presidentFullName,
+        baskanEposta: data.presidentEmail,
+        danismanAkademikKadroId: data.advisorAcademicStaffId,
+        danismanUnvani: data.advisorTitle,
+        danismanAdSoyad: data.advisorFullName,
+        danismanEposta: data.advisorEmail,
+        danismanBolumu: data.advisorDepartment,
+        onayGerektirir: data.requiresApproval
+      };
+      await api.patch(`/kulupler/${clubId}/profil`, payload);
       set({ successMessage: 'Kulüp profil bilgileri güncellendi.', isLoading: false });
       await get().fetchAdminClubs();
       return true;
@@ -281,7 +421,14 @@ export const useClubStore = create<ClubState>((set, get) => ({
   requestClubProfileUpdate: async (clubId, data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post(`/clubs/${clubId}/profile-update-requests`, data);
+      const payload = {
+        ad: data.name,
+        kisaAciklama: data.shortDescription,
+        vizyon: data.vision,
+        aciklama: data.description,
+        logoUrl: data.logoUrl
+      };
+      await api.post(`/kulupler/${clubId}/profil-guncelleme-talepleri`, payload);
       set({ successMessage: 'Profil güncelleme talebi SKS yönetimine iletildi.', isLoading: false });
       await get().fetchManagedClubs();
       return true;
@@ -294,8 +441,8 @@ export const useClubStore = create<ClubState>((set, get) => ({
   fetchProfileChangeRequests: async () => {
     set({ isLoading: true, error: null });
     try {
-      const res = await api.get<ClubProfileChangeRequest[]>('/clubs/profile-update-requests');
-      set({ profileChangeRequests: res.data, isLoading: false });
+      const res = await api.get<any[]>('/kulupler/profil-guncelleme-talepleri');
+      set({ profileChangeRequests: res.data.map(mapClubProfileChangeRequestResponse), isLoading: false });
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Profil güncelleme talepleri yüklenemedi.'), isLoading: false });
     }
@@ -304,7 +451,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   approveProfileChangeRequest: async (requestId) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post(`/clubs/profile-update-requests/${requestId}/approve`);
+      await api.post(`/kulupler/profil-guncelleme-talepleri/${requestId}/onayla`);
       set({ successMessage: 'Profil güncelleme talebi onaylandı.', isLoading: false });
       await get().fetchProfileChangeRequests();
       await get().fetchAdminClubs();
@@ -318,7 +465,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   requestProfileChangeRevision: async (requestId, feedback) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post(`/clubs/profile-update-requests/${requestId}/revision-request`, { feedback });
+      await api.post(`/kulupler/profil-guncelleme-talepleri/${requestId}/revizyon-talebi`, { geriBildirim: feedback });
       set({ successMessage: 'Revizyon talebi kulüp başkanına iletildi.', isLoading: false });
       await get().fetchProfileChangeRequests();
       return true;
@@ -331,7 +478,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   rejectProfileChangeRequest: async (requestId, feedback) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post(`/clubs/profile-update-requests/${requestId}/reject`, { feedback });
+      await api.post(`/kulupler/profil-guncelleme-talepleri/${requestId}/reddet`, { geriBildirim: feedback });
       set({ successMessage: 'Profil güncelleme talebi reddedildi.', isLoading: false });
       await get().fetchProfileChangeRequests();
       return true;
@@ -344,7 +491,14 @@ export const useClubStore = create<ClubState>((set, get) => ({
   createClubAnnouncement: async (clubId, data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post(`/clubs/${clubId}/announcements`, data);
+      const payload = {
+        baslik: data.title,
+        mesaj: data.message,
+        baglantiUrl: data.linkUrl,
+        baglantiEtiketi: data.linkLabel,
+        resimUrl: data.imageUrl
+      };
+      await api.post(`/kulupler/${clubId}/duyurular`, payload);
       set({ successMessage: 'Duyuru kulüp üyelerine gönderildi.', isLoading: false });
       return true;
     } catch (err: any) {
@@ -356,7 +510,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   changeClubStatus: async (clubId, active) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.patch(`/clubs/${clubId}/status`, { active });
+      await api.patch(`/kulupler/${clubId}/durum`, { aktif: active });
       set({ successMessage: active ? 'Kulüp aktif hale getirildi.' : 'Kulüp pasif hale getirildi.', isLoading: false });
       await get().fetchAdminClubs();
       return true;
@@ -369,7 +523,12 @@ export const useClubStore = create<ClubState>((set, get) => ({
   assignPresident: async (clubId, data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.patch(`/clubs/${clubId}/president`, data);
+      const payload = {
+        ogrenciId: data.studentId,
+        adSoyad: data.fullName,
+        eposta: data.email
+      };
+      await api.patch(`/kulupler/${clubId}/baskan`, payload);
       set({ successMessage: 'Kulüp başkanı güncellendi.', isLoading: false });
       await get().fetchAdminClubs();
       return true;
@@ -382,7 +541,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   deleteClub: async (clubId: string) => {
     set({ isLoading: true, error: null });
     try {
-      await api.delete(`/clubs/${clubId}`);
+      await api.delete(`/kulupler/${clubId}`);
       const { clubs } = get();
       set({ clubs: clubs.filter(c => c.id !== clubId), isLoading: false });
       return true;
@@ -395,14 +554,14 @@ export const useClubStore = create<ClubState>((set, get) => ({
   fetchClubMembers: async (clubId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.get(`/clubs/${clubId}/members`);
-      const members: ClubMember[] = response.data;
+      const response = await api.get(`/kulupler/${clubId}/uyeler`);
+      const members: ClubMember[] = response.data.map(mapClubMemberResponse);
 
       // Toplu kullanıcı bilgisi çek (ad, öğrenci no, bölüm)
       if (members.length > 0) {
         try {
           const userIds = members.map(m => m.userId);
-          const profileRes = await api.post('/users/batch', { userIds });
+          const profileRes = await api.post('/kullanicilar/toplu', { kullaniciIdleri: userIds });
           const profileMap = new Map<string, any>();
           (profileRes.data || []).forEach((p: any) => profileMap.set(p.id, p));
 
@@ -410,9 +569,9 @@ export const useClubStore = create<ClubState>((set, get) => ({
             const profile = profileMap.get(m.userId);
             return {
               ...m,
-              fullName: profile?.fullName || m.fullName || 'Bilinmiyor',
-              studentId: profile?.studentNumber || m.studentId || m.userId,
-              department: profile?.department || m.department || '',
+              fullName: profile?.tamAd || m.fullName || 'Bilinmiyor',
+              studentId: profile?.ogrenciNumarasi || m.studentId || m.userId,
+              department: profile?.bolum || m.department || '',
             };
           });
           set({ clubMembers: enriched, isLoading: false });
@@ -431,7 +590,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   updateMemberRole: async (clubId: string, userId: string, role: string) => {
     set({ isLoading: true, error: null });
     try {
-      await api.patch(`/clubs/${clubId}/members/${userId}/role`, { role });
+      await api.patch(`/kulupler/${clubId}/uyeler/${userId}/rol`, { rol: role });
       const { clubMembers } = get();
       set({ clubMembers: clubMembers.map(m => m.userId === userId ? { ...m, role } : m), isLoading: false });
       return true;
@@ -444,7 +603,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   updateMemberStatus: async (clubId: string, userId: string, status: string) => {
     set({ isLoading: true, error: null });
     try {
-      await api.patch(`/clubs/${clubId}/members/${userId}/status`, { status });
+      await api.patch(`/kulupler/${clubId}/uyeler/${userId}/durum`, { durum: status });
       const { clubMembers } = get();
       set({ clubMembers: clubMembers.map(m => m.userId === userId ? { ...m, status } : m), isLoading: false });
       return true;
@@ -457,7 +616,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   removeClubMember: async (clubId: string, userId: string) => {
     set({ isLoading: true, error: null });
     try {
-      await api.delete(`/clubs/${clubId}/members/${userId}`);
+      await api.delete(`/kulupler/${clubId}/uyeler/${userId}`);
       const { clubMembers } = get();
       set({ clubMembers: clubMembers.filter(m => m.userId !== userId), isLoading: false });
       return true;
@@ -470,8 +629,8 @@ export const useClubStore = create<ClubState>((set, get) => ({
   fetchClubAnnouncements: async (clubId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.get(`/clubs/${clubId}/announcements`);
-      set({ clubAnnouncements: response.data, isLoading: false });
+      const response = await api.get(`/kulupler/${clubId}/duyurular`);
+      set({ clubAnnouncements: response.data.map(mapClubAnnouncementResponse), isLoading: false });
     } catch (error: any) {
       set({ error: getErrorMessage(error, 'Duyurular yüklenemedi'), isLoading: false });
     }
@@ -480,8 +639,8 @@ export const useClubStore = create<ClubState>((set, get) => ({
   fetchClubHealth: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.get<ClubHealth[]>('/admin/clubs/health');
-      set({ clubHealth: response.data, isLoading: false });
+      const response = await api.get<any[]>('/yonetim/kulupler/saglik');
+      set({ clubHealth: response.data.map(mapClubHealthResponse), isLoading: false });
     } catch (error: any) {
       set({ error: getErrorMessage(error, 'Kulüp sağlık görünümü yüklenemedi'), isLoading: false });
     }
@@ -490,7 +649,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   addClubHealthNote: async (clubId, message) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post(`/admin/clubs/${clubId}/health-notes`, { message });
+      await api.post(`/yonetim/kulupler/${clubId}/saglik-notlari`, { mesaj: message });
       set({ successMessage: 'Gözlem notu eklendi.', isLoading: false });
       await get().fetchClubHealth();
       await get().fetchClubAuditLogs(clubId);
@@ -504,7 +663,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   watchlistClub: async (clubId, message) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post(`/admin/clubs/${clubId}/watchlist`, { message });
+      await api.post(`/yonetim/kulupler/${clubId}/takip-listesi`, { mesaj: message });
       set({ successMessage: 'Kulüp takip listesine alındı.', isLoading: false });
       await get().fetchClubHealth();
       await get().fetchClubAuditLogs(clubId);
@@ -518,7 +677,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   requestClubHealthAction: async (clubId, message) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await api.post(`/admin/clubs/${clubId}/action-request`, { message });
+      await api.post(`/yonetim/kulupler/${clubId}/aksiyon-talebi`, { mesaj: message });
       set({ successMessage: 'Aksiyon bildirimi kulüp yöneticisine gönderildi.', isLoading: false });
       await get().fetchClubAuditLogs(clubId);
       return true;
@@ -531,11 +690,11 @@ export const useClubStore = create<ClubState>((set, get) => ({
   fetchClubAuditLogs: async (clubId, filters = {}) => {
     set({ error: null });
     try {
-      const response = await api.get<AuditLog[]>(`/clubs/${clubId}/audit-logs`, { params: filters });
+      const response = await api.get<any[]>(`/kulupler/${clubId}/denetim-gunlukleri`, { params: filters });
       set(state => ({
         clubAuditLogsByClub: {
           ...state.clubAuditLogsByClub,
-          [clubId]: response.data,
+          [clubId]: response.data.map(mapAuditLogResponse),
         },
       }));
     } catch (error: any) {

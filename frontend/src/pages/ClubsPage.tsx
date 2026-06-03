@@ -4,13 +4,15 @@ import { Link } from 'react-router-dom';
 import { AlertCircle, CalendarDays, CheckCircle2, Loader2, Search, Sparkles, Users, X } from 'lucide-react';
 import { useClubStore } from '../store/clubStore';
 import { useAuthStore } from '../store/authStore';
+import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../utils/roles';
+import { YOLLAR } from '../utils/paths';
 
 export const ClubsPage = () => {
   const { clubs, fetchClubs, joinClub, leaveClub, isLoading, error, successMessage, clearMessages } = useClubStore();
   const user = useAuthStore(state => state.user);
   const [searchTerm, setSearchTerm] = useState('');
   const [leaveTarget, setLeaveTarget] = useState<{ id: string; name: string } | null>(null);
-  const isStudent = !!user?.roles.includes('ROLE_STUDENT');
+  const isStudent = yetkilerdenBiriVarMi(user?.roles, YETKI_GRUPLARI.ogrenci);
 
   useEffect(() => {
     fetchClubs();
@@ -44,7 +46,8 @@ export const ClubsPage = () => {
   };
 
   const membershipButtonLabel = (club: typeof clubs[number]) => {
-    if (club.currentUserStatus === 'ACTIVE') return 'Üyelikten çık';
+    if (club.currentUserRole === 'ADMIN') return 'Yöneticisisin';
+    if (club.currentUserStatus === 'ACTIVE') return 'Üyesiniz';
     if (club.currentUserStatus === 'REJECTED') return 'Tekrar başvur';
     return 'Üye ol';
   };
@@ -172,16 +175,29 @@ export const ClubsPage = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <Link to={`/clubs/${club.id}`} className="px-4 py-2.5 rounded-xl text-center text-sm font-bold text-white bg-white/[0.06] border border-white/10 hover:bg-white/[0.09] transition-colors">
+                <Link to={YOLLAR.kulupDetay(club.id)} className="px-4 py-2.5 rounded-xl text-center text-sm font-bold text-white bg-white/[0.06] border border-white/10 hover:bg-white/[0.09] transition-colors">
                   Detay
                 </Link>
                 {isStudent ? (
                   <button
                     disabled={isLoading || club.currentUserRole === 'ADMIN'}
                     onClick={() => handleMembershipClick(club.id, club.name, club.currentUserStatus === 'ACTIVE')}
-                    className={`px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed ${club.currentUserStatus === 'ACTIVE' ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-100 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-100' : 'gradient-btn'}`}
+                    className={`px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed group ${
+                      club.currentUserRole === 'ADMIN'
+                        ? 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
+                        : club.currentUserStatus === 'ACTIVE'
+                          ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-200 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-100'
+                          : 'gradient-btn'
+                    }`}
                   >
-                    {membershipButtonLabel(club)}
+                    {club.currentUserStatus === 'ACTIVE' ? (
+                      <>
+                        <span className="group-hover:hidden">Üyesiniz</span>
+                        <span className="hidden group-hover:inline">Üyelikten çık</span>
+                      </>
+                    ) : (
+                      membershipButtonLabel(club)
+                    )}
                   </button>
                 ) : (
                   <span className="px-4 py-2.5 rounded-xl text-center text-xs font-bold text-white/35 bg-white/[0.03] border border-white/10">

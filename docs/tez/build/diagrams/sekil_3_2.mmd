@@ -1,0 +1,20 @@
+sequenceDiagram
+    autonumber
+    actor U as Kullanıcı (React UI)
+    participant G as API Gateway
+    participant A as auth-service
+    participant S as Downstream Servis
+
+    U->>G: POST /api/v1/kimlik/giris (e-posta, şifre)
+    G->>A: Yönlendir
+    A->>A: Şifre doğrula (bcrypt), JWT üret
+    A-->>G: JWT
+    G-->>U: JWT (istemcide saklanır)
+
+    Note over U,S: Sonraki korumalı istek
+    U->>G: GET /api/v1/kulupler (Authorization: Bearer JWT)
+    G->>G: JWT imza doğrula, claims çöz
+    G->>S: İstek + X-User-Id, X-User-Roles
+    S->>S: Rol/sahiplik kontrolü (RBAC)
+    S-->>G: Yanıt
+    G-->>U: Yanıt

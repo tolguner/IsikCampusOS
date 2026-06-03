@@ -1,0 +1,19 @@
+sequenceDiagram
+    autonumber
+    actor R as Öğrenci İşleri (Registrar)
+    participant G as API Gateway
+    participant A as auth-service
+    participant ADB as auth_db
+    participant K as Apache Kafka
+    participant P as profile-service
+    participant PDB as profile_db
+
+    R->>G: POST /api/v1/ogrenciler (öğrenci bilgileri)
+    G->>A: Yönlendir
+    A->>ADB: Kullanıcıyı kaydet
+    A->>K: Yayınla "kullanici.kaydedildi"
+    A-->>G: 201 Created
+    G-->>R: Başarılı
+
+    K-->>P: Tüket "kullanici.kaydedildi"
+    P->>PDB: Boş profil kaydı oluştur (idempotent)

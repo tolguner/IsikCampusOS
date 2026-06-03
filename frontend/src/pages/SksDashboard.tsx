@@ -591,13 +591,6 @@ export const SksDashboard = () => {
     reader.readAsDataURL(file);
   };
 
-  const metricCards = [
-    { label: 'Toplam kulüp', value: clubs.length, icon: Users, accent: 'text-indigo-200' },
-    { label: 'Aktif kulüp', value: activeClubCount, icon: CheckCircle2, accent: 'text-emerald-200' },
-    { label: 'Pasif kulüp', value: inactiveClubCount, icon: Power, accent: 'text-amber-200' },
-    { label: 'Bekleyen etkinlik', value: reviewQueue.length, icon: CalendarDays, accent: 'text-cyan-200' },
-    { label: 'Profil talebi', value: profileChangeRequests.length, icon: ClipboardCheck, accent: 'text-purple-200' },
-  ];
 
   const renderModuleHeaderActions = () => {
     if (activeModule === 'clubs') {
@@ -1498,108 +1491,142 @@ export const SksDashboard = () => {
   );
 
   const renderHealthModule = () => (
-    <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      {clubHealth.map(item => {
-        const message = healthMessageByClub[item.clubId] || '';
-        const logSearch = healthLogSearchByClub[item.clubId] || '';
-        const logs = clubAuditLogsByClub[item.clubId] || [];
-        const statusClass =
-          item.healthStatus === 'Sağlıklı'
-            ? 'text-emerald-100 bg-emerald-500/15 border-emerald-300/20'
-            : item.healthStatus === 'Takip Edilmeli'
-              ? 'text-cyan-100 bg-cyan-500/15 border-cyan-300/20'
-              : item.healthStatus === 'Riskli'
-                ? 'text-amber-100 bg-amber-500/15 border-amber-300/20'
-                : 'text-red-100 bg-red-500/15 border-red-300/20';
-        return (
-          <article key={item.clubId} className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-              <div>
-                <h3 className="text-xl font-black text-white">{item.clubName}</h3>
-                <p className="mt-1 text-xs text-white/40">{item.active ? 'Aktif kulüp' : 'Pasif kulüp'} · {item.memberCount} üye</p>
-              </div>
-              <span className={`rounded-full border px-3 py-1 text-xs font-black ${statusClass}`}>
-                {item.healthStatus}
-              </span>
-            </div>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-3xl p-5 flex items-center justify-between gap-4" style={panelStyle}>
+          <div>
+            <div className="text-3xl font-black text-white">{clubs.length}</div>
+            <div className="text-xs font-semibold text-white/40 mt-1">Toplam kulüp</div>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/10 flex items-center justify-center shrink-0 text-indigo-200">
+            <Users className="w-6 h-6" />
+          </div>
+        </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                <div className="text-xl font-black text-white">{item.upcomingEventCount}</div>
-                <div className="text-[11px] text-white/35">Yaklaşan</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                <div className="text-xl font-black text-white">{item.pendingEventCount}</div>
-                <div className="text-[11px] text-white/35">Bekleyen etkinlik</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                <div className="text-xl font-black text-white">{item.pendingProfileRequestCount}</div>
-                <div className="text-[11px] text-white/35">Profil talebi</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                <div className="text-sm font-black text-white">{item.lastEventAt ? new Date(item.lastEventAt).toLocaleDateString('tr-TR') : '-'}</div>
-                <div className="text-[11px] text-white/35">Son etkinlik</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                <div className="text-sm font-black text-white">{item.lastAnnouncementAt ? new Date(item.lastAnnouncementAt).toLocaleDateString('tr-TR') : '-'}</div>
-                <div className="text-[11px] text-white/35">Son duyuru</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                <div className="text-sm font-black text-white">{item.attendanceAverage.toFixed(1)}</div>
-                <div className="text-[11px] text-white/35">Ort. katılım</div>
-              </div>
-            </div>
+        <div className="rounded-3xl p-5 flex items-center justify-between gap-4" style={panelStyle}>
+          <div>
+            <div className="text-3xl font-black text-white">{activeClubCount}</div>
+            <div className="text-xs font-semibold text-white/40 mt-1">Aktif kulüp</div>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/10 flex items-center justify-center shrink-0 text-emerald-200">
+            <CheckCircle2 className="w-6 h-6" />
+          </div>
+        </div>
 
-            {item.latestNote && (
-              <p className="rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm text-white/55">
-                {item.latestNote}
-              </p>
-            )}
+        <div className="rounded-3xl p-5 flex items-center justify-between gap-4" style={panelStyle}>
+          <div>
+            <div className="text-3xl font-black text-white">{inactiveClubCount}</div>
+            <div className="text-xs font-semibold text-white/40 mt-1">Pasif kulüp</div>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/10 flex items-center justify-center shrink-0 text-amber-200">
+            <Power className="w-6 h-6" />
+          </div>
+        </div>
+      </div>
 
-            <textarea
-              value={message}
-              onChange={e => setHealthMessageByClub(prev => ({ ...prev, [item.clubId]: e.target.value }))}
-              placeholder="Gözlem notu veya kulüp yöneticisine gönderilecek aksiyon mesajı"
-              className={`${inputClass} min-h-24 resize-none`}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-              <button type="button" onClick={() => addClubHealthNote(item.clubId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-indigo-100 bg-indigo-500/15 hover:bg-indigo-500/25">Not Ekle</button>
-              <button type="button" onClick={() => watchlistClub(item.clubId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-amber-100 bg-amber-500/15 hover:bg-amber-500/25">Takibe Al</button>
-              <button type="button" onClick={() => requestClubHealthAction(item.clubId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-cyan-100 bg-cyan-500/15 hover:bg-cyan-500/25">Aksiyon İste</button>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3 space-y-2">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <input
-                  value={logSearch}
-                  onChange={e => setHealthLogSearchByClub(prev => ({ ...prev, [item.clubId]: e.target.value }))}
-                  placeholder="Kulüp loglarında ara"
-                  className={`${inputClass} py-2.5`}
-                />
-                <button type="button" onClick={() => fetchClubAuditLogs(item.clubId, { search: logSearch })} className="rounded-2xl px-4 py-2.5 text-xs font-black text-white/70 bg-white/[0.06] hover:bg-white/[0.1]">
-                  Logları Aç
-                </button>
-              </div>
-              {logs.slice(0, 4).map(log => (
-                <div key={log.id} className="rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[11px] font-black text-purple-100">{log.action}</span>
-                    <span className="text-[11px] text-white/30">{new Date(log.createdAt).toLocaleString('tr-TR')}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-white/50">{log.message}</p>
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        {clubHealth.map(item => {
+          const message = healthMessageByClub[item.clubId] || '';
+          const logSearch = healthLogSearchByClub[item.clubId] || '';
+          const logs = clubAuditLogsByClub[item.clubId] || [];
+          const statusClass =
+            item.healthStatus === 'Sağlıklı'
+              ? 'text-emerald-100 bg-emerald-500/15 border-emerald-300/20'
+              : item.healthStatus === 'Takip Edilmeli'
+                ? 'text-cyan-100 bg-cyan-500/15 border-cyan-300/20'
+                : item.healthStatus === 'Riskli'
+                  ? 'text-amber-100 bg-amber-500/15 border-amber-300/20'
+                  : 'text-red-100 bg-red-500/15 border-red-300/20';
+          return (
+            <article key={item.clubId} className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div>
+                  <h3 className="text-xl font-black text-white">{item.clubName}</h3>
+                  <p className="mt-1 text-xs text-white/40">{item.active ? 'Aktif kulüp' : 'Pasif kulüp'} · {item.memberCount} üye</p>
                 </div>
-              ))}
-              {logs.length === 0 && <p className="text-xs text-white/35">Kulüp loglarını görmek için Logları Aç.</p>}
-            </div>
-          </article>
-        );
-      })}
-      {clubHealth.length === 0 && (
-        <p className="xl:col-span-2 rounded-3xl border border-white/10 bg-white/[0.025] p-8 text-center text-sm text-white/40">
-          Sağlık verisi bulunamadı.
-        </p>
-      )}
-    </section>
+                <span className={`rounded-full border px-3 py-1 text-xs font-black ${statusClass}`}>
+                  {item.healthStatus}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                  <div className="text-xl font-black text-white">{item.upcomingEventCount}</div>
+                  <div className="text-[11px] text-white/35">Yaklaşan</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                  <div className="text-xl font-black text-white">{item.pendingEventCount}</div>
+                  <div className="text-[11px] text-white/35">Bekleyen etkinlik</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                  <div className="text-xl font-black text-white">{item.pendingProfileRequestCount}</div>
+                  <div className="text-[11px] text-white/35">Profil talebi</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                  <div className="text-sm font-black text-white">{item.lastEventAt ? new Date(item.lastEventAt).toLocaleDateString('tr-TR') : '-'}</div>
+                  <div className="text-[11px] text-white/35">Son etkinlik</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                  <div className="text-sm font-black text-white">{item.lastAnnouncementAt ? new Date(item.lastAnnouncementAt).toLocaleDateString('tr-TR') : '-'}</div>
+                  <div className="text-[11px] text-white/35">Son duyuru</div>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                  <div className="text-sm font-black text-white">{item.attendanceAverage.toFixed(1)}</div>
+                  <div className="text-[11px] text-white/35">Ort. katılım</div>
+                </div>
+              </div>
+
+              {item.latestNote && (
+                <p className="rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm text-white/55">
+                  {item.latestNote}
+                </p>
+              )}
+
+              <textarea
+                value={message}
+                onChange={e => setHealthMessageByClub(prev => ({ ...prev, [item.clubId]: e.target.value }))}
+                placeholder="Gözlem notu veya kulüp yöneticisine gönderilecek aksiyon mesajı"
+                className={`${inputClass} min-h-24 resize-none`}
+              />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <button type="button" onClick={() => addClubHealthNote(item.clubId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-indigo-100 bg-indigo-500/15 hover:bg-indigo-500/25">Not Ekle</button>
+                <button type="button" onClick={() => watchlistClub(item.clubId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-amber-100 bg-amber-500/15 hover:bg-amber-500/25">Takibe Al</button>
+                <button type="button" onClick={() => requestClubHealthAction(item.clubId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-cyan-100 bg-cyan-500/15 hover:bg-cyan-500/25">Aksiyon İste</button>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <input
+                    value={logSearch}
+                    onChange={e => setHealthLogSearchByClub(prev => ({ ...prev, [item.clubId]: e.target.value }))}
+                    placeholder="Kulüp loglarında ara"
+                    className={`${inputClass} py-2.5`}
+                  />
+                  <button type="button" onClick={() => fetchClubAuditLogs(item.clubId, { search: logSearch })} className="rounded-2xl px-4 py-2.5 text-xs font-black text-white/70 bg-white/[0.06] hover:bg-white/[0.1]">
+                    Logları Aç
+                  </button>
+                </div>
+                {logs.slice(0, 4).map(log => (
+                  <div key={log.id} className="rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[11px] font-black text-purple-100">{log.action}</span>
+                      <span className="text-[11px] text-white/30">{new Date(log.createdAt).toLocaleString('tr-TR')}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-white/50">{log.message}</p>
+                  </div>
+                ))}
+                {logs.length === 0 && <p className="text-xs text-white/35">Kulüp loglarını görmek için Logları Aç.</p>}
+              </div>
+            </article>
+          );
+        })}
+        {clubHealth.length === 0 && (
+          <p className="xl:col-span-2 rounded-3xl border border-white/10 bg-white/[0.025] p-8 text-center text-sm text-white/40">
+            Sağlık verisi bulunamadı.
+          </p>
+        )}
+      </section>
+    </div>
   );
 
   const renderActiveModule = () => {
@@ -1647,24 +1674,8 @@ export const SksDashboard = () => {
         </div>
       )}
 
-      <section className="grid grid-cols-[repeat(5,minmax(11rem,1fr))] gap-3 overflow-x-auto pb-1">
-        {metricCards.map(card => {
-          const Icon = card.icon;
-          return (
-            <div key={card.label} className="rounded-3xl p-4 min-w-44 flex items-center justify-between gap-3" style={panelStyle}>
-              <div>
-                <div className="text-2xl font-black text-white">{card.value}</div>
-                <div className="text-xs font-semibold text-white/40 mt-1">{card.label}</div>
-              </div>
-              <div className={`w-10 h-10 rounded-2xl bg-white/[0.06] border border-white/10 flex items-center justify-center shrink-0 ${card.accent}`}>
-                <Icon className="w-5 h-5" />
-              </div>
-            </div>
-          );
-        })}
-      </section>
 
-      <nav className="grid grid-cols-[repeat(5,minmax(13rem,1fr))] gap-3 overflow-x-auto pb-1">
+      <nav className="grid grid-cols-[repeat(6,minmax(11rem,1fr))] gap-3 overflow-x-auto pb-1">
         {(Object.keys(moduleMeta) as SksModule[]).map(moduleKey => {
           const meta = moduleMeta[moduleKey];
           const Icon = meta.icon;
@@ -1674,7 +1685,7 @@ export const SksDashboard = () => {
               key={moduleKey}
               type="button"
               onClick={() => setActiveModule(moduleKey)}
-              className={`h-20 rounded-3xl p-4 min-w-52 text-left border transition-colors overflow-hidden ${selected ? 'bg-purple-500/15 border-purple-400/35' : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06]'}`}
+              className={`relative h-20 rounded-3xl p-3.5 min-w-44 text-left border transition-colors overflow-hidden ${selected ? 'bg-purple-500/15 border-purple-400/35' : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06]'}`}
             >
               <div className="flex items-start gap-3">
                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border shrink-0 ${selected ? 'bg-purple-500/20 border-purple-300/30 text-purple-100' : 'bg-white/[0.04] border-white/10 text-white/55'}`}>
@@ -1685,6 +1696,28 @@ export const SksDashboard = () => {
                   <div className="text-xs text-white/40 mt-1 leading-snug line-clamp-2">{meta.description}</div>
                 </div>
               </div>
+              
+              {moduleKey === 'events' && reviewQueue.length > 0 && (
+                <motion.span
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                  className="absolute top-2 right-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white border border-red-400/25 shadow-lg shadow-red-500/35"
+                >
+                  {reviewQueue.length}
+                </motion.span>
+              )}
+              
+              {moduleKey === 'profileRequests' && profileChangeRequests.length > 0 && (
+                <motion.span
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                  className="absolute top-2 right-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white border border-red-400/25 shadow-lg shadow-red-500/35"
+                >
+                  {profileChangeRequests.length}
+                </motion.span>
+              )}
             </button>
           );
         })}

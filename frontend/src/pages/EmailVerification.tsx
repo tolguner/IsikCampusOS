@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../store/authStore';
 import { Mail, Loader2, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
@@ -7,8 +7,11 @@ export const EmailVerification = () => {
   const [code, setCode] = useState('');
   const [countdown, setCountdown] = useState(0);
   const { user, verifyEmail, resendVerification, isLoading, error, successMessage, clearError, clearSuccess, logout } = useAuthStore();
+  const sentRef = useRef(false);
 
   useEffect(() => {
+    if (sentRef.current) return;
+    sentRef.current = true;
     // İlk yüklemede doğrulama kodu gönder
     resendVerification();
     setCountdown(60);

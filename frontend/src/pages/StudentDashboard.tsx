@@ -1,4 +1,5 @@
 import { useAuthStore } from '../store/authStore';
+import { YOLLAR } from '../utils/paths';
 
 export const StudentDashboard = () => {
   const user = useAuthStore(state => state.user);
@@ -13,10 +14,10 @@ export const StudentDashboard = () => {
         Kulüpleri keşfet, kulüp etkinliklerine katıl ve kampüs hayatını tek yerden yönet.
       </p>
       <div className="flex gap-4 mt-8">
-        <button onClick={() => window.location.href = '/clubs'} className="px-8 py-3 rounded-2xl gradient-btn shadow-lg shadow-indigo-500/20 cursor-pointer">
+        <button onClick={() => window.location.href = YOLLAR.kulupler} className="px-8 py-3 rounded-2xl gradient-btn shadow-lg shadow-indigo-500/20 cursor-pointer">
           Kulüpleri Keşfet
         </button>
-        <button className="px-8 py-3 rounded-2xl font-semibold text-white cursor-pointer transition-all"
+        <button onClick={() => window.location.href = YOLLAR.tesisRezervasyon} className="px-8 py-3 rounded-2xl font-semibold text-white cursor-pointer transition-all"
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
           Tesis Rezerve Et
         </button>

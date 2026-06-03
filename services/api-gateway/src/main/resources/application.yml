@@ -31,89 +31,112 @@ spring:
             allowCredentials: true
       routes:
         - id: auth-service
-          uri: lb://auth-service
+          uri: lb://AUTH-SERVICE
           predicates:
-            - Path=/api/v1/auth/**
+            - Path=/api/v1/kimlik/**
 
-        # Öğrenci yönetimi — ROLE_REGISTRAR gerektirir (Auth Service içinde korumalı)
+        # Öğrenci yönetimi — ROLE_REGISTRAR gerektirir (Kimlik Servisi içinde korumalı)
         - id: student-service
-          uri: lb://auth-service
+          uri: lb://AUTH-SERVICE
           predicates:
-            - Path=/api/v1/students/**
+            - Path=/api/v1/ogrenciler/**
           filters:
-            - AuthenticationFilter
+            - KimlikDogrulama
 
-        # Internal kullanıcı bilgisi — toplu kullanıcı sorgulama (event-service vb.)
+        # Internal kullanıcı bilgisi — toplu kullanıcı sorgulama
         - id: user-service
-          uri: lb://auth-service
+          uri: lb://AUTH-SERVICE
           predicates:
-            - Path=/api/v1/users/**
+            - Path=/api/v1/kullanicilar/**
           filters:
-            - AuthenticationFilter
+            - KimlikDogrulama
 
         - id: certificate-verification-service
-          uri: lb://auth-service
+          uri: lb://AUTH-SERVICE
           predicates:
-            - Path=/api/v1/certificates/**
+            - Path=/api/v1/sertifikalar/**
+
+        - id: profile-avatar-service
+          uri: lb://PROFILE-SERVICE
+          predicates:
+            - Path=/api/v1/profiller/*/avatar
 
         - id: profile-service
-          uri: lb://profile-service
+          uri: lb://PROFILE-SERVICE
           predicates:
-            - Path=/api/v1/profiles/**
+            - Path=/api/v1/profiller/**
           filters:
-            - AuthenticationFilter
+            - KimlikDogrulama
 
         - id: event-service
-          uri: lb://event-service
+          uri: lb://EVENT-SERVICE
           predicates:
-            - Path=/api/v1/events/**
+            - Path=/api/v1/etkinlikler/**
           filters:
-            - AuthenticationFilter
+            - KimlikDogrulama
 
         - id: club-service
-          uri: lb://event-service
+          uri: lb://EVENT-SERVICE
           predicates:
-            - Path=/api/v1/clubs/**
+            - Path=/api/v1/kulupler/**
           filters:
-            - AuthenticationFilter
+            - KimlikDogrulama
 
         - id: notification-service
-          uri: lb://event-service
+          uri: lb://EVENT-SERVICE
           predicates:
-            - Path=/api/v1/notifications/**
+            - Path=/api/v1/bildirimler/**
           filters:
-            - AuthenticationFilter
+            - KimlikDogrulama
 
         - id: event-admin-service
-          uri: lb://event-service
+          uri: lb://EVENT-SERVICE
           predicates:
-            - Path=/api/v1/admin/**
+            - Path=/api/v1/yonetim/**
           filters:
-            - AuthenticationFilter
+            - KimlikDogrulama
 
         - id: academic-staff-service
-          uri: lb://event-service
+          uri: lb://EVENT-SERVICE
           predicates:
-            - Path=/api/v1/academic-staff/**
+            - Path=/api/v1/akademik-kadro/**
           filters:
-            - AuthenticationFilter
+            - KimlikDogrulama
+
+        - id: facility-service
+          uri: lb://FACILITY-SERVICE
+          predicates:
+            - Path=/api/v1/tesisler/**
+          filters:
+            - KimlikDogrulama
+
+        - id: facility-resource-service
+          uri: lb://FACILITY-SERVICE
+          predicates:
+            - Path=/api/v1/tesis-kaynaklari/**
+          filters:
+            - KimlikDogrulama
+
+        - id: facility-admin-service
+          uri: lb://FACILITY-SERVICE
+          predicates:
+            - Path=/api/v1/tesis-yonetim/**
+          filters:
+            - KimlikDogrulama
 
         - id: frontend
-          uri: http://localhost:5173
+          uri: ${FRONTEND_URL:http://localhost:5173}
           predicates:
             - Path=/**
 
 eureka:
   instance:
     prefer-ip-address: true
-    ip-address: 127.0.0.1
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
 
 security:
   jwt:
-    # JWT secret environment variable'dan okunur.
-    # Başlatırken: $env:JWT_SECRET="your-very-long-secret-min-32-chars" (PowerShell)
-    # Ya da: set JWT_SECRET=your-very-long-secret (CMD)
-    secret: ${JWT_SECRET:campusos_super_secret_key_change_in_production_min32ch}
+    # JWT secret zorunlu olarak environment variable'dan okunur.
+    secret: ${JWT_SECRET:3cfa76ef14937c1c0ea519f8fc29b945279b945279b945279b945279b945279b}
