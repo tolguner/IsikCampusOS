@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStudentStore } from '../store/studentStore';
-import { useProfileStore, type ProfileChangeRequest } from '../store/profileStore';
+import { useProfileStore, type ProfilDegisiklikIstegi } from '../store/profileStore';
 import { Search, Plus, MoreVertical, X, CheckCircle2, AlertCircle, Loader2, KeyRound, UserX, UserCheck, GraduationCap, Edit2, ChevronLeft, ChevronRight, ClipboardCheck, Trash2 } from 'lucide-react';
 
 export const RegistrarDashboard = () => {
@@ -219,15 +219,15 @@ export const RegistrarDashboard = () => {
   };
 
   const getStudentRequests = (studentId: string) =>
-    pendingChangeRequests.filter(request => request.userId === studentId);
+    pendingChangeRequests.filter(request => request.kullaniciId === studentId);
 
   const handleApproveProfileRequest = async (requestId: string) => {
     await approveChangeRequest(requestId);
     setRequestMenuOpenId(null);
   };
 
-  const handleRejectProfileRequest = async (request: ProfileChangeRequest) => {
-    const feedback = prompt(`${getFieldLabel(request.fieldName)} talebini reddetme gerekçesi:`);
+  const handleRejectProfileRequest = async (request: ProfilDegisiklikIstegi) => {
+    const feedback = prompt(`${getFieldLabel(request.alanAdi)} talebini reddetme gerekçesi:`);
     if (feedback === null) return;
     await rejectChangeRequest(request.id, feedback);
     setRequestMenuOpenId(null);
@@ -353,9 +353,9 @@ export const RegistrarDashboard = () => {
                                         <div className="flex items-start gap-2">
                                           <ClipboardCheck className="w-4 h-4 text-amber-200 mt-0.5 shrink-0" />
                                           <div className="min-w-0">
-                                            <p className="text-xs font-black text-amber-100">{getFieldLabel(request.fieldName)}</p>
-                                            <p className="text-xs text-white/45 mt-1">Mevcut: {request.currentValue || 'Kayıtlı değil'}</p>
-                                            <p className="text-xs text-white/85 mt-0.5 break-words">Yeni: {request.requestedValue}</p>
+                                            <p className="text-xs font-black text-amber-100">{getFieldLabel(request.alanAdi)}</p>
+                                            <p className="text-xs text-white/45 mt-1">Mevcut: {request.mevcutDeger || 'Kayıtlı değil'}</p>
+                                            <p className="text-xs text-white/85 mt-0.5 break-words">Yeni: {request.talepEdilenDeger}</p>
                                           </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2 mt-3">

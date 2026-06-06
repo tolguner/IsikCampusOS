@@ -185,9 +185,9 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 <div className="relative group">
                   <div className="flex items-center gap-3 p-1.5 pr-3 rounded-full cursor-pointer hover:bg-white/5 transition-colors">
                     <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-lg border border-white/10 overflow-hidden">
-                      {profile?.profilePictureUrl ? (
+                      {profile?.profilResmiUrl ? (
                         <img
-                          src={profile.profilePictureUrl}
+                          src={profile.profilResmiUrl}
                           alt={user.tamAd || 'Profil'}
                           className="w-full h-full object-cover"
                         />
