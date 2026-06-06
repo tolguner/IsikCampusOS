@@ -23,7 +23,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { useClubStore, type Club } from '../store/clubStore';
+import { useClubStore, type Kulup } from '../store/clubStore';
 import { useEventStore, type Event } from '../store/eventStore';
 import { useNotificationStore } from '../store/notificationStore';
 import { useStudentStore, type Student } from '../store/studentStore';
@@ -47,16 +47,16 @@ const fieldLimitText = (value: string, minLength: number, maxLength: number) =>
   `${value.trim().length}/${maxLength} karakter - en az ${minLength}`;
 
 const initialClubForm = {
-  name: '',
-  shortDescription: '',
-  vision: '',
+  ad: '',
+  kisaAciklama: '',
+  vizyon: '',
   logoUrl: '',
   advisorSearch: '',
-  advisorAcademicStaffId: '',
-  advisorTitle: '',
-  advisorFullName: '',
-  advisorEmail: '',
-  advisorDepartment: '',
+  danismanAkademikKadroId: '',
+  danismanUnvani: '',
+  danismanAdSoyad: '',
+  danismanEposta: '',
+  danismanBolumu: '',
   presidentSearch: '',
   presidentId: '',
 };
@@ -154,21 +154,21 @@ export const SksDashboard = () => {
   const [clubStatusFilter, setClubStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [editingClubId, setEditingClubId] = useState<string | null>(null);
   const [clubEditForm, setClubEditForm] = useState({
-    name: '',
-    shortDescription: '',
-    vision: '',
-    description: '',
+    ad: '',
+    kisaAciklama: '',
+    vizyon: '',
+    aciklama: '',
     logoUrl: '',
-    advisorAcademicStaffId: '',
-    advisorTitle: '',
-    advisorFullName: '',
-    advisorEmail: '',
-    advisorDepartment: '',
+    danismanAkademikKadroId: '',
+    danismanUnvani: '',
+    danismanAdSoyad: '',
+    danismanEposta: '',
+    danismanBolumu: '',
     advisorSearch: '',
     presidentSearch: '',
     presidentId: '',
-    presidentFullName: '',
-    presidentEmail: '',
+    baskanAdSoyad: '',
+    baskanEposta: '',
   });
   const [revisionTextByEvent, setRevisionTextByEvent] = useState<Record<string, string>>({});
   const [announcement, setAnnouncement] = useState({
@@ -220,34 +220,34 @@ export const SksDashboard = () => {
   }, [students]);
 
   const selectedPresident = clubForm.presidentId ? studentMap.get(clubForm.presidentId) : null;
-  const selectedAdvisorDisplayName = clubForm.advisorTitle
-    ? `${clubForm.advisorTitle} ${clubForm.advisorFullName}`.trim()
-    : clubForm.advisorFullName;
-  const selectedEditAdvisorDisplayName = clubEditForm.advisorTitle
-    ? `${clubEditForm.advisorTitle} ${clubEditForm.advisorFullName}`.trim()
-    : clubEditForm.advisorFullName;
-  const selectedEditPresidentName = clubEditForm.presidentFullName || clubEditForm.presidentSearch;
+  const selectedAdvisorDisplayName = clubForm.danismanUnvani
+    ? `${clubForm.danismanUnvani} ${clubForm.danismanAdSoyad}`.trim()
+    : clubForm.danismanAdSoyad;
+  const selectedEditAdvisorDisplayName = clubEditForm.danismanUnvani
+    ? `${clubEditForm.danismanUnvani} ${clubEditForm.danismanAdSoyad}`.trim()
+    : clubEditForm.danismanAdSoyad;
+  const selectedEditPresidentName = clubEditForm.baskanAdSoyad || clubEditForm.presidentSearch;
   const assignedAdvisorIds = useMemo(() => new Set(
     clubs
-      .map(club => club.advisorAcademicStaffId)
+      .map(club => club.danismanAkademikKadroId)
       .filter((advisorId): advisorId is string => Boolean(advisorId))
   ), [clubs]);
   const assignedPresidentIds = useMemo(() => new Set(
     clubs
-      .map(club => club.adminUserId)
+      .map(club => club.yoneticiKullaniciId)
       .filter((presidentId): presidentId is string => Boolean(presidentId))
   ), [clubs]);
   const selectedAdvisorUnavailable = Boolean(
-    clubForm.advisorAcademicStaffId && assignedAdvisorIds.has(clubForm.advisorAcademicStaffId)
+    clubForm.danismanAkademikKadroId && assignedAdvisorIds.has(clubForm.danismanAkademikKadroId)
   );
   const selectedPresidentUnavailable = Boolean(
     clubForm.presidentId && assignedPresidentIds.has(clubForm.presidentId)
   );
   const isAdvisorAssignedToAnotherClub = (advisorId: string, clubId: string) =>
-    clubs.some(club => club.id !== clubId && club.advisorAcademicStaffId === advisorId);
+    clubs.some(club => club.id !== clubId && club.danismanAkademikKadroId === advisorId);
   const isPresidentAssignedToAnotherClub = (studentId: string, clubId: string) =>
-    clubs.some(club => club.id !== clubId && club.adminUserId === studentId);
-  const activeClubCount = clubs.filter(club => club.active).length;
+    clubs.some(club => club.id !== clubId && club.yoneticiKullaniciId === studentId);
+  const activeClubCount = clubs.filter(club => club.aktif).length;
   const inactiveClubCount = clubs.length - activeClubCount;
   const activeModuleMeta = moduleMeta[activeModule];
   const ActiveModuleIcon = activeModuleMeta.icon;
@@ -256,15 +256,15 @@ export const SksDashboard = () => {
     const normalized = clubSearch.trim().toLocaleLowerCase('tr-TR');
     return clubs.filter(club => {
       const matchesSearch = !normalized ||
-        club.name.toLocaleLowerCase('tr-TR').includes(normalized) ||
-        club.shortDescription?.toLocaleLowerCase('tr-TR').includes(normalized) ||
-        club.presidentFullName?.toLocaleLowerCase('tr-TR').includes(normalized) ||
-        club.advisorTitle?.toLocaleLowerCase('tr-TR').includes(normalized) ||
-        club.advisorFullName?.toLocaleLowerCase('tr-TR').includes(normalized);
+        club.ad.toLocaleLowerCase('tr-TR').includes(normalized) ||
+        club.kisaAciklama?.toLocaleLowerCase('tr-TR').includes(normalized) ||
+        club.baskanAdSoyad?.toLocaleLowerCase('tr-TR').includes(normalized) ||
+        club.danismanUnvani?.toLocaleLowerCase('tr-TR').includes(normalized) ||
+        club.danismanAdSoyad?.toLocaleLowerCase('tr-TR').includes(normalized);
       const matchesStatus =
         clubStatusFilter === 'all' ||
-        (clubStatusFilter === 'active' && club.active) ||
-        (clubStatusFilter === 'inactive' && !club.active);
+        (clubStatusFilter === 'active' && club.aktif) ||
+        (clubStatusFilter === 'inactive' && !club.aktif);
 
       return matchesSearch && matchesStatus;
     });
@@ -302,7 +302,7 @@ export const SksDashboard = () => {
     }));
   };
 
-  const handleEditAdvisorSelect = (club: Club, advisor: AcademicAdvisor) => {
+  const handleEditAdvisorSelect = (club: Kulup, advisor: AcademicAdvisor) => {
     if (isAdvisorAssignedToAnotherClub(advisor.id, club.id)) {
       return;
     }
@@ -318,7 +318,7 @@ export const SksDashboard = () => {
     }));
   };
 
-  const handleEditPresidentSelect = (club: Club, student: Student) => {
+  const handleEditPresidentSelect = (club: Kulup, student: Student) => {
     if (isPresidentAssignedToAnotherClub(student.id, club.id)) {
       return;
     }
@@ -363,24 +363,24 @@ export const SksDashboard = () => {
     reader.readAsDataURL(file);
   });
 
-  const startEditingClub = (club: Club) => {
+  const startEditingClub = (club: Kulup) => {
     setEditingClubId(club.id);
     setClubEditForm({
-      name: club.name || '',
-      shortDescription: club.shortDescription || '',
-      vision: club.vision || club.description || '',
-      description: club.vision || club.description || '',
+      ad: club.ad || '',
+      kisaAciklama: club.kisaAciklama || '',
+      vizyon: club.vizyon || club.aciklama || '',
+      aciklama: club.vizyon || club.aciklama || '',
       logoUrl: club.logoUrl || '',
-      advisorAcademicStaffId: club.advisorAcademicStaffId || '',
-      advisorTitle: club.advisorTitle || '',
-      advisorFullName: club.advisorFullName || '',
-      advisorEmail: club.advisorEmail || '',
-      advisorDepartment: club.advisorDepartment || '',
-      advisorSearch: [club.advisorTitle, club.advisorFullName].filter(Boolean).join(' '),
-      presidentSearch: club.presidentFullName || '',
-      presidentId: club.adminUserId || '',
-      presidentFullName: club.presidentFullName || '',
-      presidentEmail: club.presidentEmail || '',
+      danismanAkademikKadroId: club.danismanAkademikKadroId || '',
+      danismanUnvani: club.danismanUnvani || '',
+      danismanAdSoyad: club.danismanAdSoyad || '',
+      danismanEposta: club.danismanEposta || '',
+      danismanBolumu: club.danismanBolumu || '',
+      advisorSearch: [club.danismanUnvani, club.danismanAdSoyad].filter(Boolean).join(' '),
+      presidentSearch: club.baskanAdSoyad || '',
+      presidentId: club.yoneticiKullaniciId || '',
+      baskanAdSoyad: club.baskanAdSoyad || '',
+      baskanEposta: club.baskanEposta || '',
     });
   };
 
@@ -399,19 +399,19 @@ export const SksDashboard = () => {
     event.preventDefault();
     if (!editingClubId) return;
     const ok = await updateClubProfile(editingClubId, {
-      name: clubEditForm.name,
-      shortDescription: clubEditForm.shortDescription,
-      vision: clubEditForm.vision,
-      description: clubEditForm.description,
+      ad: clubEditForm.ad,
+      kisaAciklama: clubEditForm.kisaAciklama,
+      vizyon: clubEditForm.vizyon,
+      aciklama: clubEditForm.aciklama,
       logoUrl: clubEditForm.logoUrl,
-      advisorAcademicStaffId: clubEditForm.advisorAcademicStaffId,
-      advisorTitle: clubEditForm.advisorTitle,
-      advisorFullName: clubEditForm.advisorFullName,
-      advisorEmail: clubEditForm.advisorEmail,
-      advisorDepartment: clubEditForm.advisorDepartment,
-      adminUserId: clubEditForm.presidentId,
-      presidentFullName: clubEditForm.presidentFullName,
-      presidentEmail: clubEditForm.presidentEmail,
+      danismanAkademikKadroId: clubEditForm.danismanAkademikKadroId,
+      danismanUnvani: clubEditForm.danismanUnvani,
+      danismanAdSoyad: clubEditForm.danismanAdSoyad,
+      danismanEposta: clubEditForm.danismanEposta,
+      danismanBolumu: clubEditForm.danismanBolumu,
+      yoneticiKullaniciId: clubEditForm.presidentId,
+      baskanAdSoyad: clubEditForm.baskanAdSoyad,
+      baskanEposta: clubEditForm.baskanEposta,
     });
     if (ok) setEditingClubId(null);
   };
@@ -420,23 +420,23 @@ export const SksDashboard = () => {
     e.preventDefault();
     const president = selectedPresident;
     if (!president) return;
-    if (!clubForm.advisorAcademicStaffId) return;
+    if (!clubForm.danismanAkademikKadroId) return;
     if (selectedPresidentUnavailable || selectedAdvisorUnavailable) return;
 
     const ok = await createClub({
-      name: clubForm.name,
-      shortDescription: clubForm.shortDescription,
-      vision: clubForm.vision,
-      description: clubForm.vision,
+      ad: clubForm.ad,
+      kisaAciklama: clubForm.kisaAciklama,
+      vizyon: clubForm.vizyon,
+      aciklama: clubForm.vizyon,
       logoUrl: clubForm.logoUrl,
-      advisorAcademicStaffId: clubForm.advisorAcademicStaffId,
-      advisorTitle: clubForm.advisorTitle,
-      advisorFullName: clubForm.advisorFullName,
-      advisorEmail: clubForm.advisorEmail,
-      advisorDepartment: clubForm.advisorDepartment,
-      adminUserId: president.id,
-      presidentFullName: president.fullName,
-      presidentEmail: president.email,
+      danismanAkademikKadroId: clubForm.danismanAkademikKadroId,
+      danismanUnvani: clubForm.danismanUnvani,
+      danismanAdSoyad: clubForm.danismanAdSoyad,
+      danismanEposta: clubForm.danismanEposta,
+      danismanBolumu: clubForm.danismanBolumu,
+      yoneticiKullaniciId: president.id,
+      baskanAdSoyad: president.fullName,
+      baskanEposta: president.email,
     });
 
     if (ok) {
@@ -677,34 +677,34 @@ export const SksDashboard = () => {
                   <div className="flex items-center gap-4 min-w-0">
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
                       {club.logoUrl ? (
-                        <img src={club.logoUrl} alt={`${club.name} logosu`} className="w-full h-full object-cover" />
+                        <img src={club.logoUrl} alt={`${club.ad} logosu`} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-sm font-black text-white">{club.name.slice(0, 2).toLocaleUpperCase('tr-TR')}</span>
+                        <span className="text-sm font-black text-white">{club.ad.slice(0, 2).toLocaleUpperCase('tr-TR')}</span>
                       )}
                     </div>
                     <div className="min-w-0">
-                      <div className="font-black text-white truncate">{club.name}</div>
-                      <div className="text-xs text-white/40 max-w-xs truncate">{club.shortDescription || 'Kısa açıklama bekleniyor.'}</div>
+                      <div className="font-black text-white truncate">{club.ad}</div>
+                      <div className="text-xs text-white/40 max-w-xs truncate">{club.kisaAciklama || 'Kısa açıklama bekleniyor.'}</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4 border-t border-white/5">
-                  <div className="font-bold text-white">{club.presidentFullName || 'Atanmadı'}</div>
-                  <div className="text-xs text-white/35 break-all">{club.presidentEmail || 'E-posta yok'}</div>
+                  <div className="font-bold text-white">{club.baskanAdSoyad || 'Atanmadı'}</div>
+                  <div className="text-xs text-white/35 break-all">{club.baskanEposta || 'E-posta yok'}</div>
                 </td>
                 <td className="px-5 py-4 border-t border-white/5">
-                  <div className="font-bold text-white">{[club.advisorTitle, club.advisorFullName].filter(Boolean).join(' ') || 'Bilgi yok'}</div>
-                  <div className="text-xs text-white/35">{club.advisorDepartment || 'Birim yok'}</div>
+                  <div className="font-bold text-white">{[club.danismanUnvani, club.danismanAdSoyad].filter(Boolean).join(' ') || 'Bilgi yok'}</div>
+                  <div className="text-xs text-white/35">{club.danismanBolumu || 'Birim yok'}</div>
                 </td>
                 <td className="px-5 py-4 border-t border-white/5">
-                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${club.active ? 'text-emerald-200 bg-emerald-500/10' : 'text-zinc-300 bg-white/10'}`}>
-                    {club.active ? 'Aktif' : 'Pasif'}
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${club.aktif ? 'text-emerald-200 bg-emerald-500/10' : 'text-zinc-300 bg-white/10'}`}>
+                    {club.aktif ? 'Aktif' : 'Pasif'}
                   </span>
                 </td>
                 <td className="px-5 py-4 border-t border-white/5">
                   <div className="flex gap-3">
-                    <div><span className="font-black text-white">{club.memberCount}</span><span className="text-xs text-white/35 ml-1">üye</span></div>
-                    <div><span className="font-black text-white">{club.eventCount}</span><span className="text-xs text-white/35 ml-1">etkinlik</span></div>
+                    <div><span className="font-black text-white">{club.uyeSayisi}</span><span className="text-xs text-white/35 ml-1">üye</span></div>
+                    <div><span className="font-black text-white">{club.etkinlikSayisi}</span><span className="text-xs text-white/35 ml-1">etkinlik</span></div>
                   </div>
                 </td>
                 <td className="px-5 py-4 border-t border-white/5">
@@ -718,10 +718,10 @@ export const SksDashboard = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => changeClubStatus(club.id, !club.active)}
-                      className={`rounded-2xl px-3 py-2 text-xs font-bold transition-colors ${club.active ? 'text-red-200 bg-red-500/10 hover:bg-red-500/20' : 'text-emerald-200 bg-emerald-500/10 hover:bg-emerald-500/20'}`}
+                      onClick={() => changeClubStatus(club.id, !club.aktif)}
+                      className={`rounded-2xl px-3 py-2 text-xs font-bold transition-colors ${club.aktif ? 'text-red-200 bg-red-500/10 hover:bg-red-500/20' : 'text-emerald-200 bg-emerald-500/10 hover:bg-emerald-500/20'}`}
                     >
-                      {club.active ? 'Pasifleştir' : 'Aktifleştir'}
+                      {club.aktif ? 'Pasifleştir' : 'Aktifleştir'}
                     </button>
 
                       <button
@@ -747,10 +747,10 @@ export const SksDashboard = () => {
                           <Pencil className="w-4 h-4 text-indigo-300" />
                           Kulüp Profil Bilgileri
                         </div>
-                        <input value={clubEditForm.name} onChange={e => setClubEditForm(prev => ({ ...prev, name: e.target.value }))} required placeholder="Kulüp adı" className={inputClass} />
+                        <input value={clubEditForm.ad} onChange={e => setClubEditForm(prev => ({ ...prev, name: e.target.value }))} required placeholder="Kulüp adı" className={inputClass} />
                         <div>
                           <input
-                            value={clubEditForm.shortDescription}
+                            value={clubEditForm.kisaAciklama}
                             onChange={e => setClubEditForm(prev => ({ ...prev, shortDescription: e.target.value }))}
                             required
                             minLength={SHORT_DESCRIPTION_MIN_LENGTH}
@@ -758,10 +758,10 @@ export const SksDashboard = () => {
                             placeholder="Kısa açıklama"
                             className={inputClass}
                           />
-                          <p className="mt-2 text-xs text-white/35">{fieldLimitText(clubEditForm.shortDescription, SHORT_DESCRIPTION_MIN_LENGTH, SHORT_DESCRIPTION_MAX_LENGTH)}</p>
+                          <p className="mt-2 text-xs text-white/35">{fieldLimitText(clubEditForm.kisaAciklama, SHORT_DESCRIPTION_MIN_LENGTH, SHORT_DESCRIPTION_MAX_LENGTH)}</p>
                         </div>
                         <textarea
-                          value={clubEditForm.vision}
+                          value={clubEditForm.vizyon}
                           onChange={e => setClubEditForm(prev => ({ ...prev, vision: e.target.value, description: e.target.value }))}
                           required
                           minLength={VISION_MIN_LENGTH}
@@ -770,7 +770,7 @@ export const SksDashboard = () => {
                           placeholder="Vizyon"
                           className={`${inputClass} resize-none`}
                         />
-                                                  <p className="-mt-2 text-xs text-white/35">{fieldLimitText(clubEditForm.vision, VISION_MIN_LENGTH, VISION_MAX_LENGTH)}</p>
+                                                  <p className="-mt-2 text-xs text-white/35">{fieldLimitText(clubEditForm.vizyon, VISION_MIN_LENGTH, VISION_MAX_LENGTH)}</p>
                       </section>
 
                       <aside className="space-y-4">
@@ -779,7 +779,7 @@ export const SksDashboard = () => {
                             {clubEditForm.logoUrl ? (
                               <img src={clubEditForm.logoUrl} alt="Kulüp logosu" className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-sm font-black text-white">{clubEditForm.name.slice(0, 2).toLocaleUpperCase('tr-TR') || 'KL'}</span>
+                              <span className="text-sm font-black text-white">{clubEditForm.ad.slice(0, 2).toLocaleUpperCase('tr-TR') || 'KL'}</span>
                             )}
                           </div>
                           <div>
@@ -838,7 +838,7 @@ export const SksDashboard = () => {
                           {clubEditForm.presidentId && (
                             <div className="rounded-2xl bg-emerald-500/10 border border-emerald-400/20 p-3 text-sm text-emerald-100">
                               Seçilen başkan: <span className="font-bold">{selectedEditPresidentName}</span>
-                              <div className="mt-1 text-xs text-emerald-100/75 break-all">{clubEditForm.presidentEmail}</div>
+                              <div className="mt-1 text-xs text-emerald-100/75 break-all">{clubEditForm.baskanEposta}</div>
                             </div>
                           )}
                           {clubEditForm.presidentId && isPresidentAssignedToAnotherClub(clubEditForm.presidentId, club.id) && (
@@ -889,7 +889,7 @@ export const SksDashboard = () => {
                                   type="button"
                                   onClick={() => handleEditAdvisorSelect(club, advisor)}
                                   disabled={alreadyAssigned}
-                                  className={`w-full rounded-2xl border px-3 py-3 text-left transition-colors disabled:cursor-not-allowed ${clubEditForm.advisorAcademicStaffId === advisor.id ? 'border-cyan-400/50 bg-cyan-500/15' : alreadyAssigned ? 'border-amber-400/20 bg-amber-500/[0.06] opacity-60' : 'border-white/10 bg-white/[0.035] hover:bg-white/[0.06]'}`}
+                                  className={`w-full rounded-2xl border px-3 py-3 text-left transition-colors disabled:cursor-not-allowed ${clubEditForm.danismanAkademikKadroId === advisor.id ? 'border-cyan-400/50 bg-cyan-500/15' : alreadyAssigned ? 'border-amber-400/20 bg-amber-500/[0.06] opacity-60' : 'border-white/10 bg-white/[0.035] hover:bg-white/[0.06]'}`}
                                 >
                                   <div className="flex items-start justify-between gap-3">
                                     <div className="text-sm font-bold text-white">{advisor.displayName}</div>
@@ -901,19 +901,19 @@ export const SksDashboard = () => {
                               );
                             })}
                             {advisorsLoading && <p className="text-xs text-white/35">Akademik kadro aranıyor...</p>}
-                            {!advisorsLoading && advisors.length === 0 && !clubEditForm.advisorAcademicStaffId && (
+                            {!advisorsLoading && advisors.length === 0 && !clubEditForm.danismanAkademikKadroId && (
                               <p className="rounded-2xl border border-white/10 bg-white/[0.025] p-3 text-xs text-white/35">
                                 Sonuç bulunamadı. Listeyi güncelleyip tekrar arayabilirsin.
                               </p>
                             )}
                           </div>
-                          {clubEditForm.advisorAcademicStaffId && (
+                          {clubEditForm.danismanAkademikKadroId && (
                             <div className="rounded-2xl bg-emerald-500/10 border border-emerald-400/20 p-3 text-sm text-emerald-100">
                               Seçilen danışman: <span className="font-bold">{selectedEditAdvisorDisplayName}</span>
-                              <div className="mt-1 text-xs text-emerald-100/75 break-all">{clubEditForm.advisorEmail} · {clubEditForm.advisorDepartment}</div>
+                              <div className="mt-1 text-xs text-emerald-100/75 break-all">{clubEditForm.danismanEposta} · {clubEditForm.danismanBolumu}</div>
                             </div>
                           )}
-                          {clubEditForm.advisorAcademicStaffId && isAdvisorAssignedToAnotherClub(clubEditForm.advisorAcademicStaffId, club.id) && (
+                          {clubEditForm.danismanAkademikKadroId && isAdvisorAssignedToAnotherClub(clubEditForm.danismanAkademikKadroId, club.id) && (
                             <p className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-3 text-xs font-semibold text-amber-100">
                               Bu akademisyen halihazırda başka bir kulüpte danışman.
                             </p>
@@ -929,9 +929,9 @@ export const SksDashboard = () => {
                             disabled={
                               clubsLoading ||
                               !clubEditForm.presidentId ||
-                              !clubEditForm.advisorAcademicStaffId ||
+                              !clubEditForm.danismanAkademikKadroId ||
                               isPresidentAssignedToAnotherClub(clubEditForm.presidentId, club.id) ||
-                              isAdvisorAssignedToAnotherClub(clubEditForm.advisorAcademicStaffId, club.id)
+                              isAdvisorAssignedToAnotherClub(clubEditForm.danismanAkademikKadroId, club.id)
                             }
                             className="inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold gradient-btn disabled:opacity-45"
                           >
@@ -966,10 +966,10 @@ export const SksDashboard = () => {
           <p className="text-sm text-white/40 mt-1">Öğrencilerin göreceği isim, kısa açıklama, vizyon ve logo bilgileri.</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <input value={clubForm.name} onChange={e => setClubForm(prev => ({ ...prev, name: e.target.value }))} required placeholder="Kulüp adı" className={inputClass} />
+          <input value={clubForm.ad} onChange={e => setClubForm(prev => ({ ...prev, name: e.target.value }))} required placeholder="Kulüp adı" className={inputClass} />
           <div className="lg:col-span-2">
             <input
-              value={clubForm.shortDescription}
+              value={clubForm.kisaAciklama}
               onChange={e => setClubForm(prev => ({ ...prev, shortDescription: e.target.value }))}
               required
               minLength={SHORT_DESCRIPTION_MIN_LENGTH}
@@ -977,11 +977,11 @@ export const SksDashboard = () => {
               placeholder="Kısa açıklama"
               className={inputClass}
             />
-            <p className="mt-2 text-xs text-white/35">{fieldLimitText(clubForm.shortDescription, SHORT_DESCRIPTION_MIN_LENGTH, SHORT_DESCRIPTION_MAX_LENGTH)}</p>
+            <p className="mt-2 text-xs text-white/35">{fieldLimitText(clubForm.kisaAciklama, SHORT_DESCRIPTION_MIN_LENGTH, SHORT_DESCRIPTION_MAX_LENGTH)}</p>
           </div>
           <div className="lg:col-span-2">
             <textarea
-              value={clubForm.vision}
+              value={clubForm.vizyon}
               onChange={e => setClubForm(prev => ({ ...prev, vision: e.target.value }))}
               required
               minLength={VISION_MIN_LENGTH}
@@ -990,7 +990,7 @@ export const SksDashboard = () => {
               rows={9}
               className={`${inputClass} resize-none`}
             />
-                          <p className="mt-2 text-xs text-white/35">{fieldLimitText(clubForm.vision, VISION_MIN_LENGTH, VISION_MAX_LENGTH)}</p>
+                          <p className="mt-2 text-xs text-white/35">{fieldLimitText(clubForm.vizyon, VISION_MIN_LENGTH, VISION_MAX_LENGTH)}</p>
             </div>
         </div>
 
@@ -1093,7 +1093,7 @@ export const SksDashboard = () => {
                   type="button"
                   onClick={() => handleAdvisorSelect(advisor)}
                   disabled={alreadyAssigned}
-                  className={`w-full rounded-2xl border px-3 py-3 text-left transition-colors disabled:cursor-not-allowed ${clubForm.advisorAcademicStaffId === advisor.id ? 'border-cyan-400/50 bg-cyan-500/15' : alreadyAssigned ? 'border-amber-400/20 bg-amber-500/[0.06] opacity-60' : 'border-white/10 bg-white/[0.035] hover:bg-white/[0.06]'}`}
+                  className={`w-full rounded-2xl border px-3 py-3 text-left transition-colors disabled:cursor-not-allowed ${clubForm.danismanAkademikKadroId === advisor.id ? 'border-cyan-400/50 bg-cyan-500/15' : alreadyAssigned ? 'border-amber-400/20 bg-amber-500/[0.06] opacity-60' : 'border-white/10 bg-white/[0.035] hover:bg-white/[0.06]'}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="text-sm font-bold text-white">{advisor.displayName}</div>
@@ -1105,16 +1105,16 @@ export const SksDashboard = () => {
               );
             })}
             {advisorsLoading && <p className="text-xs text-white/35">Akademik kadro aranıyor...</p>}
-            {!advisorsLoading && advisors.length === 0 && !clubForm.advisorAcademicStaffId && (
+            {!advisorsLoading && advisors.length === 0 && !clubForm.danismanAkademikKadroId && (
               <p className="rounded-2xl border border-white/10 bg-white/[0.025] p-3 text-xs text-white/35">
                 Sonuç bulunamadı. Listeyi güncelleyip tekrar arayabilirsin.
               </p>
             )}
           </div>
-          {clubForm.advisorAcademicStaffId && (
+          {clubForm.danismanAkademikKadroId && (
             <div className="rounded-2xl bg-emerald-500/10 border border-emerald-400/20 p-3 text-sm text-emerald-100">
               Seçilen danışman: <span className="font-bold">{selectedAdvisorDisplayName}</span>
-              <div className="mt-1 text-xs text-emerald-100/75">{clubForm.advisorEmail} · {clubForm.advisorDepartment}</div>
+              <div className="mt-1 text-xs text-emerald-100/75">{clubForm.danismanEposta} · {clubForm.danismanBolumu}</div>
             </div>
           )}
           {selectedAdvisorUnavailable && (
@@ -1182,11 +1182,11 @@ export const SksDashboard = () => {
             <p className="text-xs text-white/40 mt-1">Kulüp aktif oluşturulur ve seçilen başkan kulüp yöneticisi yapılır.</p>
           </div>
           <div className="space-y-2 text-sm text-white/60">
-            <div className="flex justify-between gap-4"><span>Kulüp</span><strong className="text-white text-right">{clubForm.name || 'Bekleniyor'}</strong></div>
+            <div className="flex justify-between gap-4"><span>Kulüp</span><strong className="text-white text-right">{clubForm.ad || 'Bekleniyor'}</strong></div>
             <div className="flex justify-between gap-4"><span>Danışman</span><strong className="text-white text-right">{selectedAdvisorDisplayName || 'Seçilmedi'}</strong></div>
             <div className="flex justify-between gap-4"><span>Başkan</span><strong className="text-white text-right">{selectedPresident?.fullName || 'Seçilmedi'}</strong></div>
           </div>
-          <button type="submit" disabled={!selectedPresident || !clubForm.advisorAcademicStaffId || selectedPresidentUnavailable || selectedAdvisorUnavailable || clubsLoading} className="w-full rounded-2xl px-8 py-3 gradient-btn font-bold disabled:opacity-45 disabled:cursor-not-allowed">
+          <button type="submit" disabled={!selectedPresident || !clubForm.danismanAkademikKadroId || selectedPresidentUnavailable || selectedAdvisorUnavailable || clubsLoading} className="w-full rounded-2xl px-8 py-3 gradient-btn font-bold disabled:opacity-45 disabled:cursor-not-allowed">
             Kulübü Oluştur
           </button>
         </section>
@@ -1332,34 +1332,34 @@ export const SksDashboard = () => {
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_22rem] gap-5">
             <div className="min-w-0 space-y-4">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-lg font-black text-white">{request.club.name}</h3>
-                <span className="rounded-full px-2.5 py-1 text-xs font-bold text-purple-200 bg-purple-500/10">{request.status}</span>
-                <span className="text-xs text-white/35">{new Date(request.createdAt).toLocaleString('tr-TR')}</span>
+                <h3 className="text-lg font-black text-white">{request.kulup.ad}</h3>
+                <span className="rounded-full px-2.5 py-1 text-xs font-bold text-purple-200 bg-purple-500/10">{request.durum}</span>
+                <span className="text-xs text-white/35">{new Date(request.olusturulmaTarihi).toLocaleString('tr-TR')}</span>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
                   <div className="text-xs font-black uppercase tracking-wide text-white/35 mb-3">Mevcut Profil</div>
                   <div className="space-y-2 text-sm">
-                    <div className="font-bold text-white">{request.club.name}</div>
-                    <p className="text-white/45">{request.club.shortDescription || 'Kısa açıklama yok.'}</p>
-                    <p className="text-white/35 line-clamp-4">{request.club.vision || request.club.description}</p>
+                    <div className="font-bold text-white">{request.kulup.ad}</div>
+                    <p className="text-white/45">{request.kulup.kisaAciklama || 'Kısa açıklama yok.'}</p>
+                    <p className="text-white/35 line-clamp-4">{request.kulup.vizyon || request.kulup.aciklama}</p>
                   </div>
                 </div>
                 <div className="rounded-2xl border border-purple-400/20 bg-purple-500/[0.06] p-4">
                   <div className="text-xs font-black uppercase tracking-wide text-purple-200/75 mb-3">Talep Edilen Profil</div>
                   <div className="space-y-2 text-sm">
-                    <div className="font-bold text-white">{request.name}</div>
-                    <p className="text-white/55">{request.shortDescription}</p>
-                    <p className="text-white/45 line-clamp-4">{request.vision}</p>
+                    <div className="font-bold text-white">{request.ad}</div>
+                    <p className="text-white/55">{request.kisaAciklama}</p>
+                    <p className="text-white/45 line-clamp-4">{request.vizyon}</p>
                     {request.logoUrl && <p className="text-xs text-purple-100/75 break-all">Logo güncellemesi var.</p>}
                   </div>
                 </div>
               </div>
 
-              {request.feedback && (
+              {request.geriBildirim && (
                 <p className="rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                  Son SKS notu: {request.feedback}
+                  Son SKS notu: {request.geriBildirim}
                 </p>
               )}
             </div>
@@ -1531,93 +1531,93 @@ export const SksDashboard = () => {
 
       <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {clubHealth.map(item => {
-          const message = healthMessageByClub[item.clubId] || '';
-          const logSearch = healthLogSearchByClub[item.clubId] || '';
-          const logs = clubAuditLogsByClub[item.clubId] || [];
+          const message = healthMessageByClub[item.kulupId] || '';
+          const logSearch = healthLogSearchByClub[item.kulupId] || '';
+          const logs = clubAuditLogsByClub[item.kulupId] || [];
           const statusClass =
-            item.healthStatus === 'Sağlıklı'
+            item.saglikDurumu === 'Sağlıklı'
               ? 'text-emerald-100 bg-emerald-500/15 border-emerald-300/20'
-              : item.healthStatus === 'Takip Edilmeli'
+              : item.saglikDurumu === 'Takip Edilmeli'
                 ? 'text-cyan-100 bg-cyan-500/15 border-cyan-300/20'
-                : item.healthStatus === 'Riskli'
+                : item.saglikDurumu === 'Riskli'
                   ? 'text-amber-100 bg-amber-500/15 border-amber-300/20'
                   : 'text-red-100 bg-red-500/15 border-red-300/20';
           return (
-            <article key={item.clubId} className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 space-y-4">
+            <article key={item.kulupId} className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div>
-                  <h3 className="text-xl font-black text-white">{item.clubName}</h3>
-                  <p className="mt-1 text-xs text-white/40">{item.active ? 'Aktif kulüp' : 'Pasif kulüp'} · {item.memberCount} üye</p>
+                  <h3 className="text-xl font-black text-white">{item.kulupAdi}</h3>
+                  <p className="mt-1 text-xs text-white/40">{item.aktif ? 'Aktif kulüp' : 'Pasif kulüp'} · {item.uyeSayisi} üye</p>
                 </div>
                 <span className={`rounded-full border px-3 py-1 text-xs font-black ${statusClass}`}>
-                  {item.healthStatus}
+                  {item.saglikDurumu}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                  <div className="text-xl font-black text-white">{item.upcomingEventCount}</div>
+                  <div className="text-xl font-black text-white">{item.gelecekEtkinlikSayisi}</div>
                   <div className="text-[11px] text-white/35">Yaklaşan</div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                  <div className="text-xl font-black text-white">{item.pendingEventCount}</div>
+                  <div className="text-xl font-black text-white">{item.onayBekleyenEtkinlikSayisi}</div>
                   <div className="text-[11px] text-white/35">Bekleyen etkinlik</div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                  <div className="text-xl font-black text-white">{item.pendingProfileRequestCount}</div>
+                  <div className="text-xl font-black text-white">{item.onayBekleyenProfilTalebiSayisi}</div>
                   <div className="text-[11px] text-white/35">Profil talebi</div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                  <div className="text-sm font-black text-white">{item.lastEventAt ? new Date(item.lastEventAt).toLocaleDateString('tr-TR') : '-'}</div>
+                  <div className="text-sm font-black text-white">{item.sonEtkinlikTarihi ? new Date(item.sonEtkinlikTarihi).toLocaleDateString('tr-TR') : '-'}</div>
                   <div className="text-[11px] text-white/35">Son etkinlik</div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                  <div className="text-sm font-black text-white">{item.lastAnnouncementAt ? new Date(item.lastAnnouncementAt).toLocaleDateString('tr-TR') : '-'}</div>
+                  <div className="text-sm font-black text-white">{item.sonDuyuruTarihi ? new Date(item.sonDuyuruTarihi).toLocaleDateString('tr-TR') : '-'}</div>
                   <div className="text-[11px] text-white/35">Son duyuru</div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                  <div className="text-sm font-black text-white">{item.attendanceAverage.toFixed(1)}</div>
+                  <div className="text-sm font-black text-white">{item.katilimOrtalamasi.toFixed(1)}</div>
                   <div className="text-[11px] text-white/35">Ort. katılım</div>
                 </div>
               </div>
 
-              {item.latestNote && (
+              {item.sonNot && (
                 <p className="rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm text-white/55">
-                  {item.latestNote}
+                  {item.sonNot}
                 </p>
               )}
 
               <textarea
                 value={message}
-                onChange={e => setHealthMessageByClub(prev => ({ ...prev, [item.clubId]: e.target.value }))}
+                onChange={e => setHealthMessageByClub(prev => ({ ...prev, [item.kulupId]: e.target.value }))}
                 placeholder="Gözlem notu veya kulüp yöneticisine gönderilecek aksiyon mesajı"
                 className={`${inputClass} min-h-24 resize-none`}
               />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                <button type="button" onClick={() => addClubHealthNote(item.clubId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-indigo-100 bg-indigo-500/15 hover:bg-indigo-500/25">Not Ekle</button>
-                <button type="button" onClick={() => watchlistClub(item.clubId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-amber-100 bg-amber-500/15 hover:bg-amber-500/25">Takibe Al</button>
-                <button type="button" onClick={() => requestClubHealthAction(item.clubId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-cyan-100 bg-cyan-500/15 hover:bg-cyan-500/25">Aksiyon İste</button>
+                <button type="button" onClick={() => addClubHealthNote(item.kulupId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-indigo-100 bg-indigo-500/15 hover:bg-indigo-500/25">Not Ekle</button>
+                <button type="button" onClick={() => watchlistClub(item.kulupId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-amber-100 bg-amber-500/15 hover:bg-amber-500/25">Takibe Al</button>
+                <button type="button" onClick={() => requestClubHealthAction(item.kulupId, message)} className="rounded-2xl px-3 py-2.5 text-xs font-black text-cyan-100 bg-cyan-500/15 hover:bg-cyan-500/25">Aksiyon İste</button>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-3 space-y-2">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <input
                     value={logSearch}
-                    onChange={e => setHealthLogSearchByClub(prev => ({ ...prev, [item.clubId]: e.target.value }))}
+                    onChange={e => setHealthLogSearchByClub(prev => ({ ...prev, [item.kulupId]: e.target.value }))}
                     placeholder="Kulüp loglarında ara"
                     className={`${inputClass} py-2.5`}
                   />
-                  <button type="button" onClick={() => fetchClubAuditLogs(item.clubId, { search: logSearch })} className="rounded-2xl px-4 py-2.5 text-xs font-black text-white/70 bg-white/[0.06] hover:bg-white/[0.1]">
+                  <button type="button" onClick={() => fetchClubAuditLogs(item.kulupId, { search: logSearch })} className="rounded-2xl px-4 py-2.5 text-xs font-black text-white/70 bg-white/[0.06] hover:bg-white/[0.1]">
                     Logları Aç
                   </button>
                 </div>
                 {logs.slice(0, 4).map(log => (
                   <div key={log.id} className="rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[11px] font-black text-purple-100">{log.action}</span>
-                      <span className="text-[11px] text-white/30">{new Date(log.createdAt).toLocaleString('tr-TR')}</span>
+                      <span className="text-[11px] font-black text-purple-100">{log.islem}</span>
+                      <span className="text-[11px] text-white/30">{new Date(log.olusturulmaTarihi).toLocaleString('tr-TR')}</span>
                     </div>
-                    <p className="mt-1 text-xs text-white/50">{log.message}</p>
+                    <p className="mt-1 text-xs text-white/50">{log.mesaj}</p>
                   </div>
                 ))}
                 {logs.length === 0 && <p className="text-xs text-white/35">Kulüp loglarını görmek için Logları Aç.</p>}

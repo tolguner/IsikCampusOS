@@ -14,7 +14,7 @@ import {
   XCircle,
   QrCode,
 } from 'lucide-react';
-import type { Club } from '../../store/clubStore';
+import type { Kulup } from '../../store/clubStore';
 import { useEventStore, type Event } from '../../store/eventStore';
 import { YOLLAR } from '../../utils/paths';
 import {
@@ -32,7 +32,7 @@ import {
 import { LocationPicker } from './LocationPicker';
 
 interface EventsTabProps {
-  selectedClub: Club;
+  selectedClub: Kulup;
 }
 
 const pad = (value: number) => value.toString().padStart(2, '0');

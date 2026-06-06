@@ -69,7 +69,7 @@ export const ClubPresidentDashboard = () => {
           <p className="text-sm font-bold text-purple-300">Kulüp Başkanlığı</p>
           <h1 className="text-4xl font-black gradient-text mt-2">Kulüp Yönetim Paneli</h1>
           <p className="text-white/45 mt-3">
-            {selectedClub.name} operasyonlarını buradan yönet. Profil değişiklikleri SKS onayına gider; etkinlikler yayınlanmadan önce SKS tarafından incelenir.
+            {selectedClub.ad} operasyonlarını buradan yönet. Profil değişiklikleri SKS onayına gider; etkinlikler yayınlanmadan önce SKS tarafından incelenir.
           </p>
         </div>
       </header>

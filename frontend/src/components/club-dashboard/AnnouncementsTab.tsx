@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Bell, ImagePlus, Megaphone } from 'lucide-react';
-import type { Club } from '../../store/clubStore';
+import type { Kulup } from '../../store/clubStore';
 import { useClubStore } from '../../store/clubStore';
 import { inputClass, textareaClass, emptyAnnouncementForm } from './constants';
 
 interface AnnouncementsTabProps {
-  selectedClub: Club;
+  selectedClub: Kulup;
 }
 
 export const AnnouncementsTab = ({ selectedClub }: AnnouncementsTabProps) => {
@@ -28,11 +28,11 @@ export const AnnouncementsTab = ({ selectedClub }: AnnouncementsTabProps) => {
   const submitAnnouncement = async (event: FormEvent) => {
     event.preventDefault();
     const ok = await createClubAnnouncement(selectedClub.id, {
-      title: announcementForm.title,
-      message: announcementForm.message,
-      linkUrl: announcementForm.linkUrl || undefined,
-      linkLabel: announcementForm.linkLabel || undefined,
-      imageUrl: announcementForm.imageUrl || undefined,
+      baslik: announcementForm.title,
+      mesaj: announcementForm.message,
+      baglantiUrl: announcementForm.linkUrl || undefined,
+      baglantiEtiketi: announcementForm.linkLabel || undefined,
+      resimUrl: announcementForm.imageUrl || undefined,
     });
     if (ok) setAnnouncementForm(emptyAnnouncementForm);
   };
@@ -45,7 +45,7 @@ export const AnnouncementsTab = ({ selectedClub }: AnnouncementsTabProps) => {
         </span>
         <div>
           <h2 className="text-2xl font-black text-white">Kulüp Duyurusu</h2>
-          <p className="text-sm text-white/40 mt-1">Duyurular {selectedClub.name} üyelerinin bildirim merkezine düşer.</p>
+          <p className="text-sm text-white/40 mt-1">Duyurular {selectedClub.ad} üyelerinin bildirim merkezine düşer.</p>
         </div>
       </div>
       <input value={announcementForm.title} onChange={e => setAnnouncementForm(prev => ({ ...prev, title: e.target.value }))} className={inputClass} placeholder="Duyuru başlığı" />
