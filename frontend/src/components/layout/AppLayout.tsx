@@ -11,7 +11,7 @@ import { YOLLAR } from '../../utils/paths';
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, logout, user } = useAuthStore();
-  const { notifications, unreadCount, fetchNotifications, markAsRead } = useNotificationStore();
+  const { bildirimler, okunmamisSayisi, bildirimleriGetir, okunduIsaretle } = useNotificationStore();
   const { managedClubs, fetchManagedClubs } = useClubStore();
   const { profile, fetchMyProfile } = useProfileStore();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -23,8 +23,8 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
     '?';
 
   useEffect(() => {
-    if (isAuthenticated) fetchNotifications();
-  }, [isAuthenticated, fetchNotifications]);
+    if (isAuthenticated) bildirimleriGetir();
+  }, [isAuthenticated, bildirimleriGetir]);
 
   useEffect(() => {
     if (isAuthenticated && isStudent) fetchManagedClubs();
@@ -101,9 +101,9 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 type="button"
               >
                 <Bell className="w-5 h-5 text-white/40 hover:text-white/70" />
-                {unreadCount > 0 && (
+                {okunmamisSayisi > 0 && (
                   <span className="absolute -right-1 -top-1 min-w-[18px] h-[18px] px-1 rounded-full bg-purple-500 border border-[#0c0c18] text-[10px] font-black leading-[16px] text-white text-center shadow-[0_0_16px_rgba(168,85,247,0.55)]">
-                    {unreadCount > 99 ? '99+' : unreadCount}
+                    {okunmamisSayisi > 99 ? '99+' : okunmamisSayisi}
                   </span>
                 )}
               </button>
@@ -113,55 +113,55 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                   <div className="p-4 border-b border-white/10">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-bold text-white">Bildirimler</p>
-                      {unreadCount > 0 && (
+                      {okunmamisSayisi > 0 && (
                         <span className="rounded-full bg-purple-500/20 border border-purple-300/25 px-2 py-1 text-[10px] font-black text-purple-100">
-                          {unreadCount} okunmamış
+                          {okunmamisSayisi} okunmamış
                         </span>
                       )}
                     </div>
                   </div>
                   <div className="max-h-96 overflow-y-auto p-2">
-                    {notifications.slice(0, 8).map(notification => (
+                    {bildirimler.slice(0, 8).map(notification => (
                       <div
                         key={notification.id}
                         role="button"
                         tabIndex={0}
-                        onClick={() => markAsRead(notification.id)}
+                        onClick={() => okunduIsaretle(notification.id)}
                         onKeyDown={event => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
-                            markAsRead(notification.id);
+                            okunduIsaretle(notification.id);
                           }
                         }}
-                        className={`relative rounded-xl px-3 py-3 hover:bg-white/5 transition-colors cursor-pointer ${notification.read ? 'opacity-70' : 'bg-purple-500/[0.06] border border-purple-400/10'}`}
+                        className={`relative rounded-xl px-3 py-3 hover:bg-white/5 transition-colors cursor-pointer ${notification.okundu ? 'opacity-70' : 'bg-purple-500/[0.06] border border-purple-400/10'}`}
                       >
-                        {!notification.read && (
+                        {!notification.okundu && (
                           <span className="absolute right-3 top-3 w-2 h-2 rounded-full bg-purple-300 shadow-[0_0_12px_rgba(216,180,254,0.7)]" />
                         )}
-                        {notification.imageUrl && (
-                          <img src={notification.imageUrl} alt={notification.title} className="mb-3 w-full h-28 object-cover rounded-xl border border-white/10" />
+                        {notification.resimUrl && (
+                          <img src={notification.resimUrl} alt={notification.baslik} className="mb-3 w-full h-28 object-cover rounded-xl border border-white/10" />
                         )}
-                        <p className="text-sm font-semibold text-white/90">{notification.title}</p>
+                        <p className="text-sm font-semibold text-white/90">{notification.baslik}</p>
                         <p className="text-[11px] font-semibold text-white/35 mt-1">
-                          Gönderen: <span className="text-white/55">{notification.createdByName || (notification.type === 'ANNOUNCEMENT' ? 'SKS Yönetimi' : 'Sistem')}</span>
+                          Gönderen: <span className="text-white/55">{notification.olusturanAdi || (notification.tur === 'DUYURU' ? 'SKS Yönetimi' : 'Sistem')}</span>
                         </p>
-                        <p className="text-xs text-white/45 mt-1 leading-relaxed">{notification.message}</p>
-                        {notification.linkUrl && (
+                        <p className="text-xs text-white/45 mt-1 leading-relaxed">{notification.mesaj}</p>
+                        {notification.baglantiUrl && (
                           <a
-                            href={notification.linkUrl}
+                            href={notification.baglantiUrl}
                             target="_blank"
                             rel="noreferrer"
-                            onClick={() => markAsRead(notification.id)}
+                            onClick={() => okunduIsaretle(notification.id)}
                             className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-cyan-200 hover:text-cyan-100"
                           >
                             <LinkIcon className="w-3.5 h-3.5" />
-                            {notification.linkLabel || 'Bağlantıyı aç'}
+                            {notification.baglantiEtiketi || 'Bağlantıyı aç'}
                           </a>
                         )}
-                        <p className="text-[11px] text-white/30 mt-2">{new Date(notification.createdAt).toLocaleString('tr-TR')}</p>
+                        <p className="text-[11px] text-white/30 mt-2">{new Date(notification.olusturulmaTarihi).toLocaleString('tr-TR')}</p>
                       </div>
                     ))}
-                    {notifications.length === 0 && (
+                    {bildirimler.length === 0 && (
                       <p className="px-3 py-6 text-sm text-white/40 text-center">Yeni bildirim yok.</p>
                     )}
                   </div>

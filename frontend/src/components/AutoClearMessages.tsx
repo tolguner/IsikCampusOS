@@ -24,8 +24,8 @@ export const AutoClearMessages = () => {
   const studentSuccess = useStudentStore(state => state.successMessage);
   const clearStudent = useStudentStore(state => state.clearMessages);
 
-  const notificationError = useNotificationStore(state => state.error);
-  const clearNotificationError = useNotificationStore(state => state.clearError);
+  const notificationError = useNotificationStore(state => state.hata);
+  const clearNotificationError = useNotificationStore(state => state.hatayiTemizle);
 
   const advisorError = useAcademicStaffStore(state => state.error);
   const clearAdvisorError = useAcademicStaffStore(state => state.clearError);

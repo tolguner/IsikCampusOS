@@ -127,7 +127,7 @@ export const SksDashboard = () => {
     approveEvent,
     requestRevision,
   } = useEventStore();
-  const { createAnnouncement, error: notificationError } = useNotificationStore();
+  const { duyuruOlustur, hata: notificationError } = useNotificationStore();
   const currentUser = useAuthStore(state => state.user);
   const { students, fetchStudents, isLoading: studentsLoading } = useStudentStore();
   const {
@@ -565,9 +565,14 @@ export const SksDashboard = () => {
 
   const handleAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = await createAnnouncement({
-      ...announcement,
-      createdByName: announcementSenderName,
+    const ok = await duyuruOlustur({
+      baslik: announcement.title,
+      mesaj: announcement.message,
+      baglantiUrl: announcement.linkUrl,
+      baglantiEtiketi: announcement.linkLabel,
+      resimUrl: announcement.imageUrl,
+      olusturanAdi: announcementSenderName,
+      hedefKitle: announcement.targetAudience === 'CLUB_PRESIDENTS' ? 'KULUP_BASKANLARI' : 'TUM_OGRENCILER',
     });
     if (ok) setAnnouncement({
       title: '',

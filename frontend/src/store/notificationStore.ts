@@ -1,154 +1,107 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
 
-export interface Notification {
+export type BildirimTuru =
+  | 'DUYURU'
+  | 'ETKINLIK_REVIZYON_TALEBI'
+  | 'ETKINLIK_ONAY_TALEBI'
+  | 'PROFIL_ONAY_TALEBI'
+  | 'SERTIFIKA';
+
+export type HedefKitle = 'KULLANICI' | 'TUM_OGRENCILER' | 'KULUP_BASKANLARI' | 'SKS_YONETICILERI';
+
+/** Backend (notification-service) BildirimYaniti ile birebir aynı alanlar — çeviri (mapper) yoktur. */
+export interface Bildirim {
   id: string;
-  title: string;
-  message: string;
-  linkUrl?: string;
-  linkLabel?: string;
-  imageUrl?: string;
-  type: 'ANNOUNCEMENT' | 'EVENT_REVISION_REQUEST' | 'EVENT_APPROVAL_REQUEST' | 'PROFILE_APPROVAL_REQUEST' | 'CERTIFICATE';
-  targetAudience: 'USER' | 'ALL_STUDENTS' | 'CLUB_PRESIDENTS' | 'SKS_ADMINS';
-  relatedEventId?: string;
-  createdBy?: string;
-  createdByName?: string;
-  read: boolean;
-  createdAt: string;
+  baslik: string;
+  mesaj: string;
+  baglantiUrl?: string;
+  baglantiEtiketi?: string;
+  resimUrl?: string;
+  tur: BildirimTuru;
+  hedefKitle: HedefKitle;
+  ilgiliEtkinlikId?: string;
+  olusturan?: string;
+  olusturanAdi?: string;
+  okundu: boolean;
+  olusturulmaTarihi: string;
 }
 
-interface NotificationState {
-  notifications: Notification[];
-  unreadCount: number;
-  isLoading: boolean;
-  error: string | null;
-  clearError: () => void;
-  fetchNotifications: () => Promise<void>;
-  markAsRead: (notificationId: string) => Promise<void>;
-  createAnnouncement: (data: {
-    title: string;
-    message: string;
-    linkUrl?: string;
-    linkLabel?: string;
-    imageUrl?: string;
-    createdByName?: string;
-    targetAudience: 'ALL_STUDENTS' | 'CLUB_PRESIDENTS';
+interface BildirimState {
+  bildirimler: Bildirim[];
+  okunmamisSayisi: number;
+  yukleniyor: boolean;
+  hata: string | null;
+  hatayiTemizle: () => void;
+  bildirimleriGetir: () => Promise<void>;
+  okunduIsaretle: (bildirimId: string) => Promise<void>;
+  duyuruOlustur: (veri: {
+    baslik: string;
+    mesaj: string;
+    baglantiUrl?: string;
+    baglantiEtiketi?: string;
+    resimUrl?: string;
+    olusturanAdi?: string;
+    hedefKitle: 'TUM_OGRENCILER' | 'KULUP_BASKANLARI';
   }) => Promise<boolean>;
 }
 
-const mapType = (type: string): Notification['type'] => {
-  switch (type) {
-    case 'DUYURU': return 'ANNOUNCEMENT';
-    case 'ETKINLIK_REVIZYON_TALEBI': return 'EVENT_REVISION_REQUEST';
-    case 'ETKINLIK_ONAY_TALEBI': return 'EVENT_APPROVAL_REQUEST';
-    case 'PROFIL_ONAY_TALEBI': return 'PROFILE_APPROVAL_REQUEST';
-    case 'SERTIFIKA': return 'CERTIFICATE';
-    default: return type as any;
-  }
-};
+const okunmamisSay = (bildirimler: Bildirim[]) =>
+  bildirimler.filter(bildirim => !bildirim.okundu).length;
 
-const mapReverseAudience = (aud: string): string => {
-  switch (aud) {
-    case 'ALL_STUDENTS': return 'TUM_OGRENCILER';
-    case 'CLUB_PRESIDENTS': return 'KULUP_BASKANLARI';
-    default: return aud;
-  }
-};
+export const useNotificationStore = create<BildirimState>((set, get) => ({
+  bildirimler: [],
+  okunmamisSayisi: 0,
+  yukleniyor: false,
+  hata: null,
 
-const mapAudience = (aud: string): Notification['targetAudience'] => {
-  switch (aud) {
-    case 'KULLANICI': return 'USER';
-    case 'TUM_OGRENCILER': return 'ALL_STUDENTS';
-    case 'KULUP_BASKANLARI': return 'CLUB_PRESIDENTS';
-    case 'SKS_YONETICILERI': return 'SKS_ADMINS';
-    default: return aud as any;
-  }
-};
+  hatayiTemizle: () => set({ hata: null }),
 
-const mapNotification = (data: any): Notification => ({
-  id: data.id,
-  title: data.baslik,
-  message: data.mesaj,
-  linkUrl: data.baglantiUrl,
-  linkLabel: data.baglantiEtiketi,
-  imageUrl: data.resimUrl,
-  type: mapType(data.tur),
-  targetAudience: mapAudience(data.hedefKitle),
-  relatedEventId: data.ilgiliEtkinlikId,
-  createdBy: data.olusturan,
-  createdByName: data.olusturanAdi,
-  read: data.okundu,
-  createdAt: data.olusturulmaTarihi
-});
-
-export const useNotificationStore = create<NotificationState>((set, get) => ({
-  notifications: [],
-  unreadCount: 0,
-  isLoading: false,
-  error: null,
-
-  clearError: () => set({ error: null }),
-
-  fetchNotifications: async () => {
-    set({ isLoading: true, error: null });
+  bildirimleriGetir: async () => {
+    set({ yukleniyor: true, hata: null });
     try {
-      const res = await api.get<any[]>('/bildirimler');
-      const mapped = res.data.map(mapNotification);
-      set({ notifications: mapped, unreadCount: countUnread(mapped), isLoading: false });
+      const res = await api.get<Bildirim[]>('/bildirimler');
+      set({ bildirimler: res.data, okunmamisSayisi: okunmamisSay(res.data), yukleniyor: false });
     } catch (err: any) {
-      set({ error: err.response?.data?.message || 'Bildirimler yüklenirken hata oluştu.', isLoading: false });
+      set({ hata: err.response?.data?.message || 'Bildirimler yüklenirken hata oluştu.', yukleniyor: false });
     }
   },
 
-  markAsRead: async (notificationId) => {
-    const currentNotifications = get().notifications;
-    const target = currentNotifications.find(notification => notification.id === notificationId);
+  okunduIsaretle: async (bildirimId) => {
+    const mevcut = get().bildirimler;
+    const hedef = mevcut.find(bildirim => bildirim.id === bildirimId);
+    if (!hedef || hedef.okundu) return;
 
-    if (!target || target.read) return;
-
-    const optimisticNotifications = currentNotifications.map(notification =>
-      notification.id === notificationId ? { ...notification, read: true } : notification
+    const iyimser = mevcut.map(bildirim =>
+      bildirim.id === bildirimId ? { ...bildirim, okundu: true } : bildirim
     );
-
-    set({ notifications: optimisticNotifications, unreadCount: countUnread(optimisticNotifications) });
+    set({ bildirimler: iyimser, okunmamisSayisi: okunmamisSay(iyimser) });
 
     try {
-      const res = await api.patch<any>(`/bildirimler/${notificationId}/oku`);
-      const confirmedNotifications = get().notifications.map(notification =>
-        notification.id === notificationId ? mapNotification(res.data) : notification
+      const res = await api.patch<Bildirim>(`/bildirimler/${bildirimId}/oku`);
+      const onayli = get().bildirimler.map(bildirim =>
+        bildirim.id === bildirimId ? res.data : bildirim
       );
-      set({ notifications: confirmedNotifications, unreadCount: countUnread(confirmedNotifications) });
+      set({ bildirimler: onayli, okunmamisSayisi: okunmamisSay(onayli) });
     } catch (err: any) {
       set({
-        notifications: currentNotifications,
-        unreadCount: countUnread(currentNotifications),
-        error: err.response?.data?.message || 'Bildirim okundu olarak işaretlenemedi.',
+        bildirimler: mevcut,
+        okunmamisSayisi: okunmamisSay(mevcut),
+        hata: err.response?.data?.message || 'Bildirim okundu olarak işaretlenemedi.',
       });
     }
   },
 
-  createAnnouncement: async (data) => {
-    set({ isLoading: true, error: null });
+  duyuruOlustur: async (veri) => {
+    set({ yukleniyor: true, hata: null });
     try {
-      const payload = {
-        baslik: data.title,
-        mesaj: data.message,
-        baglantiUrl: data.linkUrl,
-        baglantiEtiketi: data.linkLabel,
-        resimUrl: data.imageUrl,
-        olusturanAdi: data.createdByName,
-        hedefKitle: mapReverseAudience(data.targetAudience)
-      };
-      await api.post('/bildirimler/duyurular', payload);
-      await get().fetchNotifications();
-      set({ isLoading: false });
+      await api.post('/bildirimler/duyurular', veri);
+      await get().bildirimleriGetir();
+      set({ yukleniyor: false });
       return true;
     } catch (err: any) {
-      set({ error: err.response?.data?.message || 'Duyuru gönderilemedi.', isLoading: false });
+      set({ hata: err.response?.data?.message || 'Duyuru gönderilemedi.', yukleniyor: false });
       return false;
     }
   },
 }));
-
-const countUnread = (notifications: Notification[]) =>
-  notifications.filter(notification => !notification.read).length;
