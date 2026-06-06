@@ -36,7 +36,7 @@ export const ClubDetailPage = () => {
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
   const [expandedPosterEvent, setExpandedPosterEvent] = useState<Event | null>(null);
   const [qrTicket, setQrTicket] = useState<{ event: Event; dataUrl: string } | null>(null);
-  const isStudent = yetkilerdenBiriVarMi(user?.roles, YETKI_GRUPLARI.ogrenci);
+  const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);
 
   useEffect(() => {
     if (!clubId) return;

@@ -12,7 +12,7 @@ export const ClubsPage = () => {
   const user = useAuthStore(state => state.user);
   const [searchTerm, setSearchTerm] = useState('');
   const [leaveTarget, setLeaveTarget] = useState<{ id: string; name: string } | null>(null);
-  const isStudent = yetkilerdenBiriVarMi(user?.roles, YETKI_GRUPLARI.ogrenci);
+  const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);
 
   useEffect(() => {
     fetchClubs();

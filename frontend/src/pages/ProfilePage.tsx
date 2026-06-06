@@ -64,9 +64,9 @@ export const ProfilePage = () => {
 
   if (!user) return null;
 
-  const isStudent = yetkilerdenBiriVarMi(user.roles, YETKI_GRUPLARI.ogrenci);
-  const isRegistrar = yetkilerdenBiriVarMi(user.roles, YETKI_GRUPLARI.ogrenciIsleri);
-  const isAdmin = yetkilerdenBiriVarMi(user.roles, [YETKILER.SISTEM_YONETICISI]);
+  const isStudent = yetkilerdenBiriVarMi(user.roller, YETKI_GRUPLARI.ogrenci);
+  const isRegistrar = yetkilerdenBiriVarMi(user.roller, YETKI_GRUPLARI.ogrenciIsleri);
+  const isAdmin = yetkilerdenBiriVarMi(user.roller, [YETKILER.SISTEM_YONETICISI]);
 
   const getRoleName = () => {
     if (isAdmin) return 'Sistem Yöneticisi';
@@ -148,7 +148,7 @@ export const ProfilePage = () => {
   };
 
   const displayValue = (value?: string | null) => value?.trim() || 'Kayıtlı bilgi yok';
-  const maskedIdValue = profile?.nationalIdMasked?.trim() || user.nationalIdMasked?.trim() || 'Yetkili birim tarafından doğrulanmalı';
+  const maskedIdValue = profile?.nationalIdMasked?.trim() || user.tcKimlikMaskeli?.trim() || 'Yetkili birim tarafından doğrulanmalı';
   const pendingChange = changeRequests.find(request => request.status === 'PENDING');
   const selectedPhoneCountry = phoneCountryOptions.find(country => country.code === phoneCountryCode) || phoneCountryOptions[0];
   const normalizedPhoneNumber = phoneNumber.replace(/\D/g, '');
@@ -215,7 +215,7 @@ export const ProfilePage = () => {
                 {profilePic || profile?.profilePictureUrl ? (
                   <img src={profilePic || profile?.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <span>{user.firstName?.[0]}{user.lastName?.[0]}</span>
+                  <span>{user.ad?.[0]}{user.soyad?.[0]}</span>
                 )}
                 
                 {/* Upload Overlay */}
@@ -239,8 +239,8 @@ export const ProfilePage = () => {
             {/* Name and Role */}
             <div className="flex-1 pb-2">
               <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-                {user.fullName}
-                {user.emailVerified && <span title="Doğrulanmış Hesap"><ShieldCheck className="w-6 h-6 text-emerald-400" /></span>}
+                {user.tamAd}
+                {user.epostaDogrulandi && <span title="Doğrulanmış Hesap"><ShieldCheck className="w-6 h-6 text-emerald-400" /></span>}
               </h1>
               <p className="text-indigo-300 font-medium mt-1 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -274,7 +274,7 @@ export const ProfilePage = () => {
                 </div>
                 <div>
                   <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">Üniversite E-postası</p>
-                  <p className="text-sm text-white/90 font-medium">{profile?.email || user.email}</p>
+                  <p className="text-sm text-white/90 font-medium">{profile?.email || user.eposta}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -446,28 +446,28 @@ export const ProfilePage = () => {
                     <User className="w-4 h-4 text-white/50" />
                     <span className="text-sm text-white/70">Öğrenci No</span>
                   </div>
-                  <span className="text-sm font-semibold text-white font-mono">{user.studentNumber || '-'}</span>
+                  <span className="text-sm font-semibold text-white font-mono">{user.ogrenciNumarasi || '-'}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
                   <div className="flex items-center gap-3">
                     <Building2 className="w-4 h-4 text-white/50" />
                     <span className="text-sm text-white/70">Fakülte</span>
                   </div>
-                  <span className="text-sm font-semibold text-white text-right max-w-[150px] truncate" title={user.faculty || 'İİSBF'}>{user.faculty || 'İİSBF'}</span>
+                  <span className="text-sm font-semibold text-white text-right max-w-[150px] truncate" title={user.fakulte || 'İİSBF'}>{user.fakulte || 'İİSBF'}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
                   <div className="flex items-center gap-3">
                     <GraduationCap className="w-4 h-4 text-white/50" />
                     <span className="text-sm text-white/70">Bölüm</span>
                   </div>
-                  <span className="text-sm font-semibold text-white text-right max-w-[150px] truncate" title={user.department || 'YBS (İngilizce)'}>{user.department || 'YBS (İng)'}</span>
+                  <span className="text-sm font-semibold text-white text-right max-w-[150px] truncate" title={user.bolum || 'YBS (İngilizce)'}>{user.bolum || 'YBS (İng)'}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
                   <div className="flex items-center gap-3">
                     <Calendar className="w-4 h-4 text-white/50" />
                     <span className="text-sm text-white/70">Kayıt Yılı</span>
                   </div>
-                  <span className="text-sm font-semibold text-white">{user.enrollmentYear || '2023'}</span>
+                  <span className="text-sm font-semibold text-white">{user.kayitYili || '2023'}</span>
                 </div>
               </div>
             </motion.div>

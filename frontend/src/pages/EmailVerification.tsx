@@ -28,7 +28,7 @@ export const EmailVerification = () => {
     e.preventDefault();
     if (!user) return;
     clearError(); clearSuccess();
-    await verifyEmail(user.email, code);
+    await verifyEmail(user.eposta, code);
   };
 
   const handleResend = async () => {
@@ -51,7 +51,7 @@ export const EmailVerification = () => {
           </div>
           <h2 className="text-2xl font-extrabold text-white mb-2">E-posta Doğrulama 📧</h2>
           <p className="text-white/40 text-sm">
-            <span className="text-indigo-400 font-semibold">{user?.email}</span> adresine 6 haneli doğrulama kodu gönderdik.
+            <span className="text-indigo-400 font-semibold">{user?.eposta}</span> adresine 6 haneli doğrulama kodu gönderdik.
           </p>
         </div>
 

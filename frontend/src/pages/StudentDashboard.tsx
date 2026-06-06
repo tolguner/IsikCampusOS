@@ -10,7 +10,7 @@ export const StudentDashboard = () => {
         Kontrol Paneli
       </h1>
       <p className="text-xl text-white/40 text-center max-w-2xl leading-relaxed">
-        Hoş geldin{user?.fullName ? `, ${user.fullName}` : ''}! Kampüs hayatını yönetmek için hazırsın.
+        Hoş geldin{user?.tamAd ? `, ${user.tamAd}` : ''}! Kampüs hayatını yönetmek için hazırsın.
         Kulüpleri keşfet, kulüp etkinliklerine katıl ve kampüs hayatını tek yerden yönet.
       </p>
       <div className="flex gap-4 mt-8">
