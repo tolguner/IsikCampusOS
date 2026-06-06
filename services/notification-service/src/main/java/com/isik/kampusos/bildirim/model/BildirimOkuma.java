@@ -1,9 +1,9 @@
-package com.isik.kampusos.etkinlik.model;
- 
+package com.isik.kampusos.bildirim.model;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
- 
+
 @Entity
 @Table(
         name = "bildirim_okumalari",
@@ -20,16 +20,16 @@ public class BildirimOkuma {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
- 
+
     @Column(name = "bildirim_id", nullable = false)
     private String bildirimId;
- 
+
     @Column(name = "kullanici_id", nullable = false)
     private String kullaniciId;
- 
+
     @Column(nullable = false)
     private LocalDateTime okunmaTarihi;
- 
+
     @PrePersist
     protected void onCreate() {
         this.okunmaTarihi = LocalDateTime.now();

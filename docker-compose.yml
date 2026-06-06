@@ -160,6 +160,24 @@ services:
     networks:
       - campusos-net
 
+  notification-service:
+    image: eclipse-temurin:21-jre-alpine
+    container_name: campusos-notification
+    depends_on:
+      - eureka-server
+      - postgres
+      - kafka
+    volumes:
+      - ./services/notification-service/target:/app
+    command: sh -c "java -jar /app/*.jar"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/notification_db
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
+    networks:
+      - campusos-net
+
   facility-service:
     image: eclipse-temurin:21-jre-alpine
     container_name: campusos-facility

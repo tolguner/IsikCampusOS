@@ -1,5 +1,7 @@
 package com.isik.kampusos.etkinlik.service;
 
+import com.isik.kampusos.etkinlik.bildirim.BildirimYayinlayici;
+
 import com.isik.kampusos.etkinlik.model.Etkinlik;
 import com.isik.kampusos.etkinlik.model.EtkinlikKatilimi;
 import com.isik.kampusos.etkinlik.repository.EtkinlikDeposu;
@@ -23,7 +25,7 @@ public class EtkinlikHatirlaticiZamanlayici {
 
     private final EtkinlikDeposu etkinlikDeposu;
     private final EtkinlikKatilimiDeposu etkinlikKatilimiDeposu;
-    private final BildirimServisi bildirimServisi;
+    private final BildirimYayinlayici bildirimYayinlayici;
 
     @Scheduled(fixedDelay = 60_000)
     @Transactional
@@ -72,7 +74,7 @@ public class EtkinlikHatirlaticiZamanlayici {
                 : bosuMetneDonustur(etkinlik.getKonumAdi() != null ? etkinlik.getKonumAdi() : etkinlik.getKonum());
 
         for (EtkinlikKatilimi katilim : alicilar) {
-            bildirimServisi.kullaniciDuyurusuBilgilendir(
+            bildirimYayinlayici.kullaniciDuyurusuBilgilendir(
                     katilim.getKullaniciId(),
                     "Etkinlik hatırlatması: " + etkinlik.getBaslik(),
                     etkinlik.getBaslik() + " etkinliği yaklaşık " + sureMetni + " sonra başlayacak.\n\nBaşlangıç: "

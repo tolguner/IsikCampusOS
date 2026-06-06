@@ -1,5 +1,7 @@
 package com.isik.kampusos.etkinlik.service;
 
+import com.isik.kampusos.etkinlik.bildirim.BildirimYayinlayici;
+
 import com.isik.kampusos.etkinlik.dto.KulupBaskaniAtamaTalebi;
 import com.isik.kampusos.etkinlik.dto.KulupDuyuruTalebi;
 import com.isik.kampusos.etkinlik.dto.KulupYaniti;
@@ -37,7 +39,7 @@ public class KulupServisi {
     private final KulupDeposu kulupDeposu;
     private final KulupUyesiDeposu kulupUyesiDeposu;
     private final KulupDuyurusuDeposu kulupDuyurusuDeposu;
-    private final BildirimServisi bildirimServisi;
+    private final BildirimYayinlayici bildirimYayinlayici;
     private final DenetimGunluguServisi denetimGunluguServisi;
     private final KulupYanitFabrikasi kulupYanitFabrikasi;
     private final KulupDogrulayici kulupDogrulayici;
@@ -243,7 +245,7 @@ public class KulupServisi {
 
         List<KulupUyesi> uyeler = kulupUyesiDeposu.findByKulupId(kulupId);
         if (uyeler.isEmpty()) {
-            bildirimServisi.kullaniciDuyurusuBilgilendir(
+            bildirimYayinlayici.kullaniciDuyurusuBilgilendir(
                     kullaniciId,
                     talep.getBaslik().trim(),
                     talep.getMesaj().trim(),
@@ -255,7 +257,7 @@ public class KulupServisi {
             return;
         }
 
-        uyeler.forEach(uye -> bildirimServisi.kullaniciDuyurusuBilgilendir(
+        uyeler.forEach(uye -> bildirimYayinlayici.kullaniciDuyurusuBilgilendir(
                 uye.getKullaniciId(),
                 talep.getBaslik().trim(),
                 talep.getMesaj().trim(),

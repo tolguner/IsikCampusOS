@@ -9,7 +9,9 @@ import com.isik.kampusos.etkinlik.model.Kulup;
 import com.isik.kampusos.etkinlik.model.KulupUyesi;
 import com.isik.kampusos.etkinlik.model.Etkinlik;
 import com.isik.kampusos.etkinlik.model.EtkinlikDegisiklikIstegi;
-import com.isik.kampusos.etkinlik.model.Bildirim;
+import com.isik.kampusos.etkinlik.bildirim.BildirimYayinlayici;
+import com.isik.kampusos.etkinlik.bildirim.BildirimTuru;
+import com.isik.kampusos.etkinlik.bildirim.HedefKitle;
 import com.isik.kampusos.etkinlik.model.EtkinlikKatilimi;
 import com.isik.kampusos.etkinlik.repository.KulupUyesiDeposu;
 import com.isik.kampusos.etkinlik.repository.KulupDeposu;
@@ -47,7 +49,7 @@ public class EtkinlikServisi {
     private final KulupUyesiDeposu kulupUyesiDeposu;
     private final EtkinlikKatilimiDeposu etkinlikKatilimiDeposu;
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final BildirimServisi bildirimServisi;
+    private final BildirimYayinlayici bildirimYayinlayici;
     private final DenetimGunluguServisi denetimGunluguServisi;
 
     public Etkinlik etkinlikTaslagiOlustur(String kullaniciId, EtkinlikOlusturmaTalebi talep) {
@@ -120,7 +122,7 @@ public class EtkinlikServisi {
         denetimGunluguServisi.kaydet(DenetimGunlugu.VarlikTuru.ETKINLIK, kaydedilen.getId(), "EVENT_SUBMITTED", kullaniciId, "CLUB_ADMIN",
                 kaydedilen.getBaslik() + " etkinliği SKS onayına gönderildi.");
 
-        bildirimServisi.sksEtkinlikOnayTalebiBilgilendir(
+        bildirimYayinlayici.sksEtkinlikOnayTalebiBilgilendir(
                 "Yeni etkinlik onay talebi",
                 kaydedilen.getKulup().getAd() + " kulübü \"" + kaydedilen.getBaslik() + "\" etkinliği için SKS onayı istedi.",
                 kullaniciId,
@@ -155,12 +157,12 @@ public class EtkinlikServisi {
                 kaydedilen.getId(), kaydedilen.getBaslik(), adminId);
         kafkaTemplate.send("etkinlik.yayinlandi", kaydedilen.getId(), paylasimYuku);
 
-        bildirimServisi.kullaniciyiTurIleBilgilendir(
+        bildirimYayinlayici.kullaniciyiTurIleBilgilendir(
                 kaydedilen.getKulup().getYoneticiKullaniciId(),
                 "Etkinlik talebi onaylandı",
                 kaydedilen.getKulup().getAd() + " kulübünün \"" + kaydedilen.getBaslik() + "\" etkinliği SKS tarafından onaylandı ve yayınlandı.",
                 kaydedilen.getId(),
-                Bildirim.BildirimTuru.ETKINLIK_ONAY_TALEBI
+                BildirimTuru.ETKINLIK_ONAY_TALEBI
         );
         kulupUyelerineYeniEtkinligiDuyur(kaydedilen);
 
@@ -185,12 +187,12 @@ public class EtkinlikServisi {
         denetimGunluguServisi.kaydet(DenetimGunlugu.VarlikTuru.ETKINLIK, kaydedilen.getId(), "EVENT_REVISION_REQUESTED", adminId, "SKS",
                 kaydedilen.getBaslik() + " etkinliği için revizyon istendi: " + kaydedilen.getRedNedeni());
 
-        bildirimServisi.kullaniciyiTurIleBilgilendir(
+        bildirimYayinlayici.kullaniciyiTurIleBilgilendir(
                 kaydedilen.getKulup().getYoneticiKullaniciId(),
                 "Etkinlik düzenleme talebi",
                 kaydedilen.getBaslik() + " etkinliği için SKS düzenleme istedi: " + kaydedilen.getRedNedeni(),
                 kaydedilen.getId(),
-                Bildirim.BildirimTuru.ETKINLIK_REVIZYON_TALEBI
+                BildirimTuru.ETKINLIK_REVIZYON_TALEBI
         );
 
         return kaydedilen;
@@ -234,8 +236,8 @@ public class EtkinlikServisi {
         denetimGunluguServisi.kaydet(DenetimGunlugu.VarlikTuru.ETKINLIK, kaydedilen.getId(), "EVENT_CANCELLED", kullaniciId, roller, 
                 kaydedilen.getBaslik() + " etkinliği iptal edildi. Gerekçe: " + neden);
 
-        bildirimServisi.hedefKitleyiBilgilendir(
-                Bildirim.HedefKitle.TUM_OGRENCILER,
+        bildirimYayinlayici.hedefKitleyiBilgilendir(
+                HedefKitle.TUM_OGRENCILER,
                 "Etkinlik iptal edildi: " + kaydedilen.getBaslik(),
                 kaydedilen.getKulup().getAd() + " kulübünün \"" + kaydedilen.getBaslik() + "\" etkinliği iptal edildi.\n\nGerekçe: " + neden,
                 kullaniciId,
@@ -316,12 +318,12 @@ public class EtkinlikServisi {
         denetimGunluguServisi.kaydet(DenetimGunlugu.VarlikTuru.ETKINLIK, etkinlik.getId(), "EVENT_CHANGE_APPROVED", adminId, "SKS",
                 etkinlik.getBaslik() + " etkinliği değişiklik talebi onaylandı.");
 
-        bildirimServisi.kullaniciyiTurIleBilgilendir(
+        bildirimYayinlayici.kullaniciyiTurIleBilgilendir(
                 etkinlik.getKulup().getYoneticiKullaniciId(),
                 "Etkinlik değişikliği onaylandı",
                 etkinlik.getBaslik() + " etkinliği için gönderilen değişiklik talebi SKS tarafından onaylandı.",
                 etkinlik.getId(),
-                Bildirim.BildirimTuru.ETKINLIK_ONAY_TALEBI
+                BildirimTuru.ETKINLIK_ONAY_TALEBI
         );
 
         return etkinlik;
@@ -343,12 +345,12 @@ public class EtkinlikServisi {
         denetimGunluguServisi.kaydet(DenetimGunlugu.VarlikTuru.ETKINLIK, kaydedilen.getEtkinlik().getId(), "EVENT_CHANGE_REVISION_REQUESTED", adminId, "SKS",
                 kaydedilen.getEtkinlik().getBaslik() + " etkinliği değişiklik talebi için revizyon istendi: " + kaydedilen.getGeriBildirim());
 
-        bildirimServisi.kullaniciyiTurIleBilgilendir(
+        bildirimYayinlayici.kullaniciyiTurIleBilgilendir(
                 kaydedilen.getEtkinlik().getKulup().getYoneticiKullaniciId(),
                 "Etkinlik değişikliği düzenleme talebi",
                 kaydedilen.getEtkinlik().getBaslik() + " etkinliği değişikliği için SKS düzenleme istedi: " + kaydedilen.getGeriBildirim(),
                 kaydedilen.getEtkinlik().getId(),
-                Bildirim.BildirimTuru.ETKINLIK_REVIZYON_TALEBI
+                BildirimTuru.ETKINLIK_REVIZYON_TALEBI
         );
 
         return kaydedilen;
@@ -388,7 +390,7 @@ public class EtkinlikServisi {
                 .map(KulupUyesi::getKullaniciId)
                 .filter(userId -> userId != null && !userId.isBlank())
                 .distinct()
-                .forEach(userId -> bildirimServisi.kullaniciDuyurusuBilgilendir(
+                .forEach(userId -> bildirimYayinlayici.kullaniciDuyurusuBilgilendir(
                         userId,
                         "Kulübünün yeni etkinliği yayınlandı",
                         kulupAdi + " kulübü yeni bir etkinlik düzenliyor: " + etkinlik.getBaslik()
