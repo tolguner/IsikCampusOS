@@ -11,39 +11,39 @@ const filterLabels: Record<NotificationFilter, string> = {
 };
 
 const targetAudienceLabel = (value: string) => {
-  if (value === 'ALL_STUDENTS') return 'Tüm öğrenciler';
-  if (value === 'CLUB_PRESIDENTS') return 'Kulüp başkanları';
-  if (value === 'SKS_ADMINS') return 'SKS yönetimi';
+  if (value === 'TUM_OGRENCILER') return 'Tüm öğrenciler';
+  if (value === 'KULUP_BASKANLARI') return 'Kulüp başkanları';
+  if (value === 'SKS_YONETICILERI') return 'SKS yönetimi';
   return 'Kişisel bildirim';
 };
 
 export const NotificationsPage = () => {
-  const { notifications, unreadCount, fetchNotifications, markAsRead, isLoading, error } = useNotificationStore();
+  const { bildirimler, okunmamisSayisi, bildirimleriGetir, okunduIsaretle, yukleniyor, error } = useNotificationStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const [previewImage, setPreviewImage] = useState<{ src: string; title: string } | null>(null);
 
   useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    bildirimleriGetir();
+  }, [bildirimleriGetir]);
 
   const filteredNotifications = useMemo(() => {
     const normalized = searchTerm.trim().toLocaleLowerCase('tr-TR');
 
-    return notifications.filter(notification => {
+    return bildirimler.filter(notification => {
       const matchesFilter =
         filter === 'all' ||
-        (filter === 'announcements' && notification.type === 'ANNOUNCEMENT') ||
-        (filter === 'events' && ['EVENT_REVISION_REQUEST', 'EVENT_APPROVAL_REQUEST', 'PROFILE_APPROVAL_REQUEST', 'CERTIFICATE'].includes(notification.type));
+        (filter === 'announcements' && notification.tur === 'DUYURU') ||
+        (filter === 'events' && ['ETKINLIK_REVIZYON_TALEBI', 'ETKINLIK_ONAY_TALEBI', 'PROFIL_ONAY_TALEBI', 'SERTIFIKA'].includes(notification.tur));
 
       const matchesSearch = !normalized ||
-        notification.title.toLocaleLowerCase('tr-TR').includes(normalized) ||
-        notification.message.toLocaleLowerCase('tr-TR').includes(normalized) ||
-        notification.createdByName?.toLocaleLowerCase('tr-TR').includes(normalized);
+        notification.baslik.toLocaleLowerCase('tr-TR').includes(normalized) ||
+        notification.mesaj.toLocaleLowerCase('tr-TR').includes(normalized) ||
+        notification.olusturanAdi?.toLocaleLowerCase('tr-TR').includes(normalized);
 
       return matchesFilter && matchesSearch;
     });
-  }, [filter, notifications, searchTerm]);
+  }, [filter, bildirimler, searchTerm]);
 
   return (
     <div className="w-full space-y-6 animate-fade-in">
@@ -56,11 +56,11 @@ export const NotificationsPage = () => {
           </p>
         </div>
         <div className="rounded-3xl border border-white/10 bg-white/[0.035] px-5 py-4 min-w-40">
-          <div className="text-3xl font-black text-white">{notifications.length}</div>
+          <div className="text-3xl font-black text-white">{bildirimler.length}</div>
           <div className="text-sm text-white/40">Toplam bildirim</div>
         </div>
         <div className="rounded-3xl border border-purple-300/20 bg-purple-500/[0.08] px-5 py-4 min-w-40">
-          <div className="text-3xl font-black text-white">{unreadCount}</div>
+          <div className="text-3xl font-black text-white">{okunmamisSayisi}</div>
           <div className="text-sm text-purple-100/60">Okunmamış</div>
         </div>
       </div>
@@ -89,9 +89,9 @@ export const NotificationsPage = () => {
         </div>
       </section>
 
-      {error && (
+      {hata && (
         <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-5 py-4 text-sm font-semibold text-red-200">
-          {error}
+          {hata}
         </div>
       )}
 
@@ -99,10 +99,10 @@ export const NotificationsPage = () => {
         {filteredNotifications.map(notification => (
           <article
             key={notification.id}
-            onClick={() => markAsRead(notification.id)}
-            className={`relative rounded-3xl border overflow-hidden cursor-pointer transition-colors ${notification.read ? 'border-white/10 bg-white/[0.03]' : 'border-purple-300/30 bg-purple-500/[0.055]'}`}
+            onClick={() => okunduIsaretle(notification.id)}
+            className={`relative rounded-3xl border overflow-hidden cursor-pointer transition-colors ${notification.okundu ? 'border-white/10 bg-white/[0.03]' : 'border-purple-300/30 bg-purple-500/[0.055]'}`}
           >
-            {!notification.read && (
+            {!notification.okundu && (
               <span className="absolute right-5 top-5 rounded-full px-3 py-1 text-[11px] font-black text-purple-50 bg-purple-500/30 border border-purple-300/30 z-10">
                 Okunmadı
               </span>
@@ -111,48 +111,48 @@ export const NotificationsPage = () => {
               <div className="flex-1 min-w-0 space-y-4">
                 <div className="flex flex-wrap gap-2">
                   <span className="rounded-full px-3 py-1 text-xs font-bold text-purple-100 bg-purple-500/15 border border-purple-400/20">
-                    {notification.type === 'ANNOUNCEMENT' ? 'Duyuru' : notification.type === 'CERTIFICATE' ? 'Sertifika' : notification.type === 'PROFILE_APPROVAL_REQUEST' ? 'Profil Talebi' : 'Etkinlik'}
+                    {notification.tur === 'DUYURU' ? 'Duyuru' : notification.tur === 'SERTIFIKA' ? 'Sertifika' : notification.tur === 'PROFIL_ONAY_TALEBI' ? 'Profil Talebi' : 'Etkinlik'}
                   </span>
                   <span className="rounded-full px-3 py-1 text-xs font-bold text-cyan-100 bg-cyan-500/10 border border-cyan-400/20">
-                    {targetAudienceLabel(notification.targetAudience)}
+                    {targetAudienceLabel(notification.hedefKitle)}
                   </span>
                 </div>
 
                 <div>
-                  <h2 className="text-2xl font-black text-white leading-tight">{notification.title}</h2>
+                  <h2 className="text-2xl font-black text-white leading-tight">{notification.baslik}</h2>
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-xs text-white/40">
-                    <span>Gönderen: <strong className="text-white/65">{notification.createdByName || (notification.type === 'ANNOUNCEMENT' ? 'SKS Yönetimi' : 'Sistem')}</strong></span>
+                    <span>Gönderen: <strong className="text-white/65">{notification.olusturanAdi || (notification.tur === 'ANNOUNCEMENT' ? 'SKS Yönetimi' : 'Sistem')}</strong></span>
                     <span className="inline-flex items-center gap-1.5">
                       <CalendarDays className="w-3.5 h-3.5" />
-                      {new Date(notification.createdAt).toLocaleString('tr-TR')}
+                      {new Date(notification.olusturulmaTarihi).toLocaleString('tr-TR')}
                     </span>
                   </div>
                 </div>
 
-                <p className="text-sm text-white/55 leading-relaxed whitespace-pre-line">{notification.message}</p>
+                <p className="text-sm text-white/55 leading-relaxed whitespace-pre-line">{notification.mesaj}</p>
 
-                {notification.linkUrl && (
+                {notification.baglantiUrl && (
                   <a
-                    href={notification.linkUrl}
+                    href={notification.baglantiUrl}
                     target="_blank"
                     rel="noreferrer"
-                    onClick={() => markAsRead(notification.id)}
+                    onClick={() => okunduIsaretle(notification.id)}
                     className="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-cyan-100 bg-cyan-500/10 border border-cyan-400/20 hover:bg-cyan-500/15"
                   >
                     <LinkIcon className="w-4 h-4" />
-                    {notification.linkLabel || 'Bağlantıyı aç'}
+                    {notification.baglantiEtiketi || 'Bağlantıyı aç'}
                   </a>
                 )}
               </div>
 
-              {notification.imageUrl && (
+              {notification.resimUrl && (
                 <button
                   type="button"
-                  onClick={() => setPreviewImage({ src: notification.imageUrl!, title: notification.title })}
+                  onClick={() => setPreviewImage({ src: notification.resimUrl!, title: notification.baslik })}
                   className="group lg:w-64 xl:w-72 h-40 lg:h-44 rounded-2xl overflow-hidden border border-white/10 bg-white/[0.025] shrink-0 relative"
                   title="Görseli büyüt"
                 >
-                  <img src={notification.imageUrl} alt={notification.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                  <img src={notification.resimUrl} alt={notification.baslik} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                   <span className="absolute inset-x-0 bottom-0 px-3 py-2 text-xs font-bold text-white bg-black/55 backdrop-blur-sm">
                     Büyütmek için tıkla
                   </span>
@@ -162,14 +162,14 @@ export const NotificationsPage = () => {
           </article>
         ))}
 
-        {!isLoading && filteredNotifications.length === 0 && (
+        {!yukleniyor && filteredNotifications.length === 0 && (
           <div className="rounded-3xl border border-white/10 bg-white/[0.025] p-12 text-center">
             <Bell className="w-8 h-8 text-white/25 mx-auto mb-3" />
             <p className="text-sm font-semibold text-white/45">Bu filtrede bildirim bulunamadı.</p>
           </div>
         )}
 
-        {isLoading && (
+        {yukleniyor && (
           <p className="text-sm text-white/40">Bildirimler yükleniyor...</p>
         )}
       </section>
