@@ -94,7 +94,7 @@ export const ProfilePage = () => {
       const imageUrl = String(reader.result || '');
       if (!imageUrl) return;
       setProfilePic(imageUrl);
-      const ok = await updateMyProfile({ profilePictureUrl: imageUrl }, 'Profil fotoğrafın güncellendi.');
+      const ok = await updateMyProfile({ profilResmiUrl: imageUrl }, 'Profil fotoğrafın güncellendi.');
       if (!ok) {
         setProfilePic(null);
       }
@@ -148,8 +148,8 @@ export const ProfilePage = () => {
   };
 
   const displayValue = (value?: string | null) => value?.trim() || 'Kayıtlı bilgi yok';
-  const maskedIdValue = profile?.nationalIdMasked?.trim() || user.tcKimlikMaskeli?.trim() || 'Yetkili birim tarafından doğrulanmalı';
-  const pendingChange = changeRequests.find(request => request.status === 'PENDING');
+  const maskedIdValue = profile?.tcKimlikMaskeli?.trim() || user.tcKimlikMaskeli?.trim() || 'Yetkili birim tarafından doğrulanmalı';
+  const pendingChange = changeRequests.find(request => request.durum === 'BEKLEMEDE');
   const selectedPhoneCountry = phoneCountryOptions.find(country => country.code === phoneCountryCode) || phoneCountryOptions[0];
   const normalizedPhoneNumber = phoneNumber.replace(/\D/g, '');
   const isPhoneLengthValid = selectedPhoneCountry.digits
@@ -212,8 +212,8 @@ export const ProfilePage = () => {
             {/* Avatar with Upload */}
             <div className="relative group">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#0c0d1e] shadow-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-4xl font-bold text-white relative">
-                {profilePic || profile?.profilePictureUrl ? (
-                  <img src={profilePic || profile?.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+                {profilePic || profile?.profilResmiUrl ? (
+                  <img src={profilePic || profile?.profilResmiUrl} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <span>{user.ad?.[0]}{user.soyad?.[0]}</span>
                 )}
@@ -274,7 +274,7 @@ export const ProfilePage = () => {
                 </div>
                 <div>
                   <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">Üniversite E-postası</p>
-                  <p className="text-sm text-white/90 font-medium">{profile?.email || user.eposta}</p>
+                  <p className="text-sm text-white/90 font-medium">{profile?.eposta || user.eposta}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -283,7 +283,7 @@ export const ProfilePage = () => {
                 </div>
                 <div>
                   <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">Telefon</p>
-                  <p className="text-sm text-white/90 font-medium">{displayValue(profile?.phoneNumber)}</p>
+                  <p className="text-sm text-white/90 font-medium">{displayValue(profile?.telefonNumarasi)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -301,7 +301,7 @@ export const ProfilePage = () => {
                 </div>
                 <div>
                   <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">İkametgah Adresi</p>
-                  <p className="text-sm text-white/90 font-medium">{displayValue(profile?.residenceAddress)}</p>
+                  <p className="text-sm text-white/90 font-medium">{displayValue(profile?.ikametAdresi)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -310,7 +310,7 @@ export const ProfilePage = () => {
                 </div>
                 <div>
                   <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">Kan Grubu</p>
-                  <p className="text-sm text-white/90 font-medium">{displayValue(profile?.bloodType)}</p>
+                  <p className="text-sm text-white/90 font-medium">{displayValue(profile?.kanGrubu)}</p>
                 </div>
               </div>
             </div>
@@ -326,7 +326,7 @@ export const ProfilePage = () => {
               )}
               {pendingChange && (
                 <div className="rounded-xl px-3 py-2 text-xs font-semibold text-amber-100 bg-amber-500/10 border border-amber-400/20">
-                  Bekleyen talep: {pendingChange.requestedValue}
+                  Bekleyen talep: {pendingChange.talepEdilenDeger}
                 </div>
               )}
               <div className="space-y-2">
