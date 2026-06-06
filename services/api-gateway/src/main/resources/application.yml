@@ -82,8 +82,18 @@ spring:
           filters:
             - KimlikDogrulama
 
-        - id: notification-service
+        # SKS toplu duyuru ucu event-service'te kalır (kulüp başkanı verisi orada — fan-out)
+        - id: notification-announcement-service
           uri: lb://EVENT-SERVICE
+          predicates:
+            - Path=/api/v1/bildirimler/duyurular
+            - Method=POST
+          filters:
+            - KimlikDogrulama
+
+        # Bildirim okuma/işaretleme notification-service'te
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
           predicates:
             - Path=/api/v1/bildirimler/**
           filters:

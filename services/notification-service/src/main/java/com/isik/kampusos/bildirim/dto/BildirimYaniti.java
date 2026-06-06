@@ -1,4 +1,4 @@
-package com.isik.kampusos.etkinlik.dto;
+package com.isik.kampusos.bildirim.dto;
 
 import lombok.Builder;
 import lombok.Data;

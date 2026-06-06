@@ -1,5 +1,7 @@
 package com.isik.kampusos.etkinlik.service;
 
+import com.isik.kampusos.etkinlik.bildirim.BildirimYayinlayici;
+
 import com.isik.kampusos.etkinlik.dto.SertifikaVerilmeYaniti;
 import com.isik.kampusos.etkinlik.dto.EtkinlikKatilimciYaniti;
 import com.isik.kampusos.etkinlik.model.DenetimGunlugu;
@@ -27,7 +29,7 @@ public class EtkinlikKatilimServisi {
     private final EtkinlikDeposu etkinlikDeposu;
     private final EtkinlikKatilimiDeposu etkinlikKatilimiDeposu;
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final BildirimServisi bildirimServisi;
+    private final BildirimYayinlayici bildirimYayinlayici;
     private final DenetimGunluguServisi denetimGunluguServisi;
 
     @Transactional
@@ -221,7 +223,7 @@ public class EtkinlikKatilimServisi {
                 katilim.setSertifikaGonderilmeTarihi(simdi);
                 gonderilenSayisi++;
                 String kod = sertifikaKodu(etkinlik, katilim);
-                bildirimServisi.kullaniciyiSertifikaylaBilgilendir(
+                bildirimYayinlayici.kullaniciyiSertifikaylaBilgilendir(
                         katilim.getKullaniciId(),
                         "Katılım sertifikan hazır",
                         String.format("%s etkinliği için katılım sertifikan oluşturuldu. Sertifika kodu: %s",

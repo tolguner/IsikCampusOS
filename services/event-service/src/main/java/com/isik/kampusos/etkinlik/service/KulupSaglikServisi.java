@@ -1,5 +1,7 @@
 package com.isik.kampusos.etkinlik.service;
 
+import com.isik.kampusos.etkinlik.bildirim.BildirimYayinlayici;
+
 import com.isik.kampusos.etkinlik.dto.KulupSaglikIslemTalebi;
 import com.isik.kampusos.etkinlik.dto.KulupSaglikYaniti;
 import com.isik.kampusos.etkinlik.model.DenetimGunlugu;
@@ -37,7 +39,7 @@ public class KulupSaglikServisi {
     private final KulupDuyurusuDeposu kulupDuyurusuDeposu;
     private final KulupProfilDegisiklikIstegiDeposu profilDegisiklikIstegiDeposu;
     private final KulupSaglikKaydiDeposu kulupSaglikKaydiDeposu;
-    private final BildirimServisi bildirimServisi;
+    private final BildirimYayinlayici bildirimYayinlayici;
     private final DenetimGunluguServisi denetimGunluguServisi;
 
     public List<KulupSaglikYaniti> saglikListele() {
@@ -71,7 +73,7 @@ public class KulupSaglikServisi {
         kayit.setSonNotTarihi(LocalDateTime.now());
         kulupSaglikKaydiDeposu.save(kayit);
         denetimGunluguServisi.kaydet(DenetimGunlugu.VarlikTuru.KULUP, kulupId, "WATCHLISTED", yapanId, "SKS", mesaj);
-        bildirimServisi.kullaniciDuyurusuBilgilendir(
+        bildirimYayinlayici.kullaniciDuyurusuBilgilendir(
                 kulup.getYoneticiKullaniciId(),
                 "Kulübün SKS takip listesine alındı",
                 mesaj,
@@ -88,7 +90,7 @@ public class KulupSaglikServisi {
         Kulup kulup = kulupGetir(kulupId);
         String mesaj = zorunluMesaj(talep);
         denetimGunluguServisi.kaydet(DenetimGunlugu.VarlikTuru.KULUP, kulupId, "ACTION_REQUESTED", yapanId, "SKS", mesaj);
-        bildirimServisi.kullaniciDuyurusuBilgilendir(
+        bildirimYayinlayici.kullaniciDuyurusuBilgilendir(
                 kulup.getYoneticiKullaniciId(),
                 "SKS kulübünden aksiyon bekliyor",
                 mesaj,

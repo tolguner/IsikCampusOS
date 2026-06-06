@@ -1,6 +1,6 @@
-package com.isik.kampusos.etkinlik.repository;
+package com.isik.kampusos.bildirim.repository;
 
-import com.isik.kampusos.etkinlik.model.Bildirim;
+import com.isik.kampusos.bildirim.model.Bildirim;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

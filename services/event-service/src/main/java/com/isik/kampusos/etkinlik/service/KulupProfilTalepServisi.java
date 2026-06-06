@@ -3,7 +3,8 @@ package com.isik.kampusos.etkinlik.service;
 import com.isik.kampusos.etkinlik.dto.EtkinlikGeriBildirimTalebi;
 import com.isik.kampusos.etkinlik.dto.KulupProfilDegisiklikIstegiYaniti;
 import com.isik.kampusos.etkinlik.dto.KulupProfilGuncellemeTalebi;
-import com.isik.kampusos.etkinlik.model.Bildirim;
+import com.isik.kampusos.etkinlik.bildirim.BildirimYayinlayici;
+import com.isik.kampusos.etkinlik.bildirim.BildirimTuru;
 import com.isik.kampusos.etkinlik.model.DenetimGunlugu;
 import com.isik.kampusos.etkinlik.model.Kulup;
 import com.isik.kampusos.etkinlik.model.KulupProfilDegisiklikIstegi;
@@ -28,7 +29,7 @@ public class KulupProfilTalepServisi {
 
     private final KulupDeposu kulupDeposu;
     private final KulupProfilDegisiklikIstegiDeposu kulupProfilDegisiklikIstegiDeposu;
-    private final BildirimServisi bildirimServisi;
+    private final BildirimYayinlayici bildirimYayinlayici;
     private final DenetimGunluguServisi denetimGunluguServisi;
     private final KulupYanitFabrikasi kulupYanitFabrikasi;
     private final KulupDogrulayici kulupDogrulayici;
@@ -83,7 +84,7 @@ public class KulupProfilTalepServisi {
                 talep.getLogoUrl() == null || talep.getLogoUrl().isBlank() ? "Değişiklik yok / boş"
                         : talep.getLogoUrl());
 
-        bildirimServisi.sksProfilOnayTalebiBilgilendir(
+        bildirimYayinlayici.sksProfilOnayTalebiBilgilendir(
                 "Kulüp profil güncelleme talebi",
                 bildirimMesaji.trim(),
                 kullaniciId,
@@ -127,12 +128,12 @@ public class KulupProfilTalepServisi {
         denetimGunluguServisi.kaydet(DenetimGunlugu.VarlikTuru.KULUP, kulup.getId(), "PROFILE_UPDATE_APPROVED", inceleyen, "SKS",
                 kulup.getAd() + " kulübü profil güncellemesi onaylandı.");
 
-        bildirimServisi.kullaniciyiTurIleBilgilendir(
+        bildirimYayinlayici.kullaniciyiTurIleBilgilendir(
                 kulup.getYoneticiKullaniciId(),
                 "Kulüp profil talebi onaylandı",
                 kulup.getAd() + " kulübü profil güncellemesi SKS tarafından onaylandı.",
                 kulup.getId(),
-                Bildirim.BildirimTuru.PROFIL_ONAY_TALEBI);
+                BildirimTuru.PROFIL_ONAY_TALEBI);
 
         return kulupYanitFabrikasi.profilTalepYaniti(kaydedilen, inceleyen);
     }
@@ -187,12 +188,12 @@ public class KulupProfilTalepServisi {
                 inceleyen, "SKS",
                 kaydedilen.getKulup().getAd() + " kulübü profil talebi için SKS notu: " + kaydedilen.getGeriBildirim());
 
-        bildirimServisi.kullaniciyiTurIleBilgilendir(
+        bildirimYayinlayici.kullaniciyiTurIleBilgilendir(
                 kaydedilen.getKulup().getYoneticiKullaniciId(),
                 baslik,
                 kaydedilen.getKulup().getAd() + " kulübü profil talebi için SKS notu: " + kaydedilen.getGeriBildirim(),
                 kaydedilen.getKulup().getId(),
-                Bildirim.BildirimTuru.PROFIL_ONAY_TALEBI);
+                BildirimTuru.PROFIL_ONAY_TALEBI);
 
         return kulupYanitFabrikasi.profilTalepYaniti(kaydedilen, inceleyen);
     }
