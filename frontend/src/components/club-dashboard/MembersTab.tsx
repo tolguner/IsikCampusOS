@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { UsersRound, ShieldCheck } from 'lucide-react';
-import type { Club } from '../../store/clubStore';
+import type { Kulup } from '../../store/clubStore';
 import { useClubStore } from '../../store/clubStore';
 
 interface MembersTabProps {
-  selectedClub: Club;
+  selectedClub: Kulup;
 }
 
 export const MembersTab = ({ selectedClub }: MembersTabProps) => {
@@ -46,12 +46,12 @@ export const MembersTab = ({ selectedClub }: MembersTabProps) => {
               </thead>
               <tbody className="divide-y divide-white/5 text-white/80">
                 {clubMembers.map(m => {
-                  const isAdmin = m.role === 'ADMIN';
+                  const isAdmin = m.rol === 'YONETICI';
                   return (
-                    <tr key={m.userId} className="hover:bg-white/5 transition-colors">
+                    <tr key={m.kullaniciId} className="hover:bg-white/5 transition-colors">
                       <td className="py-3 px-4 font-medium text-white">
                         <span className="flex items-center gap-2">
-                          {m.fullName || 'Bilinmiyor'}
+                          {m.adSoyad || 'Bilinmiyor'}
                           {isAdmin && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-yellow-300 bg-yellow-500/15 border border-yellow-400/20 rounded-full px-2 py-0.5">
                               <ShieldCheck className="w-3 h-3" /> Başkan
@@ -59,8 +59,8 @@ export const MembersTab = ({ selectedClub }: MembersTabProps) => {
                           )}
                         </span>
                       </td>
-                      <td className="py-3 px-4">{m.studentId || m.userId}</td>
-                      <td className="py-3 px-4">{m.department || '-'}</td>
+                      <td className="py-3 px-4">{m.ogrenciNumarasi || m.kullaniciId}</td>
+                      <td className="py-3 px-4">{m.bolum || '-'}</td>
                     </tr>
                   );
                 })}

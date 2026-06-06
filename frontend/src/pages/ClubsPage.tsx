@@ -22,33 +22,33 @@ export const ClubsPage = () => {
     const normalized = searchTerm.trim().toLocaleLowerCase('tr-TR');
     if (!normalized) return clubs;
     return clubs.filter(club =>
-      club.name.toLocaleLowerCase('tr-TR').includes(normalized) ||
-      club.shortDescription?.toLocaleLowerCase('tr-TR').includes(normalized) ||
-      club.vision?.toLocaleLowerCase('tr-TR').includes(normalized) ||
-      club.description?.toLocaleLowerCase('tr-TR').includes(normalized)
+      club.ad.toLocaleLowerCase('tr-TR').includes(normalized) ||
+      club.kisaAciklama?.toLocaleLowerCase('tr-TR').includes(normalized) ||
+      club.vizyon?.toLocaleLowerCase('tr-TR').includes(normalized) ||
+      club.aciklama?.toLocaleLowerCase('tr-TR').includes(normalized)
     );
   }, [clubs, searchTerm]);
 
-  const managedClubs = useMemo(() => clubs.filter(club => club.currentUserRole === 'ADMIN'), [clubs]);
-  const managedClubNames = managedClubs.map(club => club.name).join(', ');
+  const managedClubs = useMemo(() => clubs.filter(club => club.mevcutKullaniciRol === 'YONETICI'), [clubs]);
+  const managedClubNames = managedClubs.map(club => club.ad).join(', ');
 
   const membershipBadge = (club: typeof clubs[number]) => {
-    if (club.currentUserRole === 'ADMIN') {
+    if (club.mevcutKullaniciRol === 'YONETICI') {
       return <span className="px-3 py-1 rounded-full text-xs font-bold text-amber-200 bg-amber-500/10 border border-amber-500/20">Yönetici</span>;
     }
-    if (club.currentUserStatus === 'ACTIVE') {
+    if (club.mevcutKullaniciDurum === 'AKTIF') {
       return <span className="px-3 py-1 rounded-full text-xs font-bold text-emerald-200 bg-emerald-500/10 border border-emerald-500/20">Üyesin</span>;
     }
-    if (club.currentUserStatus === 'REJECTED') {
+    if (club.mevcutKullaniciDurum === 'REDDEDILDI') {
       return <span className="px-3 py-1 rounded-full text-xs font-bold text-red-200 bg-red-500/10 border border-red-500/20">Reddedildi</span>;
     }
     return null;
   };
 
   const membershipButtonLabel = (club: typeof clubs[number]) => {
-    if (club.currentUserRole === 'ADMIN') return 'Yöneticisisin';
-    if (club.currentUserStatus === 'ACTIVE') return 'Üyesiniz';
-    if (club.currentUserStatus === 'REJECTED') return 'Tekrar başvur';
+    if (club.mevcutKullaniciRol === 'YONETICI') return 'Yöneticisisin';
+    if (club.mevcutKullaniciDurum === 'AKTIF') return 'Üyesiniz';
+    if (club.mevcutKullaniciDurum === 'REDDEDILDI') return 'Tekrar başvur';
     return 'Üye ol';
   };
 
@@ -92,7 +92,7 @@ export const ClubsPage = () => {
             <div className="text-xs text-white/40">Aktif kulüp</div>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-            <div className="text-2xl font-black text-white">{clubs.filter(c => c.currentUserMember).length}</div>
+            <div className="text-2xl font-black text-white">{clubs.filter(c => c.mevcutKullaniciUyeMi).length}</div>
             <div className="text-xs text-white/40">Üyelik</div>
           </div>
           {managedClubs.length > 0 && (
@@ -147,30 +147,30 @@ export const ClubsPage = () => {
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 border border-white/15 flex items-center justify-center shrink-0 overflow-hidden">
                     {club.logoUrl ? (
-                      <img src={club.logoUrl} alt={`${club.name} logosu`} className="w-full h-full object-cover" />
+                      <img src={club.logoUrl} alt={`${club.ad} logosu`} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-lg font-black text-white">{clubInitials(club.name) || <Sparkles className="w-6 h-6 text-white" />}</span>
+                      <span className="text-lg font-black text-white">{clubInitials(club.ad) || <Sparkles className="w-6 h-6 text-white" />}</span>
                     )}
                   </div>
                   <div className="min-w-0">
-                    <h2 className="text-xl font-extrabold text-white leading-tight line-clamp-2">{club.name}</h2>
+                    <h2 className="text-xl font-extrabold text-white leading-tight line-clamp-2">{club.ad}</h2>
                   </div>
                 </div>
                 {membershipBadge(club)}
               </div>
 
               <div className="space-y-3 flex-1">
-                <p className="text-sm text-white/45 leading-relaxed line-clamp-4">{club.shortDescription || 'Kısa açıklama bekleniyor.'}</p>
+                <p className="text-sm text-white/45 leading-relaxed line-clamp-4">{club.kisaAciklama || 'Kısa açıklama bekleniyor.'}</p>
               </div>
 
               <div className="flex items-center justify-between text-xs text-white/45">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-indigo-300" />
-                  <span>{club.memberCount} üye</span>
+                  <span>{club.uyeSayisi} üye</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CalendarDays className="w-4 h-4 text-cyan-300" />
-                  <span>{club.eventCount} etkinlik</span>
+                  <span>{club.etkinlikSayisi} etkinlik</span>
                 </div>
               </div>
 
@@ -180,17 +180,17 @@ export const ClubsPage = () => {
                 </Link>
                 {isStudent ? (
                   <button
-                    disabled={isLoading || club.currentUserRole === 'ADMIN'}
-                    onClick={() => handleMembershipClick(club.id, club.name, club.currentUserStatus === 'ACTIVE')}
+                    disabled={isLoading || club.mevcutKullaniciRol === 'YONETICI'}
+                    onClick={() => handleMembershipClick(club.id, club.ad, club.mevcutKullaniciDurum === 'AKTIF')}
                     className={`px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed group ${
-                      club.currentUserRole === 'ADMIN'
+                      club.mevcutKullaniciRol === 'YONETICI'
                         ? 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
-                        : club.currentUserStatus === 'ACTIVE'
+                        : club.mevcutKullaniciDurum === 'AKTIF'
                           ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-200 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-100'
                           : 'gradient-btn'
                     }`}
                   >
-                    {club.currentUserStatus === 'ACTIVE' ? (
+                    {club.mevcutKullaniciDurum === 'AKTIF' ? (
                       <>
                         <span className="group-hover:hidden">Üyesiniz</span>
                         <span className="hidden group-hover:inline">Üyelikten çık</span>
@@ -216,7 +216,7 @@ export const ClubsPage = () => {
                   >
                     <p className="text-sm font-bold text-white mb-1">Üyelikten çıkılsın mı?</p>
                     <p className="text-xs text-white/45 leading-relaxed mb-3">
-                      {club.name} üyeliğin sonlandırılacak.
+                      {club.ad} üyeliğin sonlandırılacak.
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       <button

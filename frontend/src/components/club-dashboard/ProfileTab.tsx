@@ -1,29 +1,29 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { GraduationCap, ImagePlus, Send } from 'lucide-react';
-import type { Club } from '../../store/clubStore';
+import type { Kulup } from '../../store/clubStore';
 import { useClubStore } from '../../store/clubStore';
 import { inputClass, textareaClass, squareImageFile } from './constants';
 
 interface ProfileTabProps {
-  selectedClub: Club;
+  selectedClub: Kulup;
 }
 
 export const ProfileTab = ({ selectedClub }: ProfileTabProps) => {
   const { isLoading, requestClubProfileUpdate } = useClubStore();
 
   const [profileForm, setProfileForm] = useState({
-    name: '',
-    shortDescription: '',
-    vision: '',
+    ad: '',
+    kisaAciklama: '',
+    vizyon: '',
     logoUrl: '',
   });
 
   useEffect(() => {
     setProfileForm({
-      name: selectedClub.name || '',
-      shortDescription: selectedClub.shortDescription || '',
-      vision: selectedClub.vision || selectedClub.description || '',
+      ad: selectedClub.ad || '',
+      kisaAciklama: selectedClub.kisaAciklama || '',
+      vizyon: selectedClub.vizyon || selectedClub.aciklama || '',
       logoUrl: selectedClub.logoUrl || '',
     });
   }, [selectedClub]);
@@ -43,7 +43,7 @@ export const ProfileTab = ({ selectedClub }: ProfileTabProps) => {
     event.preventDefault();
     await requestClubProfileUpdate(selectedClub.id, {
       ...profileForm,
-      description: profileForm.vision,
+      aciklama: profileForm.vizyon,
     });
   };
 
@@ -52,18 +52,18 @@ export const ProfileTab = ({ selectedClub }: ProfileTabProps) => {
       <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-6">
         <div className="flex items-center gap-4">
           <div className="w-24 h-24 rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-white font-black shadow-lg shrink-0">
-            {selectedClub.logoUrl ? <img src={selectedClub.logoUrl} alt={selectedClub.name} className="w-full h-full object-cover" /> : <span className="text-2xl">{selectedClub.name.slice(0, 2).toLocaleUpperCase('tr-TR')}</span>}
+            {selectedClub.logoUrl ? <img src={selectedClub.logoUrl} alt={selectedClub.ad} className="w-full h-full object-cover" /> : <span className="text-2xl">{selectedClub.ad.slice(0, 2).toLocaleUpperCase('tr-TR')}</span>}
           </div>
           <div>
-            <h2 className="text-2xl font-black text-white">{selectedClub.name}</h2>
-            <p className="text-sm text-white/40">{selectedClub.shortDescription}</p>
+            <h2 className="text-2xl font-black text-white">{selectedClub.ad}</h2>
+            <p className="text-sm text-white/40">{selectedClub.kisaAciklama}</p>
           </div>
         </div>
         <dl className="mt-6 space-y-4 text-sm">
-          <div className="flex justify-between gap-4"><dt className="text-white/35">Üye sayısı</dt><dd className="font-bold text-white">{selectedClub.memberCount}</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-white/35">Etkinlik sayısı</dt><dd className="font-bold text-white">{selectedClub.eventCount}</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-white/35">Danışman</dt><dd className="font-bold text-white text-right">{selectedClub.advisorFullName || 'Bilgi bekleniyor'}</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-white/35">Durum</dt><dd className="font-bold text-white">{selectedClub.active ? 'Aktif' : 'Pasif'}</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-white/35">Üye sayısı</dt><dd className="font-bold text-white">{selectedClub.uyeSayisi}</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-white/35">Etkinlik sayısı</dt><dd className="font-bold text-white">{selectedClub.etkinlikSayisi}</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-white/35">Danışman</dt><dd className="font-bold text-white text-right">{selectedClub.danismanAdSoyad || 'Bilgi bekleniyor'}</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-white/35">Durum</dt><dd className="font-bold text-white">{selectedClub.aktif ? 'Aktif' : 'Pasif'}</dd></div>
         </dl>
       </div>
 
@@ -73,7 +73,7 @@ export const ProfileTab = ({ selectedClub }: ProfileTabProps) => {
           <p className="text-sm text-white/40 mt-1">Bu form kulübü doğrudan değiştirmez; SKS yönetimine değerlendirme bildirimi gönderir.</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-center">
-          <input value={profileForm.name} onChange={e => setProfileForm(prev => ({ ...prev, name: e.target.value }))} className={inputClass} placeholder="Kulüp adı" />
+          <input value={profileForm.ad} onChange={e => setProfileForm(prev => ({ ...prev, ad: e.target.value }))} className={inputClass} placeholder="Kulüp adı" />
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 overflow-hidden flex items-center justify-center border border-white/10 shrink-0">
               {profileForm.logoUrl ? (
@@ -90,8 +90,8 @@ export const ProfileTab = ({ selectedClub }: ProfileTabProps) => {
             />
           </div>
         </div>
-        <textarea value={profileForm.shortDescription} onChange={e => setProfileForm(prev => ({ ...prev, shortDescription: e.target.value }))} className={textareaClass} placeholder="Kısa açıklama" />
-        <textarea value={profileForm.vision} onChange={e => setProfileForm(prev => ({ ...prev, vision: e.target.value }))} className={`${textareaClass} min-h-40`} placeholder="Vizyon" />
+        <textarea value={profileForm.kisaAciklama} onChange={e => setProfileForm(prev => ({ ...prev, kisaAciklama: e.target.value }))} className={textareaClass} placeholder="Kısa açıklama" />
+        <textarea value={profileForm.vizyon} onChange={e => setProfileForm(prev => ({ ...prev, vizyon: e.target.value }))} className={`${textareaClass} min-h-40`} placeholder="Vizyon" />
 
         <section className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 space-y-2 mt-4">
           <div className="flex items-center gap-2 text-sm font-bold text-white">
@@ -99,7 +99,7 @@ export const ProfileTab = ({ selectedClub }: ProfileTabProps) => {
             Danışman Akademisyen
           </div>
           <p className="text-sm font-bold text-white">
-            {[selectedClub.advisorTitle, selectedClub.advisorFullName].filter(Boolean).join(' ') || 'Bilgi bekleniyor'}
+            {[selectedClub.danismanUnvani, selectedClub.danismanAdSoyad].filter(Boolean).join(' ') || 'Bilgi bekleniyor'}
           </p>
           <p className="text-xs text-white/40">
             Danışman değişikliği yalnızca SKS yöneticileri tarafından yapılır.

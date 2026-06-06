@@ -74,17 +74,17 @@ export const ClubDetailPage = () => {
     );
   }
 
-  const isManager = selectedClub.currentUserRole === 'ADMIN';
-  const vision = selectedClub.vision || selectedClub.description;
+  const isManager = selectedClub.mevcutKullaniciRol === 'YONETICI';
+  const vision = selectedClub.vizyon || selectedClub.aciklama;
   const membershipButtonLabel =
-    selectedClub.currentUserRole === 'ADMIN'
+    selectedClub.mevcutKullaniciRol === 'YONETICI'
       ? 'Yöneticisisin'
-      : selectedClub.currentUserStatus === 'ACTIVE'
+      : selectedClub.mevcutKullaniciDurum === 'AKTIF'
           ? 'Üyesiniz'
-          : selectedClub.currentUserStatus === 'REJECTED'
+          : selectedClub.mevcutKullaniciDurum === 'REDDEDILDI'
               ? 'Tekrar başvur'
               : 'Üye ol';
-  const initials = selectedClub.name
+  const initials = selectedClub.ad
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
@@ -93,7 +93,7 @@ export const ClubDetailPage = () => {
     .toLocaleUpperCase('tr-TR');
 
   const handleMembershipClick = async () => {
-    if (selectedClub.currentUserStatus !== 'ACTIVE') {
+    if (selectedClub.mevcutKullaniciDurum !== 'AKTIF') {
       await joinClub(selectedClub.id);
       return;
     }
@@ -165,17 +165,17 @@ export const ClubDetailPage = () => {
             <div className="flex flex-col sm:flex-row sm:items-center gap-6">
               <div className="w-24 h-24 shrink-0 rounded-3xl bg-gradient-to-br from-indigo-500 to-cyan-500 border border-white/15 shadow-lg overflow-hidden flex items-center justify-center">
                 {selectedClub.logoUrl ? (
-                  <img src={selectedClub.logoUrl} alt={`${selectedClub.name} logosu`} className="w-full h-full object-cover" />
+                  <img src={selectedClub.logoUrl} alt={`${selectedClub.ad} logosu`} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-3xl font-black text-white">{initials}</span>
                 )}
               </div>
               <div className="space-y-3">
-                <h1 className="text-4xl sm:text-5xl font-black text-white leading-tight">{selectedClub.name}</h1>
+                <h1 className="text-4xl sm:text-5xl font-black text-white leading-tight">{selectedClub.ad}</h1>
               </div>
             </div>
-            {selectedClub.shortDescription && (
-              <p className="text-lg text-indigo-100/75 leading-relaxed">{selectedClub.shortDescription}</p>
+            {selectedClub.kisaAciklama && (
+              <p className="text-lg text-indigo-100/75 leading-relaxed">{selectedClub.kisaAciklama}</p>
             )}
             <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
               <div className="text-xs font-bold uppercase tracking-wide text-indigo-200/80 mb-3">Vizyon</div>
@@ -187,25 +187,25 @@ export const ClubDetailPage = () => {
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-white/40">Üye sayısı</span>
-                <span className="text-2xl font-black text-white">{selectedClub.memberCount}</span>
+                <span className="text-2xl font-black text-white">{selectedClub.uyeSayisi}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-white/40">Etkinlik sayısı</span>
-                <span className="text-2xl font-black text-white">{selectedClub.eventCount}</span>
+                <span className="text-2xl font-black text-white">{selectedClub.etkinlikSayisi}</span>
               </div>
               {isStudent ? (
                 <button
-                  disabled={isLoading || selectedClub.currentUserRole === 'ADMIN'}
+                  disabled={isLoading || selectedClub.mevcutKullaniciRol === 'YONETICI'}
                   onClick={handleMembershipClick}
                   className={`w-full py-3 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-45 disabled:cursor-not-allowed group ${
-                    selectedClub.currentUserRole === 'ADMIN'
+                    selectedClub.mevcutKullaniciRol === 'YONETICI'
                       ? 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
-                      : selectedClub.currentUserStatus === 'ACTIVE'
+                      : selectedClub.mevcutKullaniciDurum === 'AKTIF'
                         ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-200 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-100'
                         : 'gradient-btn'
                   }`}
                 >
-                  {selectedClub.currentUserStatus === 'ACTIVE' ? (
+                  {selectedClub.mevcutKullaniciDurum === 'AKTIF' ? (
                     <>
                       <span className="group-hover:hidden">Üyesiniz</span>
                       <span className="hidden group-hover:inline">Üyelikten çık</span>
@@ -229,7 +229,7 @@ export const ClubDetailPage = () => {
                   >
                     <p className="text-sm font-bold text-white mb-1">Üyelikten çıkılsın mı?</p>
                     <p className="text-xs text-white/45 leading-relaxed mb-3">
-                      {selectedClub.name} üyeliğin sonlandırılacak.
+                      {selectedClub.ad} üyeliğin sonlandırılacak.
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       <button
@@ -259,17 +259,17 @@ export const ClubDetailPage = () => {
                 <UserRound className="w-5 h-5 text-indigo-300 shrink-0 mt-0.5" />
                 <div>
                   <div className="text-xs text-white/35 mb-1">Kulüp Başkanı</div>
-                  <div className="text-sm font-bold text-white">{selectedClub.presidentFullName || 'Bilgi bekleniyor'}</div>
-                  <div className="text-xs text-white/35 mt-1 break-all">{selectedClub.presidentEmail || 'E-posta bekleniyor'}</div>
+                  <div className="text-sm font-bold text-white">{selectedClub.baskanAdSoyad || 'Bilgi bekleniyor'}</div>
+                  <div className="text-xs text-white/35 mt-1 break-all">{selectedClub.baskanEposta || 'E-posta bekleniyor'}</div>
                 </div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 flex gap-3">
                 <GraduationCap className="w-5 h-5 text-purple-300 shrink-0 mt-0.5" />
                 <div>
                   <div className="text-xs text-white/35 mb-1">Danışman Akademisyen</div>
-                  <div className="text-sm font-bold text-white">{selectedClub.advisorFullName || 'Bilgi bekleniyor'}</div>
-                  <div className="text-xs text-white/35 mt-1">{selectedClub.advisorDepartment || 'Birim bilgisi bekleniyor'}</div>
-                  <div className="text-xs text-white/35 mt-1 break-all">{selectedClub.advisorEmail || 'E-posta bekleniyor'}</div>
+                  <div className="text-sm font-bold text-white">{selectedClub.danismanAdSoyad || 'Bilgi bekleniyor'}</div>
+                  <div className="text-xs text-white/35 mt-1">{selectedClub.danismanBolumu || 'Birim bilgisi bekleniyor'}</div>
+                  <div className="text-xs text-white/35 mt-1 break-all">{selectedClub.danismanEposta || 'E-posta bekleniyor'}</div>
                 </div>
               </div>
             </div>

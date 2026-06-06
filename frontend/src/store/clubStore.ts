@@ -2,119 +2,120 @@ import { create } from 'zustand';
 import { api } from '../lib/api';
 import { type Event, mapEventResponse } from './eventStore';
 
-export interface Club {
+/** Backend (event-service) KulupYaniti ile birebir — çeviri (mapper) yoktur. */
+export interface Kulup {
   id: string;
-  name: string;
-  shortDescription?: string;
-  vision?: string;
-  description: string;
-  adminUserId: string;
-  presidentFullName?: string;
-  presidentEmail?: string;
+  ad: string;
+  kisaAciklama?: string;
+  vizyon?: string;
+  aciklama: string;
+  yoneticiKullaniciId: string;
+  baskanAdSoyad?: string;
+  baskanEposta?: string;
   logoUrl?: string;
-  advisorAcademicStaffId?: string;
-  advisorTitle?: string;
-  advisorFullName?: string;
-  advisorEmail?: string;
-  advisorDepartment?: string;
-  active: boolean;
-  memberCount: number;
-  eventCount: number;
-  currentUserMember: boolean;
-  currentUserRole: 'MEMBER' | 'ADMIN' | null;
-  currentUserStatus: 'ACTIVE' | 'REJECTED' | null;
-  requiresApproval?: boolean;
+  danismanAkademikKadroId?: string;
+  danismanUnvani?: string;
+  danismanAdSoyad?: string;
+  danismanEposta?: string;
+  danismanBolumu?: string;
+  aktif: boolean;
+  uyeSayisi: number;
+  etkinlikSayisi: number;
+  mevcutKullaniciUyeMi: boolean;
+  mevcutKullaniciRol: 'YONETICI' | 'UYE' | null;
+  mevcutKullaniciDurum: 'AKTIF' | 'REDDEDILDI' | null;
+  onayGerektirir?: boolean;
 }
 
-export interface AuditLog {
+export interface DenetimGunlugu {
   id: string;
-  entityType: 'CLUB' | 'EVENT';
-  entityId: string;
-  action: string;
-  actorId: string;
-  actorRole?: string;
-  message: string;
-  metadata?: string;
-  createdAt: string;
+  varlikTuru: 'KULUP' | 'ETKINLIK';
+  varlikId: string;
+  islem: string;
+  islemYapanId: string;
+  islemYapanRol?: string;
+  mesaj: string;
+  metaVeri?: string;
+  olusturulmaTarihi: string;
 }
 
-export interface ClubHealth {
-  clubId: string;
-  clubName: string;
-  active: boolean;
-  memberCount: number;
-  activeEventCount: number;
-  upcomingEventCount: number;
-  pendingEventCount: number;
-  pendingProfileRequestCount: number;
-  lastEventAt?: string;
-  lastAnnouncementAt?: string;
-  attendanceAverage: number;
-  healthStatus: 'Sağlıklı' | 'Takip Edilmeli' | 'Riskli' | 'Pasifleşmeye Aday';
-  watchlisted: boolean;
-  latestNote?: string;
-  latestNoteBy?: string;
-  latestNoteAt?: string;
+export interface KulupSaglik {
+  kulupId: string;
+  kulupAdi: string;
+  aktif: boolean;
+  uyeSayisi: number;
+  aktifEtkinlikSayisi: number;
+  gelecekEtkinlikSayisi: number;
+  onayBekleyenEtkinlikSayisi: number;
+  onayBekleyenProfilTalebiSayisi: number;
+  sonEtkinlikTarihi?: string;
+  sonDuyuruTarihi?: string;
+  katilimOrtalamasi: number;
+  saglikDurumu: 'Sağlıklı' | 'Takip Edilmeli' | 'Riskli' | 'Pasifleşmeye Aday';
+  gozetimAltinda: boolean;
+  sonNot?: string;
+  sonNotuYazan?: string;
+  sonNotTarihi?: string;
 }
 
-export interface ClubAnnouncement {
+export interface KulupDuyurusu {
   id: string;
-  clubId: string;
-  clubName: string;
-  title: string;
-  message: string;
-  linkUrl?: string;
-  linkLabel?: string;
-  imageUrl?: string;
-  createdByUserId: string;
-  createdAt: string;
+  kulupId: string;
+  kulupAdi: string;
+  baslik: string;
+  mesaj: string;
+  baglantiUrl?: string;
+  baglantiEtiketi?: string;
+  resimUrl?: string;
+  olusturanKullaniciId: string;
+  olusturulmaTarihi: string;
 }
 
-export interface ClubMember {
+export interface KulupUyesi {
   id: string;
-  clubId: string;
-  userId: string;
-  studentId?: string;
-  fullName: string;
-  department?: string;
-  role: string;
-  status: string;
-  joinedAt: string;
+  kulupId: string;
+  kullaniciId: string;
+  adSoyad: string;
+  ogrenciNumarasi?: string;
+  bolum?: string;
+  rol: 'YONETICI' | 'UYE' | string;
+  durum: string;
+  katilmaTarihi: string;
 }
 
-export interface ClubProfileChangeRequest {
+export interface KulupProfilDegisiklikIstegi {
   id: string;
-  club: Club;
-  requestedBy: string;
-  name: string;
-  shortDescription: string;
-  vision: string;
+  kulup: Kulup;
+  talepEden: string;
+  ad: string;
+  kisaAciklama: string;
+  vizyon: string;
   logoUrl?: string;
-  status: 'PENDING' | 'APPROVED' | 'REVISION_REQUESTED' | 'REJECTED';
-  feedback?: string;
-  reviewedBy?: string;
-  reviewedAt?: string;
-  createdAt: string;
-  updatedAt: string;
+  durum: 'BEKLEMEDE' | 'ONAYLANDI' | 'REVIZYON_TALEP_EDILDI' | 'REDDEDILDI';
+  geriBildirim?: string;
+  inceleyen?: string;
+  incelemeTarihi?: string;
+  olusturulmaTarihi: string;
+  guncellenmeTarihi: string;
 }
 
-type ClubProfileUpdate = Pick<Club, 'name' | 'shortDescription' | 'vision' | 'description' | 'logoUrl' | 'advisorAcademicStaffId' | 'advisorTitle' | 'advisorFullName' | 'advisorEmail' | 'advisorDepartment' | 'requiresApproval'> & {
-  adminUserId?: string;
-  presidentFullName?: string;
-  presidentEmail?: string;
+type KulupProfilGuncelleme = Pick<Kulup, 'ad' | 'kisaAciklama' | 'vizyon' | 'aciklama' | 'logoUrl' | 'danismanAkademikKadroId' | 'danismanUnvani' | 'danismanAdSoyad' | 'danismanEposta' | 'danismanBolumu' | 'onayGerektirir'> & {
+  yoneticiKullaniciId?: string;
+  baskanAdSoyad?: string;
+  baskanEposta?: string;
 };
-type ClubProfileUpdateRequest = Pick<Club, 'name' | 'shortDescription' | 'vision' | 'description' | 'logoUrl'>;
+type KulupProfilGuncellemeTalebi = Pick<Kulup, 'ad' | 'kisaAciklama' | 'vizyon' | 'aciklama' | 'logoUrl'>;
 
 interface ClubState {
-  clubs: Club[];
-  managedClubs: Club[];
-  selectedClub: Club | null;
+  clubs: Kulup[];
+  managedClubs: Kulup[];
+  selectedClub: Kulup | null;
   clubEvents: Event[];
-  clubMembers: ClubMember[];
-  clubAnnouncements: ClubAnnouncement[];
-  profileChangeRequests: ClubProfileChangeRequest[];
-  clubHealth: ClubHealth[];
-  clubAuditLogsByClub: Record<string, AuditLog[]>;
+  clubMembers: KulupUyesi[];
+  clubAnnouncements: KulupDuyurusu[];
+  profileChangeRequests: KulupProfilDegisiklikIstegi[];
+  clubHealth: KulupSaglik[];
+  clubAuditLogsByClub: Record<string, DenetimGunlugu[]>;
   isLoading: boolean;
   error: string | null;
   successMessage: string | null;
@@ -126,16 +127,16 @@ interface ClubState {
   leaveClub: (clubId: string) => Promise<boolean>;
   fetchAdminClubs: () => Promise<void>;
   fetchManagedClubs: () => Promise<void>;
-  createClub: (data: Partial<Club> & { adminUserId: string; shortDescription: string; vision: string; advisorAcademicStaffId?: string; advisorTitle?: string; advisorFullName: string; advisorEmail: string; advisorDepartment: string }) => Promise<boolean>;
-  updateClubProfile: (clubId: string, data: ClubProfileUpdate) => Promise<boolean>;
-  requestClubProfileUpdate: (clubId: string, data: ClubProfileUpdateRequest) => Promise<boolean>;
+  createClub: (data: Partial<Kulup> & { yoneticiKullaniciId: string; kisaAciklama: string; vizyon: string; danismanAkademikKadroId?: string; danismanUnvani?: string; danismanAdSoyad: string; danismanEposta: string; danismanBolumu: string }) => Promise<boolean>;
+  updateClubProfile: (clubId: string, data: KulupProfilGuncelleme) => Promise<boolean>;
+  requestClubProfileUpdate: (clubId: string, data: KulupProfilGuncellemeTalebi) => Promise<boolean>;
   fetchProfileChangeRequests: () => Promise<void>;
   approveProfileChangeRequest: (requestId: string) => Promise<boolean>;
   requestProfileChangeRevision: (requestId: string, feedback: string) => Promise<boolean>;
   rejectProfileChangeRequest: (requestId: string, feedback: string) => Promise<boolean>;
-  createClubAnnouncement: (clubId: string, data: { title: string; message: string; linkUrl?: string; linkLabel?: string; imageUrl?: string }) => Promise<boolean>;
+  createClubAnnouncement: (clubId: string, data: { baslik: string; mesaj: string; baglantiUrl?: string; baglantiEtiketi?: string; resimUrl?: string }) => Promise<boolean>;
   changeClubStatus: (clubId: string, active: boolean) => Promise<boolean>;
-  assignPresident: (clubId: string, data: { studentId: string; fullName: string; email: string }) => Promise<boolean>;
+  assignPresident: (clubId: string, data: { ogrenciId: string; adSoyad: string; eposta: string }) => Promise<boolean>;
   deleteClub: (clubId: string) => Promise<boolean>;
   fetchClubMembers: (clubId: string) => Promise<void>;
   updateMemberRole: (clubId: string, userId: string, role: string) => Promise<boolean>;
@@ -157,113 +158,14 @@ const getErrorMessage = (err: any, fallback: string) => {
   return err?.response?.data?.message || err?.message || fallback;
 };
 
-const mapClubResponse = (data: any): Club => {
-  return {
-    id: data.id,
-    name: data.ad,
-    shortDescription: data.kisaAciklama,
-    vision: data.vizyon,
-    description: data.aciklama,
-    adminUserId: data.yoneticiKullaniciId,
-    presidentFullName: data.baskanAdSoyad,
-    presidentEmail: data.baskanEposta,
-    logoUrl: data.logoUrl,
-    advisorAcademicStaffId: data.danismanAkademikKadroId,
-    advisorTitle: data.danismanUnvani,
-    advisorFullName: data.danismanAdSoyad,
-    advisorEmail: data.danismanEposta,
-    advisorDepartment: data.danismanBolumu,
-    active: data.aktif,
-    requiresApproval: data.onayGerektirir,
-    memberCount: Number(data.uyeSayisi || 0),
-    eventCount: Number(data.etkinlikSayisi || 0),
-    currentUserMember: data.mevcutKullaniciUyeMi,
-    currentUserRole: data.mevcutKullaniciRol === 'YONETICI' ? 'ADMIN' : (data.mevcutKullaniciRol === 'UYE' ? 'MEMBER' : data.mevcutKullaniciRol),
-    currentUserStatus: data.mevcutKullaniciDurum === 'AKTIF' ? 'ACTIVE' : (data.mevcutKullaniciDurum === 'REDDEDILDI' ? 'REJECTED' : data.mevcutKullaniciDurum)
-  };
-};
-
-const mapClubProfileChangeRequestResponse = (data: any): ClubProfileChangeRequest => {
-  return {
-    id: data.id,
-    club: mapClubResponse(data.kulup),
-    requestedBy: data.talepEden,
-    name: data.ad,
-    shortDescription: data.kisaAciklama,
-    vision: data.vizyon,
-    logoUrl: data.logoUrl,
-    status: data.durum,
-    feedback: data.geriBildirim,
-    reviewedBy: data.inceleyen,
-    reviewedAt: data.incelemeTarihi,
-    createdAt: data.olusturulmaTarihi,
-    updatedAt: data.guncellenmeTarihi
-  };
-};
-
-const mapClubMemberResponse = (data: any): ClubMember => {
-  return {
-    id: data.id,
-    clubId: data.kulupId,
-    userId: data.kullaniciId,
-    fullName: data.adSoyad,
-    role: data.rol === 'YONETICI' ? 'ADMIN' : (data.rol === 'UYE' ? 'MEMBER' : data.rol),
-    status: data.durum,
-    joinedAt: data.katilmaTarihi
-  };
-};
-
-const mapClubHealthResponse = (data: any): ClubHealth => {
-  return {
-    clubId: data.kulupId,
-    clubName: data.kulupAdi,
-    active: data.aktif,
-    memberCount: Number(data.uyeSayisi || 0),
-    activeEventCount: Number(data.aktifEtkinlikSayisi || 0),
-    upcomingEventCount: Number(data.gelecekEtkinlikSayisi || 0),
-    pendingEventCount: Number(data.onayBekleyenEtkinlikSayisi || 0),
-    pendingProfileRequestCount: Number(data.onayBekleyenProfilTalebiSayisi || 0),
-    lastEventAt: data.sonEtkinlikTarihi,
-    lastAnnouncementAt: data.sonDuyuruTarihi,
-    attendanceAverage: Number(data.katilimOrtalamasi || 0),
-    healthStatus: data.saglikDurumu,
-    watchlisted: data.gozetimAltinda,
-    latestNote: data.sonNot,
-    latestNoteBy: data.sonNotuYazan,
-    latestNoteAt: data.sonNotTarihi
-  };
-};
-
-const mapClubAnnouncementResponse = (data: any): ClubAnnouncement => {
-  return {
-    id: data.id,
-    clubId: data.kulupId,
-    clubName: data.kulupAdi,
-    title: data.baslik,
-    message: data.mesaj,
-    linkUrl: data.baglantiUrl,
-    linkLabel: data.baglantiEtiketi,
-    imageUrl: data.resimUrl,
-    createdByUserId: data.olusturanKullaniciId,
-    createdAt: data.olusturulmaTarihi
-  };
-};
-
-const mapAuditLogResponse = (data: any): AuditLog => {
-  let entityType: 'CLUB' | 'EVENT' = 'CLUB';
-  if (data.varlikTuru === 'ETKINLIK') entityType = 'EVENT';
-  return {
-    id: data.id,
-    entityType,
-    entityId: data.varlikId,
-    action: data.islem,
-    actorId: data.islemYapanId,
-    actorRole: data.islemYapanRol,
-    message: data.mesaj,
-    metadata: data.metaVeri,
-    createdAt: data.olusturulmaTarihi
-  };
-};
+// API (event-service) yanıtları artık tiplerle birebir aynı; çeviri yapılmaz.
+// Bu ince passthrough'lar yalnızca res.data'ya doğru tipi verir.
+const mapClubResponse = (data: any): Kulup => data;
+const mapClubProfileChangeRequestResponse = (data: any): KulupProfilDegisiklikIstegi => data;
+const mapClubMemberResponse = (data: any): KulupUyesi => data;
+const mapClubHealthResponse = (data: any): KulupSaglik => data;
+const mapClubAnnouncementResponse = (data: any): KulupDuyurusu => data;
+const mapAuditLogResponse = (data: any): DenetimGunlugu => data;
 
 export const useClubStore = create<ClubState>((set, get) => ({
   clubs: [],
@@ -363,23 +265,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   createClub: async (data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      const payload = {
-        ad: data.name,
-        kisaAciklama: data.shortDescription,
-        vizyon: data.vision,
-        aciklama: data.description,
-        yoneticiKullaniciId: data.adminUserId,
-        baskanAdSoyad: data.presidentFullName,
-        baskanEposta: data.presidentEmail,
-        logoUrl: data.logoUrl,
-        danismanAkademikKadroId: data.advisorAcademicStaffId,
-        danismanUnvani: data.advisorTitle,
-        danismanAdSoyad: data.advisorFullName,
-        danismanEposta: data.advisorEmail,
-        danismanBolumu: data.advisorDepartment,
-        onayGerektirir: data.requiresApproval
-      };
-      await api.post('/kulupler', payload);
+      await api.post('/kulupler', data);
       set({ successMessage: 'Kulüp oluşturuldu.', isLoading: false });
       await get().fetchAdminClubs();
       return true;
@@ -392,23 +278,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   updateClubProfile: async (clubId, data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      const payload = {
-        ad: data.name,
-        kisaAciklama: data.shortDescription,
-        vizyon: data.vision,
-        aciklama: data.description,
-        logoUrl: data.logoUrl,
-        yoneticiKullaniciId: data.adminUserId,
-        baskanAdSoyad: data.presidentFullName,
-        baskanEposta: data.presidentEmail,
-        danismanAkademikKadroId: data.advisorAcademicStaffId,
-        danismanUnvani: data.advisorTitle,
-        danismanAdSoyad: data.advisorFullName,
-        danismanEposta: data.advisorEmail,
-        danismanBolumu: data.advisorDepartment,
-        onayGerektirir: data.requiresApproval
-      };
-      await api.patch(`/kulupler/${clubId}/profil`, payload);
+      await api.patch(`/kulupler/${clubId}/profil`, data);
       set({ successMessage: 'Kulüp profil bilgileri güncellendi.', isLoading: false });
       await get().fetchAdminClubs();
       return true;
@@ -421,14 +291,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   requestClubProfileUpdate: async (clubId, data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      const payload = {
-        ad: data.name,
-        kisaAciklama: data.shortDescription,
-        vizyon: data.vision,
-        aciklama: data.description,
-        logoUrl: data.logoUrl
-      };
-      await api.post(`/kulupler/${clubId}/profil-guncelleme-talepleri`, payload);
+      await api.post(`/kulupler/${clubId}/profil-guncelleme-talepleri`, data);
       set({ successMessage: 'Profil güncelleme talebi SKS yönetimine iletildi.', isLoading: false });
       await get().fetchManagedClubs();
       return true;
@@ -491,14 +354,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   createClubAnnouncement: async (clubId, data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      const payload = {
-        baslik: data.title,
-        mesaj: data.message,
-        baglantiUrl: data.linkUrl,
-        baglantiEtiketi: data.linkLabel,
-        resimUrl: data.imageUrl
-      };
-      await api.post(`/kulupler/${clubId}/duyurular`, payload);
+      await api.post(`/kulupler/${clubId}/duyurular`, data);
       set({ successMessage: 'Duyuru kulüp üyelerine gönderildi.', isLoading: false });
       return true;
     } catch (err: any) {
@@ -523,12 +379,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
   assignPresident: async (clubId, data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      const payload = {
-        ogrenciId: data.studentId,
-        adSoyad: data.fullName,
-        eposta: data.email
-      };
-      await api.patch(`/kulupler/${clubId}/baskan`, payload);
+      await api.patch(`/kulupler/${clubId}/baskan`, data);
       set({ successMessage: 'Kulüp başkanı güncellendi.', isLoading: false });
       await get().fetchAdminClubs();
       return true;
@@ -555,23 +406,23 @@ export const useClubStore = create<ClubState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get(`/kulupler/${clubId}/uyeler`);
-      const members: ClubMember[] = response.data.map(mapClubMemberResponse);
+      const members: KulupUyesi[] = response.data.map(mapClubMemberResponse);
 
       // Toplu kullanıcı bilgisi çek (ad, öğrenci no, bölüm)
       if (members.length > 0) {
         try {
-          const userIds = members.map(m => m.userId);
+          const userIds = members.map(m => m.kullaniciId);
           const profileRes = await api.post('/kullanicilar/toplu', { kullaniciIdleri: userIds });
           const profileMap = new Map<string, any>();
           (profileRes.data || []).forEach((p: any) => profileMap.set(p.id, p));
 
           const enriched = members.map(m => {
-            const profile = profileMap.get(m.userId);
+            const profile = profileMap.get(m.kullaniciId);
             return {
               ...m,
-              fullName: profile?.tamAd || m.fullName || 'Bilinmiyor',
-              studentId: profile?.ogrenciNumarasi || m.studentId || m.userId,
-              department: profile?.bolum || m.department || '',
+              adSoyad: profile?.tamAd || m.adSoyad || 'Bilinmiyor',
+              ogrenciNumarasi: profile?.ogrenciNumarasi || m.ogrenciNumarasi || m.kullaniciId,
+              bolum: profile?.bolum || m.bolum || '',
             };
           });
           set({ clubMembers: enriched, isLoading: false });
@@ -592,7 +443,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
     try {
       await api.patch(`/kulupler/${clubId}/uyeler/${userId}/rol`, { rol: role });
       const { clubMembers } = get();
-      set({ clubMembers: clubMembers.map(m => m.userId === userId ? { ...m, role } : m), isLoading: false });
+      set({ clubMembers: clubMembers.map(m => m.kullaniciId === userId ? { ...m, rol: role } : m), isLoading: false });
       return true;
     } catch (error: any) {
       set({ error: getErrorMessage(error, 'Rol güncellenemedi'), isLoading: false });
@@ -605,7 +456,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
     try {
       await api.patch(`/kulupler/${clubId}/uyeler/${userId}/durum`, { durum: status });
       const { clubMembers } = get();
-      set({ clubMembers: clubMembers.map(m => m.userId === userId ? { ...m, status } : m), isLoading: false });
+      set({ clubMembers: clubMembers.map(m => m.kullaniciId === userId ? { ...m, durum: status } : m), isLoading: false });
       return true;
     } catch (error: any) {
       set({ error: getErrorMessage(error, 'Durum güncellenemedi'), isLoading: false });
@@ -618,7 +469,7 @@ export const useClubStore = create<ClubState>((set, get) => ({
     try {
       await api.delete(`/kulupler/${clubId}/uyeler/${userId}`);
       const { clubMembers } = get();
-      set({ clubMembers: clubMembers.filter(m => m.userId !== userId), isLoading: false });
+      set({ clubMembers: clubMembers.filter(m => m.kullaniciId !== userId), isLoading: false });
       return true;
     } catch (error: any) {
       set({ error: getErrorMessage(error, 'Üye silinemedi'), isLoading: false });
