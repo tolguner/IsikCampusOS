@@ -1,25 +1,26 @@
 import { create } from 'zustand';
 import { api, authApi } from '../lib/api';
 
-export interface User {
+/** Backend (auth-service) alanlarıyla birebir — çeviri (mapper) yoktur. */
+export interface Kullanici {
   id: string;
-  email: string;
-  roles: string;
-  fullName: string;
-  firstName?: string;
-  lastName?: string;
-  faculty?: string;
-  department?: string;
-  enrollmentYear?: number;
-  studentNumber: string | null;
-  nationalIdMasked?: string;
-  mustChangePassword: boolean;
-  emailVerified: boolean;
-  status: string;
+  eposta: string;
+  roller: string;
+  tamAd: string;
+  ad?: string;
+  soyad?: string;
+  fakulte?: string;
+  bolum?: string;
+  kayitYili?: number;
+  ogrenciNumarasi: string | null;
+  tcKimlikMaskeli?: string;
+  sifreDegistirmeli: boolean;
+  epostaDogrulandi: boolean;
+  durum: string;
 }
 
 interface AuthState {
-  user: User | null;
+  user: Kullanici | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -34,10 +35,10 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
   clearSuccess: () => void;
-  updateUser: (updates: Partial<User>) => void;
+  updateUser: (updates: Partial<Kullanici>) => void;
 }
 
-const readStoredUser = (): User | null => {
+const readStoredUser = (): Kullanici | null => {
   try {
     const storedUser = localStorage.getItem('user');
     return storedUser ? JSON.parse(storedUser) : null;
@@ -47,7 +48,7 @@ const readStoredUser = (): User | null => {
   }
 };
 
-const persistAuth = (token: string, user: User) => {
+const persistAuth = (token: string, user: Kullanici) => {
   try {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
@@ -79,39 +80,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         sifre: normalizedPassword,
       });
 
-      const {
-        token,
-        kullaniciId,
-        eposta,
-        roller,
-        tamAd,
-        ad,
-        soyad,
-        fakulte,
-        bolum,
-        kayitYili,
-        ogrenciNumarasi,
-        tcKimlikMaskeli,
-        sifreDegistirmeli,
-        epostaDogrulandi,
-        durum,
-      } = res.data;
+      const { token, kullaniciId, eposta } = res.data;
 
-      const user: User = {
+      const user: Kullanici = {
         id: kullaniciId,
-        email: eposta || normalizedEmail,
-        roles: roller,
-        fullName: tamAd,
-        firstName: ad,
-        lastName: soyad,
-        faculty: fakulte,
-        department: bolum,
-        enrollmentYear: kayitYili,
-        studentNumber: ogrenciNumarasi,
-        nationalIdMasked: tcKimlikMaskeli,
-        mustChangePassword: sifreDegistirmeli,
-        emailVerified: epostaDogrulandi,
-        status: durum,
+        eposta: eposta || normalizedEmail,
+        roller: res.data.roller,
+        tamAd: res.data.tamAd,
+        ad: res.data.ad,
+        soyad: res.data.soyad,
+        fakulte: res.data.fakulte,
+        bolum: res.data.bolum,
+        kayitYili: res.data.kayitYili,
+        ogrenciNumarasi: res.data.ogrenciNumarasi,
+        tcKimlikMaskeli: res.data.tcKimlikMaskeli,
+        sifreDegistirmeli: res.data.sifreDegistirmeli,
+        epostaDogrulandi: res.data.epostaDogrulandi,
+        durum: res.data.durum,
       };
 
       set({ user, token, isAuthenticated: true, isLoading: false, error: null });
@@ -136,7 +121,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       const user = get().user;
       if (user) {
-        const updated = { ...user, mustChangePassword: false };
+        const updated = { ...user, sifreDegistirmeli: false };
         localStorage.setItem('user', JSON.stringify(updated));
         set({ user: updated, isLoading: false, successMessage: 'Şifreniz başarıyla değiştirildi.' });
       }
@@ -184,7 +169,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       const user = get().user;
       if (user) {
-        const updated = { ...user, emailVerified: true };
+        const updated = { ...user, epostaDogrulandi: true };
         localStorage.setItem('user', JSON.stringify(updated));
         set({ user: updated, isLoading: false, successMessage: 'E-posta adresiniz doğrulandı.' });
       }

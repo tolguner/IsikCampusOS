@@ -182,7 +182,7 @@ export const SksDashboard = () => {
   const [revisionTextByProfileRequest, setRevisionTextByProfileRequest] = useState<Record<string, string>>({});
   const [healthMessageByClub, setHealthMessageByClub] = useState<Record<string, string>>({});
   const [healthLogSearchByClub, setHealthLogSearchByClub] = useState<Record<string, string>>({});
-  const announcementSenderName = currentUser?.fullName || currentUser?.email || 'SKS Yönetimi';
+  const announcementSenderName = currentUser?.tamAd || currentUser?.eposta || 'SKS Yönetimi';
 
   useEffect(() => {
     fetchAdminClubs();

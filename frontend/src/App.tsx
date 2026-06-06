@@ -41,16 +41,16 @@ const ProtectedRoute = ({
   if (!isAuthenticated || !user) return <Navigate to={YOLLAR.giris} replace />;
 
   // İlk girişte e-posta doğrulama zorunlu
-  if (!user.emailVerified) {
+  if (!user.epostaDogrulandi) {
     return <Navigate to={YOLLAR.epostaDogrula} replace />;
   }
 
   // İlk girişte şifre değiştirme zorunlu
-  if (user.mustChangePassword) {
+  if (user.sifreDegistirmeli) {
     return <Navigate to={YOLLAR.sifreDegistir} replace />;
   }
 
-  if (izinliYetkiler && !yetkilerdenBiriVarMi(user.roles, izinliYetkiler)) {
+  if (izinliYetkiler && !yetkilerdenBiriVarMi(user.roller, izinliYetkiler)) {
     return <Navigate to={YOLLAR.anaSayfa} replace />;
   }
 
@@ -59,17 +59,17 @@ const ProtectedRoute = ({
 
 const DashboardRoute = () => {
   const user = useAuthStore(state => state.user);
-  const isStudent = yetkilerdenBiriVarMi(user?.roles, YETKI_GRUPLARI.ogrenci);
+  const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);
 
-  if (yetkilerdenBiriVarMi(user?.roles, YETKI_GRUPLARI.sksYonetimi)) {
+  if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.sksYonetimi)) {
     return <SksDashboard />;
   }
 
-  if (yetkilerdenBiriVarMi(user?.roles, YETKI_GRUPLARI.ogrenciIsleri)) {
+  if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenciIsleri)) {
     return <RegistrarDashboard />;
   }
 
-  if (yetkilerdenBiriVarMi(user?.roles, YETKI_GRUPLARI.tesisYonetimi)) {
+  if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.tesisYonetimi)) {
     return <FacilityAdminDashboard />;
   }
 
@@ -138,7 +138,7 @@ function App() {
 
         {/* E-posta doğrulama — giriş yapmış ama doğrulanmamış */}
         <Route path={YOLLAR.epostaDogrula} element={
-          hasSession && !user.emailVerified
+          hasSession && !user.epostaDogrulandi
             ? <EmailVerification />
             : <Navigate to={hasSession ? YOLLAR.anaSayfa : YOLLAR.giris} />
         } />
@@ -146,7 +146,7 @@ function App() {
 
         {/* Şifre değiştirme — giriş yapmış ama ilk şifre değişikliği bekliyor */}
         <Route path={YOLLAR.sifreDegistir} element={
-          hasSession && user.mustChangePassword
+          hasSession && user.sifreDegistirmeli
             ? <ChangePassword />
             : <Navigate to={hasSession ? YOLLAR.anaSayfa : YOLLAR.giris} />
         } />

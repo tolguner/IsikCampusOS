@@ -15,11 +15,11 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { managedClubs, fetchManagedClubs } = useClubStore();
   const { profile, fetchMyProfile } = useProfileStore();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const isStudent = yetkilerdenBiriVarMi(user?.roles, YETKI_GRUPLARI.ogrenci);
-  const isFacilityAdmin = yetkilerdenBiriVarMi(user?.roles, YETKI_GRUPLARI.tesisYonetimi);
+  const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);
+  const isFacilityAdmin = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.tesisYonetimi);
   const isClubPresident = isStudent && managedClubs.length > 0;
-  const userInitials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}` ||
-    user?.fullName?.split(' ').map(part => part[0]).slice(0, 2).join('') ||
+  const userInitials = `${user?.ad?.[0] ?? ''}${user?.soyad?.[0] ?? ''}` ||
+    user?.tamAd?.split(' ').map(part => part[0]).slice(0, 2).join('') ||
     '?';
 
   useEffect(() => {
@@ -188,14 +188,14 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
                       {profile?.profilePictureUrl ? (
                         <img
                           src={profile.profilePictureUrl}
-                          alt={user.fullName || 'Profil'}
+                          alt={user.tamAd || 'Profil'}
                           className="w-full h-full object-cover"
                         />
                       ) : (
                         <span>{userInitials}</span>
                       )}
                     </div>
-                    <span className="text-sm font-medium text-white/90">{user.fullName}</span>
+                    <span className="text-sm font-medium text-white/90">{user.tamAd}</span>
                   </div>
 
                   {/* Dropdown Menu (Hover) */}

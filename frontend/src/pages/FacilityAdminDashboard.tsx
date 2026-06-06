@@ -64,13 +64,6 @@ const defaultPolicy: FacilityPolicy = {
   maxBookingDurationMinutes: 120,
 };
 
-const blankRule: AvailabilityRule = {
-  dayOfWeek: 1,
-  startTime: '09:00',
-  endTime: '10:00',
-  status: 'ACTIVE',
-};
-
 interface WeeklyHourDay {
   dayOfWeek: number;
   isOpen: boolean;
@@ -112,7 +105,7 @@ export const FacilityAdminDashboard = () => {
   // Config Forms
   const [facilityForm, setFacilityForm] = useState(blankFacilityForm);
   const [policyForm, setPolicyForm] = useState<FacilityPolicy>(defaultPolicy);
-  const [rules, setRules] = useState<AvailabilityRule[]>([]);
+  const [, setRules] = useState<AvailabilityRule[]>([]);
   const [weeklyHours, setWeeklyHours] = useState<WeeklyHourDay[]>([]);
 
   // Block Team Training Form
