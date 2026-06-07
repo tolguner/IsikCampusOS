@@ -189,7 +189,7 @@ export const SksDashboard = () => {
     fetchProfileChangeRequests();
     fetchReviewQueue();
     fetchClubHealth();
-    fetchStudents(0, 8, '', 'ACTIVE');
+    fetchStudents(0, 8, '', 'AKTIF');
     searchAdvisors('');
   }, [fetchAdminClubs, fetchProfileChangeRequests, fetchReviewQueue, fetchClubHealth, fetchStudents, searchAdvisors]);
 
@@ -274,16 +274,16 @@ export const SksDashboard = () => {
     fetchAdminClubs();
     fetchProfileChangeRequests();
     fetchReviewQueue();
-    fetchStudents(0, 8, activeModule === 'clubs' ? clubEditForm.presidentSearch : clubForm.presidentSearch, 'ACTIVE');
+    fetchStudents(0, 8, activeModule === 'clubs' ? clubEditForm.presidentSearch : clubForm.presidentSearch, 'AKTIF');
     searchAdvisors(activeModule === 'clubs' ? clubEditForm.advisorSearch : clubForm.advisorSearch);
   };
 
   const handlePresidentSearch = async () => {
-    await fetchStudents(0, 8, clubForm.presidentSearch, 'ACTIVE');
+    await fetchStudents(0, 8, clubForm.presidentSearch, 'AKTIF');
   };
 
   const handleEditPresidentSearch = async () => {
-    await fetchStudents(0, 8, clubEditForm.presidentSearch, 'ACTIVE');
+    await fetchStudents(0, 8, clubEditForm.presidentSearch, 'AKTIF');
   };
 
   const handleAdvisorSelect = (advisor: AcademicAdvisor) => {
@@ -326,9 +326,9 @@ export const SksDashboard = () => {
     setClubEditForm(prev => ({
       ...prev,
       presidentId: student.id,
-      presidentSearch: student.fullName,
-      presidentFullName: student.fullName,
-      presidentEmail: student.email,
+      presidentSearch: student.tamAd,
+      presidentFullName: student.tamAd,
+      presidentEmail: student.eposta,
     }));
   };
 
@@ -435,8 +435,8 @@ export const SksDashboard = () => {
       danismanEposta: clubForm.danismanEposta,
       danismanBolumu: clubForm.danismanBolumu,
       yoneticiKullaniciId: president.id,
-      baskanAdSoyad: president.fullName,
-      baskanEposta: president.email,
+      baskanAdSoyad: president.tamAd,
+      baskanEposta: president.eposta,
     });
 
     if (ok) {
@@ -826,10 +826,10 @@ export const SksDashboard = () => {
                                   className={`w-full rounded-2xl border px-3 py-2.5 text-left transition-colors disabled:cursor-not-allowed ${clubEditForm.presidentId === student.id ? 'border-purple-400/50 bg-purple-500/15' : alreadyPresident ? 'border-amber-400/20 bg-amber-500/[0.06] opacity-60' : 'border-white/10 bg-white/[0.035] hover:bg-white/[0.06]'}`}
                                 >
                                   <div className="flex items-start justify-between gap-3">
-                                    <div className="text-sm font-bold text-white">{student.fullName}</div>
+                                    <div className="text-sm font-bold text-white">{student.tamAd}</div>
                                     {alreadyPresident && <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-1 text-[11px] font-bold text-amber-200">Başkan</span>}
                                   </div>
-                                  <div className="text-xs text-white/35">{student.studentNumber} - {student.email}</div>
+                                  <div className="text-xs text-white/35">{student.ogrenciNumarasi} - {student.eposta}</div>
                                 </button>
                               );
                             })}
@@ -1149,16 +1149,16 @@ export const SksDashboard = () => {
                   type="button"
                   onClick={() => {
                     if (alreadyPresident) return;
-                    setClubForm(prev => ({ ...prev, presidentId: student.id, presidentSearch: student.fullName }));
+                    setClubForm(prev => ({ ...prev, presidentId: student.id, presidentSearch: student.tamAd }));
                   }}
                   disabled={alreadyPresident}
                   className={`w-full rounded-2xl border px-3 py-2.5 text-left transition-colors disabled:cursor-not-allowed ${clubForm.presidentId === student.id ? 'border-purple-400/50 bg-purple-500/15' : alreadyPresident ? 'border-amber-400/20 bg-amber-500/[0.06] opacity-60' : 'border-white/10 bg-white/[0.035] hover:bg-white/[0.06]'}`}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="text-sm font-bold text-white">{student.fullName}</div>
+                    <div className="text-sm font-bold text-white">{student.tamAd}</div>
                     {alreadyPresident && <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-1 text-[11px] font-bold text-amber-200">Başkan</span>}
                   </div>
-                  <div className="text-xs text-white/35">{student.studentNumber} - {student.email}</div>
+                  <div className="text-xs text-white/35">{student.ogrenciNumarasi} - {student.eposta}</div>
                 </button>
               );
             })}
@@ -1166,7 +1166,7 @@ export const SksDashboard = () => {
           </div>
           {selectedPresident && (
             <div className="rounded-2xl bg-emerald-500/10 border border-emerald-400/20 p-3 text-sm text-emerald-100">
-              Seçilen başkan: <span className="font-bold">{selectedPresident.fullName}</span>
+              Seçilen başkan: <span className="font-bold">{selectedPresident.tamAd}</span>
             </div>
           )}
           {selectedPresidentUnavailable && (
@@ -1184,7 +1184,7 @@ export const SksDashboard = () => {
           <div className="space-y-2 text-sm text-white/60">
             <div className="flex justify-between gap-4"><span>Kulüp</span><strong className="text-white text-right">{clubForm.ad || 'Bekleniyor'}</strong></div>
             <div className="flex justify-between gap-4"><span>Danışman</span><strong className="text-white text-right">{selectedAdvisorDisplayName || 'Seçilmedi'}</strong></div>
-            <div className="flex justify-between gap-4"><span>Başkan</span><strong className="text-white text-right">{selectedPresident?.fullName || 'Seçilmedi'}</strong></div>
+            <div className="flex justify-between gap-4"><span>Başkan</span><strong className="text-white text-right">{selectedPresident?.tamAd || 'Seçilmedi'}</strong></div>
           </div>
           <button type="submit" disabled={!selectedPresident || !clubForm.danismanAkademikKadroId || selectedPresidentUnavailable || selectedAdvisorUnavailable || clubsLoading} className="w-full rounded-2xl px-8 py-3 gradient-btn font-bold disabled:opacity-45 disabled:cursor-not-allowed">
             Kulübü Oluştur
