@@ -32,6 +32,15 @@ export const initialClubForm = {
   presidentId: '',
 };
 
+export interface DuyuruFormu {
+  title: string;
+  message: string;
+  linkUrl: string;
+  linkLabel: string;
+  imageUrl: string;
+  targetAudience: 'ALL_STUDENTS' | 'CLUB_PRESIDENTS';
+}
+
 export const moduleMeta: Record<SksModule, { label: string; description: string; icon: ElementType }> = {
   clubs: {
     label: 'Kulüp Yönetimi',
