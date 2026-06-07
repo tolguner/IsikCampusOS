@@ -26,7 +26,7 @@ interface BookingsViewProps {
   handleUpdateBookingStatus: (bookingId: string, status: string) => void;
 }
 
-export const BookingsView = ({
+export const RezervasyonGorunumu = ({
   handleAddBlockSlot,
   blockResourceId,
   setBlockResourceId,

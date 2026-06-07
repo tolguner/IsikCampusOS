@@ -33,7 +33,7 @@ interface ConfigViewProps {
   handleSaveRules: () => void;
 }
 
-export const ConfigView = ({
+export const YapilandirmaGorunumu = ({
   facilities,
   selectedFacilityId,
   selectFacility,

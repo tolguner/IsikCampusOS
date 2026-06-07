@@ -35,7 +35,7 @@ interface CalendarViewProps {
   isBookingLoading: boolean;
 }
 
-export const CalendarView = ({
+export const TakvimGorunumu = ({
   facilities,
   calendarFacilityId,
   setCalendarFacilityId,
