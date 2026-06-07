@@ -28,8 +28,8 @@ import {
   isCheckInWindowOpen,
   a3PosterFile,
   parseReminderOffsets,
-} from './constants';
-import { LocationPicker } from './LocationPicker';
+} from './sabitler';
+import { KonumSecici } from './KonumSecici';
 
 interface EventsTabProps {
   selectedClub: Kulup;
@@ -175,7 +175,7 @@ const DateTimePicker = ({ label, value, min, defaultTime, onChange }: DateTimePi
   );
 };
 
-export const EventsTab = ({ selectedClub }: EventsTabProps) => {
+export const EtkinliklerSekmesi = ({ selectedClub }: EventsTabProps) => {
   const {
     managedEvents,
     isLoading: eventsLoading,
@@ -436,7 +436,7 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
               <MapPin className="w-4 h-4 text-emerald-200" />
               Yüz yüze konum
             </div>
-            <LocationPicker
+            <KonumSecici
               latitude={eventForm.latitude}
               longitude={eventForm.longitude}
               onChange={(latitude, longitude) => setEventForm(prev => ({ ...prev, latitude, longitude }))}

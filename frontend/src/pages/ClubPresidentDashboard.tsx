@@ -3,11 +3,11 @@ import { CalendarDays, FilePenLine, Megaphone, UsersRound } from 'lucide-react';
 import { useClubStore } from '../store/clubStore';
 import { useEventStore } from '../store/eventStore';
 
-import type { PanelTab } from '../components/club-dashboard/constants';
-import { ProfileTab } from '../components/club-dashboard/ProfileTab';
-import { EventsTab } from '../components/club-dashboard/EventsTab';
-import { AnnouncementsTab } from '../components/club-dashboard/AnnouncementsTab';
-import { MembersTab } from '../components/club-dashboard/MembersTab';
+import type { PanelTab } from '../components/club-dashboard/sabitler';
+import { ProfilSekmesi } from '../components/club-dashboard/ProfilSekmesi';
+import { EtkinliklerSekmesi } from '../components/club-dashboard/EtkinliklerSekmesi';
+import { DuyurularSekmesi } from '../components/club-dashboard/DuyurularSekmesi';
+import { UyelerSekmesi } from '../components/club-dashboard/UyelerSekmesi';
 
 export const ClubPresidentDashboard = () => {
   const {
@@ -106,10 +106,10 @@ export const ClubPresidentDashboard = () => {
         </div>
       )}
 
-      {activeTab === 'profile' && <ProfileTab selectedClub={selectedClub} />}
-      {activeTab === 'events' && <EventsTab selectedClub={selectedClub} />}
-      {activeTab === 'announcements' && <AnnouncementsTab selectedClub={selectedClub} />}
-      {activeTab === 'members' && <MembersTab selectedClub={selectedClub} />}
+      {activeTab === 'profile' && <ProfilSekmesi selectedClub={selectedClub} />}
+      {activeTab === 'events' && <EtkinliklerSekmesi selectedClub={selectedClub} />}
+      {activeTab === 'announcements' && <DuyurularSekmesi selectedClub={selectedClub} />}
+      {activeTab === 'members' && <UyelerSekmesi selectedClub={selectedClub} />}
     </div>
   );
 };

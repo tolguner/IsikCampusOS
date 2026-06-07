@@ -3,13 +3,13 @@ import type { FormEvent } from 'react';
 import { GraduationCap, ImagePlus, Send } from 'lucide-react';
 import type { Kulup } from '../../store/clubStore';
 import { useClubStore } from '../../store/clubStore';
-import { inputClass, textareaClass, squareImageFile } from './constants';
+import { inputClass, textareaClass, squareImageFile } from './sabitler';
 
 interface ProfileTabProps {
   selectedClub: Kulup;
 }
 
-export const ProfileTab = ({ selectedClub }: ProfileTabProps) => {
+export const ProfilSekmesi = ({ selectedClub }: ProfileTabProps) => {
   const { isLoading, requestClubProfileUpdate } = useClubStore();
 
   const [profileForm, setProfileForm] = useState({
