@@ -176,8 +176,10 @@ function App() {
           </ProtectedRoute>
         } />
 
+        {/* Duyuru sayfası tüm kimliği doğrulanmış kullanıcılara açıktır; gönderim seçenekleri
+            role/yönetilen-kulüplere göre belirlenir ve backend her uçta yetkiyi denetler. */}
         <Route path={YOLLAR.duyuru} element={
-          <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.duyuruYetkilileri}>
+          <ProtectedRoute>
             <UygulamaDuzeni>
               <DuyuruSayfasi />
             </UygulamaDuzeni>

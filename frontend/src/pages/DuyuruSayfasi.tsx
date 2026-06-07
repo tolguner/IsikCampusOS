@@ -1,45 +1,79 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Megaphone, ImagePlus, Link as LinkIcon, Send, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useBildirimDeposu } from '../depolar/bildirimDeposu';
 import { useKimlikDeposu } from '../depolar/kimlikDeposu';
+import { useKulupDeposu } from '../depolar/kulupDeposu';
 import { rolleriAyir } from '../yardimcilar/yetkiler';
 
 const inputClass =
   'w-full rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-pink-400/60';
 
-const KURUMSAL_AD: Record<string, string> = {
-  ROLE_ADMIN: 'Sistem Yönetimi',
-  ROLE_REGISTRAR: 'Öğrenci İşleri Daire Başkanlığı',
-  ROLE_FACILITY_ADMIN: 'Spor Müdürlüğü',
-  ROLE_SKS_ADMIN: 'Sağlık Kültür ve Spor Müdürlüğü',
-};
+type DuyuruFormu = { baslik: string; mesaj: string; baglantiUrl?: string; baglantiEtiketi?: string; resimUrl?: string };
+
+interface Secenek {
+  value: string;
+  label: string;        // hedef kitle etiketi (seçici + önizleme)
+  gonderenAdi: string;  // önizleme gönderen kimliği
+  gonder: (form: DuyuruFormu) => Promise<boolean>;
+}
 
 export const DuyuruSayfasi = () => {
   const navigate = useNavigate();
   const user = useKimlikDeposu(s => s.user);
   const topluDuyuruGonder = useBildirimDeposu(s => s.topluDuyuruGonder);
+  const sksDuyuruGonder = useBildirimDeposu(s => s.duyuruOlustur);
   const yukleniyor = useBildirimDeposu(s => s.yukleniyor);
   const hata = useBildirimDeposu(s => s.hata);
+  const managedClubs = useKulupDeposu(s => s.managedClubs);
+  const fetchManagedClubs = useKulupDeposu(s => s.fetchManagedClubs);
+  const createClubAnnouncement = useKulupDeposu(s => s.createClubAnnouncement);
+  const kulupHata = useKulupDeposu(s => s.error);
 
   const roller = rolleriAyir(user?.roller);
-  const sistemYoneticisiMi = roller.includes('ROLE_ADMIN');
-  const gonderenAdi = useMemo(() => {
-    const rol = roller.find(r => KURUMSAL_AD[r]);
-    return rol ? KURUMSAL_AD[rol] : 'Kampüs Yönetimi';
-  }, [roller]);
+  const isAdmin = roller.includes('ROLE_ADMIN');
+  const isRegistrar = roller.includes('ROLE_REGISTRAR');
+  const isFacility = roller.includes('ROLE_FACILITY_ADMIN');
+  const isSks = roller.includes('ROLE_SKS_ADMIN');
+  const isStudent = roller.includes('ROLE_STUDENT');
 
-  const [form, setForm] = useState({
-    baslik: '',
-    mesaj: '',
-    baglantiUrl: '',
-    baglantiEtiketi: '',
-    resimUrl: '',
-    hedefKitle: 'TUM_OGRENCILER' as 'TUM_OGRENCILER' | 'TUM_KULLANICILAR',
-  });
+  useEffect(() => {
+    if (isStudent) fetchManagedClubs();
+  }, [isStudent, fetchManagedClubs]);
+
+  const secenekler: Secenek[] = useMemo(() => {
+    const liste: Secenek[] = [];
+    if (isAdmin) {
+      liste.push(
+        { value: 'TUM_OGRENCILER', label: 'Tüm öğrenciler', gonderenAdi: 'Sistem Yönetimi', gonder: f => topluDuyuruGonder({ ...f, hedefKitle: 'TUM_OGRENCILER' }) },
+        { value: 'TUM_KULLANICILAR', label: 'Tüm kullanıcılar (öğrenciler + personel)', gonderenAdi: 'Sistem Yönetimi', gonder: f => topluDuyuruGonder({ ...f, hedefKitle: 'TUM_KULLANICILAR' }) },
+      );
+    } else if (isRegistrar) {
+      liste.push({ value: 'TUM_OGRENCILER', label: 'Tüm öğrenciler', gonderenAdi: 'Öğrenci İşleri Daire Başkanlığı', gonder: f => topluDuyuruGonder({ ...f, hedefKitle: 'TUM_OGRENCILER' }) });
+    } else if (isFacility) {
+      liste.push({ value: 'TUM_OGRENCILER', label: 'Tüm öğrenciler', gonderenAdi: 'Spor Müdürlüğü', gonder: f => topluDuyuruGonder({ ...f, hedefKitle: 'TUM_OGRENCILER' }) });
+    }
+    if (isSks) {
+      const ad = 'Sağlık Kültür ve Spor Müdürlüğü';
+      liste.push(
+        { value: 'SKS_TUM_OGRENCILER', label: 'Tüm öğrenciler', gonderenAdi: ad, gonder: f => sksDuyuruGonder({ ...f, olusturanAdi: ad, hedefKitle: 'TUM_OGRENCILER' }) },
+        { value: 'KULUP_BASKANLARI', label: 'Kulüp başkanları', gonderenAdi: ad, gonder: f => sksDuyuruGonder({ ...f, olusturanAdi: ad, hedefKitle: 'KULUP_BASKANLARI' }) },
+      );
+    }
+    // Kulüp başkanı: yönettiği her kulüp için kulüp üyelerine duyuru
+    managedClubs.forEach(kulup => {
+      liste.push({ value: `KULUP_${kulup.id}`, label: `Kulüp üyeleri — ${kulup.ad}`, gonderenAdi: kulup.ad, gonder: f => createClubAnnouncement(kulup.id, f) });
+    });
+    return liste;
+  }, [isAdmin, isRegistrar, isFacility, isSks, managedClubs, topluDuyuruGonder, sksDuyuruGonder, createClubAnnouncement]);
+
+  const [seciliDeger, setSeciliDeger] = useState('');
+  const secili = secenekler.find(s => s.value === seciliDeger) ?? secenekler[0];
+
+  const [form, setForm] = useState<DuyuruFormu>({ baslik: '', mesaj: '', baglantiUrl: '', baglantiEtiketi: '', resimUrl: '' });
   const [basari, setBasari] = useState(false);
 
-  const gecerli = form.baslik.trim().length > 0 && form.mesaj.trim().length > 0;
+  const gecerli = form.baslik.trim().length > 0 && form.mesaj.trim().length > 0 && !!secili;
 
   const gorselSec = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -50,23 +84,24 @@ export const DuyuruSayfasi = () => {
   };
 
   const gonder = async () => {
-    const ok = await topluDuyuruGonder({
+    if (!secili) return;
+    const ok = await secili.gonder({
       baslik: form.baslik,
       mesaj: form.mesaj,
       baglantiUrl: form.baglantiUrl || undefined,
       baglantiEtiketi: form.baglantiEtiketi || undefined,
       resimUrl: form.resimUrl || undefined,
-      hedefKitle: sistemYoneticisiMi ? form.hedefKitle : 'TUM_OGRENCILER',
     });
     if (ok) setBasari(true);
   };
 
   const yeniDuyuru = () => {
     setBasari(false);
-    setForm({ baslik: '', mesaj: '', baglantiUrl: '', baglantiEtiketi: '', resimUrl: '', hedefKitle: 'TUM_OGRENCILER' });
+    setForm({ baslik: '', mesaj: '', baglantiUrl: '', baglantiEtiketi: '', resimUrl: '' });
   };
 
-  const hedefEtiketi = sistemYoneticisiMi && form.hedefKitle === 'TUM_KULLANICILAR' ? 'Tüm kullanıcılar' : 'Tüm öğrenciler';
+  const gonderenAdi = secili?.gonderenAdi ?? 'Kampüs Yönetimi';
+  const hedefEtiketi = secili?.label ?? '';
 
   return (
     <div className="space-y-6 text-white pb-12">
@@ -92,14 +127,18 @@ export const DuyuruSayfasi = () => {
         </button>
       </div>
 
-      {hata && (
-        <div className="rounded-2xl px-4 py-3 text-sm font-semibold border border-red-400/25 bg-red-500/12 text-red-100">{hata}</div>
+      {(hata || kulupHata) && (
+        <div className="rounded-2xl px-4 py-3 text-sm font-semibold border border-red-400/25 bg-red-500/12 text-red-100">{hata || kulupHata}</div>
       )}
 
-      {basari ? (
+      {secenekler.length === 0 ? (
+        <div className="rounded-3xl border border-white/10 bg-white/[0.025] p-10 text-center text-sm font-semibold text-white/45">
+          Duyuru gönderme yetkiniz bulunmuyor.
+        </div>
+      ) : basari ? (
         <div className="rounded-3xl border border-emerald-300/25 bg-emerald-500/[0.07] p-10 text-center space-y-4">
           <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-300" />
-          <div className="text-lg font-black text-white">Duyuru {hedefEtiketi.toLocaleLowerCase('tr-TR')}'a gönderildi.</div>
+          <div className="text-lg font-black text-white">Duyuru gönderildi — {hedefEtiketi}.</div>
           <div className="flex justify-center gap-3">
             <button onClick={yeniDuyuru} className="rounded-2xl bg-pink-500 hover:bg-pink-400 px-5 py-2.5 text-sm font-bold text-white cursor-pointer">Yeni Duyuru</button>
             <button onClick={() => navigate(-1)} className="rounded-2xl bg-white/10 hover:bg-white/15 px-5 py-2.5 text-sm font-bold text-white cursor-pointer">Panele Dön</button>
@@ -109,24 +148,22 @@ export const DuyuruSayfasi = () => {
         <div className="grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-6">
           {/* Form */}
           <section className="rounded-3xl border border-white/10 bg-white/[0.025] p-6 space-y-5">
-            {sistemYoneticisiMi && (
-              <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-white/35">Hedef Kitle</label>
-                <select className={inputClass} value={form.hedefKitle} onChange={e => setForm(p => ({ ...p, hedefKitle: e.target.value as 'TUM_OGRENCILER' | 'TUM_KULLANICILAR' }))}>
-                  <option value="TUM_OGRENCILER">Tüm öğrenciler</option>
-                  <option value="TUM_KULLANICILAR">Tüm kullanıcılar (öğrenciler + personel)</option>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-white/35">Hedef Kitle</label>
+              {secenekler.length > 1 ? (
+                <select className={inputClass} value={secili?.value} onChange={e => setSeciliDeger(e.target.value)}>
+                  {secenekler.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
-              </div>
-            )}
-            {!sistemYoneticisiMi && (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm font-semibold text-white/55">
-                Hedef kitle: <span className="text-white/80">Tüm öğrenciler</span>
-              </div>
-            )}
+              ) : (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm font-semibold text-white/55">
+                  Hedef kitle: <span className="text-white/80">{hedefEtiketi}</span>
+                </div>
+              )}
+            </div>
 
             <input className={inputClass} maxLength={140} placeholder="Duyuru başlığı" value={form.baslik} onChange={e => setForm(p => ({ ...p, baslik: e.target.value }))} />
             <textarea className={`${inputClass} min-h-44 resize-none`} maxLength={3000} placeholder="Duyuru metni" value={form.mesaj} onChange={e => setForm(p => ({ ...p, mesaj: e.target.value }))} />
-            <p className="-mt-3 text-xs text-white/35">{form.mesaj.trim().length}/3000 karakter</p>
+            <p className="-mt-3 text-xs text-white/35">{(form.mesaj ?? '').trim().length}/3000 karakter</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">

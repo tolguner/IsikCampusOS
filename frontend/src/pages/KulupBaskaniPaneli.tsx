@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
-import { CalendarDays, FilePenLine, Megaphone, UsersRound } from 'lucide-react';
+import { CalendarDays, FilePenLine, UsersRound } from 'lucide-react';
 import { useKulupDeposu } from '../depolar/kulupDeposu';
 import { useEtkinlikDeposu } from '../depolar/etkinlikDeposu';
 
 import type { PanelTab } from '../components/kulup-paneli/sabitler';
 import { ProfilSekmesi } from '../components/kulup-paneli/ProfilSekmesi';
 import { EtkinliklerSekmesi } from '../components/kulup-paneli/EtkinliklerSekmesi';
-import { DuyurularSekmesi } from '../components/kulup-paneli/DuyurularSekmesi';
 import { UyelerSekmesi } from '../components/kulup-paneli/UyelerSekmesi';
+import { DuyuruButonu } from '../components/DuyuruButonu';
 
 export const KulupBaskaniPaneli = () => {
   const {
@@ -46,7 +46,6 @@ export const KulupBaskaniPaneli = () => {
   const tabs = [
     { key: 'profile' as const, label: 'Kulüp Bilgileri', description: 'SKS onayına profil güncelleme talebi', icon: FilePenLine },
     { key: 'events' as const, label: 'Etkinlik Yönetimi', description: 'Taslak oluştur, revize et ve onaya gönder', icon: CalendarDays },
-    { key: 'announcements' as const, label: 'Duyurular', description: 'Kulüp üyelerine bilgilendirme gönder', icon: Megaphone },
     { key: 'members' as const, label: 'Üyeler', description: 'Kulüp üyelerini yönet', icon: UsersRound },
   ];
 
@@ -72,6 +71,7 @@ export const KulupBaskaniPaneli = () => {
             {selectedClub.ad} operasyonlarını buradan yönet. Profil değişiklikleri SKS onayına gider; etkinlikler yayınlanmadan önce SKS tarafından incelenir.
           </p>
         </div>
+        <DuyuruButonu />
       </header>
 
           <section className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -108,7 +108,6 @@ export const KulupBaskaniPaneli = () => {
 
       {activeTab === 'profile' && <ProfilSekmesi selectedClub={selectedClub} />}
       {activeTab === 'events' && <EtkinliklerSekmesi selectedClub={selectedClub} />}
-      {activeTab === 'announcements' && <DuyurularSekmesi selectedClub={selectedClub} />}
       {activeTab === 'members' && <UyelerSekmesi selectedClub={selectedClub} />}
     </div>
   );

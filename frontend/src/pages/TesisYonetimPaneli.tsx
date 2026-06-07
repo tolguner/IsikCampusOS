@@ -11,7 +11,7 @@ import {
 import { TakvimGorunumu } from '../components/tesis-yonetim/TakvimGorunumu';
 import { RezervasyonGorunumu } from '../components/tesis-yonetim/RezervasyonGorunumu';
 import { YapilandirmaGorunumu } from '../components/tesis-yonetim/YapilandirmaGorunumu';
-import { OgrenciDuyuruButonu } from '../components/OgrenciDuyuruButonu';
+import { DuyuruButonu } from '../components/DuyuruButonu';
 
 export const TesisYonetimPaneli = () => {
   const {
@@ -433,7 +433,7 @@ export const TesisYonetimPaneli = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-        <OgrenciDuyuruButonu />
+        <DuyuruButonu />
         <button
           type="button"
           onClick={() => {
