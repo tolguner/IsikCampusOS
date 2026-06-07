@@ -3,9 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Bell,
   Banknote,
-  CalendarDays,
   CheckCircle2,
-  ClipboardCheck,
   Clock,
   ImagePlus,
   Link as LinkIcon,
@@ -13,7 +11,6 @@ import {
   MapPin,
   Megaphone,
   Pencil,
-  Plus,
   Power,
   RefreshCw,
   Save,
@@ -30,69 +27,18 @@ import { useStudentStore, type Student } from '../store/studentStore';
 import { useAuthStore } from '../store/authStore';
 import { useAcademicStaffStore, type AcademicAdvisor } from '../store/academicStaffStore';
 
-type SksModule = 'clubs' | 'create' | 'profileRequests' | 'events' | 'announcements' | 'health';
-
-const panelStyle = {
-  background: 'rgba(255,255,255,0.045)',
-  border: '1px solid rgba(255,255,255,0.08)',
-};
-
-const inputClass = 'w-full rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-purple-400/60';
-const SHORT_DESCRIPTION_MIN_LENGTH = 20;
-const SHORT_DESCRIPTION_MAX_LENGTH = 180;
-const VISION_MIN_LENGTH = 80;
-const VISION_MAX_LENGTH = 3000;
-
-const fieldLimitText = (value: string, minLength: number, maxLength: number) =>
-  `${value.trim().length}/${maxLength} karakter - en az ${minLength}`;
-
-const initialClubForm = {
-  ad: '',
-  kisaAciklama: '',
-  vizyon: '',
-  logoUrl: '',
-  advisorSearch: '',
-  danismanAkademikKadroId: '',
-  danismanUnvani: '',
-  danismanAdSoyad: '',
-  danismanEposta: '',
-  danismanBolumu: '',
-  presidentSearch: '',
-  presidentId: '',
-};
-
-const moduleMeta: Record<SksModule, { label: string; description: string; icon: React.ElementType }> = {
-  clubs: {
-    label: 'Kulüp Yönetimi',
-    description: 'Kulüp kayıtları, başkanlar ve aktiflik durumu',
-    icon: Users,
-  },
-  create: {
-    label: 'Kulüp Oluşturma',
-    description: 'Yeni kulüp kaydı ve kurucu başkan seçimi',
-    icon: Plus,
-  },
-  events: {
-    label: 'Etkinlik Talepleri',
-    description: 'SKS onayı bekleyen etkinlik akışları',
-    icon: CalendarDays,
-  },
-  profileRequests: {
-    label: 'Profil Talepleri',
-    description: 'Kulüp başkanı profil güncelleme istekleri',
-    icon: ClipboardCheck,
-  },
-  announcements: {
-    label: 'Duyuru',
-    description: 'Öğrencilere ve kulüp başkanlarına toplu iletişim',
-    icon: Megaphone,
-  },
-  health: {
-    label: 'Sağlık',
-    description: 'Kulüp aktivite, risk ve takip görünümü',
-    icon: Bell,
-  },
-};
+import {
+  type SksModule,
+  panelStyle,
+  inputClass,
+  SHORT_DESCRIPTION_MIN_LENGTH,
+  SHORT_DESCRIPTION_MAX_LENGTH,
+  VISION_MIN_LENGTH,
+  VISION_MAX_LENGTH,
+  fieldLimitText,
+  initialClubForm,
+  moduleMeta,
+} from '../components/sks-dashboard/ortak';
 
 export const SksDashboard = () => {
   const {
