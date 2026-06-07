@@ -5,6 +5,7 @@ import {
   type YonetimKullanicisi,
   type KullaniciOlusturmaFormu,
 } from '../depolar/yonetimDeposu';
+import { OgrenciDuyuruButonu } from '../components/OgrenciDuyuruButonu';
 
 type Sekme = 'kullanicilar' | 'loglar';
 
@@ -83,14 +84,17 @@ export const YonetimPaneli = () => {
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => (sekme === 'kullanicilar' ? kullanicilariGetir(0, 20, arama, '', rolFiltre) : loglariGetir())}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/70 transition hover:bg-white/10 cursor-pointer"
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Yenile
-        </button>
+        <div className="flex items-center gap-3">
+          <OgrenciDuyuruButonu />
+          <button
+            type="button"
+            onClick={() => (sekme === 'kullanicilar' ? kullanicilariGetir(0, 20, arama, '', rolFiltre) : loglariGetir())}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/70 transition hover:bg-white/10 cursor-pointer"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Yenile
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 border-b border-white/5 pb-px">

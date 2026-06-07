@@ -44,6 +44,13 @@ interface BildirimState {
     olusturanAdi?: string;
     hedefKitle: 'TUM_OGRENCILER' | 'KULUP_BASKANLARI';
   }) => Promise<boolean>;
+  /** İdari roller (Öğrenci İşleri / Spor Müdürlüğü / Sistem Yönetimi) → tüm öğrencilere kurumsal duyuru. */
+  ogrencilereDuyuruGonder: (veri: {
+    baslik: string;
+    mesaj: string;
+    baglantiUrl?: string;
+    baglantiEtiketi?: string;
+  }) => Promise<boolean>;
 }
 
 const okunmamisSay = (bildirimler: Bildirim[]) =>
@@ -97,6 +104,18 @@ export const useBildirimDeposu = create<BildirimState>((set, get) => ({
     try {
       await api.post('/bildirimler/duyurular', veri);
       await get().bildirimleriGetir();
+      set({ yukleniyor: false });
+      return true;
+    } catch (err: any) {
+      set({ hata: err.response?.data?.message || 'Duyuru gönderilemedi.', yukleniyor: false });
+      return false;
+    }
+  },
+
+  ogrencilereDuyuruGonder: async (veri) => {
+    set({ yukleniyor: true, hata: null });
+    try {
+      await api.post('/bildirimler/toplu-duyuru', veri);
       set({ yukleniyor: false });
       return true;
     } catch (err: any) {

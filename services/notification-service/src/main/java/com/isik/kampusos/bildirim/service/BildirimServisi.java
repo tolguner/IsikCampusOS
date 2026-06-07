@@ -47,6 +47,30 @@ public class BildirimServisi {
         return bildirimDeposu.save(bildirim);
     }
 
+    /**
+     * İdari rollerin tüm öğrencilere gönderdiği toplu duyuruyu kalıcılaştırır.
+     * Gönderenin kurumsal kimliği (olusturanAdi) öğrenciye gösterilir.
+     */
+    public Bildirim topluOgrenciDuyurusuOlustur(String baslik, String mesaj, String baglantiUrl,
+                                                String baglantiEtiketi, String resimUrl,
+                                                String olusturanId, String olusturanAdi) {
+        if (baslik == null || baslik.isBlank() || mesaj == null || mesaj.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Başlık ve mesaj zorunludur.");
+        }
+        Bildirim bildirim = Bildirim.builder()
+                .baslik(baslik.trim())
+                .mesaj(mesaj.trim())
+                .baglantiUrl(baglantiUrl)
+                .baglantiEtiketi(baglantiEtiketi)
+                .resimUrl(resimUrl)
+                .tur(Bildirim.BildirimTuru.DUYURU)
+                .hedefKitle(Bildirim.HedefKitle.TUM_OGRENCILER)
+                .olusturan(olusturanId)
+                .olusturanAdi(olusturanAdi)
+                .build();
+        return bildirimDeposu.save(bildirim);
+    }
+
     public List<BildirimYaniti> gorunurBildirimleriListele(String kullaniciId, String yetkiler) {
         List<Bildirim.HedefKitle> kitleler = gorunurKitleler(yetkiler);
 
