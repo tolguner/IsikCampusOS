@@ -160,13 +160,13 @@ export const RegistrarDashboard = () => {
 
   const openEditModal = (student: any) => {
     setFormData({
-      firstName: student.firstName,
-      lastName: student.lastName,
-      studentNumber: student.studentNumber,
+      firstName: student.ad,
+      lastName: student.soyad,
+      studentNumber: student.ogrenciNumarasi,
       tcKimlikNo: '',
-      faculty: student.faculty,
-      department: student.department,
-      enrollmentYear: student.enrollmentYear,
+      faculty: student.fakulte,
+      department: student.bolum,
+      enrollmentYear: student.kayitYili,
       phoneNumber: '',
       residenceAddress: '',
       bloodType: 'A Rh+'
@@ -203,10 +203,10 @@ export const RegistrarDashboard = () => {
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'ACTIVE': return <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Aktif</span>;
-      case 'INACTIVE': return <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-red-500/10 text-red-400 border border-red-500/20">Pasif</span>;
-      case 'GRADUATED': return <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Mezun</span>;
-      case 'EXPELLED': return <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-500/10 text-slate-400 border border-slate-500/20">İlişiği Kesilmiş</span>;
+      case 'AKTIF': return <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Aktif</span>;
+      case 'PASIF': return <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-red-500/10 text-red-400 border border-red-500/20">Pasif</span>;
+      case 'MEZUN': return <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Mezun</span>;
+      case 'ILISIGI_KESILMIS': return <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-500/10 text-slate-400 border border-slate-500/20">İlişiği Kesilmiş</span>;
       default: return null;
     }
   };
@@ -275,10 +275,10 @@ export const RegistrarDashboard = () => {
         </div>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="py-2.5 px-4 rounded-xl text-sm text-white outline-none cursor-pointer" style={inputStyle}>
           <option value="" className="bg-[#0f1123]">Tüm Durumlar</option>
-          <option value="ACTIVE" className="bg-[#0f1123]">Aktif</option>
-          <option value="INACTIVE" className="bg-[#0f1123]">Pasif</option>
-          <option value="GRADUATED" className="bg-[#0f1123]">Mezun</option>
-          <option value="EXPELLED" className="bg-[#0f1123]">İlişiği Kesilmiş</option>
+          <option value="AKTIF" className="bg-[#0f1123]">Aktif</option>
+          <option value="PASIF" className="bg-[#0f1123]">Pasif</option>
+          <option value="MEZUN" className="bg-[#0f1123]">Mezun</option>
+          <option value="ILISIGI_KESILMIS" className="bg-[#0f1123]">İlişiği Kesilmiş</option>
         </select>
       </div>
 
@@ -305,22 +305,22 @@ export const RegistrarDashboard = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-indigo-500/30 text-indigo-300 font-bold">
-                          {student.firstName[0]}{student.lastName[0]}
+                          {student.ad[0]}{student.soyad[0]}
                         </div>
                         <div>
-                          <div className="font-semibold text-white text-sm">{student.fullName}</div>
+                          <div className="font-semibold text-white text-sm">{student.tamAd}</div>
                           <div className="text-xs text-white/40 flex items-center gap-2">
-                            <span>{student.studentNumber}</span> • <span>{student.email}</span>
+                            <span>{student.ogrenciNumarasi}</span> • <span>{student.eposta}</span>
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-white/80">{student.department}</div>
-                      <div className="text-xs text-white/30">{student.faculty}</div>
+                      <div className="text-sm text-white/80">{student.bolum}</div>
+                      <div className="text-xs text-white/30">{student.fakulte}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-white/60">{student.enrollmentYear}</td>
-                    <td className="px-6 py-4">{getStatusBadge(student.status)}</td>
+                    <td className="px-6 py-4 text-sm text-white/60">{student.kayitYili}</td>
+                    <td className="px-6 py-4">{getStatusBadge(student.durum)}</td>
                     <td className="px-6 py-4 relative">
                       {getStudentRequests(student.id).length > 0 ? (
                         <>
@@ -345,7 +345,7 @@ export const RegistrarDashboard = () => {
                                 >
                                   <div className="border-b border-white/10 px-4 py-3">
                                     <p className="text-sm font-black text-white">Profil değişiklik talepleri</p>
-                                    <p className="text-xs text-white/35 mt-0.5">{student.fullName}</p>
+                                    <p className="text-xs text-white/35 mt-0.5">{student.tamAd}</p>
                                   </div>
                                   <div className="max-h-80 overflow-y-auto p-2 space-y-2">
                                     {getStudentRequests(student.id).map(request => (
@@ -403,13 +403,13 @@ export const RegistrarDashboard = () => {
                               style={{ background: 'rgba(20,20,35,0.95)', backdropFilter: 'blur(16px)' }}>
                               <div className="p-1.5 flex flex-col gap-1">
                                 <button onClick={() => openEditModal(student)} className="flex items-center gap-2 px-3 py-2 text-xs text-blue-400 hover:bg-white/5 rounded-lg w-full text-left cursor-pointer transition-colors"><Edit2 className="w-3.5 h-3.5"/> Düzenle</button>
-                                {student.status !== 'ACTIVE' && <button onClick={() => handleStatusChange(student.id, 'ACTIVE')} className="flex items-center gap-2 px-3 py-2 text-xs text-emerald-400 hover:bg-white/5 rounded-lg w-full text-left cursor-pointer transition-colors"><UserCheck className="w-3.5 h-3.5"/> Aktif Yap</button>}
-                                {student.status !== 'GRADUATED' && <button onClick={() => handleStatusChange(student.id, 'GRADUATED')} className="flex items-center gap-2 px-3 py-2 text-xs text-purple-400 hover:bg-white/5 rounded-lg w-full text-left cursor-pointer transition-colors"><GraduationCap className="w-3.5 h-3.5"/> Mezun Yap</button>}
-                                {student.status !== 'INACTIVE' && <button onClick={() => handleStatusChange(student.id, 'INACTIVE')} className="flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-white/5 rounded-lg w-full text-left cursor-pointer transition-colors"><UserX className="w-3.5 h-3.5"/> Pasife Al</button>}
-                                {student.status !== 'EXPELLED' && <button onClick={() => handleStatusChange(student.id, 'EXPELLED')} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-400 hover:bg-white/5 rounded-lg w-full text-left cursor-pointer transition-colors"><AlertCircle className="w-3.5 h-3.5"/> İlişiği Kes</button>}
+                                {student.durum !== 'AKTIF' && <button onClick={() => handleStatusChange(student.id, 'AKTIF')} className="flex items-center gap-2 px-3 py-2 text-xs text-emerald-400 hover:bg-white/5 rounded-lg w-full text-left cursor-pointer transition-colors"><UserCheck className="w-3.5 h-3.5"/> Aktif Yap</button>}
+                                {student.durum !== 'MEZUN' && <button onClick={() => handleStatusChange(student.id, 'MEZUN')} className="flex items-center gap-2 px-3 py-2 text-xs text-purple-400 hover:bg-white/5 rounded-lg w-full text-left cursor-pointer transition-colors"><GraduationCap className="w-3.5 h-3.5"/> Mezun Yap</button>}
+                                {student.durum !== 'PASIF' && <button onClick={() => handleStatusChange(student.id, 'PASIF')} className="flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-white/5 rounded-lg w-full text-left cursor-pointer transition-colors"><UserX className="w-3.5 h-3.5"/> Pasife Al</button>}
+                                {student.durum !== 'ILISIGI_KESILMIS' && <button onClick={() => handleStatusChange(student.id, 'ILISIGI_KESILMIS')} className="flex items-center gap-2 px-3 py-2 text-xs text-slate-400 hover:bg-white/5 rounded-lg w-full text-left cursor-pointer transition-colors"><AlertCircle className="w-3.5 h-3.5"/> İlişiği Kes</button>}
                                 <div className="h-px bg-white/10 my-1" />
                                 <button onClick={() => handleResetPassword(student.id)} className="flex items-center gap-2 px-3 py-2 text-xs text-amber-400 hover:bg-white/5 rounded-lg w-full text-left cursor-pointer transition-colors"><KeyRound className="w-3.5 h-3.5"/> Şifreyi Sıfırla</button>
-                                <button onClick={() => handleDeleteStudent(student.id, student.fullName)} className="flex items-center gap-2 px-3 py-2 text-xs text-red-500 hover:bg-red-500/10 rounded-lg w-full text-left cursor-pointer transition-colors"><Trash2 className="w-3.5 h-3.5"/> Öğrenciyi Sil</button>
+                                <button onClick={() => handleDeleteStudent(student.id, student.tamAd)} className="flex items-center gap-2 px-3 py-2 text-xs text-red-500 hover:bg-red-500/10 rounded-lg w-full text-left cursor-pointer transition-colors"><Trash2 className="w-3.5 h-3.5"/> Öğrenciyi Sil</button>
                               </div>
                             </motion.div>
                           </>

@@ -1,21 +1,24 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
 
+export type OgrenciDurumu = 'AKTIF' | 'PASIF' | 'MEZUN' | 'ILISIGI_KESILMIS';
+
+/** Backend (profile-service /ogrenciler) yanıtları ile birebir — çeviri (mapper) yoktur. */
 export interface Student {
   id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
-  studentNumber: string;
-  faculty: string;
-  department: string;
-  departmentCode: string;
-  enrollmentYear: number;
-  status: 'ACTIVE' | 'INACTIVE' | 'GRADUATED' | 'EXPELLED';
-  emailVerified: boolean;
-  createdAt: string;
-  lastLoginAt: string | null;
+  eposta: string;
+  ad: string;
+  soyad: string;
+  tamAd: string;
+  ogrenciNumarasi: string;
+  fakulte: string;
+  bolum: string;
+  bolumKodu: string;
+  kayitYili: number;
+  durum: OgrenciDurumu;
+  epostaDogrulandi: boolean;
+  olusturulmaTarihi: string;
+  sonGirisTarihi: string | null;
 }
 
 interface PageData {
@@ -43,40 +46,8 @@ interface StudentState {
   clearMessages: () => void;
 }
 
-const mapStatusToEnglish = (status: string): 'ACTIVE' | 'INACTIVE' | 'GRADUATED' | 'EXPELLED' => {
-  if (status === 'AKTIF') return 'ACTIVE';
-  if (status === 'PASIF') return 'INACTIVE';
-  if (status === 'MEZUN') return 'GRADUATED';
-  if (status === 'ILISIGI_KESILMIS') return 'EXPELLED';
-  return 'ACTIVE';
-};
-
-const mapStatusToTurkish = (status: string): string => {
-  if (status === 'ACTIVE') return 'AKTIF';
-  if (status === 'INACTIVE') return 'PASIF';
-  if (status === 'GRADUATED') return 'MEZUN';
-  if (status === 'EXPELLED') return 'ILISIGI_KESILMIS';
-  return '';
-};
-
-const mapStudentResponse = (data: any): Student => {
-  return {
-    id: data.id,
-    email: data.eposta,
-    firstName: data.ad,
-    lastName: data.soyad,
-    fullName: data.tamAd,
-    studentNumber: data.ogrenciNumarasi,
-    faculty: data.fakulte,
-    department: data.bolum,
-    departmentCode: data.bolumKodu || '',
-    enrollmentYear: data.kayitYili,
-    status: mapStatusToEnglish(data.durum),
-    emailVerified: data.epostaDogrulandi,
-    createdAt: data.olusturulmaTarihi,
-    lastLoginAt: data.sonGirisTarihi,
-  };
-};
+// API (profile-service) yanıtları artık tiplerle birebir; çeviri yapılmaz (ince passthrough).
+const mapStudentResponse = (data: any): Student => data;
 
 const getDepartmentCode = (studentNumber: string): string => {
   const match = studentNumber.match(/\d+([a-zA-Z]+)\d+/);
@@ -97,13 +68,12 @@ export const useStudentStore = create<StudentState>((set, get) => ({
   fetchStudents: async (page = 0, size = 10, search = '', status = '') => {
     set({ isLoading: true, error: null });
     try {
-      const apiStatus = mapStatusToTurkish(status);
       const res = await api.get<PageData>('/ogrenciler', {
         params: {
           sayfa: page,
           boyut: size,
           arama: search,
-          durum: apiStatus || undefined,
+          durum: status || undefined,
         }
       });
       set({ 
@@ -166,9 +136,8 @@ export const useStudentStore = create<StudentState>((set, get) => ({
   changeStatus: async (id, status) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      const apiStatus = mapStatusToTurkish(status);
       await api.patch(`/ogrenciler/${id}/durum`, {
-        yeniDurum: apiStatus,
+        yeniDurum: status,
         neden: 'Durum güncellemesi',
       });
       set({ successMessage: 'Öğrenci durumu güncellendi.', isLoading: false });
