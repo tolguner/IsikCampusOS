@@ -4,7 +4,7 @@ import { useEtkinlikDeposu } from '../depolar/etkinlikDeposu';
 import { useBildirimDeposu } from '../depolar/bildirimDeposu';
 import { useOgrenciDeposu } from '../depolar/ogrenciDeposu';
 import { useAkademikKadroDeposu } from '../depolar/akademikKadroDeposu';
-import { useAutoDismissMessage } from '../hooks/useAutoDismissMessage';
+import { useMesajOtomatikKapat } from '../kancalar/useMesajOtomatikKapat';
 
 export const OtomatikMesajTemizleyici = () => {
   const authError = useKimlikDeposu(state => state.error);
@@ -30,16 +30,16 @@ export const OtomatikMesajTemizleyici = () => {
   const advisorError = useAkademikKadroDeposu(state => state.error);
   const clearAdvisorError = useAkademikKadroDeposu(state => state.clearError);
 
-  useAutoDismissMessage(authError, clearAuthError);
-  useAutoDismissMessage(authSuccess, clearAuthSuccess);
-  useAutoDismissMessage(clubError, clearClub);
-  useAutoDismissMessage(clubSuccess, clearClub);
-  useAutoDismissMessage(eventError, clearEvent);
-  useAutoDismissMessage(eventSuccess, clearEvent);
-  useAutoDismissMessage(studentError, clearStudent);
-  useAutoDismissMessage(studentSuccess, clearStudent);
-  useAutoDismissMessage(notificationError, clearNotificationError);
-  useAutoDismissMessage(advisorError, clearAdvisorError);
+  useMesajOtomatikKapat(authError, clearAuthError);
+  useMesajOtomatikKapat(authSuccess, clearAuthSuccess);
+  useMesajOtomatikKapat(clubError, clearClub);
+  useMesajOtomatikKapat(clubSuccess, clearClub);
+  useMesajOtomatikKapat(eventError, clearEvent);
+  useMesajOtomatikKapat(eventSuccess, clearEvent);
+  useMesajOtomatikKapat(studentError, clearStudent);
+  useMesajOtomatikKapat(studentSuccess, clearStudent);
+  useMesajOtomatikKapat(notificationError, clearNotificationError);
+  useMesajOtomatikKapat(advisorError, clearAdvisorError);
 
   return null;
 };
