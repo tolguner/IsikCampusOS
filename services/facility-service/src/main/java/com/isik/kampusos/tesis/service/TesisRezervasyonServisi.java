@@ -25,6 +25,16 @@ public class TesisRezervasyonServisi {
     private final TesisPolitikasiDeposu tesisPolitikasiDeposu;
     private final TesisKullanilabilirlikKuraliDeposu tesisKullanilabilirlikKuraliDeposu;
 
+    /**
+     * İki zaman aralığının çakışıp çakışmadığını belirler (yarı-açık aralık mantığı:
+     * bir aralığın bitişi diğerinin başlangıcına eşitse çakışma yoktur).
+     * Birim testlerle doğrulanabilmesi için saf (yan etkisiz) tutulmuştur.
+     */
+    static boolean zamanlarCakisiyorMu(OffsetDateTime baslangic, OffsetDateTime bitis,
+                                       OffsetDateTime mevcutBaslangic, OffsetDateTime mevcutBitis) {
+        return baslangic.isBefore(mevcutBitis) && bitis.isAfter(mevcutBaslangic);
+    }
+
     public List<TesisRezervasyonYaniti> listMyBookings(String kullaniciId) {
         return tesisRezervasyonDeposu.findByRezervasyonYapanKullaniciIdOrderByBaslangicTarihiDesc(kullaniciId).stream()
                 .map(this::toResponse)
@@ -109,8 +119,8 @@ public class TesisRezervasyonServisi {
         List<TesisRezervasyon> aktifRezervasyonlar = tesisRezervasyonDeposu.findByKaynakIdAndDurumIn(
                 kaynak.getId(), List.of(TesisRezervasyon.RezervasyonDurumu.BEKLEMEDE, TesisRezervasyon.RezervasyonDurumu.ONAYLANDI, TesisRezervasyon.RezervasyonDurumu.BLOKE));
         
-        boolean hasOverlap = aktifRezervasyonlar.stream().anyMatch(existing -> 
-                start.isBefore(existing.getBitisTarihi()) && end.isAfter(existing.getBaslangicTarihi()));
+        boolean hasOverlap = aktifRezervasyonlar.stream().anyMatch(existing ->
+                zamanlarCakisiyorMu(start, end, existing.getBaslangicTarihi(), existing.getBitisTarihi()));
 
         if (hasOverlap) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Seçtiğiniz zaman diliminde kaynak zaten dolu.");
