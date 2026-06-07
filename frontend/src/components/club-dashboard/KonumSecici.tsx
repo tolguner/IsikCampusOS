@@ -10,7 +10,7 @@ interface LocationPickerProps {
   onLocationSelect?: (name: string) => void;
 }
 
-export const LocationPicker = ({ latitude, longitude, onChange, onLocationSelect }: LocationPickerProps) => {
+export const KonumSecici = ({ latitude, longitude, onChange, onLocationSelect }: LocationPickerProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);

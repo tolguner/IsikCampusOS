@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
 import { Camera, QrCode } from 'lucide-react';
 import type { Etkinlik } from '../../store/eventStore';
-import { inputClass } from './constants';
+import { inputClass } from './sabitler';
 
 interface QrCheckInPanelProps {
   event: Etkinlik;
@@ -11,7 +11,7 @@ interface QrCheckInPanelProps {
   onSubmit: (token: string) => Promise<boolean>;
 }
 
-export const QrCheckInPanel = ({ event, isLoading, onClose, onSubmit }: QrCheckInPanelProps) => {
+export const QrGirisPaneli = ({ event, isLoading, onClose, onSubmit }: QrCheckInPanelProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);

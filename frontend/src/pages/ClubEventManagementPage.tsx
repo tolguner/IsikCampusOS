@@ -25,8 +25,8 @@ import {
   participantStatusLabel,
   statusClass,
   statusLabel,
-} from '../components/club-dashboard/constants';
-import { QrCheckInPanel } from '../components/club-dashboard/QrCheckInPanel';
+} from '../components/club-dashboard/sabitler';
+import { QrGirisPaneli } from '../components/club-dashboard/QrGirisPaneli';
 
 const tabClass = (active: boolean) =>
   `rounded-2xl px-4 py-2.5 text-sm font-black border transition-colors ${
@@ -365,7 +365,7 @@ export const ClubEventManagementPage = () => {
           {!event.qrGirisEtkin ? (
             <p className="rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm font-semibold text-white/45">Bu etkinlikte QR katılım doğrulama açık değil.</p>
           ) : canCheckIn ? (
-            <QrCheckInPanel event={event} isLoading={isLoading} onClose={() => undefined} onSubmit={submitQrCheckIn} />
+            <QrGirisPaneli event={event} isLoading={isLoading} onClose={() => undefined} onSubmit={submitQrCheckIn} />
           ) : (
             <p className="rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm font-semibold text-white/45">Şu anda yoklama penceresi açık değil.</p>
           )}

@@ -7,7 +7,7 @@ interface MembersTabProps {
   selectedClub: Kulup;
 }
 
-export const MembersTab = ({ selectedClub }: MembersTabProps) => {
+export const UyelerSekmesi = ({ selectedClub }: MembersTabProps) => {
   const {
     clubMembers,
     fetchClubMembers,

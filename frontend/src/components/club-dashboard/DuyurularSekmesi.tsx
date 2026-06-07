@@ -3,13 +3,13 @@ import type { FormEvent } from 'react';
 import { Bell, ImagePlus, Megaphone } from 'lucide-react';
 import type { Kulup } from '../../store/clubStore';
 import { useClubStore } from '../../store/clubStore';
-import { inputClass, textareaClass, emptyAnnouncementForm } from './constants';
+import { inputClass, textareaClass, emptyAnnouncementForm } from './sabitler';
 
 interface AnnouncementsTabProps {
   selectedClub: Kulup;
 }
 
-export const AnnouncementsTab = ({ selectedClub }: AnnouncementsTabProps) => {
+export const DuyurularSekmesi = ({ selectedClub }: AnnouncementsTabProps) => {
   const { isLoading, createClubAnnouncement } = useClubStore();
   const [announcementForm, setAnnouncementForm] = useState(emptyAnnouncementForm);
 
