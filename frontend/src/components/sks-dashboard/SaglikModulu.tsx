@@ -19,7 +19,7 @@ interface HealthModuleProps {
   fetchClubAuditLogs: (clubId: string, filters?: { search?: string }) => void;
 }
 
-export const HealthModule = ({
+export const SaglikModulu = ({
   totalClubCount,
   activeClubCount,
   inactiveClubCount,

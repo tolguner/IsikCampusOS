@@ -15,7 +15,7 @@ interface EventsModuleProps {
   setRevisionTextByEvent: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 }
 
-export const EventsModule = ({
+export const EtkinlikModulu = ({
   reviewQueue,
   eventsLoading,
   formatEventDate,

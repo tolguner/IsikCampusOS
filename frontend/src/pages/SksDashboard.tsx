@@ -19,12 +19,12 @@ import {
   type DuyuruFormu,
   type KulupDuzenleFormu,
 } from '../components/sks-dashboard/ortak';
-import { AnnouncementsModule } from '../components/sks-dashboard/AnnouncementsModule';
-import { ProfileRequestsModule } from '../components/sks-dashboard/ProfileRequestsModule';
-import { EventsModule } from '../components/sks-dashboard/EventsModule';
-import { HealthModule } from '../components/sks-dashboard/HealthModule';
-import { ClubsModule } from '../components/sks-dashboard/ClubsModule';
-import { CreateModule } from '../components/sks-dashboard/CreateModule';
+import { DuyuruModulu } from '../components/sks-dashboard/DuyuruModulu';
+import { ProfilTalepModulu } from '../components/sks-dashboard/ProfilTalepModulu';
+import { EtkinlikModulu } from '../components/sks-dashboard/EtkinlikModulu';
+import { SaglikModulu } from '../components/sks-dashboard/SaglikModulu';
+import { KulupModulu } from '../components/sks-dashboard/KulupModulu';
+import { OlusturModulu } from '../components/sks-dashboard/OlusturModulu';
 
 export const SksDashboard = () => {
   const {
@@ -588,7 +588,7 @@ export const SksDashboard = () => {
   };
 
   const renderClubsModule = () => (
-    <ClubsModule
+    <KulupModulu
       filteredClubs={filteredClubs}
       clubsLoading={clubsLoading}
       editingClubId={editingClubId}
@@ -616,7 +616,7 @@ export const SksDashboard = () => {
   );
 
   const renderCreateModule = () => (
-    <CreateModule
+    <OlusturModulu
       handleCreateClub={handleCreateClub}
       clubForm={clubForm}
       setClubForm={setClubForm}
@@ -649,7 +649,7 @@ export const SksDashboard = () => {
   );
 
   const renderEventsModule = () => (
-    <EventsModule
+    <EtkinlikModulu
       reviewQueue={reviewQueue}
       eventsLoading={eventsLoading}
       formatEventDate={formatEventDate}
@@ -662,7 +662,7 @@ export const SksDashboard = () => {
   );
 
   const renderProfileRequestsModule = () => (
-    <ProfileRequestsModule
+    <ProfilTalepModulu
       profileChangeRequests={profileChangeRequests}
       clubsLoading={clubsLoading}
       approveProfileChangeRequest={approveProfileChangeRequest}
@@ -674,7 +674,7 @@ export const SksDashboard = () => {
   );
 
   const renderAnnouncementsModule = () => (
-    <AnnouncementsModule
+    <DuyuruModulu
       announcement={announcement}
       setAnnouncement={setAnnouncement}
       handleAnnouncement={handleAnnouncement}
@@ -684,7 +684,7 @@ export const SksDashboard = () => {
   );
 
   const renderHealthModule = () => (
-    <HealthModule
+    <SaglikModulu
       totalClubCount={clubs.length}
       activeClubCount={activeClubCount}
       inactiveClubCount={inactiveClubCount}

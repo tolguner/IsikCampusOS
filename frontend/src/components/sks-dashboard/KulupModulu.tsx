@@ -39,7 +39,7 @@ interface ClubsModuleProps {
   selectedEditAdvisorDisplayName: string;
 }
 
-export const ClubsModule = ({
+export const KulupModulu = ({
   filteredClubs,
   clubsLoading,
   editingClubId,
