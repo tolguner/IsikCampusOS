@@ -11,6 +11,7 @@ import {
 import { TakvimGorunumu } from '../components/tesis-yonetim/TakvimGorunumu';
 import { RezervasyonGorunumu } from '../components/tesis-yonetim/RezervasyonGorunumu';
 import { YapilandirmaGorunumu } from '../components/tesis-yonetim/YapilandirmaGorunumu';
+import { OgrenciDuyuruButonu } from '../components/OgrenciDuyuruButonu';
 
 export const TesisYonetimPaneli = () => {
   const {
@@ -431,6 +432,8 @@ export const TesisYonetimPaneli = () => {
             Işık Üniversitesi Spor Tesislerini, kaynaklarını, kurallarını yönetin ve takım antrenman programlarını bloke slotlar olarak tanımlayın.
           </p>
         </div>
+        <div className="flex items-center gap-3">
+        <OgrenciDuyuruButonu />
         <button
           type="button"
           onClick={() => {
@@ -454,6 +457,7 @@ export const TesisYonetimPaneli = () => {
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           Yenile
         </button>
+        </div>
       </div>
 
       {/* Tabs */}

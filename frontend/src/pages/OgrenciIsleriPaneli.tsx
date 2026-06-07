@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOgrenciDeposu } from '../depolar/ogrenciDeposu';
+import { OgrenciDuyuruButonu } from '../components/OgrenciDuyuruButonu';
 import { useProfilDeposu, type ProfilDegisiklikIstegi } from '../depolar/profilDeposu';
 import { Search, Plus, MoreVertical, X, CheckCircle2, AlertCircle, Loader2, KeyRound, UserX, UserCheck, GraduationCap, Edit2, ChevronLeft, ChevronRight, ClipboardCheck, Trash2 } from 'lucide-react';
 
@@ -244,10 +245,13 @@ export const OgrenciIsleriPaneli = () => {
           <h1 className="text-3xl font-extrabold text-white mb-1">Öğrenci Yönetimi</h1>
           <p className="text-sm text-white/40">Sistemde kayıtlı toplam <span className="text-indigo-400 font-bold">{totalElements}</span> öğrenci bulunuyor.</p>
         </div>
-        <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-lg cursor-pointer transition-transform hover:scale-105"
-          style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-          <Plus className="w-4 h-4" /> Yeni Öğrenci Ekle
-        </button>
+        <div className="flex items-center gap-3">
+          <OgrenciDuyuruButonu />
+          <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-lg cursor-pointer transition-transform hover:scale-105"
+            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+            <Plus className="w-4 h-4" /> Yeni Öğrenci Ekle
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
