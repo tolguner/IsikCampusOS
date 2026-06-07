@@ -1,220 +1,118 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
 
-export interface Club {
+/** Etkinlik yanıtı içindeki kulüp özeti. */
+export interface EtkinlikKulupOzeti {
   id: string;
-  name: string;
-  adminUserId: string;
-  description?: string;
+  ad: string;
+  yoneticiKullaniciId: string;
+  aciklama?: string;
 }
 
-export interface Event {
+export type EtkinlikDurumu =
+  | 'TASLAK'
+  | 'SKS_ONAYI_BEKLIYOR'
+  | 'REVIZYON_TALEP_EDILDI'
+  | 'YAYINLANDI'
+  | 'REDDEDILDI'
+  | 'IPTAL_EDILDI'
+  | 'TAMAMLANDI';
+
+export type KatilimDurumu =
+  | 'ODEME_BEKLIYOR'
+  | 'ONAYLANDI'
+  | 'YEDEKTE'
+  | 'IPTAL_EDILDI'
+  | 'KATILDI'
+  | 'GELMEDI';
+
+/** Backend (club-service) etkinlik yanıtı ile birebir — çeviri (mapper) yoktur. */
+export interface Etkinlik {
   id: string;
-  club: Club;
-  title: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  eventMode?: 'ONLINE' | 'IN_PERSON';
-  onlinePlatform?: string;
-  onlineMeetingUrl?: string;
-  locationName?: string;
-  locationDetail?: string;
-  latitude?: number;
-  longitude?: number;
-  posterImageUrl?: string;
-  hasCapacityLimit: boolean;
-  capacityLimited?: boolean;
-  capacity: number;
-  hasWaitlistLimit: boolean;
-  waitlistCapacity: number;
-  currentRsvpCount: number;
-  currentWaitlistCount: number;
-  qrCheckInEnabled: boolean;
-  certificateEnabled: boolean;
-  certificateTitle?: string;
-  certificatesIssuedAt?: string;
-  paid?: boolean;
-  feeAmount?: number;
+  kulup: EtkinlikKulupOzeti;
+  baslik: string;
+  aciklama: string;
+  baslangicTarihi: string;
+  bitisTarihi: string;
+  konum: string;
+  etkinlikTuru?: 'CEVRIMICI' | 'YUZ_YUZE';
+  cevrimiciPlatform?: string;
+  cevrimiciToplantiUrl?: string;
+  konumAdi?: string;
+  konumDetayi?: string;
+  enlem?: number;
+  boylam?: number;
+  afisResmiUrl?: string;
+  kontenjanSiniriVar: boolean;
+  kontenjanSinirli?: boolean;
+  kontenjan: number;
+  yedekListesiSiniriVar: boolean;
+  yedekListesiKontenjani: number;
+  mevcutRsvpSayisi: number;
+  mevcutYedekSayisi: number;
+  qrGirisEtkin: boolean;
+  sertifikaEtkin: boolean;
+  sertifikaBasligi?: string;
+  sertifikalarinOlusturulmaTarihi?: string;
+  ucretli?: boolean;
+  ucretTutari?: number;
   iban?: string;
-  paymentInstructions?: string;
-  reminderEnabled?: boolean;
-  reminderOffsetsMinutes?: string;
-  sentReminderOffsetsMinutes?: string;
-  status: 'DRAFT' | 'PENDING_SKS_APPROVAL' | 'REVISION_REQUESTED' | 'PUBLISHED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED';
-  rejectionReason?: string;
-  updatedAt?: string;
+  odemeTalimatlari?: string;
+  hatirlaticiEtkin?: boolean;
+  hatirlatmaZamanlariDakika?: string;
+  gonderilenHatirlatmaZamanlariDakika?: string;
+  durum: EtkinlikDurumu;
+  redNedeni?: string;
+  guncellenmeTarihi?: string;
 }
 
-export interface Rsvp {
+export interface Katilim {
   id: string;
-  eventId: string;
-  userId: string;
-  checkInToken?: string;
-  status: 'PENDING_PAYMENT' | 'CONFIRMED' | 'WAITLISTED' | 'CANCELLED' | 'ATTENDED' | 'NO_SHOW';
-  createdAt: string;
+  etkinlikId: string;
+  kullaniciId: string;
+  yoklamaBelirteci?: string;
+  durum: KatilimDurumu;
+  olusturulmaTarihi: string;
 }
 
-export interface EventParticipant {
-  rsvpId: string;
-  eventId: string;
-  userId: string;
-  fullName?: string;
-  studentNumber?: string;
-  email?: string;
-  department?: string;
-  status: 'PENDING_PAYMENT' | 'CONFIRMED' | 'WAITLISTED' | 'CANCELLED' | 'ATTENDED' | 'NO_SHOW';
-  registeredAt: string;
-  checkedInAt?: string;
-  checkedInBy?: string;
-  paymentPending: boolean;
-  paymentConfirmed: boolean;
-  paymentReviewedAt?: string;
-  paymentReviewedBy?: string;
-  paymentRejectionReason?: string;
-  certificateSent: boolean;
-  certificateSentAt?: string;
+export interface EtkinlikKatilimci {
+  katilimId: string;
+  etkinlikId: string;
+  kullaniciId: string;
+  adSoyad?: string;
+  ogrenciNumarasi?: string;
+  eposta?: string;
+  bolum?: string;
+  durum: KatilimDurumu;
+  kayitTarihi: string;
+  yoklamaTarihi?: string;
+  yoklamayiYapan?: string;
+  odemeBekliyor: boolean;
+  odemeOnaylandi: boolean;
+  odemeIncelemeTarihi?: string;
+  odemeyiInceleyen?: string;
+  odemeRedNedeni?: string;
+  sertifikaGonderildi: boolean;
+  sertifikaGonderilmeTarihi?: string;
 }
 
-export interface AuditLog {
+export interface DenetimGunlugu {
   id: string;
-  entityType: 'CLUB' | 'EVENT';
-  entityId: string;
-  action: string;
-  actorId: string;
-  actorRole?: string;
-  message: string;
-  metadata?: string;
-  createdAt: string;
+  varlikTuru: 'KULUP' | 'ETKINLIK';
+  varlikId: string;
+  islem: string;
+  islemYapanId: string;
+  islemYapanRol?: string;
+  mesaj: string;
+  metaVeri?: string;
+  olusturulmaTarihi: string;
 }
 
-// --- Status mapping helpers ---
-const statusTrToEn: Record<string, Event['status']> = {
-  TASLAK: 'DRAFT',
-  SKS_ONAYI_BEKLIYOR: 'PENDING_SKS_APPROVAL',
-  REVIZYON_TALEP_EDILDI: 'REVISION_REQUESTED',
-  YAYINLANDI: 'PUBLISHED',
-  REDDEDILDI: 'REJECTED',
-  IPTAL_EDILDI: 'CANCELLED',
-  TAMAMLANDI: 'COMPLETED',
-};
-
-const rsvpStatusTrToEn: Record<string, Rsvp['status']> = {
-  ODEME_BEKLIYOR: 'PENDING_PAYMENT',
-  ONAYLANDI: 'CONFIRMED',
-  YEDEKTE: 'WAITLISTED',
-  IPTAL_EDILDI: 'CANCELLED',
-  KATILDI: 'ATTENDED',
-  GELMEDI: 'NO_SHOW',
-};
-
-const eventModeTrToEn: Record<string, 'ONLINE' | 'IN_PERSON'> = {
-  CEVRIMICI: 'ONLINE',
-  YUZ_YUZE: 'IN_PERSON',
-};
-
-const eventModeEnToTr: Record<string, string> = {
-  ONLINE: 'CEVRIMICI',
-  IN_PERSON: 'YUZ_YUZE',
-};
-
-const mapClubFromApi = (data: any): Club => {
-  if (!data) return { id: '', name: '', adminUserId: '' };
-  return {
-    id: data.id,
-    name: data.ad ?? data.name ?? '',
-    adminUserId: data.yoneticiKullaniciId ?? data.adminUserId ?? '',
-    description: data.aciklama ?? data.description,
-  };
-};
-
-export const mapEventResponse = (data: any): Event => {
-  return {
-    id: data.id,
-    club: mapClubFromApi(data.kulup ?? data.club),
-    title: data.baslik,
-    description: data.aciklama,
-    startTime: data.baslangicTarihi,
-    endTime: data.bitisTarihi,
-    location: data.konum,
-    eventMode: data.etkinlikTuru ? eventModeTrToEn[data.etkinlikTuru] : undefined,
-    onlinePlatform: data.cevrimiciPlatform,
-    onlineMeetingUrl: data.cevrimiciToplantiUrl,
-    locationName: data.konumAdi,
-    locationDetail: data.konumDetayi,
-    latitude: data.enlem,
-    longitude: data.boylam,
-    posterImageUrl: data.afisResmiUrl,
-    hasCapacityLimit: data.kontenjanSiniriVar,
-    capacityLimited: data.kontenjanSinirli,
-    capacity: data.kontenjan,
-    hasWaitlistLimit: data.yedekListesiSiniriVar,
-    waitlistCapacity: data.yedekListesiKontenjani,
-    currentRsvpCount: data.mevcutRsvpSayisi,
-    currentWaitlistCount: data.mevcutYedekSayisi,
-    qrCheckInEnabled: data.qrGirisEtkin,
-    certificateEnabled: data.sertifikaEtkin,
-    certificateTitle: data.sertifikaBasligi,
-    certificatesIssuedAt: data.sertifikalarinOlusturulmaTarihi,
-    paid: data.ucretli,
-    feeAmount: data.ucretTutari,
-    iban: data.iban,
-    paymentInstructions: data.odemeTalimatlari,
-    reminderEnabled: data.hatirlaticiEtkin,
-    reminderOffsetsMinutes: data.hatirlatmaZamanlariDakika,
-    sentReminderOffsetsMinutes: data.gonderilenHatirlatmaZamanlariDakika,
-    status: statusTrToEn[data.durum] || data.durum,
-    rejectionReason: data.redNedeni,
-    updatedAt: data.guncellenmeTarihi,
-  };
-};
-
-const mapRsvpResponse = (data: any): Rsvp => {
-  return {
-    id: data.id,
-    eventId: data.etkinlikId,
-    userId: data.kullaniciId,
-    checkInToken: data.yoklamaBelirteci,
-    status: rsvpStatusTrToEn[data.durum] || data.durum,
-    createdAt: data.olusturulmaTarihi,
-  };
-};
-
-const mapParticipantResponse = (data: any): EventParticipant => {
-  return {
-    rsvpId: data.katilimId,
-    eventId: data.etkinlikId,
-    userId: data.kullaniciId,
-    status: rsvpStatusTrToEn[data.durum] || data.durum,
-    registeredAt: data.kayitTarihi,
-    checkedInAt: data.yoklamaTarihi,
-    checkedInBy: data.yoklamayiYapan,
-    paymentPending: data.odemeBekliyor,
-    paymentConfirmed: data.odemeOnaylandi,
-    paymentReviewedAt: data.odemeIncelemeTarihi,
-    paymentReviewedBy: data.odemeyiInceleyen,
-    paymentRejectionReason: data.odemeRedNedeni,
-    certificateSent: data.sertifikaGonderildi,
-    certificateSentAt: data.sertifikaGonderilmeTarihi,
-  };
-};
-
-const mapAuditLogResponse = (data: any): AuditLog => {
-  let entityType: 'CLUB' | 'EVENT' = 'EVENT';
-  if (data.varlikTuru === 'KULUP') entityType = 'CLUB';
-  return {
-    id: data.id,
-    entityType,
-    entityId: data.varlikId,
-    action: data.islem,
-    actorId: data.islemYapanId,
-    actorRole: data.islemYapanRol,
-    message: data.mesaj,
-    metadata: data.metaVeri,
-    createdAt: data.olusturulmaTarihi,
-  };
-};
+// API (club-service) yanıtları artık tiplerle birebir; çeviri yapılmaz (ince passthrough'lar).
+export const mapEventResponse = (data: any): Etkinlik => data;
+const mapRsvpResponse = (data: any): Katilim => data;
+const mapParticipantResponse = (data: any): EtkinlikKatilimci => data;
+const mapAuditLogResponse = (data: any): DenetimGunlugu => data;
 
 const mapEventCreatePayload = (data: any) => ({
   kulupId: data.clubId,
@@ -223,7 +121,7 @@ const mapEventCreatePayload = (data: any) => ({
   baslangicTarihi: data.startTime,
   bitisTarihi: data.endTime,
   konum: data.location,
-  etkinlikTuru: data.eventMode ? eventModeEnToTr[data.eventMode] : undefined,
+  etkinlikTuru: data.eventMode || undefined,
   cevrimiciPlatform: data.onlinePlatform,
   cevrimiciToplantiUrl: data.onlineMeetingUrl,
   konumAdi: data.locationName,
@@ -248,12 +146,12 @@ const mapEventCreatePayload = (data: any) => ({
 });
 
 interface EventState {
-  events: Event[];
-  managedEvents: Event[];
-  participantsByEvent: Record<string, EventParticipant[]>;
-  myRsvpsByEvent: Record<string, Rsvp>;
-  reviewQueue: Event[];
-  auditLogsByEvent: Record<string, AuditLog[]>;
+  events: Etkinlik[];
+  managedEvents: Etkinlik[];
+  participantsByEvent: Record<string, EtkinlikKatilimci[]>;
+  myRsvpsByEvent: Record<string, Katilim>;
+  reviewQueue: Etkinlik[];
+  auditLogsByEvent: Record<string, DenetimGunlugu[]>;
   isLoading: boolean;
   error: string | null;
   successMessage: string | null;
@@ -263,7 +161,7 @@ interface EventState {
   fetchManagedEvents: () => Promise<void>;
   fetchMyRsvps: () => Promise<void>;
   fetchReviewQueue: () => Promise<void>;
-  createEventDraft: (data: any) => Promise<Event | null>;
+  createEventDraft: (data: any) => Promise<Etkinlik | null>;
   updateEvent: (eventId: string, data: any) => Promise<boolean>;
   submitForApproval: (eventId: string) => Promise<boolean>;
   approveEvent: (eventId: string) => Promise<boolean>;
@@ -329,8 +227,8 @@ export const useEventStore = create<EventState>((set, get) => ({
       const res = await api.get<any[]>('/etkinlikler/katilimlarim');
       const rsvps = res.data.map(mapRsvpResponse);
       set({
-        myRsvpsByEvent: rsvps.reduce<Record<string, Rsvp>>((acc, rsvp) => {
-          acc[rsvp.eventId] = rsvp;
+        myRsvpsByEvent: rsvps.reduce<Record<string, Katilim>>((acc, rsvp) => {
+          acc[rsvp.etkinlikId] = rsvp;
           return acc;
         }, {}),
       });
@@ -483,27 +381,27 @@ export const useEventStore = create<EventState>((set, get) => ({
     try {
       const res = await api.get<any[]>(`/etkinlikler/${eventId}/katilimcilar`);
       let participants = res.data.map(mapParticipantResponse);
-      const userIds = [...new Set(participants.map(participant => participant.userId).filter(Boolean))];
+      const userIds = [...new Set(participants.map(participant => participant.kullaniciId).filter(Boolean))];
       if (userIds.length > 0) {
         try {
           const profileRes = await api.post('/kullanicilar/toplu', { kullaniciIdleri: userIds });
           const profileMap = new Map<string, any>();
           (profileRes.data || []).forEach((profile: any) => profileMap.set(profile.id, profile));
           participants = participants.map(participant => {
-            const profile = profileMap.get(participant.userId);
+            const profile = profileMap.get(participant.kullaniciId);
             return {
               ...participant,
-              fullName: profile?.tamAd || participant.fullName || participant.userId,
-              studentNumber: profile?.ogrenciNumarasi || participant.studentNumber || participant.userId,
-              email: profile?.eposta || participant.email || '',
-              department: profile?.bolum || participant.department || '',
+              adSoyad: profile?.tamAd || participant.adSoyad || participant.kullaniciId,
+              ogrenciNumarasi: profile?.ogrenciNumarasi || participant.ogrenciNumarasi || participant.kullaniciId,
+              eposta: profile?.eposta || participant.eposta || '',
+              bolum: profile?.bolum || participant.bolum || '',
             };
           });
         } catch {
           participants = participants.map(participant => ({
             ...participant,
-            fullName: participant.fullName || participant.userId,
-            studentNumber: participant.studentNumber || participant.userId,
+            adSoyad: participant.adSoyad || participant.kullaniciId,
+            ogrenciNumarasi: participant.ogrenciNumarasi || participant.kullaniciId,
           }));
         }
       }

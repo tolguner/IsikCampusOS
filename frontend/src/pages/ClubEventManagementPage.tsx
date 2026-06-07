@@ -17,7 +17,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useClubStore } from '../store/clubStore';
-import { useEventStore, type EventParticipant } from '../store/eventStore';
+import { useEventStore, type EtkinlikKatilimci } from '../store/eventStore';
 import { YOLLAR } from '../utils/paths';
 import {
   isCheckInWindowOpen,
@@ -38,11 +38,11 @@ const tabClass = (active: boolean) =>
 const formatDateTime = (value?: string) =>
   value ? new Date(value).toLocaleString('tr-TR') : 'Belirtilmedi';
 
-const participantName = (participant: EventParticipant) =>
-  participant.fullName || participant.userId;
+const participantName = (participant: EtkinlikKatilimci) =>
+  participant.adSoyad || participant.kullaniciId;
 
-const participantNumber = (participant: EventParticipant) =>
-  participant.studentNumber || participant.userId;
+const participantNumber = (participant: EtkinlikKatilimci) =>
+  participant.ogrenciNumarasi || participant.kullaniciId;
 
 const downloadXlsx = (filename: string, rows: Record<string, string>[]) => {
   const headers = [
@@ -151,35 +151,35 @@ export const ClubEventManagementPage = () => {
     const searchable = [
       participantName(participant),
       participantNumber(participant),
-      participant.email || '',
-      participant.department || '',
-      participant.userId,
+      participant.eposta || '',
+      participant.bolum || '',
+      participant.kullaniciId,
     ].join(' ').toLocaleLowerCase('tr-TR');
     const matchesSearch = !normalized || searchable.includes(normalized);
-    const matchesStatus = statusFilter === 'ALL' || participant.status === statusFilter;
+    const matchesStatus = statusFilter === 'ALL' || participant.durum === statusFilter;
     const matchesPayment =
       paymentFilter === 'ALL'
-      || (paymentFilter === 'PENDING' && participant.paymentPending)
-      || (paymentFilter === 'CONFIRMED' && participant.paymentConfirmed)
-      || (paymentFilter === 'NONE' && !participant.paymentPending && !participant.paymentConfirmed);
+      || (paymentFilter === 'PENDING' && participant.odemeBekliyor)
+      || (paymentFilter === 'ONAYLANDI' && participant.odemeOnaylandi)
+      || (paymentFilter === 'NONE' && !participant.odemeBekliyor && !participant.odemeOnaylandi);
     const matchesAttendance =
       attendanceFilter === 'ALL'
-      || (attendanceFilter === 'ATTENDED' && participant.status === 'ATTENDED')
-      || (attendanceFilter === 'NOT_ATTENDED' && participant.status !== 'ATTENDED');
+      || (attendanceFilter === 'KATILDI' && participant.durum === 'KATILDI')
+      || (attendanceFilter === 'NOT_ATTENDED' && participant.durum !== 'KATILDI');
     const matchesCertificate =
       certificateFilter === 'ALL'
-      || (certificateFilter === 'SENT' && participant.certificateSent)
-      || (certificateFilter === 'PENDING' && !participant.certificateSent);
+      || (certificateFilter === 'SENT' && participant.sertifikaGonderildi)
+      || (certificateFilter === 'PENDING' && !participant.sertifikaGonderildi);
     return matchesSearch && matchesStatus && matchesPayment && matchesAttendance && matchesCertificate;
   });
-  const attendedParticipants = participants.filter(participant => participant.status === 'ATTENDED');
-  const pendingPaymentParticipants = participants.filter(participant => participant.status === 'PENDING_PAYMENT');
-  const pendingCertificateParticipants = attendedParticipants.filter(participant => !participant.certificateSent);
-  const canCheckIn = event.status === 'PUBLISHED' && event.qrCheckInEnabled && isCheckInWindowOpen(event);
+  const attendedParticipants = participants.filter(participant => participant.durum === 'KATILDI');
+  const pendingPaymentParticipants = participants.filter(participant => participant.durum === 'ODEME_BEKLIYOR');
+  const pendingCertificateParticipants = attendedParticipants.filter(participant => !participant.sertifikaGonderildi);
+  const canCheckIn = event.durum === 'YAYINLANDI' && event.qrGirisEtkin && isCheckInWindowOpen(event);
   const canIssueCertificates =
     isPastEvent(event)
-    && event.certificateEnabled
-    && (event.status === 'PUBLISHED' || event.status === 'COMPLETED')
+    && event.sertifikaEtkin
+    && (event.durum === 'YAYINLANDI' || event.durum === 'TAMAMLANDI')
     && pendingCertificateParticipants.length > 0;
 
   const submitQrCheckIn = async (token: string) => {
@@ -202,15 +202,15 @@ export const ClubEventManagementPage = () => {
     const rows = filteredParticipants.map(participant => ({
       'Ad Soyad': participantName(participant),
       'Öğrenci No': participantNumber(participant),
-      'E-posta': participant.email || '',
-      'Bölüm': participant.department || '',
-      'Kayıt Tarihi': formatDateTime(participant.registeredAt),
-      'Kayıt Durumu': participantStatusLabel[participant.status],
-      'Yoklama Tarihi': participant.checkedInAt ? formatDateTime(participant.checkedInAt) : '',
-      'Ödeme Durumu': participant.paymentPending ? 'Ödeme bekliyor' : participant.paymentConfirmed ? 'Ödeme onaylandı' : 'Ödeme yok',
-      'Sertifika Durumu': participant.certificateSent ? 'Gönderildi' : 'Bekliyor',
+      'E-posta': participant.eposta || '',
+      'Bölüm': participant.bolum || '',
+      'Kayıt Tarihi': formatDateTime(participant.kayitTarihi),
+      'Kayıt Durumu': participantStatusLabel[participant.durum],
+      'Yoklama Tarihi': participant.yoklamaTarihi ? formatDateTime(participant.yoklamaTarihi) : '',
+      'Ödeme Durumu': participant.odemeBekliyor ? 'Ödeme bekliyor' : participant.odemeOnaylandi ? 'Ödeme onaylandı' : 'Ödeme yok',
+      'Sertifika Durumu': participant.sertifikaGonderildi ? 'Gönderildi' : 'Bekliyor',
     }));
-    downloadXlsx(`${event.title}-katilimcilar.xlsx`, rows);
+    downloadXlsx(`${event.baslik}-katilimcilar.xlsx`, rows);
   };
 
   return (
@@ -222,18 +222,18 @@ export const ClubEventManagementPage = () => {
             Etkinlik akışına dön
           </Link>
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className={`rounded-full px-3 py-1 text-[11px] font-black ${statusClass[event.status]}`}>{statusLabel[event.status]}</span>
+            <span className={`rounded-full px-3 py-1 text-[11px] font-black ${statusClass[event.durum]}`}>{statusLabel[event.durum]}</span>
             <span className="rounded-full px-3 py-1 text-[11px] font-black bg-cyan-500/10 text-cyan-100">
-              {event.eventMode === 'ONLINE' ? 'Online' : 'Yüz yüze'}
+              {event.etkinlikTuru === 'CEVRIMICI' ? 'Online' : 'Yüz yüze'}
             </span>
-            {event.paid && <span className="rounded-full px-3 py-1 text-[11px] font-black bg-amber-500/10 text-amber-100">Ücretli</span>}
+            {event.ucretli && <span className="rounded-full px-3 py-1 text-[11px] font-black bg-amber-500/10 text-amber-100">Ücretli</span>}
           </div>
-          <h1 className="mt-3 text-3xl sm:text-4xl font-black text-white leading-tight">{event.title}</h1>
-          <p className="mt-2 text-sm text-white/45">{event.club?.name}</p>
+          <h1 className="mt-3 text-3xl sm:text-4xl font-black text-white leading-tight">{event.baslik}</h1>
+          <p className="mt-2 text-sm text-white/45">{event.kulup.ad}</p>
         </div>
 
-        {event.posterImageUrl && (
-          <img src={event.posterImageUrl} alt={event.title} className="w-28 aspect-[297/420] rounded-2xl object-cover border border-white/10 bg-white/[0.025]" />
+        {event.afisResmiUrl && (
+          <img src={event.afisResmiUrl} alt={event.baslik} className="w-28 aspect-[297/420] rounded-2xl object-cover border border-white/10 bg-white/[0.025]" />
         )}
       </div>
 
@@ -241,8 +241,8 @@ export const ClubEventManagementPage = () => {
         <button type="button" onClick={() => setActiveTab('overview')} className={tabClass(activeTab === 'overview')}>Genel</button>
         <button type="button" onClick={() => setActiveTab('participants')} className={tabClass(activeTab === 'participants')}>Katılımcılar</button>
         <button type="button" onClick={() => setActiveTab('qr')} className={tabClass(activeTab === 'qr')}>QR Yoklama</button>
-        {event.paid && <button type="button" onClick={() => setActiveTab('payments')} className={tabClass(activeTab === 'payments')}>Ödeme</button>}
-        {event.certificateEnabled && <button type="button" onClick={() => setActiveTab('certificates')} className={tabClass(activeTab === 'certificates')}>Sertifika</button>}
+        {event.ucretli && <button type="button" onClick={() => setActiveTab('payments')} className={tabClass(activeTab === 'payments')}>Ödeme</button>}
+        {event.sertifikaEtkin && <button type="button" onClick={() => setActiveTab('certificates')} className={tabClass(activeTab === 'certificates')}>Sertifika</button>}
         <button type="button" onClick={() => setActiveTab('logs')} className={tabClass(activeTab === 'logs')}>İşlem Geçmişi</button>
       </div>
 
@@ -250,32 +250,32 @@ export const ClubEventManagementPage = () => {
         <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_0.7fr] gap-5">
           <section className="rounded-3xl border border-white/10 bg-white/[0.035] p-6 space-y-4">
             <h2 className="text-xl font-black text-white">Etkinlik Detayları</h2>
-            <p className="text-sm leading-6 text-white/55 whitespace-pre-line">{event.description || 'Açıklama girilmemiş.'}</p>
+            <p className="text-sm leading-6 text-white/55 whitespace-pre-line">{event.aciklama || 'Açıklama girilmemiş.'}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
                 <div className="flex items-center gap-2 text-xs font-black text-white/45"><CalendarDays className="w-4 h-4" />Başlangıç</div>
-                <p className="mt-2 text-sm font-bold text-white">{formatDateTime(event.startTime)}</p>
+                <p className="mt-2 text-sm font-bold text-white">{formatDateTime(event.baslangicTarihi)}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
                 <div className="flex items-center gap-2 text-xs font-black text-white/45"><CalendarDays className="w-4 h-4" />Bitiş</div>
-                <p className="mt-2 text-sm font-bold text-white">{formatDateTime(event.endTime)}</p>
+                <p className="mt-2 text-sm font-bold text-white">{formatDateTime(event.bitisTarihi)}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 md:col-span-2">
                 <div className="flex items-center gap-2 text-xs font-black text-white/45">
-                  {event.eventMode === 'ONLINE' ? <LinkIcon className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
-                  {event.eventMode === 'ONLINE' ? 'Online Bağlantı' : 'Konum'}
+                  {event.etkinlikTuru === 'CEVRIMICI' ? <LinkIcon className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+                  {event.etkinlikTuru === 'CEVRIMICI' ? 'Online Bağlantı' : 'Konum'}
                 </div>
                 <p className="mt-2 text-sm font-bold text-white">
-                  {event.eventMode === 'ONLINE' ? event.onlinePlatform || 'Online' : event.locationName || event.location || 'Konum belirtilmedi'}
+                  {event.etkinlikTuru === 'CEVRIMICI' ? event.cevrimiciPlatform || 'Online' : event.konumAdi || event.konum || 'Konum belirtilmedi'}
                 </p>
-                {event.eventMode === 'ONLINE' && event.onlineMeetingUrl && (
-                  <a href={event.onlineMeetingUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-cyan-100 bg-cyan-500/15 hover:bg-cyan-500/25">
+                {event.etkinlikTuru === 'CEVRIMICI' && event.cevrimiciToplantiUrl && (
+                  <a href={event.cevrimiciToplantiUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-cyan-100 bg-cyan-500/15 hover:bg-cyan-500/25">
                     <ExternalLink className="w-4 h-4" />
                     Online etkinliği aç
                   </a>
                 )}
-                {event.eventMode === 'IN_PERSON' && (
-                  <p className="mt-2 text-xs text-white/40">{event.latitude}, {event.longitude} · {event.locationDetail || 'Konum detayı yok'}</p>
+                {event.etkinlikTuru === 'YUZ_YUZE' && (
+                  <p className="mt-2 text-xs text-white/40">{event.enlem}, {event.boylam} · {event.konumDetayi || 'Konum detayı yok'}</p>
                 )}
               </div>
             </div>
@@ -291,9 +291,9 @@ export const ClubEventManagementPage = () => {
               <div className="text-3xl font-black text-emerald-100">{attendedParticipants.length}</div>
               <div className="text-sm font-semibold text-white/40">Yoklaması alınan</div>
             </div>
-            {event.hasCapacityLimit && (
+            {event.kontenjanSiniriVar && (
               <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-                <div className="text-3xl font-black text-cyan-100">{event.currentRsvpCount}/{event.capacity}</div>
+                <div className="text-3xl font-black text-cyan-100">{event.mevcutRsvpSayisi}/{event.kontenjan}</div>
                 <div className="text-sm font-semibold text-white/40">Kontenjan</div>
               </div>
             )}
@@ -362,7 +362,7 @@ export const ClubEventManagementPage = () => {
               <p className="text-sm text-white/40">Yoklama başlangıçtan 1 saat önce açılır, bitişten 1 saat sonra kapanır.</p>
             </div>
           </div>
-          {!event.qrCheckInEnabled ? (
+          {!event.qrGirisEtkin ? (
             <p className="rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm font-semibold text-white/45">Bu etkinlikte QR katılım doğrulama açık değil.</p>
           ) : canCheckIn ? (
             <QrCheckInPanel event={event} isLoading={isLoading} onClose={() => undefined} onSubmit={submitQrCheckIn} />
@@ -372,7 +372,7 @@ export const ClubEventManagementPage = () => {
         </section>
       )}
 
-      {activeTab === 'payments' && event.paid && (
+      {activeTab === 'payments' && event.ucretli && (
         <section className="rounded-3xl border border-white/10 bg-white/[0.035] p-6 space-y-4">
           <div className="flex items-center gap-3">
             <Banknote className="w-5 h-5 text-amber-200" />
@@ -383,17 +383,17 @@ export const ClubEventManagementPage = () => {
           ) : (
             <div className="space-y-2">
               {pendingPaymentParticipants.map(participant => (
-                <div key={participant.rsvpId} className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-2xl border border-amber-300/15 bg-amber-500/10 px-4 py-3">
+                <div key={participant.katilimId} className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-2xl border border-amber-300/15 bg-amber-500/10 px-4 py-3">
                   <div>
                     <div className="text-sm font-black text-white">{participantName(participant)}</div>
-                    <div className="text-xs text-white/40">{participantNumber(participant)} · {formatDateTime(participant.registeredAt)}</div>
+                    <div className="text-xs text-white/40">{participantNumber(participant)} · {formatDateTime(participant.kayitTarihi)}</div>
                   </div>
                   <div className="flex gap-2">
-                    <button type="button" disabled={isLoading} onClick={() => approvePayment(event.id, participant.rsvpId)} className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-black text-emerald-100 bg-emerald-500/15 hover:bg-emerald-500/25 disabled:opacity-45">
+                    <button type="button" disabled={isLoading} onClick={() => approvePayment(event.id, participant.katilimId)} className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-black text-emerald-100 bg-emerald-500/15 hover:bg-emerald-500/25 disabled:opacity-45">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       Onayla
                     </button>
-                    <button type="button" disabled={isLoading} onClick={() => rejectPayment(event.id, participant.rsvpId)} className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-black text-red-100 bg-red-500/15 hover:bg-red-500/25 disabled:opacity-45">
+                    <button type="button" disabled={isLoading} onClick={() => rejectPayment(event.id, participant.katilimId)} className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-black text-red-100 bg-red-500/15 hover:bg-red-500/25 disabled:opacity-45">
                       <XCircle className="w-3.5 h-3.5" />
                       Reddet
                     </button>
@@ -405,7 +405,7 @@ export const ClubEventManagementPage = () => {
         </section>
       )}
 
-      {activeTab === 'certificates' && event.certificateEnabled && (
+      {activeTab === 'certificates' && event.sertifikaEtkin && (
         <section className="rounded-3xl border border-white/10 bg-white/[0.035] p-6 space-y-4">
           <div className="flex items-center gap-3">
             <GraduationCap className="w-5 h-5 text-purple-200" />
@@ -459,12 +459,12 @@ export const ClubEventManagementPage = () => {
               <div key={log.id} className="p-4 flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full px-3 py-1 text-[11px] font-black bg-purple-500/15 text-purple-100">{log.action}</span>
-                    <span className="text-xs font-semibold text-white/35">{log.actorId}</span>
+                    <span className="rounded-full px-3 py-1 text-[11px] font-black bg-purple-500/15 text-purple-100">{log.islem}</span>
+                    <span className="text-xs font-semibold text-white/35">{log.islemYapanId}</span>
                   </div>
-                  <p className="mt-2 text-sm font-semibold text-white/65">{log.message}</p>
+                  <p className="mt-2 text-sm font-semibold text-white/65">{log.mesaj}</p>
                 </div>
-                <span className="text-xs text-white/35">{formatDateTime(log.createdAt)}</span>
+                <span className="text-xs text-white/35">{formatDateTime(log.olusturulmaTarihi)}</span>
               </div>
             ))}
             {auditLogs.length === 0 && (
@@ -482,7 +482,7 @@ const ParticipantTable = ({
   canManualCheckIn,
   onCheckIn,
 }: {
-  participants: EventParticipant[];
+  participants: EtkinlikKatilimci[];
   canManualCheckIn: boolean;
   onCheckIn: (userId: string) => Promise<boolean>;
 }) => {
@@ -510,26 +510,26 @@ const ParticipantTable = ({
         </thead>
         <tbody className="divide-y divide-white/10">
           {participants.map(participant => (
-            <tr key={participant.rsvpId} className="hover:bg-white/[0.025]">
+            <tr key={participant.katilimId} className="hover:bg-white/[0.025]">
               <td className="px-5 py-4">
                 <div className="text-sm font-black text-white">{participantName(participant)}</div>
-                <div className="text-xs text-white/35">{participant.email || participant.department || participant.userId}</div>
+                <div className="text-xs text-white/35">{participant.eposta || participant.bolum || participant.kullaniciId}</div>
               </td>
               <td className="px-5 py-4 text-sm font-bold text-white/70">{participantNumber(participant)}</td>
-              <td className="px-5 py-4 text-sm text-white/50">{formatDateTime(participant.registeredAt)}</td>
+              <td className="px-5 py-4 text-sm text-white/50">{formatDateTime(participant.kayitTarihi)}</td>
               <td className="px-5 py-4">
                 <span className="rounded-full px-3 py-1 text-[11px] font-black bg-white/10 text-white/65">
-                  {participantStatusLabel[participant.status]}
+                  {participantStatusLabel[participant.durum]}
                 </span>
               </td>
               <td className="px-5 py-4 text-sm text-white/50">
-                {participant.checkedInAt ? formatDateTime(participant.checkedInAt) : '-'}
+                {participant.yoklamaTarihi ? formatDateTime(participant.yoklamaTarihi) : '-'}
               </td>
               <td className="px-5 py-4">
                 <button
                   type="button"
-                  disabled={!canManualCheckIn || participant.status !== 'CONFIRMED'}
-                  onClick={() => onCheckIn(participant.userId)}
+                  disabled={!canManualCheckIn || participant.durum !== 'ONAYLANDI'}
+                  onClick={() => onCheckIn(participant.kullaniciId)}
                   className="rounded-xl px-3 py-2 text-xs font-black text-emerald-100 bg-emerald-500/15 hover:bg-emerald-500/25 disabled:opacity-40 disabled:hover:bg-emerald-500/15 disabled:cursor-not-allowed"
                 >
                   Yoklama Al

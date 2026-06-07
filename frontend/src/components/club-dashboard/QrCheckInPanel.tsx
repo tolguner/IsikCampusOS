@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
 import { Camera, QrCode } from 'lucide-react';
-import type { Event } from '../../store/eventStore';
+import type { Etkinlik } from '../../store/eventStore';
 import { inputClass } from './constants';
 
 interface QrCheckInPanelProps {
-  event: Event;
+  event: Etkinlik;
   isLoading: boolean;
   onClose: () => void;
   onSubmit: (token: string) => Promise<boolean>;

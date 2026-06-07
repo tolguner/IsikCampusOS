@@ -15,7 +15,7 @@ import {
   QrCode,
 } from 'lucide-react';
 import type { Kulup } from '../../store/clubStore';
-import { useEventStore, type Event } from '../../store/eventStore';
+import { useEventStore, type Etkinlik } from '../../store/eventStore';
 import { YOLLAR } from '../../utils/paths';
 import {
   inputClass,
@@ -202,7 +202,7 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
   }, [selectedClub.id]);
 
   const selectedClubEvents = useMemo(
-    () => managedEvents.filter((event) => event.club?.id === selectedClub?.id),
+    () => managedEvents.filter((event) => event.kulup?.id === selectedClub?.id),
     [managedEvents, selectedClub?.id]
   );
 
@@ -210,7 +210,7 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
     return {
       ...eventForm,
       clubId: selectedClub.id,
-      location: eventForm.eventMode === 'IN_PERSON' ? eventForm.locationName : eventForm.onlineMeetingUrl,
+      location: eventForm.eventMode === 'YUZ_YUZE' ? eventForm.locationName : eventForm.onlineMeetingUrl,
       hasCapacityLimit: eventForm.hasCapacityLimit,
       capacityLimited: eventForm.hasCapacityLimit,
       hasWaitlistLimit: false,
@@ -231,37 +231,37 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
     setEventForm({ ...emptyEventForm, clubId: selectedClub.id });
   };
 
-  const startEditingEvent = (event: Event) => {
+  const startEditingEvent = (event: Etkinlik) => {
     if (isPastEvent(event)) return;
     setEditingEventId(event.id);
     setEventForm({
-      clubId: event.club?.id || selectedClub?.id || '',
-      title: event.title || '',
-      description: event.description || '',
-      startTime: event.startTime ? event.startTime.slice(0, 16) : '',
-      endTime: event.endTime ? event.endTime.slice(0, 16) : '',
-      location: event.location || '',
-      eventMode: event.eventMode || 'IN_PERSON',
-      onlinePlatform: event.onlinePlatform || 'Google Meet',
-      onlineMeetingUrl: event.onlineMeetingUrl || '',
-      locationName: event.locationName || event.location || '',
-      locationDetail: event.locationDetail || '',
-      latitude: event.latitude || emptyEventForm.latitude,
-      longitude: event.longitude || emptyEventForm.longitude,
-      posterImageUrl: event.posterImageUrl || '',
-      hasCapacityLimit: Boolean(event.hasCapacityLimit || event.capacityLimited),
-      capacity: event.capacity || 0,
+      clubId: event.kulup?.id || selectedClub?.id || '',
+      title: event.baslik || '',
+      description: event.aciklama || '',
+      startTime: event.baslangicTarihi ? event.baslangicTarihi.slice(0, 16) : '',
+      endTime: event.bitisTarihi ? event.bitisTarihi.slice(0, 16) : '',
+      location: event.konum || '',
+      eventMode: event.etkinlikTuru || 'YUZ_YUZE',
+      onlinePlatform: event.cevrimiciPlatform || 'Google Meet',
+      onlineMeetingUrl: event.cevrimiciToplantiUrl || '',
+      locationName: event.konumAdi || event.konum || '',
+      locationDetail: event.konumDetayi || '',
+      latitude: event.enlem || emptyEventForm.latitude,
+      longitude: event.boylam || emptyEventForm.longitude,
+      posterImageUrl: event.afisResmiUrl || '',
+      hasCapacityLimit: Boolean(event.kontenjanSiniriVar || event.kontenjanSinirli),
+      capacity: event.kontenjan || 0,
       hasWaitlistLimit: false,
       waitlistCapacity: 0,
-      qrCheckInEnabled: event.qrCheckInEnabled,
-      certificateEnabled: event.certificateEnabled,
-      certificateTitle: event.certificateTitle || '',
-      paid: Boolean(event.paid),
-      feeAmount: event.feeAmount || 0,
+      qrCheckInEnabled: event.qrGirisEtkin,
+      certificateEnabled: event.sertifikaEtkin,
+      certificateTitle: event.sertifikaBasligi || '',
+      paid: Boolean(event.ucretli),
+      feeAmount: event.ucretTutari || 0,
       iban: event.iban || '',
-      paymentInstructions: event.paymentInstructions || '',
-      reminderEnabled: Boolean(event.reminderEnabled),
-      reminderOffsetsMinutes: parseReminderOffsets(event.reminderOffsetsMinutes as any),
+      paymentInstructions: event.odemeTalimatlari || '',
+      reminderEnabled: Boolean(event.hatirlaticiEtkin),
+      reminderOffsetsMinutes: parseReminderOffsets(event.hatirlatmaZamanlariDakika as any),
     });
   };
 
@@ -305,7 +305,7 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
       setFormError('Etkinlik bitiş tarihi başlangıç tarihinden sonra olmalıdır.');
       return;
     }
-    if (payload.eventMode === 'ONLINE') {
+    if (payload.eventMode === 'CEVRIMICI') {
       try {
         const url = new URL(payload.onlineMeetingUrl);
         if (!['http:', 'https:'].includes(url.protocol)) {
@@ -321,7 +321,7 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
     let ok = false;
     if (editingEventId) {
       ok = await updateEvent(editingEventId, payload);
-      if (ok && currentEvent && ['DRAFT', 'REVISION_REQUESTED'].includes(currentEvent.status)) {
+      if (ok && currentEvent && ['TASLAK', 'REVIZYON_TALEP_EDILDI'].includes(currentEvent.durum)) {
         ok = await submitForApproval(editingEventId);
       }
     } else {
@@ -406,15 +406,15 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
         </div>
 
         <div className="grid grid-cols-2 gap-2 rounded-3xl border border-white/10 bg-white/[0.025] p-2">
-          <button type="button" onClick={() => setEventForm(prev => ({ ...prev, eventMode: 'IN_PERSON' }))} className={`rounded-2xl px-4 py-3 text-sm font-black transition-colors ${eventForm.eventMode === 'IN_PERSON' ? 'bg-purple-500/25 text-white' : 'text-white/45 hover:text-white'}`}>
+          <button type="button" onClick={() => setEventForm(prev => ({ ...prev, eventMode: 'YUZ_YUZE' }))} className={`rounded-2xl px-4 py-3 text-sm font-black transition-colors ${eventForm.eventMode === 'YUZ_YUZE' ? 'bg-purple-500/25 text-white' : 'text-white/45 hover:text-white'}`}>
             Yüz yüze
           </button>
-          <button type="button" onClick={() => setEventForm(prev => ({ ...prev, eventMode: 'ONLINE' }))} className={`rounded-2xl px-4 py-3 text-sm font-black transition-colors ${eventForm.eventMode === 'ONLINE' ? 'bg-purple-500/25 text-white' : 'text-white/45 hover:text-white'}`}>
+          <button type="button" onClick={() => setEventForm(prev => ({ ...prev, eventMode: 'CEVRIMICI' }))} className={`rounded-2xl px-4 py-3 text-sm font-black transition-colors ${eventForm.eventMode === 'CEVRIMICI' ? 'bg-purple-500/25 text-white' : 'text-white/45 hover:text-white'}`}>
             Online
           </button>
         </div>
 
-        {eventForm.eventMode === 'ONLINE' ? (
+        {eventForm.eventMode === 'CEVRIMICI' ? (
           <section className="rounded-3xl border border-white/10 bg-white/[0.025] p-4 space-y-3">
             <div className="flex items-center gap-2 text-sm font-black text-white">
               <LinkIcon className="w-4 h-4 text-cyan-200" />
@@ -619,63 +619,63 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
             <div key={event.id} className="p-5 flex flex-col lg:flex-row lg:items-center gap-4">
               {(() => {
                 const pastEvent = isPastEvent(event);
-                const canEditEvent = !pastEvent && (event.status === 'DRAFT' || event.status === 'REVISION_REQUESTED' || event.status === 'PUBLISHED');
-                const canSubmitEvent = !pastEvent && (event.status === 'DRAFT' || event.status === 'REVISION_REQUESTED');
-                const canOperatePublishedEvent = !pastEvent && event.status === 'PUBLISHED';
-                const canCheckInEvent = event.status === 'PUBLISHED' && isCheckInWindowOpen(event);
-                const showActionPanel = canEditEvent || event.status === 'PUBLISHED';
+                const canEditEvent = !pastEvent && (event.durum === 'TASLAK' || event.durum === 'REVIZYON_TALEP_EDILDI' || event.durum === 'YAYINLANDI');
+                const canSubmitEvent = !pastEvent && (event.durum === 'TASLAK' || event.durum === 'REVIZYON_TALEP_EDILDI');
+                const canOperatePublishedEvent = !pastEvent && event.durum === 'YAYINLANDI';
+                const canCheckInEvent = event.durum === 'YAYINLANDI' && isCheckInWindowOpen(event);
+                const showActionPanel = canEditEvent || event.durum === 'YAYINLANDI';
                 return (
               <>
-              {event.posterImageUrl && (
-                <img src={event.posterImageUrl} alt={event.title} className="w-full lg:w-24 aspect-[297/420] rounded-2xl object-cover border border-white/10 bg-white/[0.025]" />
+              {event.afisResmiUrl && (
+                <img src={event.afisResmiUrl} alt={event.baslik} className="w-full lg:w-24 aspect-[297/420] rounded-2xl object-cover border border-white/10 bg-white/[0.025]" />
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-black text-white">{event.title}</h3>
-                  <span className={`rounded-full px-3 py-1 text-[11px] font-black ${statusClass[event.status]}`}>{statusLabel[event.status]}</span>
+                  <h3 className="font-black text-white">{event.baslik}</h3>
+                  <span className={`rounded-full px-3 py-1 text-[11px] font-black ${statusClass[event.durum]}`}>{statusLabel[event.durum]}</span>
                   <span className="rounded-full px-3 py-1 text-[11px] font-black bg-cyan-500/10 text-cyan-100">
-                    {event.eventMode === 'ONLINE' ? 'Online' : 'Yüz yüze'}
+                    {event.etkinlikTuru === 'CEVRIMICI' ? 'Online' : 'Yüz yüze'}
                   </span>
-                  {event.paid && <span className="rounded-full px-3 py-1 text-[11px] font-black bg-amber-500/10 text-amber-100">Ücretli</span>}
+                  {event.ucretli && <span className="rounded-full px-3 py-1 text-[11px] font-black bg-amber-500/10 text-amber-100">Ücretli</span>}
                   {pastEvent && <span className="rounded-full px-3 py-1 text-[11px] font-black bg-white/10 text-white/45">Geçmiş</span>}
                 </div>
                 <p className="text-xs text-white/40 mt-2">
-                  {(event.eventMode === 'ONLINE' ? event.onlinePlatform : event.locationName || event.location) || 'Konum/link bekleniyor'} · {new Date(event.startTime).toLocaleString('tr-TR')}
+                  {(event.etkinlikTuru === 'CEVRIMICI' ? event.cevrimiciPlatform : event.konumAdi || event.konum) || 'Konum/link bekleniyor'} · {new Date(event.baslangicTarihi).toLocaleString('tr-TR')}
                 </p>
-                {event.eventMode === 'ONLINE' && event.onlineMeetingUrl && (
-                  <a href={event.onlineMeetingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-cyan-200 hover:text-cyan-100">
+                {event.etkinlikTuru === 'CEVRIMICI' && event.cevrimiciToplantiUrl && (
+                  <a href={event.cevrimiciToplantiUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-cyan-200 hover:text-cyan-100">
                     <LinkIcon className="w-3.5 h-3.5" />
                     Online etkinliğe git
                   </a>
                 )}
-                {event.eventMode === 'IN_PERSON' && event.latitude && event.longitude && (
-                  <p className="text-xs text-white/35 mt-2">{event.latitude}, {event.longitude} · {event.locationDetail || 'Konum detayı yok'}</p>
+                {event.etkinlikTuru === 'YUZ_YUZE' && event.enlem && event.boylam && (
+                  <p className="text-xs text-white/35 mt-2">{event.enlem}, {event.boylam} · {event.konumDetayi || 'Konum detayı yok'}</p>
                 )}
                 <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-white/45">
                   <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2">
                     <UsersRound className="w-3.5 h-3.5 text-cyan-200" />
-                    {event.hasCapacityLimit ? `${event.currentRsvpCount}/${event.capacity} kayıt` : `${event.currentRsvpCount} kayıt`}
+                    {event.kontenjanSiniriVar ? `${event.mevcutRsvpSayisi}/${event.kontenjan} kayıt` : `${event.mevcutRsvpSayisi} kayıt`}
                   </span>
-                  {event.qrCheckInEnabled && (
+                  {event.qrGirisEtkin && (
                     <span className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 ${canCheckInEvent ? 'border-emerald-300/20 bg-emerald-500/10 text-emerald-100' : 'border-white/10 bg-white/[0.025]'}`}>
                       <QrCode className="w-3.5 h-3.5" />
                       {canCheckInEvent ? 'Yoklama açık' : 'Yoklama kapalı'}
                     </span>
                   )}
                 </div>
-                {event.paid && <p className="text-xs text-amber-100/75 mt-2">Ödeme: {event.feeAmount || 0} TL · {event.iban || 'IBAN bekleniyor'}</p>}
-                {event.reminderEnabled && event.reminderOffsetsMinutes && (
+                {event.ucretli && <p className="text-xs text-amber-100/75 mt-2">Ödeme: {event.ucretTutari || 0} TL · {event.iban || 'IBAN bekleniyor'}</p>}
+                {event.hatirlaticiEtkin && event.hatirlatmaZamanlariDakika && (
                   <p className="text-xs text-cyan-100/75 mt-2">
-                    Hatırlatmalar: {(event.reminderOffsetsMinutes as any as string).split(',').filter(Boolean).map(value => {
+                    Hatırlatmalar: {(event.hatirlatmaZamanlariDakika as any as string).split(',').filter(Boolean).map(value => {
                       const minutes = Number(value);
                       return minutes >= 60 && minutes % 60 === 0 ? `${minutes / 60} saat önce` : `${minutes} dk önce`;
                     }).join(', ')}
                   </p>
                 )}
-                {event.rejectionReason && <p className="text-xs text-red-200 mt-2">SKS geri bildirimi: {event.rejectionReason}</p>}
-                {event.status === 'CANCELLED' && event.rejectionReason && (
+                {event.redNedeni && <p className="text-xs text-red-200 mt-2">SKS geri bildirimi: {event.redNedeni}</p>}
+                {event.durum === 'IPTAL_EDILDI' && event.redNedeni && (
                   <p className="mt-3 rounded-2xl border border-red-400/15 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-100">
-                    İptal gerekçesi: {event.rejectionReason}
+                    İptal gerekçesi: {event.redNedeni}
                   </p>
                 )}
               </div>
@@ -694,7 +694,7 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
                       Onaya Gönder
                     </button>
                   )}
-                  {event.status === 'PUBLISHED' && (
+                  {event.durum === 'YAYINLANDI' && (
                     <>
                       {canOperatePublishedEvent && (
                         <>
@@ -748,7 +748,7 @@ export const EventsTab = ({ selectedClub }: EventsTabProps) => {
               {pastEvent && (
                 <div className="lg:w-52 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-xs font-semibold text-white/45 text-center space-y-3">
                   <p>
-                    {event.status === 'DRAFT' || event.status === 'REVISION_REQUESTED'
+                    {event.durum === 'TASLAK' || event.durum === 'REVIZYON_TALEP_EDILDI'
                       ? 'Bu taslak geçmiş tarihli olduğu için SKS onayına gönderilemez. Yeni tarihli bir etkinlik talebi oluştur.'
                       : canCheckInEvent
                         ? 'Etkinlik sona erdi; yoklama +1 saat esnekliği içinde açık kalır.'
