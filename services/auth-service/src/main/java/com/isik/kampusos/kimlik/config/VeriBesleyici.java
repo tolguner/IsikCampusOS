@@ -5,20 +5,27 @@ import com.isik.kampusos.kimlik.model.KullaniciDurumu;
 import com.isik.kampusos.kimlik.repository.KullaniciDeposu;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
- 
+
 @Component
 @Profile("dev")  // Yalnızca 'dev' profilinde çalışır
 @RequiredArgsConstructor
 @Slf4j
 public class VeriBesleyici implements CommandLineRunner {
- 
+
     private final KullaniciDeposu kullaniciDeposu;
     private final PasswordEncoder passwordEncoder;
- 
+
+    // Sistem yöneticisi seed parolası ortam değişkeninden okunur (varsayılan yalnızca geliştirme içindir).
+    private static final String VARSAYILAN_ADMIN_SIFRE = "Admin123!";
+
+    @Value("${ADMIN_SEED_PASSWORD:" + VARSAYILAN_ADMIN_SIFRE + "}")
+    private String adminSeedSifre;
+
     @Override
     public void run(String... args) {
         // Öğrenci İşleri hesabı
@@ -37,11 +44,11 @@ public class VeriBesleyici implements CommandLineRunner {
             log.info("✅ Seed: Öğrenci İşleri hesabı oluşturuldu — ogrenci.isleri@isikun.edu.tr / Admin123!");
         }
  
-        // Sistem Admin hesabı
+        // Sistem Admin hesabı — parola ADMIN_SEED_PASSWORD ortam değişkeninden okunur.
         if (!kullaniciDeposu.existsByEposta("admin@isikun.edu.tr")) {
             Kullanici admin = Kullanici.builder()
                     .eposta("admin@isikun.edu.tr")
-                    .sifre(passwordEncoder.encode("Admin123!"))
+                    .sifre(passwordEncoder.encode(adminSeedSifre))
                     .roller("ROLE_ADMIN")
                     .ad("Sistem")
                     .soyad("Yöneticisi")
@@ -50,7 +57,10 @@ public class VeriBesleyici implements CommandLineRunner {
                     .sifreDegistirmeli(false)
                     .build();
             kullaniciDeposu.save(admin);
-            log.info("✅ Seed: Sistem Admin hesabı oluşturuldu — admin@isikun.edu.tr / Admin123!");
+            boolean varsayilanParola = VARSAYILAN_ADMIN_SIFRE.equals(adminSeedSifre);
+            log.info("✅ Seed: Sistem Admin hesabı oluşturuldu — admin@isikun.edu.tr / parola: {}",
+                    varsayilanParola ? VARSAYILAN_ADMIN_SIFRE + " (varsayılan — üretimde ADMIN_SEED_PASSWORD ile değiştirin)"
+                                     : "ADMIN_SEED_PASSWORD ortam değişkeninden okundu");
         }
  
         // SKS yöneticisi hesabı
