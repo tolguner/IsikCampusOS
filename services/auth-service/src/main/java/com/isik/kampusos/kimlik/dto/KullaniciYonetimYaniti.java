@@ -29,6 +29,4 @@ public class KullaniciYonetimYaniti {
     private LocalDateTime sonGirisTarihi;
     private LocalDateTime olusturulmaTarihi;
     private LocalDateTime guncellenmeTarihi;
-    /** Yalnızca yeni oluşturmada, üretilen geçici şifre döndürülür (aksi halde null). */
-    private String geciciSifre;
 }
