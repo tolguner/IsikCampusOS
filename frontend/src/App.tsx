@@ -18,6 +18,7 @@ import { SertifikaDogrulamaSayfasi } from './pages/SertifikaDogrulamaSayfasi';
 import { TesisYonetimPaneli } from './pages/TesisYonetimPaneli';
 import { TesisRezervasyonSayfasi } from './pages/TesisRezervasyonSayfasi';
 import { RezervasyonlarimSayfasi } from './pages/RezervasyonlarimSayfasi';
+import { YonetimPaneli } from './pages/YonetimPaneli';
 import { useKimlikDeposu } from './depolar/kimlikDeposu';
 import { useKulupDeposu } from './depolar/kulupDeposu';
 import { OtomatikMesajTemizleyici } from './components/OtomatikMesajTemizleyici';
@@ -60,6 +61,11 @@ const ProtectedRoute = ({
 const DashboardRoute = () => {
   const user = useKimlikDeposu(state => state.user);
   const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);
+
+  // Sistem yöneticisi kendi paneline yönlenir (SKS'ten ayrı)
+  if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.sistemYonetimi)) {
+    return <YonetimPaneli />;
+  }
 
   if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.sksYonetimi)) {
     return <SksPaneli />;
@@ -157,6 +163,14 @@ function App() {
           <ProtectedRoute>
             <UygulamaDuzeni>
               <DashboardRoute />
+            </UygulamaDuzeni>
+          </ProtectedRoute>
+        } />
+
+        <Route path={YOLLAR.yonetim} element={
+          <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.sistemYonetimi}>
+            <UygulamaDuzeni>
+              <YonetimPaneli />
             </UygulamaDuzeni>
           </ProtectedRoute>
         } />

@@ -1,0 +1,298 @@
+import { useEffect, useMemo, useState } from 'react';
+import { ShieldCheck, Users, ScrollText, Plus, RefreshCw, KeyRound, Trash2, Pencil, X, Search } from 'lucide-react';
+import {
+  useYonetimDeposu,
+  type YonetimKullanicisi,
+  type KullaniciOlusturmaFormu,
+} from '../depolar/yonetimDeposu';
+
+type Sekme = 'kullanicilar' | 'loglar';
+
+const ROL_ETIKETLERI: Record<string, string> = {
+  ROLE_ADMIN: 'Sistem Yöneticisi',
+  ROLE_SKS_ADMIN: 'SKS Yöneticisi',
+  ROLE_FACILITY_ADMIN: 'Tesis Yöneticisi',
+  ROLE_REGISTRAR: 'Öğrenci İşleri',
+  ROLE_STUDENT: 'Öğrenci',
+};
+const ROLLER = Object.keys(ROL_ETIKETLERI);
+
+const DURUM_ETIKETLERI: Record<string, string> = {
+  AKTIF: 'Aktif',
+  PASIF: 'Pasif',
+  MEZUN: 'Mezun',
+  ILISIGI_KESILMIS: 'İlişiği Kesilmiş',
+};
+
+const inputClass =
+  'w-full rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-purple-400/60';
+
+const rolEtiketi = (roller: string) =>
+  roller.split(',').map(r => ROL_ETIKETLERI[r.trim()] || r.trim()).join(', ');
+
+export const YonetimPaneli = () => {
+  const {
+    kullanicilar, toplamKullanici, loglar, isLoading, hata, basariMesaji,
+    temizleMesajlar, kullanicilariGetir, kullaniciOlustur, kullaniciGuncelle,
+    sifreSifirla, kullaniciSil, loglariGetir,
+  } = useYonetimDeposu();
+
+  const [sekme, setSekme] = useState<Sekme>('kullanicilar');
+  const [arama, setArama] = useState('');
+  const [rolFiltre, setRolFiltre] = useState('');
+  const [logVarlik, setLogVarlik] = useState('');
+  const [logArama, setLogArama] = useState('');
+
+  const [olusturModal, setOlusturModal] = useState(false);
+  const [duzenle, setDuzenle] = useState<YonetimKullanicisi | null>(null);
+  const [geciciSifreBilgisi, setGeciciSifreBilgisi] = useState<{ eposta: string; sifre: string } | null>(null);
+
+  useEffect(() => {
+    if (sekme === 'kullanicilar') {
+      const t = setTimeout(() => kullanicilariGetir(0, 20, arama, '', rolFiltre), 250);
+      return () => clearTimeout(t);
+    }
+  }, [sekme, arama, rolFiltre, kullanicilariGetir]);
+
+  useEffect(() => {
+    if (sekme === 'loglar') {
+      const t = setTimeout(() => loglariGetir(logVarlik, logArama), 250);
+      return () => clearTimeout(t);
+    }
+  }, [sekme, logVarlik, logArama, loglariGetir]);
+
+  return (
+    <div className="space-y-6 text-white pb-12">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-purple-300/25 bg-purple-500/10 text-purple-200">
+            <ShieldCheck className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-black tracking-normal text-white">Sistem Yönetim Paneli</h1>
+            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-white/45">
+              Tüm kullanıcı ve rolleri yönetin, sistem denetim kayıtlarını inceleyin.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => (sekme === 'kullanicilar' ? kullanicilariGetir(0, 20, arama, '', rolFiltre) : loglariGetir(logVarlik, logArama))}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/70 transition hover:bg-white/10 cursor-pointer"
+        >
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Yenile
+        </button>
+      </div>
+
+      <div className="flex gap-2 border-b border-white/5 pb-px">
+        <button onClick={() => setSekme('kullanicilar')}
+          className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'kullanicilar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
+          <Users className="h-4 w-4" /> Kullanıcı & Rol Yönetimi ({toplamKullanici})
+        </button>
+        <button onClick={() => setSekme('loglar')}
+          className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'loglar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
+          <ScrollText className="h-4 w-4" /> Sistem Logları
+        </button>
+      </div>
+
+      {(hata || basariMesaji) && (
+        <div className={`rounded-2xl px-4 py-3 text-sm font-semibold flex items-center justify-between ${hata ? 'border border-red-400/25 bg-red-500/12 text-red-100' : 'border border-emerald-300/25 bg-emerald-500/12 text-emerald-100'}`}>
+          <span>{hata || basariMesaji}</span>
+          <button onClick={temizleMesajlar} className="text-white/50 hover:text-white"><X className="h-4 w-4" /></button>
+        </div>
+      )}
+
+      {geciciSifreBilgisi && (
+        <div className="rounded-2xl px-4 py-3 text-sm border border-amber-400/25 bg-amber-500/10 text-amber-100 flex items-center justify-between">
+          <span><b>{geciciSifreBilgisi.eposta}</b> için geçici şifre: <code className="font-black tracking-wider">{geciciSifreBilgisi.sifre}</code> — kullanıcı ilk girişte değiştirecek.</span>
+          <button onClick={() => setGeciciSifreBilgisi(null)} className="text-white/50 hover:text-white"><X className="h-4 w-4" /></button>
+        </div>
+      )}
+
+      {sekme === 'kullanicilar' ? (
+        <section className="space-y-5">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <input value={arama} onChange={e => setArama(e.target.value)} placeholder="Ad, e-posta veya öğrenci no ara" className={`${inputClass} pl-11`} />
+            </div>
+            <select value={rolFiltre} onChange={e => setRolFiltre(e.target.value)} className="rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none focus:border-purple-400/60">
+              <option value="">Tüm roller</option>
+              {ROLLER.map(r => <option key={r} value={r}>{ROL_ETIKETLERI[r]}</option>)}
+            </select>
+            <button onClick={() => setOlusturModal(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-500 hover:bg-purple-400 px-5 py-3 text-sm font-black text-white transition cursor-pointer">
+              <Plus className="h-4 w-4" /> Yeni Kullanıcı
+            </button>
+          </div>
+
+          <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.025]">
+            <table className="w-full min-w-[900px] text-left border-collapse">
+              <thead>
+                <tr className="text-xs uppercase tracking-wide text-white/35 bg-white/[0.025] border-b border-white/10">
+                  <th className="px-5 py-4 font-bold">Kullanıcı</th>
+                  <th className="px-5 py-4 font-bold">Rol</th>
+                  <th className="px-5 py-4 font-bold">Durum</th>
+                  <th className="px-5 py-4 font-bold text-right">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {kullanicilar.map(k => (
+                  <tr key={k.id} className="hover:bg-white/[0.02]">
+                    <td className="px-5 py-4">
+                      <div className="font-bold text-white text-sm">{[k.ad, k.soyad].filter(Boolean).join(' ') || '—'}</div>
+                      <div className="text-xs text-white/40">{k.eposta}</div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="rounded-full px-3 py-1 text-xs font-bold text-purple-100 bg-purple-500/15 border border-purple-400/20">{rolEtiketi(k.roller)}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`rounded-lg px-2.5 py-1 text-xs font-semibold border ${k.durum === 'AKTIF' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-white/5 text-white/50 border-white/10'}`}>
+                        {DURUM_ETIKETLERI[k.durum] || k.durum}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <button onClick={() => setDuzenle(k)} title="Düzenle" className="p-2 rounded-xl text-blue-300 hover:bg-white/5 cursor-pointer"><Pencil className="h-4 w-4" /></button>
+                        <button onClick={async () => { const s = await sifreSifirla(k.id); if (s) setGeciciSifreBilgisi({ eposta: k.eposta, sifre: s }); }} title="Şifre Sıfırla" className="p-2 rounded-xl text-amber-300 hover:bg-white/5 cursor-pointer"><KeyRound className="h-4 w-4" /></button>
+                        <button onClick={() => { if (window.confirm(`${k.eposta} kullanıcısını kalıcı olarak silmek istediğinize emin misiniz?`)) kullaniciSil(k.id); }} title="Sil" className="p-2 rounded-xl text-red-400 hover:bg-red-500/10 cursor-pointer"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {kullanicilar.length === 0 && (
+                  <tr><td colSpan={4} className="px-5 py-12 text-center text-sm text-white/35">Kayıt bulunamadı.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : (
+        <section className="space-y-5">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <input value={logArama} onChange={e => setLogArama(e.target.value)} placeholder="İşlem, mesaj veya kullanıcı ara" className={`${inputClass} pl-11`} />
+            </div>
+            <select value={logVarlik} onChange={e => setLogVarlik(e.target.value)} className="rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none focus:border-purple-400/60">
+              <option value="">Tüm varlıklar</option>
+              <option value="KULUP">Kulüp</option>
+              <option value="ETKINLIK">Etkinlik</option>
+            </select>
+          </div>
+
+          <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.025]">
+            <table className="w-full min-w-[900px] text-left border-collapse">
+              <thead>
+                <tr className="text-xs uppercase tracking-wide text-white/35 bg-white/[0.025] border-b border-white/10">
+                  <th className="px-5 py-4 font-bold">Tarih</th>
+                  <th className="px-5 py-4 font-bold">İşlem</th>
+                  <th className="px-5 py-4 font-bold">Varlık</th>
+                  <th className="px-5 py-4 font-bold">Yapan</th>
+                  <th className="px-5 py-4 font-bold">Mesaj</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {loglar.map(l => (
+                  <tr key={l.id} className="hover:bg-white/[0.02] align-top">
+                    <td className="px-5 py-4 text-xs text-white/50 whitespace-nowrap">{new Date(l.olusturulmaTarihi).toLocaleString('tr-TR')}</td>
+                    <td className="px-5 py-4"><span className="rounded-lg px-2 py-0.5 text-xs font-bold text-cyan-200 bg-cyan-500/10 border border-cyan-400/20">{l.islem}</span></td>
+                    <td className="px-5 py-4 text-xs text-white/60">{l.varlikTuru}</td>
+                    <td className="px-5 py-4 text-xs text-white/50">{l.islemYapanRol || '—'}</td>
+                    <td className="px-5 py-4 text-sm text-white/70">{l.mesaj}</td>
+                  </tr>
+                ))}
+                {loglar.length === 0 && (
+                  <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-white/35">Log kaydı bulunamadı.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {olusturModal && (
+        <KullaniciOlusturModal
+          onKapat={() => setOlusturModal(false)}
+          onKaydet={async (form) => {
+            const olusan = await kullaniciOlustur(form);
+            if (olusan) {
+              setOlusturModal(false);
+              if (olusan.geciciSifre) setGeciciSifreBilgisi({ eposta: olusan.eposta, sifre: olusan.geciciSifre });
+            }
+          }}
+        />
+      )}
+
+      {duzenle && (
+        <KullaniciDuzenleModal
+          kullanici={duzenle}
+          onKapat={() => setDuzenle(null)}
+          onKaydet={async (form) => { const ok = await kullaniciGuncelle(duzenle.id, form); if (ok) setDuzenle(null); }}
+        />
+      )}
+    </div>
+  );
+};
+
+const ModalKabuk = ({ baslik, onKapat, children }: { baslik: string; onKapat: () => void; children: React.ReactNode }) => (
+  <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="w-full max-w-md rounded-3xl p-6 space-y-5 relative text-white bg-[#0f0f1c] border border-white/10 shadow-2xl">
+      <button type="button" onClick={onKapat} className="absolute top-4 right-4 text-white/40 hover:text-white/70 cursor-pointer"><X className="h-5 w-5" /></button>
+      <h3 className="text-lg font-black">{baslik}</h3>
+      {children}
+    </div>
+  </div>
+);
+
+const KullaniciOlusturModal = ({ onKapat, onKaydet }: { onKapat: () => void; onKaydet: (f: KullaniciOlusturmaFormu) => void }) => {
+  const [form, setForm] = useState<KullaniciOlusturmaFormu>({ eposta: '', roller: 'ROLE_STUDENT', ad: '', soyad: '', fakulte: '', bolum: '' });
+  const gecerli = useMemo(() => form.eposta.includes('@') && form.roller, [form]);
+  return (
+    <ModalKabuk baslik="Yeni Kullanıcı" onKapat={onKapat}>
+      <div className="space-y-3">
+        <input className={inputClass} placeholder="E-posta" value={form.eposta} onChange={e => setForm(p => ({ ...p, eposta: e.target.value }))} />
+        <div className="grid grid-cols-2 gap-3">
+          <input className={inputClass} placeholder="Ad" value={form.ad} onChange={e => setForm(p => ({ ...p, ad: e.target.value }))} />
+          <input className={inputClass} placeholder="Soyad" value={form.soyad} onChange={e => setForm(p => ({ ...p, soyad: e.target.value }))} />
+        </div>
+        <select className={inputClass} value={form.roller} onChange={e => setForm(p => ({ ...p, roller: e.target.value }))}>
+          {ROLLER.map(r => <option key={r} value={r}>{ROL_ETIKETLERI[r]}</option>)}
+        </select>
+        <div className="grid grid-cols-2 gap-3">
+          <input className={inputClass} placeholder="Fakülte (ops.)" value={form.fakulte} onChange={e => setForm(p => ({ ...p, fakulte: e.target.value }))} />
+          <input className={inputClass} placeholder="Bölüm (ops.)" value={form.bolum} onChange={e => setForm(p => ({ ...p, bolum: e.target.value }))} />
+        </div>
+        <p className="text-xs text-white/35">Geçici şifre otomatik üretilir ve oluşturma sonrası gösterilir.</p>
+        <button disabled={!gecerli} onClick={() => onKaydet(form)} className="w-full rounded-2xl bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed px-5 py-3 text-sm font-black text-white cursor-pointer">Oluştur</button>
+      </div>
+    </ModalKabuk>
+  );
+};
+
+const KullaniciDuzenleModal = ({ kullanici, onKapat, onKaydet }: { kullanici: YonetimKullanicisi; onKapat: () => void; onKaydet: (f: any) => void }) => {
+  const [form, setForm] = useState({
+    ad: kullanici.ad || '', soyad: kullanici.soyad || '',
+    roller: kullanici.roller, durum: kullanici.durum,
+    fakulte: kullanici.fakulte || '', bolum: kullanici.bolum || '',
+  });
+  return (
+    <ModalKabuk baslik={`Düzenle — ${kullanici.eposta}`} onKapat={onKapat}>
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <input className={inputClass} placeholder="Ad" value={form.ad} onChange={e => setForm(p => ({ ...p, ad: e.target.value }))} />
+          <input className={inputClass} placeholder="Soyad" value={form.soyad} onChange={e => setForm(p => ({ ...p, soyad: e.target.value }))} />
+        </div>
+        <label className="block text-xs font-bold uppercase tracking-wider text-white/35">Rol</label>
+        <select className={inputClass} value={form.roller} onChange={e => setForm(p => ({ ...p, roller: e.target.value }))}>
+          {ROLLER.map(r => <option key={r} value={r}>{ROL_ETIKETLERI[r]}</option>)}
+        </select>
+        <label className="block text-xs font-bold uppercase tracking-wider text-white/35">Durum</label>
+        <select className={inputClass} value={form.durum} onChange={e => setForm(p => ({ ...p, durum: e.target.value }))}>
+          {Object.keys(DURUM_ETIKETLERI).map(d => <option key={d} value={d}>{DURUM_ETIKETLERI[d]}</option>)}
+        </select>
+        <button onClick={() => onKaydet(form)} className="w-full rounded-2xl bg-purple-500 hover:bg-purple-400 px-5 py-3 text-sm font-black text-white cursor-pointer">Kaydet</button>
+      </div>
+    </ModalKabuk>
+  );
+};

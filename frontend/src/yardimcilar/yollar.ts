@@ -14,4 +14,5 @@ export const YOLLAR = {
   tesisYonetimi: '/tesis-yonetimi',
   tesisRezervasyon: '/tesis-rezervasyon',
   rezervasyonlarim: '/rezervasyonlarim',
+  yonetim: '/yonetim',
 } as const;
