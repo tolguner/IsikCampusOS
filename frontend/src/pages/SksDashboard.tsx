@@ -1,12 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Banknote,
   CheckCircle2,
-  Clock,
-  Link as LinkIcon,
   GraduationCap,
-  MapPin,
   Pencil,
   Power,
   RefreshCw,
@@ -15,7 +11,6 @@ import {
   UserCog,
   Users,
   X,
-  XCircle,
 } from 'lucide-react';
 import { useClubStore, type Kulup } from '../store/clubStore';
 import { useEventStore, type Etkinlik } from '../store/eventStore';
@@ -38,6 +33,8 @@ import {
   type DuyuruFormu,
 } from '../components/sks-dashboard/ortak';
 import { AnnouncementsModule } from '../components/sks-dashboard/AnnouncementsModule';
+import { ProfileRequestsModule } from '../components/sks-dashboard/ProfileRequestsModule';
+import { EventsModule } from '../components/sks-dashboard/EventsModule';
 
 export const SksDashboard = () => {
   const {
@@ -1140,220 +1137,28 @@ export const SksDashboard = () => {
   );
 
   const renderEventsModule = () => (
-    <section className="space-y-5">
-      <div className="space-y-4">
-        {reviewQueue.map(event => (
-          <motion.div key={event.id} layout className="rounded-3xl p-5 bg-white/[0.035] border border-white/5">
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-              <div className="min-w-0 flex-1 space-y-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-xl font-black text-white">{event.baslik}</h3>
-                  <span className="rounded-full px-3 py-1 text-xs font-black text-purple-100 bg-purple-500/15 border border-purple-300/20">
-                    {event.kulup?.ad || 'Kulüp bilgisi yok'}
-                  </span>
-                  <span className="rounded-full px-3 py-1 text-xs font-black text-cyan-100 bg-cyan-500/10 border border-cyan-300/15">
-                    {event.etkinlikTuru === 'CEVRIMICI' ? 'Online' : 'Yüz yüze'}
-                  </span>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-                  <div className="text-xs font-black uppercase tracking-wide text-white/35 mb-2">Etkinlik açıklaması</div>
-                  <p className="text-sm text-white/60 leading-relaxed whitespace-pre-line">{event.aciklama || 'Açıklama belirtilmedi.'}</p>
-                </div>
-
-                <div className="grid grid-cols-1 xl:grid-cols-[12rem_1fr] gap-4">
-                  {event.afisResmiUrl ? (
-                    <img src={event.afisResmiUrl} alt={event.baslik} className="w-full max-w-xs xl:max-w-none aspect-[297/420] object-cover rounded-2xl border border-white/10 bg-white/[0.025]" />
-                  ) : (
-                    <div className="w-full max-w-xs xl:max-w-none aspect-[297/420] rounded-2xl border border-white/10 bg-white/[0.025] flex items-center justify-center text-xs font-bold text-white/30">
-                      Afiş yok
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-                      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-white/35 mb-3">
-                        <Clock className="w-4 h-4 text-indigo-200" />
-                        Zaman
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between gap-3"><span className="text-white/40">Başlangıç</span><strong className="text-white text-right">{formatEventDate(event.baslangicTarihi)}</strong></div>
-                        <div className="flex justify-between gap-3"><span className="text-white/40">Bitiş</span><strong className="text-white text-right">{formatEventDate(event.bitisTarihi)}</strong></div>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-                      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-white/35 mb-3">
-                        <MapPin className="w-4 h-4 text-emerald-200" />
-                        Konum
-                      </div>
-                      <div className="space-y-2 text-sm text-white/60">
-                        <p className="font-bold text-white">{eventLocationLabel(event)}</p>
-                        {event.etkinlikTuru === 'CEVRIMICI' && event.cevrimiciToplantiUrl && (
-                          <a href={event.cevrimiciToplantiUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-100 hover:text-cyan-50 break-all">
-                            <LinkIcon className="w-3.5 h-3.5 shrink-0" />
-                            {event.cevrimiciToplantiUrl}
-                          </a>
-                        )}
-                        {event.etkinlikTuru === 'YUZ_YUZE' && (
-                          <>
-                            <p>{event.konumDetayi || 'Konum detayı belirtilmedi.'}</p>
-                            {event.enlem && event.boylam && <p className="text-xs text-white/35">{event.enlem}, {event.boylam}</p>}
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-                      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-white/35 mb-3">
-                        <Users className="w-4 h-4 text-cyan-200" />
-                        Katılım
-                      </div>
-                      <div className="space-y-2 text-sm text-white/60">
-                        <div className="flex justify-between gap-3"><span>Kontenjan</span><strong className="text-white">{event.kontenjanSiniriVar || event.kontenjanSinirli ? `${event.kontenjan} kişi` : 'Sınırsız'}</strong></div>
-                        <div className="flex justify-between gap-3"><span>QR yoklama</span><strong className="text-white">{event.qrGirisEtkin ? 'Açık' : 'Kapalı'}</strong></div>
-                        <div className="flex justify-between gap-3"><span>Sertifika</span><strong className="text-white">{event.sertifikaEtkin ? event.sertifikaBasligi || 'Açık' : 'Kapalı'}</strong></div>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-                      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-white/35 mb-3">
-                        <Banknote className="w-4 h-4 text-amber-200" />
-                        Ücret ve ödeme
-                      </div>
-                      {event.ucretli ? (
-                        <div className="space-y-2 text-sm text-amber-50/80">
-                          <div className="font-black">{event.ucretTutari || 0} TL</div>
-                          <p className="break-all">IBAN: {event.iban || 'Belirtilmedi'}</p>
-                          <p>{event.odemeTalimatlari || 'Ödeme açıklaması yok.'}</p>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-white/55">Ücretsiz etkinlik.</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {event.hatirlaticiEtkin && <span className="rounded-full px-3 py-1 text-xs font-bold bg-cyan-500/10 text-cyan-200">Hatırlatma: {event.hatirlatmaZamanlariDakika || 'Planlandı'}</span>}
-                  {event.redNedeni && <span className="rounded-full px-3 py-1 text-xs font-bold bg-amber-500/10 text-amber-200">Önceki SKS notu var</span>}
-                </div>
-                {event.redNedeni && <p className="mt-3 text-sm text-amber-200">Son geri bildirim: {event.redNedeni}</p>}
-              </div>
-
-              <div className="w-full lg:w-72 space-y-3">
-                <button onClick={() => approveEvent(event.id)} type="button" className="w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-emerald-100 bg-emerald-500/15 hover:bg-emerald-500/25 transition-colors">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Onayla
-                </button>
-                <textarea
-                  value={revisionTextByEvent[event.id] || ''}
-                  onChange={e => setRevisionTextByEvent(prev => ({ ...prev, [event.id]: e.target.value }))}
-                  placeholder="Düzenleme isteği geri bildirimi"
-                  rows={3}
-                  className={`${inputClass} resize-none focus:border-amber-400/60`}
-                />
-                <button onClick={() => handleRevision(event)} type="button" className="w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-amber-100 bg-amber-500/15 hover:bg-amber-500/25 transition-colors">
-                  <XCircle className="w-4 h-4" />
-                  Düzenleme İste
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-        {!eventsLoading && reviewQueue.length === 0 && (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.025] p-12 text-center text-white/35">
-            Şu anda bekleyen etkinlik talebi yok.
-          </div>
-        )}
-      </div>
-    </section>
+    <EventsModule
+      reviewQueue={reviewQueue}
+      eventsLoading={eventsLoading}
+      formatEventDate={formatEventDate}
+      eventLocationLabel={eventLocationLabel}
+      approveEvent={approveEvent}
+      handleRevision={handleRevision}
+      revisionTextByEvent={revisionTextByEvent}
+      setRevisionTextByEvent={setRevisionTextByEvent}
+    />
   );
 
   const renderProfileRequestsModule = () => (
-    <section className="space-y-4">
-      {profileChangeRequests.map(request => (
-        <motion.article key={request.id} layout className="rounded-2xl p-5 bg-white/[0.035] border border-white/5">
-          <div className="grid grid-cols-1 xl:grid-cols-[1fr_22rem] gap-5">
-            <div className="min-w-0 space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-lg font-black text-white">{request.kulup.ad}</h3>
-                <span className="rounded-full px-2.5 py-1 text-xs font-bold text-purple-200 bg-purple-500/10">{request.durum}</span>
-                <span className="text-xs text-white/35">{new Date(request.olusturulmaTarihi).toLocaleString('tr-TR')}</span>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-                  <div className="text-xs font-black uppercase tracking-wide text-white/35 mb-3">Mevcut Profil</div>
-                  <div className="space-y-2 text-sm">
-                    <div className="font-bold text-white">{request.kulup.ad}</div>
-                    <p className="text-white/45">{request.kulup.kisaAciklama || 'Kısa açıklama yok.'}</p>
-                    <p className="text-white/35 line-clamp-4">{request.kulup.vizyon || request.kulup.aciklama}</p>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-purple-400/20 bg-purple-500/[0.06] p-4">
-                  <div className="text-xs font-black uppercase tracking-wide text-purple-200/75 mb-3">Talep Edilen Profil</div>
-                  <div className="space-y-2 text-sm">
-                    <div className="font-bold text-white">{request.ad}</div>
-                    <p className="text-white/55">{request.kisaAciklama}</p>
-                    <p className="text-white/45 line-clamp-4">{request.vizyon}</p>
-                    {request.logoUrl && <p className="text-xs text-purple-100/75 break-all">Logo güncellemesi var.</p>}
-                  </div>
-                </div>
-              </div>
-
-              {request.geriBildirim && (
-                <p className="rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                  Son SKS notu: {request.geriBildirim}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => approveProfileChangeRequest(request.id)}
-                disabled={clubsLoading}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-emerald-100 bg-emerald-500/15 hover:bg-emerald-500/25 transition-colors disabled:opacity-45"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                Onayla ve Yayınla
-              </button>
-              <textarea
-                value={revisionTextByProfileRequest[request.id] || ''}
-                onChange={e => setRevisionTextByProfileRequest(prev => ({ ...prev, [request.id]: e.target.value }))}
-                placeholder="Revizyon veya red gerekçesi"
-                rows={4}
-                className={`${inputClass} resize-none focus:border-amber-400/60`}
-              />
-              <button
-                type="button"
-                onClick={() => handleProfileChangeRevision(request.id)}
-                disabled={clubsLoading || !revisionTextByProfileRequest[request.id]?.trim()}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-amber-100 bg-amber-500/15 hover:bg-amber-500/25 transition-colors disabled:opacity-45"
-              >
-                <Pencil className="w-4 h-4" />
-                Revizyon İste
-              </button>
-              <button
-                type="button"
-                onClick={() => handleProfileChangeReject(request.id)}
-                disabled={clubsLoading || !revisionTextByProfileRequest[request.id]?.trim()}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-red-100 bg-red-500/15 hover:bg-red-500/25 transition-colors disabled:opacity-45"
-              >
-                <XCircle className="w-4 h-4" />
-                Reddet
-              </button>
-            </div>
-          </div>
-        </motion.article>
-      ))}
-      {!clubsLoading && profileChangeRequests.length === 0 && (
-        <div className="rounded-3xl border border-white/10 bg-white/[0.025] p-12 text-center text-white/35">
-          Şu anda bekleyen kulüp profil talebi yok.
-        </div>
-      )}
-    </section>
+    <ProfileRequestsModule
+      profileChangeRequests={profileChangeRequests}
+      clubsLoading={clubsLoading}
+      approveProfileChangeRequest={approveProfileChangeRequest}
+      handleProfileChangeRevision={handleProfileChangeRevision}
+      handleProfileChangeReject={handleProfileChangeReject}
+      revisionTextByProfileRequest={revisionTextByProfileRequest}
+      setRevisionTextByProfileRequest={setRevisionTextByProfileRequest}
+    />
   );
 
   const renderAnnouncementsModule = () => (
