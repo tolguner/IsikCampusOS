@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { api } from '../lib/api';
 
 export type KullaniciRol =
-  | 'ROLE_ADMIN' | 'ROLE_SKS_ADMIN' | 'ROLE_FACILITY_ADMIN' | 'ROLE_REGISTRAR' | 'ROLE_STUDENT';
+  | 'ROLE_ADMIN' | 'ROLE_SKS_ADMIN' | 'ROLE_FACILITY_ADMIN' | 'ROLE_REGISTRAR';
 
 /** Backend (auth-service /yonetim) yanıtları ile birebir. */
 export interface YonetimKullanicisi {
@@ -21,7 +21,6 @@ export interface YonetimKullanicisi {
   sonGirisTarihi?: string;
   olusturulmaTarihi?: string;
   guncellenmeTarihi?: string;
-  geciciSifre?: string;
 }
 
 export interface DenetimKaydi {
@@ -43,7 +42,7 @@ export interface KullaniciOlusturmaFormu {
   soyad?: string;
   fakulte?: string;
   bolum?: string;
-  geciciSifre?: string;
+  tcKimlikNo: string;   // zorunlu — varsayılan şifre = TC
 }
 
 export interface KullaniciGuncellemeFormu {
@@ -68,9 +67,9 @@ interface YonetimState {
   kullanicilariGetir: (sayfa?: number, boyut?: number, arama?: string, durum?: string, rol?: string) => Promise<void>;
   kullaniciOlustur: (form: KullaniciOlusturmaFormu) => Promise<YonetimKullanicisi | null>;
   kullaniciGuncelle: (id: string, form: KullaniciGuncellemeFormu) => Promise<boolean>;
-  sifreSifirla: (id: string) => Promise<string | null>;
+  sifreSifirla: (id: string, tcKimlikNo: string) => Promise<boolean>;
   kullaniciSil: (id: string) => Promise<boolean>;
-  loglariGetir: (varlikTuru?: string, arama?: string) => Promise<void>;
+  loglariGetir: () => Promise<void>;
 }
 
 const hataMesaji = (err: any, varsayilan: string) =>
@@ -110,7 +109,7 @@ export const useYonetimDeposu = create<YonetimState>((set, get) => ({
     set({ isLoading: true, hata: null, basariMesaji: null });
     try {
       const res = await api.post<YonetimKullanicisi>('/yonetim/kullanicilar', form);
-      set({ basariMesaji: 'Kullanıcı oluşturuldu.', isLoading: false });
+      set({ basariMesaji: 'Kullanıcı oluşturuldu. Başlangıç şifresi TC Kimlik numarasıdır (ilk girişte değiştirilecek).', isLoading: false });
       await get().kullanicilariGetir(get().mevcutSayfa);
       return res.data;
     } catch (err: any) {
@@ -132,15 +131,15 @@ export const useYonetimDeposu = create<YonetimState>((set, get) => ({
     }
   },
 
-  sifreSifirla: async (id) => {
+  sifreSifirla: async (id, tcKimlikNo) => {
     set({ isLoading: true, hata: null, basariMesaji: null });
     try {
-      const res = await api.post<{ geciciSifre: string }>(`/yonetim/kullanicilar/${id}/sifre-sifirla`);
-      set({ basariMesaji: 'Şifre sıfırlandı.', isLoading: false });
-      return res.data.geciciSifre;
+      await api.post(`/yonetim/kullanicilar/${id}/sifre-sifirla`, { tcKimlikNo });
+      set({ basariMesaji: 'Şifre TC Kimlik numarasına sıfırlandı (kullanıcı ilk girişte değiştirecek).', isLoading: false });
+      return true;
     } catch (err: any) {
       set({ hata: hataMesaji(err, 'Şifre sıfırlanamadı.'), isLoading: false });
-      return null;
+      return false;
     }
   },
 
@@ -157,13 +156,18 @@ export const useYonetimDeposu = create<YonetimState>((set, get) => ({
     }
   },
 
-  loglariGetir: async (varlikTuru = '', arama = '') => {
+  loglariGetir: async () => {
     set({ isLoading: true, hata: null });
     try {
-      const res = await api.get<DenetimKaydi[]>('/denetim-gunlukleri', {
-        params: { varlikTuru: varlikTuru || undefined, arama: arama || undefined },
-      });
-      set({ loglar: res.data, isLoading: false });
+      // Kullanıcı işlemleri (auth) + kulüp/etkinlik işlemleri (club) tek görünümde birleşir.
+      const [kullaniciLog, kulupLog] = await Promise.all([
+        api.get<DenetimKaydi[]>('/yonetim/denetim-gunlukleri').then(r => r.data).catch(() => []),
+        api.get<DenetimKaydi[]>('/denetim-gunlukleri').then(r => r.data).catch(() => []),
+      ]);
+      const birlesik = [...kullaniciLog, ...kulupLog].sort(
+        (a, b) => new Date(b.olusturulmaTarihi).getTime() - new Date(a.olusturulmaTarihi).getTime()
+      );
+      set({ loglar: birlesik, isLoading: false });
     } catch (err: any) {
       set({ hata: hataMesaji(err, 'Sistem logları yüklenemedi.'), isLoading: false });
     }

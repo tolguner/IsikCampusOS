@@ -8,18 +8,22 @@ import {
 
 type Sekme = 'kullanicilar' | 'loglar';
 
+// Sistem yöneticisi yalnızca PERSONEL rollerini yönetir — öğrenci hariç (Öğrenci İşleri'ne ait).
 const ROL_ETIKETLERI: Record<string, string> = {
   ROLE_ADMIN: 'Sistem Yöneticisi',
   ROLE_SKS_ADMIN: 'SKS Yöneticisi',
   ROLE_FACILITY_ADMIN: 'Tesis Yöneticisi',
   ROLE_REGISTRAR: 'Öğrenci İşleri',
-  ROLE_STUDENT: 'Öğrenci',
 };
 const ROLLER = Object.keys(ROL_ETIKETLERI);
 
-const DURUM_ETIKETLERI: Record<string, string> = {
+// Personel durumu yalnızca AKTIF/PASIF; MEZUN/ILISIGI_KESILMIS öğrencilere özgüdür.
+const PERSONEL_DURUMLARI: Record<string, string> = {
   AKTIF: 'Aktif',
   PASIF: 'Pasif',
+};
+const DURUM_ETIKETLERI: Record<string, string> = {
+  ...PERSONEL_DURUMLARI,
   MEZUN: 'Mezun',
   ILISIGI_KESILMIS: 'İlişiği Kesilmiş',
 };
@@ -45,7 +49,6 @@ export const YonetimPaneli = () => {
 
   const [olusturModal, setOlusturModal] = useState(false);
   const [duzenle, setDuzenle] = useState<YonetimKullanicisi | null>(null);
-  const [geciciSifreBilgisi, setGeciciSifreBilgisi] = useState<{ eposta: string; sifre: string } | null>(null);
 
   useEffect(() => {
     if (sekme === 'kullanicilar') {
@@ -55,11 +58,16 @@ export const YonetimPaneli = () => {
   }, [sekme, arama, rolFiltre, kullanicilariGetir]);
 
   useEffect(() => {
-    if (sekme === 'loglar') {
-      const t = setTimeout(() => loglariGetir(logVarlik, logArama), 250);
-      return () => clearTimeout(t);
-    }
-  }, [sekme, logVarlik, logArama, loglariGetir]);
+    if (sekme === 'loglar') loglariGetir();
+  }, [sekme, loglariGetir]);
+
+  const filtrelenmisLoglar = useMemo(() => {
+    const q = logArama.trim().toLowerCase();
+    return loglar.filter(l =>
+      (!logVarlik || l.varlikTuru === logVarlik) &&
+      (!q || l.islem.toLowerCase().includes(q) || l.mesaj.toLowerCase().includes(q) || (l.islemYapanId || '').toLowerCase().includes(q))
+    );
+  }, [loglar, logVarlik, logArama]);
 
   return (
     <div className="space-y-6 text-white pb-12">
@@ -77,7 +85,7 @@ export const YonetimPaneli = () => {
         </div>
         <button
           type="button"
-          onClick={() => (sekme === 'kullanicilar' ? kullanicilariGetir(0, 20, arama, '', rolFiltre) : loglariGetir(logVarlik, logArama))}
+          onClick={() => (sekme === 'kullanicilar' ? kullanicilariGetir(0, 20, arama, '', rolFiltre) : loglariGetir())}
           className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/70 transition hover:bg-white/10 cursor-pointer"
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -100,13 +108,6 @@ export const YonetimPaneli = () => {
         <div className={`rounded-2xl px-4 py-3 text-sm font-semibold flex items-center justify-between ${hata ? 'border border-red-400/25 bg-red-500/12 text-red-100' : 'border border-emerald-300/25 bg-emerald-500/12 text-emerald-100'}`}>
           <span>{hata || basariMesaji}</span>
           <button onClick={temizleMesajlar} className="text-white/50 hover:text-white"><X className="h-4 w-4" /></button>
-        </div>
-      )}
-
-      {geciciSifreBilgisi && (
-        <div className="rounded-2xl px-4 py-3 text-sm border border-amber-400/25 bg-amber-500/10 text-amber-100 flex items-center justify-between">
-          <span><b>{geciciSifreBilgisi.eposta}</b> için geçici şifre: <code className="font-black tracking-wider">{geciciSifreBilgisi.sifre}</code> — kullanıcı ilk girişte değiştirecek.</span>
-          <button onClick={() => setGeciciSifreBilgisi(null)} className="text-white/50 hover:text-white"><X className="h-4 w-4" /></button>
         </div>
       )}
 
@@ -154,7 +155,7 @@ export const YonetimPaneli = () => {
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-2">
                         <button onClick={() => setDuzenle(k)} title="Düzenle" className="p-2 rounded-xl text-blue-300 hover:bg-white/5 cursor-pointer"><Pencil className="h-4 w-4" /></button>
-                        <button onClick={async () => { const s = await sifreSifirla(k.id); if (s) setGeciciSifreBilgisi({ eposta: k.eposta, sifre: s }); }} title="Şifre Sıfırla" className="p-2 rounded-xl text-amber-300 hover:bg-white/5 cursor-pointer"><KeyRound className="h-4 w-4" /></button>
+                        <button onClick={() => { const tc = window.prompt(`${k.eposta} kullanıcısının şifresi, gireceğiniz TC Kimlik numarasına sıfırlanacaktır.\nTC Kimlik No (11 hane):`); if (tc && tc.trim()) sifreSifirla(k.id, tc.trim()); }} title="Şifre Sıfırla (TC'ye)" className="p-2 rounded-xl text-amber-300 hover:bg-white/5 cursor-pointer"><KeyRound className="h-4 w-4" /></button>
                         <button onClick={() => { if (window.confirm(`${k.eposta} kullanıcısını kalıcı olarak silmek istediğinize emin misiniz?`)) kullaniciSil(k.id); }} title="Sil" className="p-2 rounded-xl text-red-400 hover:bg-red-500/10 cursor-pointer"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </td>
@@ -176,6 +177,7 @@ export const YonetimPaneli = () => {
             </div>
             <select value={logVarlik} onChange={e => setLogVarlik(e.target.value)} className="rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none focus:border-purple-400/60">
               <option value="">Tüm varlıklar</option>
+              <option value="KULLANICI">Kullanıcı</option>
               <option value="KULUP">Kulüp</option>
               <option value="ETKINLIK">Etkinlik</option>
             </select>
@@ -193,7 +195,7 @@ export const YonetimPaneli = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {loglar.map(l => (
+                {filtrelenmisLoglar.map(l => (
                   <tr key={l.id} className="hover:bg-white/[0.02] align-top">
                     <td className="px-5 py-4 text-xs text-white/50 whitespace-nowrap">{new Date(l.olusturulmaTarihi).toLocaleString('tr-TR')}</td>
                     <td className="px-5 py-4"><span className="rounded-lg px-2 py-0.5 text-xs font-bold text-cyan-200 bg-cyan-500/10 border border-cyan-400/20">{l.islem}</span></td>
@@ -202,7 +204,7 @@ export const YonetimPaneli = () => {
                     <td className="px-5 py-4 text-sm text-white/70">{l.mesaj}</td>
                   </tr>
                 ))}
-                {loglar.length === 0 && (
+                {filtrelenmisLoglar.length === 0 && (
                   <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-white/35">Log kaydı bulunamadı.</td></tr>
                 )}
               </tbody>
@@ -214,13 +216,7 @@ export const YonetimPaneli = () => {
       {olusturModal && (
         <KullaniciOlusturModal
           onKapat={() => setOlusturModal(false)}
-          onKaydet={async (form) => {
-            const olusan = await kullaniciOlustur(form);
-            if (olusan) {
-              setOlusturModal(false);
-              if (olusan.geciciSifre) setGeciciSifreBilgisi({ eposta: olusan.eposta, sifre: olusan.geciciSifre });
-            }
-          }}
+          onKaydet={async (form) => { const olusan = await kullaniciOlustur(form); if (olusan) setOlusturModal(false); }}
         />
       )}
 
@@ -246,16 +242,19 @@ const ModalKabuk = ({ baslik, onKapat, children }: { baslik: string; onKapat: ()
 );
 
 const KullaniciOlusturModal = ({ onKapat, onKaydet }: { onKapat: () => void; onKaydet: (f: KullaniciOlusturmaFormu) => void }) => {
-  const [form, setForm] = useState<KullaniciOlusturmaFormu>({ eposta: '', roller: 'ROLE_STUDENT', ad: '', soyad: '', fakulte: '', bolum: '' });
-  const gecerli = useMemo(() => form.eposta.includes('@') && form.roller, [form]);
+  const [form, setForm] = useState<KullaniciOlusturmaFormu>({ eposta: '', roller: 'ROLE_SKS_ADMIN', ad: '', soyad: '', fakulte: '', bolum: '', tcKimlikNo: '' });
+  const tcGecerli = /^\d{11}$/.test(form.tcKimlikNo);
+  const gecerli = form.eposta.includes('@') && !!form.roller && tcGecerli;
   return (
-    <ModalKabuk baslik="Yeni Kullanıcı" onKapat={onKapat}>
+    <ModalKabuk baslik="Yeni Personel Kullanıcısı" onKapat={onKapat}>
       <div className="space-y-3">
         <input className={inputClass} placeholder="E-posta" value={form.eposta} onChange={e => setForm(p => ({ ...p, eposta: e.target.value }))} />
         <div className="grid grid-cols-2 gap-3">
           <input className={inputClass} placeholder="Ad" value={form.ad} onChange={e => setForm(p => ({ ...p, ad: e.target.value }))} />
           <input className={inputClass} placeholder="Soyad" value={form.soyad} onChange={e => setForm(p => ({ ...p, soyad: e.target.value }))} />
         </div>
+        <input className={inputClass} inputMode="numeric" maxLength={11} placeholder="TC Kimlik No (11 hane) — zorunlu" value={form.tcKimlikNo} onChange={e => setForm(p => ({ ...p, tcKimlikNo: e.target.value.replace(/\D/g, '').slice(0, 11) }))} />
+        {!tcGecerli && form.tcKimlikNo.length > 0 && <p className="-mt-1 text-xs text-red-300">TC Kimlik No 11 haneli olmalıdır.</p>}
         <select className={inputClass} value={form.roller} onChange={e => setForm(p => ({ ...p, roller: e.target.value }))}>
           {ROLLER.map(r => <option key={r} value={r}>{ROL_ETIKETLERI[r]}</option>)}
         </select>
@@ -263,7 +262,7 @@ const KullaniciOlusturModal = ({ onKapat, onKaydet }: { onKapat: () => void; onK
           <input className={inputClass} placeholder="Fakülte (ops.)" value={form.fakulte} onChange={e => setForm(p => ({ ...p, fakulte: e.target.value }))} />
           <input className={inputClass} placeholder="Bölüm (ops.)" value={form.bolum} onChange={e => setForm(p => ({ ...p, bolum: e.target.value }))} />
         </div>
-        <p className="text-xs text-white/35">Geçici şifre otomatik üretilir ve oluşturma sonrası gösterilir.</p>
+        <p className="text-xs text-white/35">Başlangıç şifresi TC Kimlik numarasıdır; kullanıcı ilk girişte değiştirir.</p>
         <button disabled={!gecerli} onClick={() => onKaydet(form)} className="w-full rounded-2xl bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed px-5 py-3 text-sm font-black text-white cursor-pointer">Oluştur</button>
       </div>
     </ModalKabuk>
@@ -289,7 +288,7 @@ const KullaniciDuzenleModal = ({ kullanici, onKapat, onKaydet }: { kullanici: Yo
         </select>
         <label className="block text-xs font-bold uppercase tracking-wider text-white/35">Durum</label>
         <select className={inputClass} value={form.durum} onChange={e => setForm(p => ({ ...p, durum: e.target.value }))}>
-          {Object.keys(DURUM_ETIKETLERI).map(d => <option key={d} value={d}>{DURUM_ETIKETLERI[d]}</option>)}
+          {Object.keys(PERSONEL_DURUMLARI).map(d => <option key={d} value={d}>{PERSONEL_DURUMLARI[d]}</option>)}
         </select>
         <button onClick={() => onKaydet(form)} className="w-full rounded-2xl bg-purple-500 hover:bg-purple-400 px-5 py-3 text-sm font-black text-white cursor-pointer">Kaydet</button>
       </div>
