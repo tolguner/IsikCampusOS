@@ -142,19 +142,19 @@ services:
     networks:
       - campusos-net
 
-  event-service:
+  club-service:
     image: eclipse-temurin:21-jre-alpine
-    container_name: campusos-event
+    container_name: campusos-club
     depends_on:
       - eureka-server
       - postgres
       - kafka
     volumes:
-      - ./services/event-service/target:/app
+      - ./services/club-service/target:/app
     command: sh -c "java -jar /app/*.jar"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/event_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/club_db
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
     networks:

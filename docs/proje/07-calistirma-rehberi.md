@@ -42,7 +42,7 @@ Servisler şu sırayla ayağa kaldırılmalıdır:
 2. `api-gateway` (:8080)
 3. `auth-service` (:8081)
 4. `profile-service` (:8082)
-5. `event-service` (:8089)
+5. `club-service` (:8089)
 6. `facility-service` (:8086)
 
 Her servis kendi dizininde Spring Boot uygulaması olarak çalıştırılabilir. Proje kökünde hazır başlatma betikleri bulunur:

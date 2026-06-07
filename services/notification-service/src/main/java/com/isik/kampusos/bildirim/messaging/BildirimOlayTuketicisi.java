@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * {@code bildirim.olustur} olaylarını tüketip bildirim olarak kalıcılaştırır.
- * Üretici: event-service (etkinlik/kulüp iş akışları + SKS duyuruları).
+ * Üretici: club-service (etkinlik/kulüp iş akışları + SKS duyuruları).
  */
 @Service
 @RequiredArgsConstructor

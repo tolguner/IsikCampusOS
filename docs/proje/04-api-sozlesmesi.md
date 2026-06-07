@@ -32,7 +32,7 @@
 - `GET /api/v1/profiller/{kullaniciId}` — profil görüntüle
 - Profil değişiklik talebi ve onay uç noktaları (değişiklik isteği oluşturma/inceleme)
 
-## 4. Kulüp ve Etkinlik — event-service
+## 4. Kulüp ve Etkinlik — club-service
 
 ### Kulüpler
 - `GET /api/v1/kulupler` — aktif kulüpleri listele

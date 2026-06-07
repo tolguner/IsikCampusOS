@@ -36,7 +36,7 @@ Giriş sonrası kullanıcı rolüne göre yönlendirilir:
 3. SKS onaylar → etkinlik yayına geçer (öğrenci akışında görünür).
 4. Öğrenciler RSVP yapar; kapasite dolarsa bekleme listesi (waitlist) mantığı uygulanır.
 5. Etkinlik günü QR ile check-in yapılır.
-6. Sertifikalı etkinliklerde, katılımı onaylananlara tek komutla sertifika gönderimi tetiklenir (`event-service` → Kafka → `auth-service`).
+6. Sertifikalı etkinliklerde, katılımı onaylananlara tek komutla sertifika gönderimi tetiklenir (`club-service` → Kafka → `auth-service`).
 
 ### Etkinlik durumları
 `taslak → onay_bekliyor → yayında → tamamlandı` (ayrıca `reddedildi`, `iptal`).
@@ -53,7 +53,7 @@ Giriş sonrası kullanıcı rolüne göre yönlendirilir:
 
 - Kritik domain aksiyonları (kulüp/etkinlik onayı, duyuru vb.) in-app bildirim üretir.
 - Bildirimler okundu/okunmadı durumuyla listelenir.
-- Bildirim işlevi `event-service` içinde gömülüdür.
+- Bildirim işlevi `club-service` içinde gömülüdür.
 
 ## 6. Planlanan Modül Akışları (hedef tasarım — henüz kodlanmadı)
 

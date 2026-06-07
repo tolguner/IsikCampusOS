@@ -24,7 +24,7 @@ profil servisine özgüdür ve auth'a geri yazılmaz.
 
 ## Anlık görüntü (snapshot) alanları — bilinçli olarak yenilenmez
 
-`event-service` aşağıdaki alanları **atama anındaki değerle** saklar; ilgili kişinin
+`club-service` aşağıdaki alanları **atama anındaki değerle** saklar; ilgili kişinin
 bilgisi sonradan değişse bile güncellenmez (tarihsel doğruluk amaçlı):
 
 - `kulupler.baskan_tam_adi`, `baskan_epostasi`

@@ -12,7 +12,7 @@ Geliştirme ortamında tek bir PostgreSQL container içinde birden çok veritaba
 |------------|--------|-------|
 | `auth_db` | auth-service | ✅ Kullanımda |
 | `profile_db` | profile-service | ✅ Kullanımda |
-| `event_db` | event-service | ✅ Kullanımda |
+| `club_db` | club-service | ✅ Kullanımda |
 | `facility_db` | facility-service | ✅ Kullanımda |
 | `food_db`, `ride_db`, `projectmatch_db`, `microjob_db` | (planlanan servisler) | 🔵 `init.sql`'de oluşturulur, henüz kullanılmaz |
 | `notification_db`, `moderation_db`, `analytics_db` | (ayrı servis yok) | 🔵 Rezerve |
@@ -36,7 +36,7 @@ Aşağıdaki varlıklar koddaki gerçek JPA entity'lerine dayanır (`com.isik.ka
 - **ProfilDegisiklikIstegi** — profil değişiklik talebi ve onay akışı.
 - *(enum)* **ProfilDegisiklikIstegiDurumu**.
 
-### 3.3. event_db (event-service)
+### 3.3. club_db (club-service)
 
 Bu servis kulüp, etkinlik ve bildirim domainlerini birlikte taşır:
 
