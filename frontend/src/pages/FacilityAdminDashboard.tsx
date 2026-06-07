@@ -17,8 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { useFacilityStore, type AvailabilityRule, type Facility, type FacilityPolicy, type FacilityResource } from '../store/facilityStore';
-import { useBookingStore, type Booking } from '../store/bookingStore';
+import { useFacilityStore, type KullanimKurali, type Tesis, type TesisPolitikasi, type TesisKaynagi } from '../store/facilityStore';
+import { useBookingStore, type Rezervasyon } from '../store/bookingStore';
 
 const panelStyle = {
   background: 'rgba(255,255,255,0.045)',
@@ -47,28 +47,28 @@ const dayLabels: Record<number, string> = {
 };
 
 const blankFacilityForm = {
-  name: '',
-  facilityType: 'SPORTS_AREA',
-  description: '',
-  locationText: '',
-  capacity: 10,
-  status: 'ACTIVE' as Facility['status'],
+  ad: '',
+  tesisTuru: 'SPORTS_AREA',
+  aciklama: '',
+  konumMetni: '',
+  kapasite: 10,
+  durum: 'AKTIF' as Tesis['durum'],
 };
 
-const defaultPolicy: FacilityPolicy = {
-  bookingWindowDays: 14,
-  minNoticeMinutes: 120,
-  cancellationDeadlineMinutes: 60,
-  checkinRequired: true,
-  autoNoShowMinutes: 15,
-  maxBookingDurationMinutes: 120,
+const defaultPolicy: TesisPolitikasi = {
+  rezervasyonPenceresiGun: 14,
+  minimumBildirimDakika: 120,
+  iptalLimitDakika: 60,
+  yoklamaZorunlu: true,
+  otomatikGelmemeDakika: 15,
+  maksimumRezervasyonSureDakika: 120,
 };
 
 interface WeeklyHourDay {
-  dayOfWeek: number;
+  haftaninGunu: number;
   isOpen: boolean;
-  startTime: string;
-  endTime: string;
+  baslangicSaati: string;
+  bitisSaati: string;
 }
 
 export const FacilityAdminDashboard = () => {
@@ -104,8 +104,8 @@ export const FacilityAdminDashboard = () => {
 
   // Config Forms
   const [facilityForm, setFacilityForm] = useState(blankFacilityForm);
-  const [policyForm, setPolicyForm] = useState<FacilityPolicy>(defaultPolicy);
-  const [, setRules] = useState<AvailabilityRule[]>([]);
+  const [policyForm, setPolicyForm] = useState<TesisPolitikasi>(defaultPolicy);
+  const [, setRules] = useState<KullanimKurali[]>([]);
   const [weeklyHours, setWeeklyHours] = useState<WeeklyHourDay[]>([]);
 
   // Block Team Training Form
@@ -127,7 +127,7 @@ export const FacilityAdminDashboard = () => {
     monday.setHours(0, 0, 0, 0);
     return monday;
   });
-  const [selectedBookingForModal, setSelectedBookingForModal] = useState<Booking | null>(null);
+  const [selectedBookingForModal, setSelectedBookingForModal] = useState<Rezervasyon | null>(null);
 
   // Quick Block States
   const [quickBlockModalOpen, setQuickBlockModalOpen] = useState(false);
@@ -160,7 +160,7 @@ export const FacilityAdminDashboard = () => {
   useEffect(() => {
     if (activeView === 'calendar' && calendarFacilityId) {
       const facility = facilities.find(f => f.id === calendarFacilityId);
-      const resourceId = facility?.resources?.[0]?.id;
+      const resourceId = facility?.kaynaklar?.[0]?.id;
       if (resourceId) {
         const start = new Date(calendarWeekStart);
         const end = new Date(calendarWeekStart);
@@ -173,7 +173,7 @@ export const FacilityAdminDashboard = () => {
   // Set default block resource
   useEffect(() => {
     if (facilities.length > 0 && !blockResourceId) {
-      const activeResources = facilities.flatMap(f => f.resources).filter(r => r.status === 'ACTIVE');
+      const activeResources = facilities.flatMap(f => f.kaynaklar).filter(r => r.durum === 'AKTIF');
       if (activeResources.length > 0) {
         setBlockResourceId(activeResources[0].id);
       }
@@ -186,7 +186,7 @@ export const FacilityAdminDashboard = () => {
   );
 
   const selectedResource = useMemo(
-    () => selectedFacility?.resources.find(resource => resource.id === selectedResourceId) || null,
+    () => selectedFacility?.kaynaklar.find(resource => resource.id === selectedResourceId) || null,
     [selectedFacility, selectedResourceId]
   );
 
@@ -195,14 +195,14 @@ export const FacilityAdminDashboard = () => {
   }, [facilities, calendarFacilityId]);
 
   const calendarResource = useMemo(() => {
-    return calendarFacility?.resources?.[0] || null;
+    return calendarFacility?.kaynaklar?.[0] || null;
   }, [calendarFacility]);
 
   const dynamicCalendarHoursList = useMemo(() => {
-    if (!calendarResource || !calendarResource.availabilityRules || calendarResource.availabilityRules.length === 0) {
+    if (!calendarResource || !calendarResource.kullanimKurallari || calendarResource.kullanimKurallari.length === 0) {
       return Array.from({ length: 15 }, (_, i) => 8 + i); // Default 08:00 to 22:00
     }
-    const activeRules = calendarResource.availabilityRules.filter(r => r.status === 'ACTIVE');
+    const activeRules = calendarResource.kullanimKurallari.filter(r => r.durum === 'AKTIF');
     if (activeRules.length === 0) {
       return Array.from({ length: 15 }, (_, i) => 8 + i); // Default
     }
@@ -211,8 +211,8 @@ export const FacilityAdminDashboard = () => {
     let maxHour = 0;
     
     activeRules.forEach(r => {
-      const startHour = parseInt(r.startTime.split(':')[0], 10);
-      const endHour = parseInt(r.endTime.split(':')[0], 10);
+      const startHour = parseInt(r.baslangicSaati.split(':')[0], 10);
+      const endHour = parseInt(r.bitisSaati.split(':')[0], 10);
       if (startHour < minHour) minHour = startHour;
       if (endHour > maxHour) maxHour = endHour;
     });
@@ -234,14 +234,14 @@ export const FacilityAdminDashboard = () => {
       return;
     }
     setFacilityForm({
-      name: selectedFacility.name,
-      facilityType: selectedFacility.facilityType,
-      description: selectedFacility.description || '',
-      locationText: selectedFacility.locationText || '',
-      capacity: selectedFacility.capacity,
-      status: selectedFacility.status,
+      ad: selectedFacility.ad,
+      tesisTuru: selectedFacility.tesisTuru,
+      aciklama: selectedFacility.aciklama || '',
+      konumMetni: selectedFacility.konumMetni || '',
+      kapasite: selectedFacility.kapasite,
+      durum: selectedFacility.durum,
     });
-    setPolicyForm(selectedFacility.policy || defaultPolicy);
+    setPolicyForm(selectedFacility.politika || defaultPolicy);
   }, [selectedFacility]);
 
   // Sync availability rules with selected resource
@@ -251,25 +251,25 @@ export const FacilityAdminDashboard = () => {
       setWeeklyHours([]);
       return;
     }
-    const currentRules = selectedResource.availabilityRules || [];
+    const currentRules = selectedResource.kullanimKurallari || [];
     setRules(currentRules);
 
     const initialWeekly: WeeklyHourDay[] = [];
     for (let day = 1; day <= 7; day++) {
-      const match = currentRules.find(r => r.dayOfWeek === day && r.status === 'ACTIVE');
+      const match = currentRules.find(r => r.haftaninGunu === day && r.durum === 'AKTIF');
       if (match) {
         initialWeekly.push({
-          dayOfWeek: day,
+          haftaninGunu: day,
           isOpen: true,
-          startTime: match.startTime.substring(0, 5),
-          endTime: match.endTime.substring(0, 5),
+          baslangicSaati: match.baslangicSaati.substring(0, 5),
+          bitisSaati: match.bitisSaati.substring(0, 5),
         });
       } else {
         initialWeekly.push({
-          dayOfWeek: day,
+          haftaninGunu: day,
           isOpen: false,
-          startTime: '08:00',
-          endTime: '22:00',
+          baslangicSaati: '08:00',
+          bitisSaati: '22:00',
         });
       }
     }
@@ -292,7 +292,7 @@ export const FacilityAdminDashboard = () => {
 
   const handleDeleteFacility = async () => {
     if (!selectedFacility) return;
-    if (window.confirm(`${selectedFacility.name} tesisini silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve ilişkili tüm rezervasyonlar iptal edilir.`)) {
+    if (window.confirm(`${selectedFacility.ad} tesisini silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve ilişkili tüm rezervasyonlar iptal edilir.`)) {
       const ok = await deleteFacility(selectedFacility.id);
       if (ok) {
         selectFacility(null);
@@ -309,13 +309,13 @@ export const FacilityAdminDashboard = () => {
 
   const handleSaveRules = async () => {
     if (!selectedResource) return;
-    const rulesToSave: AvailabilityRule[] = weeklyHours
+    const rulesToSave: KullanimKurali[] = weeklyHours
       .filter(w => w.isOpen)
       .map(w => ({
-        dayOfWeek: w.dayOfWeek,
-        startTime: w.startTime,
-        endTime: w.endTime,
-        status: 'ACTIVE',
+        haftaninGunu: w.haftaninGunu,
+        baslangicSaati: w.baslangicSaati,
+        bitisSaati: w.bitisSaati,
+        durum: 'AKTIF',
       }));
     await replaceAvailabilityRules(selectedResource.id, rulesToSave);
   };
@@ -358,11 +358,11 @@ export const FacilityAdminDashboard = () => {
       const endIso = `${date}T${blockEnd}:00${offset}`;
 
       const success = await createBlockedSlot({
-        resourceId: blockResourceId,
-        startAt: startIso,
-        endAt: endIso,
-        purpose: blockPurpose || 'Takım Antrenmanı',
-        participantCount: 15,
+        kaynakId: blockResourceId,
+        baslangicTarihi: startIso,
+        bitisTarihi: endIso,
+        amac: blockPurpose || 'Takım Antrenmanı',
+        katilimciSayisi: 15,
       });
 
       if (success) {
@@ -390,7 +390,7 @@ export const FacilityAdminDashboard = () => {
       fetchAllBookings();
       if (calendarFacilityId) {
         const facility = facilities.find(f => f.id === calendarFacilityId);
-        const resourceId = facility?.resources?.[0]?.id;
+        const resourceId = facility?.kaynaklar?.[0]?.id;
         if (resourceId) {
           const start = new Date(calendarWeekStart);
           const end = new Date(calendarWeekStart);
@@ -405,7 +405,7 @@ export const FacilityAdminDashboard = () => {
   const handleQuickAddBlockSlot = async (e: React.FormEvent) => {
     e.preventDefault();
     const facility = facilities.find(f => f.id === calendarFacilityId);
-    const resourceId = facility?.resources?.[0]?.id;
+    const resourceId = facility?.kaynaklar?.[0]?.id;
     if (!resourceId) return;
 
     const localTimeZoneOffset = () => {
@@ -442,11 +442,11 @@ export const FacilityAdminDashboard = () => {
       const endIso = `${date}T${quickBlockEnd}:00${offset}`;
 
       const success = await createBlockedSlot({
-        resourceId,
-        startAt: startIso,
-        endAt: endIso,
-        purpose: quickBlockPurpose || 'Takım Antrenmanı',
-        participantCount: 15,
+        kaynakId: resourceId,
+        baslangicTarihi: startIso,
+        bitisTarihi: endIso,
+        amac: quickBlockPurpose || 'Takım Antrenmanı',
+        katilimciSayisi: 15,
       });
 
       if (success) {
@@ -474,9 +474,9 @@ export const FacilityAdminDashboard = () => {
   // Flatten active resources list for block form
   const flatResources = useMemo(() => {
     return facilities.flatMap((f) => 
-      f.resources.filter(r => r.status === 'ACTIVE' && r.bookable).map((r) => ({
+      f.kaynaklar.filter(r => r.durum === 'AKTIF' && r.rezervasyonYapilabilir).map((r) => ({
         id: r.id,
-        name: f.name === r.name ? f.name : `${f.name} - ${r.name}`,
+        ad: f.ad === r.ad ? f.ad : `${f.ad} - ${r.ad}`,
       }))
     );
   }, [facilities]);
@@ -499,7 +499,7 @@ export const FacilityAdminDashboard = () => {
               fetchAllBookings();
             } else if (activeView === 'calendar' && calendarFacilityId) {
               const facility = facilities.find(f => f.id === calendarFacilityId);
-              const resourceId = facility?.resources?.[0]?.id;
+              const resourceId = facility?.kaynaklar?.[0]?.id;
               if (resourceId) {
                 const start = new Date(calendarWeekStart);
                 const end = new Date(calendarWeekStart);
@@ -584,14 +584,14 @@ export const FacilityAdminDashboard = () => {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-black text-white">{facility.name}</p>
-                        <p className="mt-1 text-xs font-semibold text-white/38">{facility.locationText || 'Konum girilmedi'}</p>
+                        <p className="text-sm font-black text-white">{facility.ad}</p>
+                        <p className="mt-1 text-xs font-semibold text-white/38">{facility.konumMetni || 'Konum girilmedi'}</p>
                       </div>
-                      <StatusBadge status={facility.status} />
+                      <StatusBadge durum={facility.durum} />
                     </div>
                     <div className="mt-3 flex gap-2 text-[11px] font-bold text-white/45">
-                      <span>Kapasite: {facility.capacity}</span>
-                      <span>{facility.resources.length} kaynak</span>
+                      <span>Kapasite: {facility.kapasite}</span>
+                      <span>{facility.kaynaklar.length} kaynak</span>
                     </div>
                   </button>
                 ))}
@@ -607,15 +607,15 @@ export const FacilityAdminDashboard = () => {
               <section className="rounded-3xl p-5" style={panelStyle}>
                 <SectionTitle icon={Plus} title="Tesis Tanımı" subtitle={selectedFacility ? 'Seçili tesisi güncelleyin veya yeni tesis oluşturun.' : 'İlk tesis kaydını oluşturun.'} />
                 <form className="mt-5 space-y-4" onSubmit={selectedFacility ? handleUpdateFacility : handleCreateFacility}>
-                  <input className={inputClass} placeholder="Tesis adı" value={facilityForm.name} onChange={e => setFacilityForm(prev => ({ ...prev, name: e.target.value }))} required />
+                  <input className={inputClass} placeholder="Tesis adı" value={facilityForm.ad} onChange={e => setFacilityForm(prev => ({ ...prev, ad: e.target.value }))} required />
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <select className={inputClass} value={facilityForm.facilityType} onChange={e => setFacilityForm(prev => ({ ...prev, facilityType: e.target.value }))}>
+                    <select className={inputClass} value={facilityForm.tesisTuru} onChange={e => setFacilityForm(prev => ({ ...prev, tesisTuru: e.target.value }))}>
                       {facilityTypes.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}
                     </select>
-                    <input className={inputClass} type="number" min={1} value={facilityForm.capacity} onChange={e => setFacilityForm(prev => ({ ...prev, capacity: Number(e.target.value) }))} required />
+                    <input className={inputClass} type="number" min={1} value={facilityForm.kapasite} onChange={e => setFacilityForm(prev => ({ ...prev, kapasite: Number(e.target.value) }))} required />
                   </div>
-                  <input className={inputClass} placeholder="Konum" value={facilityForm.locationText} onChange={e => setFacilityForm(prev => ({ ...prev, locationText: e.target.value }))} />
-                  <textarea className={`${inputClass} min-h-28 resize-none`} placeholder="Açıklama" value={facilityForm.description} onChange={e => setFacilityForm(prev => ({ ...prev, description: e.target.value }))} />
+                  <input className={inputClass} placeholder="Konum" value={facilityForm.konumMetni} onChange={e => setFacilityForm(prev => ({ ...prev, konumMetni: e.target.value }))} />
+                  <textarea className={`${inputClass} min-h-28 resize-none`} placeholder="Açıklama" value={facilityForm.aciklama} onChange={e => setFacilityForm(prev => ({ ...prev, aciklama: e.target.value }))} />
                   <div className="flex flex-wrap gap-3">
                     <button className="inline-flex items-center gap-2 rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-black text-[#071018] transition hover:bg-cyan-200 cursor-pointer" type="submit">
                       <Save className="h-4 w-4" />
@@ -639,13 +639,13 @@ export const FacilityAdminDashboard = () => {
                 <SectionTitle icon={Settings2} title="Tesis Politikaları ve Kriterleri" subtitle="Öğrenci rezervasyon fazında uygulanacak tesis kuralları." />
                 <form className="mt-5 space-y-4" onSubmit={handleUpdatePolicy}>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <NumberField label="İleri rezervasyon günü" value={policyForm.bookingWindowDays} onChange={value => setPolicyForm(prev => ({ ...prev, bookingWindowDays: value }))} />
-                    <NumberField label="Minimum ön süre (dk)" value={policyForm.minNoticeMinutes} onChange={value => setPolicyForm(prev => ({ ...prev, minNoticeMinutes: value }))} />
-                    <NumberField label="İptal son süre (dk)" value={policyForm.cancellationDeadlineMinutes} onChange={value => setPolicyForm(prev => ({ ...prev, cancellationDeadlineMinutes: value }))} />
-                    <NumberField label="Maks. rezervasyon (dk)" value={policyForm.maxBookingDurationMinutes} onChange={value => setPolicyForm(prev => ({ ...prev, maxBookingDurationMinutes: value }))} />
-                    <NumberField label="No-show toleransı (dk)" value={policyForm.autoNoShowMinutes} onChange={value => setPolicyForm(prev => ({ ...prev, autoNoShowMinutes: value }))} />
+                    <NumberField label="İleri rezervasyon günü" value={policyForm.rezervasyonPenceresiGun} onChange={value => setPolicyForm(prev => ({ ...prev, rezervasyonPenceresiGun: value }))} />
+                    <NumberField label="Minimum ön süre (dk)" value={policyForm.minimumBildirimDakika} onChange={value => setPolicyForm(prev => ({ ...prev, minimumBildirimDakika: value }))} />
+                    <NumberField label="İptal son süre (dk)" value={policyForm.iptalLimitDakika} onChange={value => setPolicyForm(prev => ({ ...prev, iptalLimitDakika: value }))} />
+                    <NumberField label="Maks. rezervasyon (dk)" value={policyForm.maksimumRezervasyonSureDakika} onChange={value => setPolicyForm(prev => ({ ...prev, maksimumRezervasyonSureDakika: value }))} />
+                    <NumberField label="No-show toleransı (dk)" value={policyForm.otomatikGelmemeDakika} onChange={value => setPolicyForm(prev => ({ ...prev, otomatikGelmemeDakika: value }))} />
                     <label className="flex min-h-[62px] items-center gap-3 rounded-2xl border border-white/10 bg-[#111123] px-4 py-3 text-sm font-bold text-white/70 font-sans cursor-pointer">
-                      <input type="checkbox" checked={policyForm.checkinRequired} onChange={e => setPolicyForm(prev => ({ ...prev, checkinRequired: e.target.checked }))} />
+                      <input type="checkbox" checked={policyForm.yoklamaZorunlu} onChange={e => setPolicyForm(prev => ({ ...prev, yoklamaZorunlu: e.target.checked }))} />
                       Check-in zorunlu
                     </label>
                   </div>
@@ -657,7 +657,7 @@ export const FacilityAdminDashboard = () => {
               </section>
 
               <section className="rounded-3xl p-5 2xl:col-span-2" style={panelStyle}>
-                <SectionTitle icon={Clock3} title="Tesis Çalışma Saatleri" subtitle={selectedFacility ? `${selectedFacility.name} için haftalık çalışma saatlerini ve kapalı günleri belirleyin` : 'Önce sol taraftan bir tesis seçin.'} />
+                <SectionTitle icon={Clock3} title="Tesis Çalışma Saatleri" subtitle={selectedFacility ? `${selectedFacility.ad} için haftalık çalışma saatlerini ve kapalı günleri belirleyin` : 'Önce sol taraftan bir tesis seçin.'} />
                 
                 {selectedFacility ? (
                   <div className="mt-5 space-y-4">
@@ -671,7 +671,7 @@ export const FacilityAdminDashboard = () => {
                     <div className="space-y-2.5">
                       {weeklyHours.map((day) => (
                         <div
-                          key={day.dayOfWeek}
+                          key={day.haftaninGunu}
                           className={`grid grid-cols-1 sm:grid-cols-[160px_140px_1fr_1fr] items-center gap-3 p-3.5 rounded-2xl border transition-all ${
                             day.isOpen
                               ? 'bg-white/[0.02] border-white/10'
@@ -679,7 +679,7 @@ export const FacilityAdminDashboard = () => {
                           }`}
                         >
                           {/* Day Label */}
-                          <span className="text-sm font-black text-white">{dayLabels[day.dayOfWeek]}</span>
+                          <span className="text-sm font-black text-white">{dayLabels[day.haftaninGunu]}</span>
 
                           {/* Toggle Switch */}
                           <div className="flex items-center">
@@ -688,7 +688,7 @@ export const FacilityAdminDashboard = () => {
                               onClick={() => {
                                 setWeeklyHours(prev =>
                                   prev.map(w =>
-                                    w.dayOfWeek === day.dayOfWeek ? { ...w, isOpen: !w.isOpen } : w
+                                    w.haftaninGunu === day.haftaninGunu ? { ...w, isOpen: !w.isOpen } : w
                                   )
                                 );
                               }}
@@ -716,11 +716,11 @@ export const FacilityAdminDashboard = () => {
                             <input
                               type="time"
                               disabled={!day.isOpen}
-                              value={day.startTime}
+                              value={day.baslangicSaati}
                               onChange={e => {
                                 setWeeklyHours(prev =>
                                   prev.map(w =>
-                                    w.dayOfWeek === day.dayOfWeek ? { ...w, startTime: e.target.value } : w
+                                    w.haftaninGunu === day.haftaninGunu ? { ...w, baslangicSaati: e.target.value } : w
                                   )
                                 );
                               }}
@@ -735,11 +735,11 @@ export const FacilityAdminDashboard = () => {
                             <input
                               type="time"
                               disabled={!day.isOpen}
-                              value={day.endTime}
+                              value={day.bitisSaati}
                               onChange={e => {
                                 setWeeklyHours(prev =>
                                   prev.map(w =>
-                                    w.dayOfWeek === day.dayOfWeek ? { ...w, endTime: e.target.value } : w
+                                    w.haftaninGunu === day.haftaninGunu ? { ...w, bitisSaati: e.target.value } : w
                                   )
                                 );
                               }}
@@ -800,7 +800,7 @@ export const FacilityAdminDashboard = () => {
                 >
                   {flatResources.map((res) => (
                     <option key={res.id} value={res.id}>
-                      {res.name}
+                      {res.ad}
                     </option>
                   ))}
                   {flatResources.length === 0 && (
@@ -940,9 +940,9 @@ export const FacilityAdminDashboard = () => {
 
             <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
               {allBookings.map((booking) => {
-                const start = formatDateTime(booking.startAt);
-                const end = formatDateTime(booking.endAt);
-                const isBlocked = booking.status === 'BLOCKED';
+                const start = formatDateTime(booking.baslangicTarihi);
+                const end = formatDateTime(booking.bitisTarihi);
+                const isBlocked = booking.durum === 'BLOKE';
                 
                 return (
                   <div
@@ -955,44 +955,44 @@ export const FacilityAdminDashboard = () => {
                   >
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2.5">
-                        <span className="text-base font-black">{booking.facilityName}</span>
-                        {booking.facilityName !== booking.resourceName && (
-                          <span className="text-xs font-semibold text-white/50">/ {booking.resourceName}</span>
+                        <span className="text-base font-black">{booking.tesisAd}</span>
+                        {booking.tesisAd !== booking.kaynakAd && (
+                          <span className="text-xs font-semibold text-white/50">/ {booking.kaynakAd}</span>
                         )}
-                        <BookingStatusBadge status={booking.status} />
+                        <BookingStatusBadge durum={booking.durum} />
                       </div>
 
                       <div className="grid gap-x-6 gap-y-1.5 grid-cols-2 md:grid-cols-3 text-xs text-white/50 pt-1 font-bold">
                         <span className="flex items-center gap-1.5">
                           <User className="h-3.5 w-3.5 text-cyan-300/60" /> 
-                          {isBlocked ? 'Spor Müdürlüğü' : booking.bookedByUserId}
+                          {isBlocked ? 'Spor Müdürlüğü' : booking.rezervasyonYapanKullaniciId}
                         </span>
                         <span className="flex items-center gap-1.5"><CalendarClock className="h-3.5 w-3.5 text-cyan-300/60" /> {start.date}</span>
                         <span className="flex items-center gap-1.5"><Clock3 className="h-3.5 w-3.5 text-cyan-300/60" /> {start.time} - {end.time}</span>
-                        {booking.purpose && (
+                        {booking.amac && (
                           <span className="col-span-2 md:col-span-3 flex items-center gap-1.5 mt-1 font-normal text-white/40">
                             <FileText className="h-3.5 w-3.5 shrink-0" /> 
-                            {booking.purpose}
+                            {booking.amac}
                           </span>
                         )}
                       </div>
                     </div>
 
                     {/* Actions for Admin */}
-                    {['CONFIRMED', 'PENDING', 'BLOCKED'].includes(booking.status) && (
+                    {['ONAYLANDI', 'BEKLEMEDE', 'BLOKE'].includes(booking.durum) && (
                       <div className="flex gap-2 self-start sm:self-center shrink-0">
                         {!isBlocked && (
                           <>
                             <button
                               type="button"
-                              onClick={() => handleUpdateBookingStatus(booking.id, 'COMPLETED')}
+                              onClick={() => handleUpdateBookingStatus(booking.id, 'TAMAMLANDI')}
                               className="px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-bold transition border border-emerald-500/20 cursor-pointer"
                             >
                               Kullanıldı
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleUpdateBookingStatus(booking.id, 'NO_SHOW')}
+                              onClick={() => handleUpdateBookingStatus(booking.id, 'GELMEDI')}
                               className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition border border-amber-500/20 cursor-pointer"
                             >
                               Gelmedi
@@ -1001,7 +1001,7 @@ export const FacilityAdminDashboard = () => {
                         )}
                         <button
                           type="button"
-                          onClick={() => handleUpdateBookingStatus(booking.id, 'CANCELLED')}
+                          onClick={() => handleUpdateBookingStatus(booking.id, 'IPTAL_EDILDI')}
                           className="px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs font-bold transition border border-red-500/20 cursor-pointer"
                         >
                           {isBlocked ? 'Blokajı Kaldır' : 'İptal Et'}
@@ -1009,9 +1009,9 @@ export const FacilityAdminDashboard = () => {
                       </div>
                     )}
 
-                    {booking.status === 'CANCELLED' && booking.cancelReason && (
+                    {booking.durum === 'IPTAL_EDILDI' && booking.iptalNedeni && (
                       <span className="text-xs font-semibold text-red-200/50 bg-red-500/5 px-3 py-1.5 rounded-lg border border-red-500/10 shrink-0 self-start sm:self-center">
-                        İptal: {booking.cancelReason}
+                        İptal: {booking.iptalNedeni}
                       </span>
                     )}
                   </div>
@@ -1038,11 +1038,11 @@ export const FacilityAdminDashboard = () => {
           const calendarHoursList = dynamicCalendarHoursList;
 
           const isDayClosed = (day: Date) => {
-            if (!calendarResource || !calendarResource.availabilityRules) return false;
+            if (!calendarResource || !calendarResource.kullanimKurallari) return false;
             let dayNum = day.getDay();
             if (dayNum === 0) dayNum = 7;
-            const hasActiveRule = calendarResource.availabilityRules.some(
-              r => r.dayOfWeek === dayNum && r.status === 'ACTIVE'
+            const hasActiveRule = calendarResource.kullanimKurallari.some(
+              r => r.haftaninGunu === dayNum && r.durum === 'AKTIF'
             );
             return !hasActiveRule;
           };
@@ -1054,8 +1054,8 @@ export const FacilityAdminDashboard = () => {
             slotEnd.setHours(hour + 1, 0, 0, 0);
 
             return calendarBookings.find((b) => {
-              const bStart = new Date(b.startAt);
-              const bEnd = new Date(b.endAt);
+              const bStart = new Date(b.baslangicTarihi);
+              const bEnd = new Date(b.bitisTarihi);
               return bStart < slotEnd && bEnd > slotStart;
             });
           };
@@ -1084,7 +1084,7 @@ export const FacilityAdminDashboard = () => {
                     >
                       {facilities.map((fac) => (
                         <option key={fac.id} value={fac.id}>
-                          {fac.name}
+                          {fac.ad}
                         </option>
                       ))}
                       {facilities.length === 0 && (
@@ -1193,10 +1193,10 @@ export const FacilityAdminDashboard = () => {
                             const booking = getCalendarBookingForSlot(day, hour);
 
                             if (booking) {
-                              const isBlocked = booking.status === 'BLOCKED';
-                              const isCompleted = booking.status === 'COMPLETED';
-                              const isNoShow = booking.status === 'NO_SHOW';
-                              const isCancelled = booking.status === 'CANCELLED';
+                              const isBlocked = booking.durum === 'BLOKE';
+                              const isCompleted = booking.durum === 'TAMAMLANDI';
+                              const isNoShow = booking.durum === 'GELMEDI';
+                              const isCancelled = booking.durum === 'IPTAL_EDILDI';
 
                               let bgStyle = 'bg-amber-500/10 border-amber-400/20 hover:bg-amber-500/20 text-amber-200';
                               if (isBlocked) bgStyle = 'bg-purple-500/10 border-purple-400/20 hover:bg-purple-500/20 text-purple-200';
@@ -1210,16 +1210,16 @@ export const FacilityAdminDashboard = () => {
                                   type="button"
                                   onClick={() => setSelectedBookingForModal(booking)}
                                   className={`m-1 p-2 rounded-xl border text-left flex flex-col justify-between transition cursor-pointer overflow-hidden ${bgStyle} min-h-14`}
-                                  title={`${booking.purpose || 'Rezervasyon'} (${booking.bookedByUserId})`}
+                                  title={`${booking.amac || 'Rezervasyon'} (${booking.rezervasyonYapanKullaniciId})`}
                                 >
                                   <div className="flex flex-wrap items-center justify-between gap-1 w-full">
                                     <span className="text-[10px] font-black tracking-wide truncate max-w-[80px]">
-                                      {isBlocked ? 'SPOR MÜDÜRÜ' : booking.bookedByUserId}
+                                      {isBlocked ? 'SPOR MÜDÜRÜ' : booking.rezervasyonYapanKullaniciId}
                                     </span>
                                     {isBlocked && <Lock className="h-3 w-3 shrink-0 opacity-60" />}
                                   </div>
                                   <span className="text-[9px] font-bold opacity-60 mt-1 truncate block w-full">
-                                    {booking.purpose || 'Serbest Çalışma'}
+                                    {booking.amac || 'Serbest Çalışma'}
                                   </span>
                                 </button>
                               );
@@ -1290,37 +1290,37 @@ export const FacilityAdminDashboard = () => {
                     <div className="divide-y divide-white/5 text-sm font-semibold">
                       <div className="py-2.5 flex justify-between gap-3">
                         <span className="text-white/40">Spor Tesisi:</span>
-                        <span className="font-black text-white">{selectedBookingForModal.facilityName}</span>
+                        <span className="font-black text-white">{selectedBookingForModal.tesisAd}</span>
                       </div>
                       <div className="py-2.5 flex justify-between gap-3">
                         <span className="text-white/40">Kullanıcı / Görevli:</span>
-                        <span className="font-black text-white">{selectedBookingForModal.status === 'BLOCKED' ? 'Spor Müdürlüğü (Bloke)' : selectedBookingForModal.bookedByUserId}</span>
+                        <span className="font-black text-white">{selectedBookingForModal.durum === 'BLOKE' ? 'Spor Müdürlüğü (Bloke)' : selectedBookingForModal.rezervasyonYapanKullaniciId}</span>
                       </div>
                       <div className="py-2.5 flex justify-between gap-3">
                         <span className="text-white/40">Tarih:</span>
-                        <span className="font-black text-cyan-300">{formatDateTime(selectedBookingForModal.startAt).date}</span>
+                        <span className="font-black text-cyan-300">{formatDateTime(selectedBookingForModal.baslangicTarihi).date}</span>
                       </div>
                       <div className="py-2.5 flex justify-between gap-3">
                         <span className="text-white/40">Saat:</span>
-                        <span className="font-black text-cyan-300">{formatDateTime(selectedBookingForModal.startAt).time} - {formatDateTime(selectedBookingForModal.endAt).time}</span>
+                        <span className="font-black text-cyan-300">{formatDateTime(selectedBookingForModal.baslangicTarihi).time} - {formatDateTime(selectedBookingForModal.bitisTarihi).time}</span>
                       </div>
                       <div className="py-2.5 flex justify-between gap-3">
                         <span className="text-white/40">Açıklama / Amaç:</span>
-                        <span className="text-white/70">{selectedBookingForModal.purpose || 'Girilmedi'}</span>
+                        <span className="text-white/70">{selectedBookingForModal.amac || 'Girilmedi'}</span>
                       </div>
                       <div className="py-2.5 flex justify-between gap-3">
                         <span className="text-white/40">Katılımcı Sayısı:</span>
-                        <span className="font-black text-white">{selectedBookingForModal.participantCount} kişi</span>
+                        <span className="font-black text-white">{selectedBookingForModal.katilimciSayisi} kişi</span>
                       </div>
                       <div className="py-2.5 flex justify-between gap-3 items-center">
                         <span className="text-white/40">Durum:</span>
-                        <BookingStatusBadge status={selectedBookingForModal.status} />
+                        <BookingStatusBadge durum={selectedBookingForModal.durum} />
                       </div>
-                      {selectedBookingForModal.checkin && (
+                      {selectedBookingForModal.yoklama && (
                         <div className="py-2.5 flex justify-between gap-3 items-center">
                           <span className="text-white/40">Giriş (Check-in):</span>
                           <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                            Doğrulandı ({new Date(selectedBookingForModal.checkin.checkedInAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })})
+                            Doğrulandı ({new Date(selectedBookingForModal.yoklama.yoklamaTarihi).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })})
                           </span>
                         </div>
                       )}
@@ -1328,31 +1328,31 @@ export const FacilityAdminDashboard = () => {
 
                     {/* Quick Actions inside Modal */}
                     <div className="pt-2 flex flex-wrap gap-2.5 justify-end">
-                      {selectedBookingForModal.status !== 'BLOCKED' && ['PENDING', 'CONFIRMED'].includes(selectedBookingForModal.status) && (
+                      {selectedBookingForModal.durum !== 'BLOKE' && ['BEKLEMEDE', 'ONAYLANDI'].includes(selectedBookingForModal.durum) && (
                         <>
                           <button
                             type="button"
-                            onClick={() => handleUpdateBookingStatus(selectedBookingForModal.id, 'COMPLETED')}
+                            onClick={() => handleUpdateBookingStatus(selectedBookingForModal.id, 'TAMAMLANDI')}
                             className="px-4 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-bold transition border border-emerald-500/20 cursor-pointer"
                           >
                             Kullanıldı
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleUpdateBookingStatus(selectedBookingForModal.id, 'NO_SHOW')}
+                            onClick={() => handleUpdateBookingStatus(selectedBookingForModal.id, 'GELMEDI')}
                             className="px-4 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition border border-amber-500/20 cursor-pointer"
                           >
                             Gelmedi
                           </button>
                         </>
                       )}
-                      {['PENDING', 'CONFIRMED', 'BLOCKED'].includes(selectedBookingForModal.status) && (
+                      {['BEKLEMEDE', 'ONAYLANDI', 'BLOKE'].includes(selectedBookingForModal.durum) && (
                         <button
                           type="button"
-                          onClick={() => handleUpdateBookingStatus(selectedBookingForModal.id, 'CANCELLED')}
+                          onClick={() => handleUpdateBookingStatus(selectedBookingForModal.id, 'IPTAL_EDILDI')}
                           className="px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs font-bold transition border border-red-500/20 cursor-pointer"
                         >
-                          {selectedBookingForModal.status === 'BLOCKED' ? 'Blokajı Kaldır' : 'İptal Et'}
+                          {selectedBookingForModal.durum === 'BLOKE' ? 'Blokajı Kaldır' : 'İptal Et'}
                         </button>
                       )}
                     </div>
@@ -1518,8 +1518,8 @@ const SectionTitle = ({ icon: Icon, title, subtitle }: { icon: React.ElementType
   </div>
 );
 
-const StatusBadge = ({ status }: { status: Facility['status'] | FacilityResource['status'] }) => {
-  const active = status === 'ACTIVE';
+const StatusBadge = ({ durum }: { durum: Tesis['durum'] | TesisKaynagi['durum'] }) => {
+  const active = durum === 'AKTIF';
   return (
     <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black bg-emerald-400/15 text-emerald-100">
       {active ? 'Aktif' : 'Pasif'}
@@ -1527,30 +1527,30 @@ const StatusBadge = ({ status }: { status: Facility['status'] | FacilityResource
   );
 };
 
-const BookingStatusBadge = ({ status }: { status: Booking['status'] }) => {
-  const colors: Record<Booking['status'], string> = {
-    DRAFT: 'bg-white/5 text-white/50 border border-white/10',
-    PENDING: 'bg-amber-400/10 text-amber-200 border border-amber-400/20',
-    CONFIRMED: 'bg-cyan-400/10 text-cyan-200 border border-cyan-400/20',
-    CANCELLED: 'bg-red-500/10 text-red-200 border border-red-500/20',
-    COMPLETED: 'bg-emerald-400/10 text-emerald-200 border border-emerald-400/20',
-    NO_SHOW: 'bg-amber-500/10 text-amber-300 border border-amber-500/20',
-    BLOCKED: 'bg-purple-500/10 text-purple-300 border border-purple-500/20',
+const BookingStatusBadge = ({ durum }: { durum: Rezervasyon['durum'] }) => {
+  const colors: Record<Rezervasyon['durum'], string> = {
+    TASLAK: 'bg-white/5 text-white/50 border border-white/10',
+    BEKLEMEDE: 'bg-amber-400/10 text-amber-200 border border-amber-400/20',
+    ONAYLANDI: 'bg-cyan-400/10 text-cyan-200 border border-cyan-400/20',
+    IPTAL_EDILDI: 'bg-red-500/10 text-red-200 border border-red-500/20',
+    TAMAMLANDI: 'bg-emerald-400/10 text-emerald-200 border border-emerald-400/20',
+    GELMEDI: 'bg-amber-500/10 text-amber-300 border border-amber-500/20',
+    BLOKE: 'bg-purple-500/10 text-purple-300 border border-purple-500/20',
   };
 
-  const labels: Record<Booking['status'], string> = {
-    DRAFT: 'Taslak',
-    PENDING: 'Onay Bekliyor',
-    CONFIRMED: 'Onaylandı',
-    CANCELLED: 'İptal Edildi',
-    COMPLETED: 'Kullanıldı',
-    NO_SHOW: 'Gelmedi',
-    BLOCKED: 'Takım Antrenmanı',
+  const labels: Record<Rezervasyon['durum'], string> = {
+    TASLAK: 'Taslak',
+    BEKLEMEDE: 'Onay Bekliyor',
+    ONAYLANDI: 'Onaylandı',
+    IPTAL_EDILDI: 'İptal Edildi',
+    TAMAMLANDI: 'Kullanıldı',
+    GELMEDI: 'Gelmedi',
+    BLOKE: 'Takım Antrenmanı',
   };
 
   return (
-    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black ${colors[status]}`}>
-      {labels[status]}
+    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black ${colors[durum]}`}>
+      {labels[durum]}
     </span>
   );
 };

@@ -65,7 +65,7 @@ export const FacilityBookingPage = () => {
 
   const selectedResource = useMemo(() => {
     if (!selectedFacility) return null;
-    return selectedFacility.resources.find(r => r.id === selectedResourceId) || null;
+    return selectedFacility.kaynaklar.find(r => r.id === selectedResourceId) || null;
   }, [selectedFacility, selectedResourceId]);
 
   // Set default values when selections change
@@ -73,18 +73,18 @@ export const FacilityBookingPage = () => {
     if (facilities.length > 0 && !selectedFacilityId) {
       const firstFac = facilities[0];
       setSelectedFacilityId(firstFac.id);
-      if (firstFac.resources.length > 0) {
-        setSelectedResourceId(firstFac.resources[0].id);
+      if (firstFac.kaynaklar.length > 0) {
+        setSelectedResourceId(firstFac.kaynaklar[0].id);
       }
     }
   }, [facilities, selectedFacilityId]);
 
   useEffect(() => {
     if (selectedFacility) {
-      if (selectedFacility.resources.length > 0) {
-        const belongs = selectedFacility.resources.some(r => r.id === selectedResourceId);
+      if (selectedFacility.kaynaklar.length > 0) {
+        const belongs = selectedFacility.kaynaklar.some(r => r.id === selectedResourceId);
         if (!belongs) {
-          setSelectedResourceId(selectedFacility.resources[0].id);
+          setSelectedResourceId(selectedFacility.kaynaklar[0].id);
         }
       } else {
         setSelectedResourceId('');
@@ -135,11 +135,11 @@ export const FacilityBookingPage = () => {
     const endIso = `${bookingDate}T${endTime}:00${offset}`;
 
     const success = await createBooking({
-      resourceId: selectedResourceId,
-      startAt: startIso,
-      endAt: endIso,
-      purpose,
-      participantCount,
+      kaynakId: selectedResourceId,
+      baslangicTarihi: startIso,
+      bitisTarihi: endIso,
+      amac: purpose,
+      katilimciSayisi: participantCount,
     });
 
     if (success) {
@@ -169,10 +169,10 @@ export const FacilityBookingPage = () => {
 
   // Dynamic Hours list based on active working hours
   const dynamicHoursList = useMemo(() => {
-    if (!selectedResource || !selectedResource.availabilityRules || selectedResource.availabilityRules.length === 0) {
+    if (!selectedResource || !selectedResource.kullanimKurallari || selectedResource.kullanimKurallari.length === 0) {
       return Array.from({ length: 15 }, (_, i) => 8 + i); // Default 08:00 to 22:00
     }
-    const activeRules = selectedResource.availabilityRules.filter(r => r.status === 'ACTIVE');
+    const activeRules = selectedResource.kullanimKurallari.filter(r => r.durum === 'AKTIF');
     if (activeRules.length === 0) {
       return Array.from({ length: 15 }, (_, i) => 8 + i); // Default
     }
@@ -181,8 +181,8 @@ export const FacilityBookingPage = () => {
     let maxHour = 0;
     
     activeRules.forEach(r => {
-      const startHour = parseInt(r.startTime.split(':')[0], 10);
-      const endHour = parseInt(r.endTime.split(':')[0], 10);
+      const startHour = parseInt(r.baslangicSaati.split(':')[0], 10);
+      const endHour = parseInt(r.bitisSaati.split(':')[0], 10);
       if (startHour < minHour) minHour = startHour;
       if (endHour > maxHour) maxHour = endHour;
     });
@@ -197,12 +197,12 @@ export const FacilityBookingPage = () => {
   }, [selectedResource]);
 
   const isDayClosed = (day: Date) => {
-    if (!selectedResource || !selectedResource.availabilityRules) return false;
+    if (!selectedResource || !selectedResource.kullanimKurallari) return false;
     let dayNum = day.getDay();
     if (dayNum === 0) dayNum = 7; // Convert Sunday from 0 to 7
     
-    const hasActiveRule = selectedResource.availabilityRules.some(
-      r => r.dayOfWeek === dayNum && r.status === 'ACTIVE'
+    const hasActiveRule = selectedResource.kullanimKurallari.some(
+      r => r.haftaninGunu === dayNum && r.durum === 'AKTIF'
     );
     return !hasActiveRule;
   };
@@ -225,8 +225,8 @@ export const FacilityBookingPage = () => {
     slotEnd.setHours(hour + 1, 0, 0, 0);
 
     return calendarBookings.find((b) => {
-      const bStart = new Date(b.startAt);
-      const bEnd = new Date(b.endAt);
+      const bStart = new Date(b.baslangicTarihi);
+      const bEnd = new Date(b.bitisTarihi);
       return bStart < slotEnd && bEnd > slotStart;
     });
   };
@@ -348,7 +348,7 @@ export const FacilityBookingPage = () => {
                 >
                   {facilities.map((fac) => (
                     <option key={fac.id} value={fac.id}>
-                      {fac.name}
+                      {fac.ad}
                     </option>
                   ))}
                   {facilities.length === 0 && (
@@ -445,7 +445,7 @@ export const FacilityBookingPage = () => {
                         {/* Slots for each day */}
                         {weekDays.map((day, dayIdx) => {
                           const booking = getBookingForSlot(day, hour);
-                          const isBlocked = booking?.status === 'BLOCKED';
+                          const isBlocked = booking?.durum === 'BLOKE';
                           const isConfirmed = booking && !isBlocked;
                           const slotDateTime = new Date(day);
                           slotDateTime.setHours(hour, 0, 0, 0);
@@ -478,7 +478,7 @@ export const FacilityBookingPage = () => {
                                 <div className="flex flex-col items-center gap-1">
                                   <Lock className="h-3 w-3 text-purple-400" />
                                   <span className="text-[10px] font-black leading-none uppercase tracking-wide truncate max-w-[90px]">
-                                    {booking.purpose || 'Takım Antrenmanı'}
+                                    {booking.amac || 'Takım Antrenmanı'}
                                   </span>
                                 </div>
                               ) : isConfirmed ? (
@@ -487,7 +487,7 @@ export const FacilityBookingPage = () => {
                                     DOLU
                                   </span>
                                   <span className="text-[9px] opacity-60">
-                                    {booking.bookedByUserId}
+                                    {booking.rezervasyonYapanKullaniciId}
                                   </span>
                                 </div>
                               ) : isPast ? (
@@ -584,7 +584,7 @@ export const FacilityBookingPage = () => {
                       <input
                         type="number"
                         min={1}
-                        max={selectedResource?.capacity || 100}
+                        max={selectedResource?.kapasite || 100}
                         className={`${inputClass} pl-11`}
                         value={participantCount}
                         onChange={(e) => setParticipantCount(Number(e.target.value))}
@@ -621,23 +621,23 @@ export const FacilityBookingPage = () => {
                 <div className="space-y-3 pt-2">
                   <PolicyItem
                     label="İleri Rezervasyon Limiti"
-                    value={`${selectedFacility.policy?.bookingWindowDays || 14} gün önceden`}
+                    value={`${selectedFacility.politika?.rezervasyonPenceresiGun || 14} gün önceden`}
                   />
                   <PolicyItem
                     label="Minimum Ön Bildirim"
-                    value={`${selectedFacility.policy?.minNoticeMinutes || 15} dakika kala`}
+                    value={`${selectedFacility.politika?.minimumBildirimDakika || 15} dakika kala`}
                   />
                   <PolicyItem
                     label="Son İptal Süresi"
-                    value={`${selectedFacility.policy?.cancellationDeadlineMinutes || 30} dakika kalaya kadar`}
+                    value={`${selectedFacility.politika?.iptalLimitDakika || 30} dakika kalaya kadar`}
                   />
                   <PolicyItem
                     label="Maksimum Süre"
-                    value={`${selectedFacility.policy?.maxBookingDurationMinutes || 120} dakika`}
+                    value={`${selectedFacility.politika?.maksimumRezervasyonSureDakika || 120} dakika`}
                   />
                   <PolicyItem
                     label="Geç Kalma Toleransı (No-Show)"
-                    value={`${selectedFacility.policy?.autoNoShowMinutes || 15} dakika`}
+                    value={`${selectedFacility.politika?.otomatikGelmemeDakika || 15} dakika`}
                   />
                   <PolicyItem
                     label="Günlük Rezervasyon Sınırı"
@@ -651,12 +651,12 @@ export const FacilityBookingPage = () => {
                     <span className="text-xs font-semibold text-white/40">Check-in Zorunluluğu</span>
                     <span
                       className={`text-xs font-black px-2.5 py-1 rounded-full ${
-                        selectedFacility.policy?.checkinRequired
+                        selectedFacility.politika?.yoklamaZorunlu
                           ? 'bg-amber-400/10 text-amber-200'
                           : 'bg-emerald-400/10 text-emerald-200'
                       }`}
                     >
-                      {selectedFacility.policy?.checkinRequired ? 'Zorunlu' : 'Gerekli Değil'}
+                      {selectedFacility.politika?.yoklamaZorunlu ? 'Zorunlu' : 'Gerekli Değil'}
                     </span>
                   </div>
                 </div>
@@ -674,18 +674,18 @@ export const FacilityBookingPage = () => {
 
               {selectedResource ? (
                 <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                  {selectedResource.availabilityRules?.map((rule, idx) => (
+                  {selectedResource.kullanimKurallari?.map((rule, idx) => (
                     <div
                       key={idx}
                       className="flex items-center justify-between py-1 text-xs border-b border-white/5 last:border-0"
                     >
-                      <span className="font-bold text-white/70">{dayLabels[rule.dayOfWeek]}</span>
+                      <span className="font-bold text-white/70">{dayLabels[rule.haftaninGunu]}</span>
                       <span className="font-semibold text-white/50">
-                        {rule.startTime.substring(0, 5)} - {rule.endTime.substring(0, 5)}
+                        {rule.baslangicSaati.substring(0, 5)} - {rule.bitisSaati.substring(0, 5)}
                       </span>
                     </div>
                   ))}
-                  {(!selectedResource.availabilityRules || selectedResource.availabilityRules.length === 0) && (
+                  {(!selectedResource.kullanimKurallari || selectedResource.kullanimKurallari.length === 0) && (
                     <div className="text-xs text-white/30 text-center py-4">Tanımlı saat aralığı yok (Tüm gün açık)</div>
                   )}
                 </div>
