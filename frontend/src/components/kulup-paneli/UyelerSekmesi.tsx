@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { UsersRound, ShieldCheck } from 'lucide-react';
-import type { Kulup } from '../../store/kulupDeposu';
-import { useKulupDeposu } from '../../store/kulupDeposu';
+import type { Kulup } from '../../depolar/kulupDeposu';
+import { useKulupDeposu } from '../../depolar/kulupDeposu';
 
 interface UyelerSekmesiProps {
   selectedClub: Kulup;

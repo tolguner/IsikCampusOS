@@ -1,16 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
-import { useTesisDeposu, type KullanimKurali, type TesisPolitikasi } from '../store/tesisDeposu';
-import { useRezervasyonDeposu, type Rezervasyon } from '../store/rezervasyonDeposu';
+import { useTesisDeposu, type KullanimKurali, type TesisPolitikasi } from '../depolar/tesisDeposu';
+import { useRezervasyonDeposu, type Rezervasyon } from '../depolar/rezervasyonDeposu';
 
 import {
   blankFacilityForm,
   defaultPolicy,
   type WeeklyHourDay,
-} from '../components/facility-admin/ortak';
-import { TakvimGorunumu } from '../components/facility-admin/TakvimGorunumu';
-import { RezervasyonGorunumu } from '../components/facility-admin/RezervasyonGorunumu';
-import { YapilandirmaGorunumu } from '../components/facility-admin/YapilandirmaGorunumu';
+} from '../components/tesis-yonetim/ortak';
+import { TakvimGorunumu } from '../components/tesis-yonetim/TakvimGorunumu';
+import { RezervasyonGorunumu } from '../components/tesis-yonetim/RezervasyonGorunumu';
+import { YapilandirmaGorunumu } from '../components/tesis-yonetim/YapilandirmaGorunumu';
 
 export const TesisYonetimPaneli = () => {
   const {

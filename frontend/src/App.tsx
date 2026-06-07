@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
-import { UygulamaDuzeni } from './components/layout/UygulamaDuzeni';
+import { UygulamaDuzeni } from './components/duzen/UygulamaDuzeni';
 import { GirisSayfasi } from './pages/GirisSayfasi';
 import { EpostaDogrulama } from './pages/EpostaDogrulama';
 import { SifreDegistir } from './pages/SifreDegistir';
@@ -18,11 +18,11 @@ import { SertifikaDogrulamaSayfasi } from './pages/SertifikaDogrulamaSayfasi';
 import { TesisYonetimPaneli } from './pages/TesisYonetimPaneli';
 import { TesisRezervasyonSayfasi } from './pages/TesisRezervasyonSayfasi';
 import { RezervasyonlarimSayfasi } from './pages/RezervasyonlarimSayfasi';
-import { useKimlikDeposu } from './store/kimlikDeposu';
-import { useKulupDeposu } from './store/kulupDeposu';
+import { useKimlikDeposu } from './depolar/kimlikDeposu';
+import { useKulupDeposu } from './depolar/kulupDeposu';
 import { OtomatikMesajTemizleyici } from './components/OtomatikMesajTemizleyici';
-import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from './utils/roles';
-import { YOLLAR } from './utils/paths';
+import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from './yardimcilar/yetkiler';
+import { YOLLAR } from './yardimcilar/yollar';
 
 // Giriş sonrası yönlendirme mantığı:
 // 1. emailVerified === false → E-posta doğrulama

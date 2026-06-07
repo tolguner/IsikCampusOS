@@ -1,7 +1,7 @@
 import React from 'react';
 import { GraduationCap, RefreshCw, Search, UserCog } from 'lucide-react';
-import type { Student } from '../../store/ogrenciDeposu';
-import type { AcademicAdvisor } from '../../store/akademikKadroDeposu';
+import type { Student } from '../../depolar/ogrenciDeposu';
+import type { AcademicAdvisor } from '../../depolar/akademikKadroDeposu';
 import {
   panelStyle,
   inputClass,

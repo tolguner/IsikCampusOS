@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useKimlikDeposu } from '../store/kimlikDeposu';
+import { useKimlikDeposu } from '../depolar/kimlikDeposu';
 import { Mail, Loader2, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 
 export const EpostaDogrulama = () => {

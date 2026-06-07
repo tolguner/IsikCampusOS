@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useOgrenciDeposu } from '../store/ogrenciDeposu';
-import { useProfilDeposu, type ProfilDegisiklikIstegi } from '../store/profilDeposu';
+import { useOgrenciDeposu } from '../depolar/ogrenciDeposu';
+import { useProfilDeposu, type ProfilDegisiklikIstegi } from '../depolar/profilDeposu';
 import { Search, Plus, MoreVertical, X, CheckCircle2, AlertCircle, Loader2, KeyRound, UserX, UserCheck, GraduationCap, Edit2, ChevronLeft, ChevronRight, ClipboardCheck, Trash2 } from 'lucide-react';
 
 export const OgrenciIsleriPaneli = () => {

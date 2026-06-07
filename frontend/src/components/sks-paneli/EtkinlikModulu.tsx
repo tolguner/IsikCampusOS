@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Banknote, CheckCircle2, Clock, Link as LinkIcon, MapPin, Users, XCircle } from 'lucide-react';
-import type { Etkinlik } from '../../store/etkinlikDeposu';
+import type { Etkinlik } from '../../depolar/etkinlikDeposu';
 import { inputClass } from './ortak';
 
 interface EtkinlikModuluProps {

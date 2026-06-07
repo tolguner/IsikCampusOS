@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, BadgeCheck, CheckCircle2, Loader2, Search } from 'lucide-react';
 import { authApi } from '../lib/api';
-import { YOLLAR } from '../utils/paths';
+import { YOLLAR } from '../yardimcilar/yollar';
 
 type CertificateVerificationResponse = {
   valid: boolean;

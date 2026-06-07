@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useKimlikDeposu } from '../store/kimlikDeposu';
-import { useProfilDeposu } from '../store/profilDeposu';
+import { useKimlikDeposu } from '../depolar/kimlikDeposu';
+import { useProfilDeposu } from '../depolar/profilDeposu';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAutoDismissMessage } from '../hooks/useAutoDismissMessage';
-import { yetkilerdenBiriVarMi, YETKI_GRUPLARI, YETKILER } from '../utils/roles';
+import { yetkilerdenBiriVarMi, YETKI_GRUPLARI, YETKILER } from '../yardimcilar/yetkiler';
 import { 
   User, Mail, GraduationCap, Building2, Calendar, 
   Camera, Lock, CheckCircle2, AlertCircle, Loader2,

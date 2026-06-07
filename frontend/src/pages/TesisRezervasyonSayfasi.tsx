@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useTesisDeposu } from '../store/tesisDeposu';
-import { useRezervasyonDeposu } from '../store/rezervasyonDeposu';
+import { useTesisDeposu } from '../depolar/tesisDeposu';
+import { useRezervasyonDeposu } from '../depolar/rezervasyonDeposu';
 import { motion } from 'framer-motion';
 import {
   Building2,

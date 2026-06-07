@@ -3,11 +3,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import QRCode from 'qrcode';
 import { Link, useParams } from 'react-router-dom';
 import { Banknote, Bell, CalendarDays, CheckCircle2, ChevronLeft, Clock, GraduationCap, Link as LinkIcon, Loader2, MapPin, Maximize2, Megaphone, Ticket, UserRound, Users, X } from 'lucide-react';
-import { useKulupDeposu } from '../store/kulupDeposu';
-import { useEtkinlikDeposu, type Etkinlik, type EtkinlikDurumu } from '../store/etkinlikDeposu';
-import { useKimlikDeposu } from '../store/kimlikDeposu';
-import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../utils/roles';
-import { YOLLAR } from '../utils/paths';
+import { useKulupDeposu } from '../depolar/kulupDeposu';
+import { useEtkinlikDeposu, type Etkinlik, type EtkinlikDurumu } from '../depolar/etkinlikDeposu';
+import { useKimlikDeposu } from '../depolar/kimlikDeposu';
+import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../yardimcilar/yetkiler';
+import { YOLLAR } from '../yardimcilar/yollar';
 
 const formatDate = (value?: string) => {
   if (!value) return 'Tarih bekleniyor';

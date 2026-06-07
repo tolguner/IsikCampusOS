@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
 import { Camera, QrCode } from 'lucide-react';
-import type { Etkinlik } from '../../store/etkinlikDeposu';
+import type { Etkinlik } from '../../depolar/etkinlikDeposu';
 import { inputClass } from './sabitler';
 
 interface QrGirisPaneliProps {

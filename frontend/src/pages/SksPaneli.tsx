@@ -4,12 +4,12 @@ import {
   RefreshCw,
   Search,
 } from 'lucide-react';
-import { useKulupDeposu, type Kulup } from '../store/kulupDeposu';
-import { useEtkinlikDeposu, type Etkinlik } from '../store/etkinlikDeposu';
-import { useBildirimDeposu } from '../store/bildirimDeposu';
-import { useOgrenciDeposu, type Student } from '../store/ogrenciDeposu';
-import { useKimlikDeposu } from '../store/kimlikDeposu';
-import { useAkademikKadroDeposu, type AcademicAdvisor } from '../store/akademikKadroDeposu';
+import { useKulupDeposu, type Kulup } from '../depolar/kulupDeposu';
+import { useEtkinlikDeposu, type Etkinlik } from '../depolar/etkinlikDeposu';
+import { useBildirimDeposu } from '../depolar/bildirimDeposu';
+import { useOgrenciDeposu, type Student } from '../depolar/ogrenciDeposu';
+import { useKimlikDeposu } from '../depolar/kimlikDeposu';
+import { useAkademikKadroDeposu, type AcademicAdvisor } from '../depolar/akademikKadroDeposu';
 
 import {
   type SksModule,
@@ -18,13 +18,13 @@ import {
   moduleMeta,
   type DuyuruFormu,
   type KulupDuzenleFormu,
-} from '../components/sks-dashboard/ortak';
-import { DuyuruModulu } from '../components/sks-dashboard/DuyuruModulu';
-import { ProfilTalepModulu } from '../components/sks-dashboard/ProfilTalepModulu';
-import { EtkinlikModulu } from '../components/sks-dashboard/EtkinlikModulu';
-import { SaglikModulu } from '../components/sks-dashboard/SaglikModulu';
-import { KulupModulu } from '../components/sks-dashboard/KulupModulu';
-import { OlusturModulu } from '../components/sks-dashboard/OlusturModulu';
+} from '../components/sks-paneli/ortak';
+import { DuyuruModulu } from '../components/sks-paneli/DuyuruModulu';
+import { ProfilTalepModulu } from '../components/sks-paneli/ProfilTalepModulu';
+import { EtkinlikModulu } from '../components/sks-paneli/EtkinlikModulu';
+import { SaglikModulu } from '../components/sks-paneli/SaglikModulu';
+import { KulupModulu } from '../components/sks-paneli/KulupModulu';
+import { OlusturModulu } from '../components/sks-paneli/OlusturModulu';
 
 export const SksPaneli = () => {
   const {
