@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useStudentStore } from '../store/studentStore';
-import { useProfileStore, type ProfilDegisiklikIstegi } from '../store/profileStore';
+import { useOgrenciDeposu } from '../store/ogrenciDeposu';
+import { useProfilDeposu, type ProfilDegisiklikIstegi } from '../store/profilDeposu';
 import { Search, Plus, MoreVertical, X, CheckCircle2, AlertCircle, Loader2, KeyRound, UserX, UserCheck, GraduationCap, Edit2, ChevronLeft, ChevronRight, ClipboardCheck, Trash2 } from 'lucide-react';
 
 export const OgrenciIsleriPaneli = () => {
@@ -89,7 +89,7 @@ export const OgrenciIsleriPaneli = () => {
   };
 
 
-  const { students, totalElements, totalPages, currentPage, fetchStudents, createStudent, updateStudent, changeStatus, resetPassword, deleteStudent, isLoading, error, successMessage, clearMessages } = useStudentStore();
+  const { students, totalElements, totalPages, currentPage, fetchStudents, createStudent, updateStudent, changeStatus, resetPassword, deleteStudent, isLoading, error, successMessage, clearMessages } = useOgrenciDeposu();
   const {
     pendingChangeRequests,
     fetchPendingChangeRequests,
@@ -99,7 +99,7 @@ export const OgrenciIsleriPaneli = () => {
     error: profileRequestError,
     successMessage: profileRequestSuccess,
     clearMessages: clearProfileRequestMessages,
-  } = useProfileStore();
+  } = useProfilDeposu();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

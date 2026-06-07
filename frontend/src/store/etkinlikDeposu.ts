@@ -178,7 +178,7 @@ interface EventState {
   fetchEventAuditLogs: (eventId: string, filters?: { action?: string; actorId?: string; from?: string; to?: string; search?: string }) => Promise<void>;
 }
 
-export const useEventStore = create<EventState>((set, get) => ({
+export const useEtkinlikDeposu = create<EventState>((set, get) => ({
   events: [],
   managedEvents: [],
   participantsByEvent: {},

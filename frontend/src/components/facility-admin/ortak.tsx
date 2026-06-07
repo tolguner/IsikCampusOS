@@ -1,6 +1,6 @@
 import React from 'react';
-import type { Tesis, TesisKaynagi, TesisPolitikasi } from '../../store/facilityStore';
-import type { Rezervasyon } from '../../store/bookingStore';
+import type { Tesis, TesisKaynagi, TesisPolitikasi } from '../../store/tesisDeposu';
+import type { Rezervasyon } from '../../store/rezervasyonDeposu';
 
 export const panelStyle = {
   background: 'rgba(255,255,255,0.045)',

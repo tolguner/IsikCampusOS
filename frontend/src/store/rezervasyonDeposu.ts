@@ -66,7 +66,7 @@ const getErrorMessage = (err: any, fallback: string) =>
 // API (facility-service) yanıtları artık tiplerle birebir; çeviri yapılmaz (ince passthrough).
 const mapBooking = (data: any): Rezervasyon => data;
 
-export const useBookingStore = create<BookingState>((set, get) => ({
+export const useRezervasyonDeposu = create<BookingState>((set, get) => ({
   myBookings: [],
   allBookings: [],
   calendarBookings: [],

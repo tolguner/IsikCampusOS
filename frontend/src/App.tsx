@@ -18,8 +18,8 @@ import { SertifikaDogrulamaSayfasi } from './pages/SertifikaDogrulamaSayfasi';
 import { TesisYonetimPaneli } from './pages/TesisYonetimPaneli';
 import { TesisRezervasyonSayfasi } from './pages/TesisRezervasyonSayfasi';
 import { RezervasyonlarimSayfasi } from './pages/RezervasyonlarimSayfasi';
-import { useAuthStore } from './store/authStore';
-import { useClubStore } from './store/clubStore';
+import { useKimlikDeposu } from './store/kimlikDeposu';
+import { useKulupDeposu } from './store/kulupDeposu';
 import { OtomatikMesajTemizleyici } from './components/OtomatikMesajTemizleyici';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from './utils/roles';
 import { YOLLAR } from './utils/paths';
@@ -35,8 +35,8 @@ const ProtectedRoute = ({
   children: React.ReactNode;
   izinliYetkiler?: readonly string[];
 }) => {
-  const user = useAuthStore(state => state.user);
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const user = useKimlikDeposu(state => state.user);
+  const isAuthenticated = useKimlikDeposu(state => state.isAuthenticated);
 
   if (!isAuthenticated || !user) return <Navigate to={YOLLAR.giris} replace />;
 
@@ -58,7 +58,7 @@ const ProtectedRoute = ({
 };
 
 const DashboardRoute = () => {
-  const user = useAuthStore(state => state.user);
+  const user = useKimlikDeposu(state => state.user);
   const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);
 
   if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.sksYonetimi)) {
@@ -81,8 +81,8 @@ const DashboardRoute = () => {
 };
 
 const ClubManagementRoute = () => {
-  const managedClubs = useClubStore(state => state.managedClubs);
-  const fetchManagedClubs = useClubStore(state => state.fetchManagedClubs);
+  const managedClubs = useKulupDeposu(state => state.managedClubs);
+  const fetchManagedClubs = useKulupDeposu(state => state.fetchManagedClubs);
   const [checked, setChecked] = React.useState(false);
 
   React.useEffect(() => {
@@ -122,8 +122,8 @@ const EskiKulupEtkinlikYonlendirme = () => {
 };
 
 function App() {
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const user = useAuthStore(state => state.user);
+  const isAuthenticated = useKimlikDeposu(state => state.isAuthenticated);
+  const user = useKimlikDeposu(state => state.user);
   const hasSession = isAuthenticated && !!user;
 
   return (

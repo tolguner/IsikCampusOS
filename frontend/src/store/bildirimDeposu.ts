@@ -49,7 +49,7 @@ interface BildirimState {
 const okunmamisSay = (bildirimler: Bildirim[]) =>
   bildirimler.filter(bildirim => !bildirim.okundu).length;
 
-export const useNotificationStore = create<BildirimState>((set, get) => ({
+export const useBildirimDeposu = create<BildirimState>((set, get) => ({
   bildirimler: [],
   okunmamisSayisi: 0,
   yukleniyor: false,

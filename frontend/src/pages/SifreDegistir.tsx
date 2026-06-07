@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuthStore } from '../store/authStore';
+import { useKimlikDeposu } from '../store/kimlikDeposu';
 import { Lock, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
 export const SifreDegistir = () => {
@@ -9,7 +9,7 @@ export const SifreDegistir = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
-  const { changePassword, isLoading, error, successMessage, clearError, clearSuccess, logout } = useAuthStore();
+  const { changePassword, isLoading, error, successMessage, clearError, clearSuccess, logout } = useKimlikDeposu();
 
   const inputStyle = { background: 'rgba(255,255,255,0.04)', border: '1.5px solid rgba(255,255,255,0.07)' };
 

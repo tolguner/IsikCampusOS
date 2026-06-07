@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { useAuthStore } from '../../store/authStore';
+import { useKimlikDeposu } from '../../store/kimlikDeposu';
 import { Bell, Building2, LayoutDashboard, Link as LinkIcon, ShieldCheck, UsersRound, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useNotificationStore } from '../../store/notificationStore';
-import { useClubStore } from '../../store/clubStore';
-import { useProfileStore } from '../../store/profileStore';
+import { useBildirimDeposu } from '../../store/bildirimDeposu';
+import { useKulupDeposu } from '../../store/kulupDeposu';
+import { useProfilDeposu } from '../../store/profilDeposu';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../../utils/roles';
 import { YOLLAR } from '../../utils/paths';
 
 export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, logout, user } = useAuthStore();
-  const { bildirimler, okunmamisSayisi, bildirimleriGetir, okunduIsaretle } = useNotificationStore();
-  const { managedClubs, fetchManagedClubs } = useClubStore();
-  const { profile, fetchMyProfile } = useProfileStore();
+  const { isAuthenticated, logout, user } = useKimlikDeposu();
+  const { bildirimler, okunmamisSayisi, bildirimleriGetir, okunduIsaretle } = useBildirimDeposu();
+  const { managedClubs, fetchManagedClubs } = useKulupDeposu();
+  const { profile, fetchMyProfile } = useProfilDeposu();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);
   const isFacilityAdmin = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.tesisYonetimi);

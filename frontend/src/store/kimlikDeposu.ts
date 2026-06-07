@@ -60,7 +60,7 @@ const persistAuth = (token: string, user: Kullanici) => {
 const getErrorMessage = (err: any, fallback: string) =>
   err?.response?.data?.message || err?.message || fallback;
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useKimlikDeposu = create<AuthState>((set, get) => ({
   user: readStoredUser(),
   token: localStorage.getItem('token'),
   isAuthenticated: !!localStorage.getItem('token'),

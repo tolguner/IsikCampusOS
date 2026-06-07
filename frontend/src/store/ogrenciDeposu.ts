@@ -54,7 +54,7 @@ const getDepartmentCode = (studentNumber: string): string => {
   return match ? match[1].toLowerCase() : '';
 };
 
-export const useStudentStore = create<StudentState>((set, get) => ({
+export const useOgrenciDeposu = create<StudentState>((set, get) => ({
   students: [],
   totalElements: 0,
   totalPages: 0,

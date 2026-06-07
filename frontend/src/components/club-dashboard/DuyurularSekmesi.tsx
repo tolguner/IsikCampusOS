@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Bell, ImagePlus, Megaphone } from 'lucide-react';
-import type { Kulup } from '../../store/clubStore';
-import { useClubStore } from '../../store/clubStore';
+import type { Kulup } from '../../store/kulupDeposu';
+import { useKulupDeposu } from '../../store/kulupDeposu';
 import { inputClass, textareaClass, emptyAnnouncementForm } from './sabitler';
 
 interface DuyurularSekmesiProps {
@@ -10,7 +10,7 @@ interface DuyurularSekmesiProps {
 }
 
 export const DuyurularSekmesi = ({ selectedClub }: DuyurularSekmesiProps) => {
-  const { isLoading, createClubAnnouncement } = useClubStore();
+  const { isLoading, createClubAnnouncement } = useKulupDeposu();
   const [announcementForm, setAnnouncementForm] = useState(emptyAnnouncementForm);
 
   const handleAnnouncementImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {

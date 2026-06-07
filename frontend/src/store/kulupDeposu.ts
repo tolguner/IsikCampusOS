@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
-import { type Etkinlik, mapEventResponse } from './eventStore';
+import { type Etkinlik, mapEventResponse } from './etkinlikDeposu';
 
 /** Backend (event-service) KulupYaniti ile birebir — çeviri (mapper) yoktur. */
 export interface Kulup {
@@ -167,7 +167,7 @@ const mapClubHealthResponse = (data: any): KulupSaglik => data;
 const mapClubAnnouncementResponse = (data: any): KulupDuyurusu => data;
 const mapAuditLogResponse = (data: any): DenetimGunlugu => data;
 
-export const useClubStore = create<ClubState>((set, get) => ({
+export const useKulupDeposu = create<ClubState>((set, get) => ({
   clubs: [],
   managedClubs: [],
   selectedClub: null,

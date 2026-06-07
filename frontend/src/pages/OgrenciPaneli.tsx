@@ -1,8 +1,8 @@
-import { useAuthStore } from '../store/authStore';
+import { useKimlikDeposu } from '../store/kimlikDeposu';
 import { YOLLAR } from '../utils/paths';
 
 export const OgrenciPaneli = () => {
-  const user = useAuthStore(state => state.user);
+  const user = useKimlikDeposu(state => state.user);
 
   return (
     <div className="flex flex-col items-center justify-center h-full space-y-6 mt-20">

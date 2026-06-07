@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useFacilityStore } from '../store/facilityStore';
-import { useBookingStore } from '../store/bookingStore';
+import { useTesisDeposu } from '../store/tesisDeposu';
+import { useRezervasyonDeposu } from '../store/rezervasyonDeposu';
 import { motion } from 'framer-motion';
 import {
   Building2,
@@ -25,8 +25,8 @@ const panelStyle = {
 const inputClass = 'w-full rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-cyan-300/60 transition-all';
 
 export const TesisRezervasyonSayfasi = () => {
-  const { facilities, isLoading: isFacilitiesLoading, fetchFacilities } = useFacilityStore();
-  const { createBooking, calendarBookings, fetchCalendarBookings, isLoading: isBookingLoading, error, successMessage, clearMessages } = useBookingStore();
+  const { facilities, isLoading: isFacilitiesLoading, fetchFacilities } = useTesisDeposu();
+  const { createBooking, calendarBookings, fetchCalendarBookings, isLoading: isBookingLoading, error, successMessage, clearMessages } = useRezervasyonDeposu();
 
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>('');
   const [selectedResourceId, setSelectedResourceId] = useState<string>('');

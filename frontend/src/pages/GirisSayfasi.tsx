@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuthStore } from '../store/authStore';
+import { useKimlikDeposu } from '../store/kimlikDeposu';
 import { Link, useNavigate } from 'react-router-dom';
 import { YOLLAR } from '../utils/paths';
 import {
@@ -19,7 +19,7 @@ export const GirisSayfasi = () => {
   const [resetCode, setResetCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const { login, forgotPassword, resetPassword, isLoading, error, successMessage, clearError, clearSuccess } = useAuthStore();
+  const { login, forgotPassword, resetPassword, isLoading, error, successMessage, clearError, clearSuccess } = useKimlikDeposu();
   const navigate = useNavigate();
 
   const resetForm = () => {

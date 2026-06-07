@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { UsersRound, ShieldCheck } from 'lucide-react';
-import type { Kulup } from '../../store/clubStore';
-import { useClubStore } from '../../store/clubStore';
+import type { Kulup } from '../../store/kulupDeposu';
+import { useKulupDeposu } from '../../store/kulupDeposu';
 
 interface UyelerSekmesiProps {
   selectedClub: Kulup;
@@ -11,7 +11,7 @@ export const UyelerSekmesi = ({ selectedClub }: UyelerSekmesiProps) => {
   const {
     clubMembers,
     fetchClubMembers,
-  } = useClubStore();
+  } = useKulupDeposu();
 
   useEffect(() => {
     fetchClubMembers(selectedClub.id);
