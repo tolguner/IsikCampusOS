@@ -44,6 +44,27 @@ public class DenetimGunluguDenetleyicisi {
         return ResponseEntity.ok(denetimGunluguServisi.listele(DenetimGunlugu.VarlikTuru.ETKINLIK, etkinlikId, islem, yapanId, baslangic, bitis, arama));
     }
 
+    /** Sistem yöneticisi: tüm sistem denetim günlükleri (en yeni 500), opsiyonel filtrelerle. */
+    @GetMapping("/api/v1/denetim-gunlukleri")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<List<DenetimGunluguYaniti>> tumDenetimGunlukleri(
+            @RequestParam(required = false) String varlikTuru,
+            @RequestParam(required = false) String islem,
+            @RequestParam(required = false) String yapanId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baslangic,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bitis,
+            @RequestParam(required = false) String arama) {
+        DenetimGunlugu.VarlikTuru tur = null;
+        if (varlikTuru != null && !varlikTuru.isBlank()) {
+            try {
+                tur = DenetimGunlugu.VarlikTuru.valueOf(varlikTuru.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz varlık türü: " + varlikTuru);
+            }
+        }
+        return ResponseEntity.ok(denetimGunluguServisi.tumunuListele(tur, islem, yapanId, baslangic, bitis, arama));
+    }
+
     @GetMapping("/api/v1/kulupler/{kulupId}/denetim-gunlukleri")
     @PreAuthorize("hasAnyAuthority('ROLE_SKS_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<List<DenetimGunluguYaniti>> kulupGunlukleriniGetir(@PathVariable String kulupId,

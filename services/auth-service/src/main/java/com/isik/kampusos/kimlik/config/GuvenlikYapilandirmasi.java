@@ -54,6 +54,8 @@ public class GuvenlikYapilandirmasi {
                 .requestMatchers(HttpMethod.GET, "/api/v1/ogrenciler/**")
                     .hasAnyAuthority("ROLE_REGISTRAR", "ROLE_SKS_ADMIN")
                 .requestMatchers("/api/v1/ogrenciler/**").hasAuthority("ROLE_REGISTRAR")
+                // Sistem yöneticisi: tüm kullanıcı/rol yönetimi
+                .requestMatchers("/api/v1/yonetim/**").hasAuthority("ROLE_ADMIN")
                 // Diğer tüm istekler authenticated olmalı
                 .anyRequest().authenticated()
             )

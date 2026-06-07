@@ -53,6 +53,29 @@ public class DenetimGunluguServisi {
                 .toList();
     }
 
+    /** Sistem yöneticisi: tüm denetim günlükleri (en yeni 500), opsiyonel filtrelerle. */
+    public List<DenetimGunluguYaniti> tumunuListele(DenetimGunlugu.VarlikTuru varlikTuru,
+                                                    String islem,
+                                                    String yapanId,
+                                                    LocalDate baslangic,
+                                                    LocalDate bitis,
+                                                    String aramaKelimesi) {
+        String normalizeArama = normalize(aramaKelimesi);
+        return denetimGunluguDeposu.findTop500ByOrderByOlusturulmaTarihiDesc()
+                .stream()
+                .filter(log -> varlikTuru == null || log.getVarlikTuru() == varlikTuru)
+                .filter(log -> islem == null || islem.isBlank() || islem.equalsIgnoreCase(log.getIslem()))
+                .filter(log -> yapanId == null || yapanId.isBlank() || yapanId.equalsIgnoreCase(log.getYapanId()))
+                .filter(log -> baslangic == null || !log.getOlusturulmaTarihi().toLocalDate().isBefore(baslangic))
+                .filter(log -> bitis == null || !log.getOlusturulmaTarihi().toLocalDate().isAfter(bitis))
+                .filter(log -> normalizeArama == null
+                        || normalize(log.getMesaj()).contains(normalizeArama)
+                        || normalize(log.getIslem()).contains(normalizeArama)
+                        || normalize(log.getYapanId()).contains(normalizeArama))
+                .map(this::yanitaDonustur)
+                .toList();
+    }
+
     private DenetimGunluguYaniti yanitaDonustur(DenetimGunlugu log) {
         return DenetimGunluguYaniti.builder()
                 .id(log.getId())
