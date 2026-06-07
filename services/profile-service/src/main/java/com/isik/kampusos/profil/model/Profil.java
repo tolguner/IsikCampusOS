@@ -2,7 +2,9 @@ package com.isik.kampusos.profil.model;
  
 import jakarta.persistence.*;
 import lombok.*;
- 
+
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "profiller")
 @Data
@@ -42,9 +44,20 @@ public class Profil {
     private String yetenekler; // Virgülle ayrılmış değerler olarak saklanır
     
     private int guvenSkoru;
- 
+
+    private LocalDateTime olusturulmaTarihi;
+    private LocalDateTime guncellenmeTarihi;
+
     @PrePersist
     protected void onCreate() {
         this.guvenSkoru = 100; // Varsayılan başlangıç güven skoru
+        LocalDateTime now = LocalDateTime.now();
+        this.olusturulmaTarihi = now;
+        this.guncellenmeTarihi = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.guncellenmeTarihi = LocalDateTime.now();
     }
 }
