@@ -1,9 +1,9 @@
-import { useKimlikDeposu } from '../store/kimlikDeposu';
-import { useKulupDeposu } from '../store/kulupDeposu';
-import { useEtkinlikDeposu } from '../store/etkinlikDeposu';
-import { useBildirimDeposu } from '../store/bildirimDeposu';
-import { useOgrenciDeposu } from '../store/ogrenciDeposu';
-import { useAkademikKadroDeposu } from '../store/akademikKadroDeposu';
+import { useKimlikDeposu } from '../depolar/kimlikDeposu';
+import { useKulupDeposu } from '../depolar/kulupDeposu';
+import { useEtkinlikDeposu } from '../depolar/etkinlikDeposu';
+import { useBildirimDeposu } from '../depolar/bildirimDeposu';
+import { useOgrenciDeposu } from '../depolar/ogrenciDeposu';
+import { useAkademikKadroDeposu } from '../depolar/akademikKadroDeposu';
 import { useAutoDismissMessage } from '../hooks/useAutoDismissMessage';
 
 export const OtomatikMesajTemizleyici = () => {

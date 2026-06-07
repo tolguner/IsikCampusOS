@@ -16,17 +16,17 @@ import {
   UsersRound,
   XCircle,
 } from 'lucide-react';
-import { useKulupDeposu } from '../store/kulupDeposu';
-import { useEtkinlikDeposu, type EtkinlikKatilimci } from '../store/etkinlikDeposu';
-import { YOLLAR } from '../utils/paths';
+import { useKulupDeposu } from '../depolar/kulupDeposu';
+import { useEtkinlikDeposu, type EtkinlikKatilimci } from '../depolar/etkinlikDeposu';
+import { YOLLAR } from '../yardimcilar/yollar';
 import {
   isCheckInWindowOpen,
   isPastEvent,
   participantStatusLabel,
   statusClass,
   statusLabel,
-} from '../components/club-dashboard/sabitler';
-import { QrGirisPaneli } from '../components/club-dashboard/QrGirisPaneli';
+} from '../components/kulup-paneli/sabitler';
+import { QrGirisPaneli } from '../components/kulup-paneli/QrGirisPaneli';
 
 const tabClass = (active: boolean) =>
   `rounded-2xl px-4 py-2.5 text-sm font-black border transition-colors ${

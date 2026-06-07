@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useRezervasyonDeposu, type Rezervasyon } from '../store/rezervasyonDeposu';
+import { useRezervasyonDeposu, type Rezervasyon } from '../depolar/rezervasyonDeposu';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CalendarClock,

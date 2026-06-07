@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { AlertCircle, CalendarDays, CheckCircle2, Loader2, Search, Sparkles, Users, X } from 'lucide-react';
-import { useKulupDeposu } from '../store/kulupDeposu';
-import { useKimlikDeposu } from '../store/kimlikDeposu';
-import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../utils/roles';
-import { YOLLAR } from '../utils/paths';
+import { useKulupDeposu } from '../depolar/kulupDeposu';
+import { useKimlikDeposu } from '../depolar/kimlikDeposu';
+import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../yardimcilar/yetkiler';
+import { YOLLAR } from '../yardimcilar/yollar';
 
 export const KuluplerSayfasi = () => {
   const { clubs, fetchClubs, joinClub, leaveClub, isLoading, error, successMessage, clearMessages } = useKulupDeposu();

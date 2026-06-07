@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useKimlikDeposu } from '../store/kimlikDeposu';
+import { useKimlikDeposu } from '../depolar/kimlikDeposu';
 import { Link, useNavigate } from 'react-router-dom';
-import { YOLLAR } from '../utils/paths';
+import { YOLLAR } from '../yardimcilar/yollar';
 import {
   Mail, Lock, Loader2, AlertCircle, Eye, EyeOff,
   Calendar, BookOpen, ArrowRight, CheckCircle2, Zap,

@@ -1,8 +1,8 @@
 import React from 'react';
 import { GraduationCap, Pencil, RefreshCw, Save, Search, UserCog, X } from 'lucide-react';
-import type { Kulup } from '../../store/kulupDeposu';
-import type { Student } from '../../store/ogrenciDeposu';
-import type { AcademicAdvisor } from '../../store/akademikKadroDeposu';
+import type { Kulup } from '../../depolar/kulupDeposu';
+import type { Student } from '../../depolar/ogrenciDeposu';
+import type { AcademicAdvisor } from '../../depolar/akademikKadroDeposu';
 import {
   inputClass,
   fieldLimitText,

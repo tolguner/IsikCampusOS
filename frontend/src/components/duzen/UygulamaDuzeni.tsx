@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useKimlikDeposu } from '../../store/kimlikDeposu';
+import { useKimlikDeposu } from '../../depolar/kimlikDeposu';
 import { Bell, Building2, LayoutDashboard, Link as LinkIcon, ShieldCheck, UsersRound, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useBildirimDeposu } from '../../store/bildirimDeposu';
-import { useKulupDeposu } from '../../store/kulupDeposu';
-import { useProfilDeposu } from '../../store/profilDeposu';
-import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../../utils/roles';
-import { YOLLAR } from '../../utils/paths';
+import { useBildirimDeposu } from '../../depolar/bildirimDeposu';
+import { useKulupDeposu } from '../../depolar/kulupDeposu';
+import { useProfilDeposu } from '../../depolar/profilDeposu';
+import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../../yardimcilar/yetkiler';
+import { YOLLAR } from '../../yardimcilar/yollar';
 
 export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, logout, user } = useKimlikDeposu();

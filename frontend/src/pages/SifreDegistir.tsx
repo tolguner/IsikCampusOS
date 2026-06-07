@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useKimlikDeposu } from '../store/kimlikDeposu';
+import { useKimlikDeposu } from '../depolar/kimlikDeposu';
 import { Lock, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
 export const SifreDegistir = () => {

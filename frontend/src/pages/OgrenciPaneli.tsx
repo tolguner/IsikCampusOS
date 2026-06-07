@@ -1,5 +1,5 @@
-import { useKimlikDeposu } from '../store/kimlikDeposu';
-import { YOLLAR } from '../utils/paths';
+import { useKimlikDeposu } from '../depolar/kimlikDeposu';
+import { YOLLAR } from '../yardimcilar/yollar';
 
 export const OgrenciPaneli = () => {
   const user = useKimlikDeposu(state => state.user);

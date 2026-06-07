@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Bell, CalendarDays, Link as LinkIcon, Search, X } from 'lucide-react';
-import { useBildirimDeposu } from '../store/bildirimDeposu';
+import { useBildirimDeposu } from '../depolar/bildirimDeposu';
 
 type NotificationFilter = 'all' | 'announcements' | 'events';
 

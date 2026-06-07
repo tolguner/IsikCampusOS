@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
 import { CalendarDays, FilePenLine, Megaphone, UsersRound } from 'lucide-react';
-import { useKulupDeposu } from '../store/kulupDeposu';
-import { useEtkinlikDeposu } from '../store/etkinlikDeposu';
+import { useKulupDeposu } from '../depolar/kulupDeposu';
+import { useEtkinlikDeposu } from '../depolar/etkinlikDeposu';
 
-import type { PanelTab } from '../components/club-dashboard/sabitler';
-import { ProfilSekmesi } from '../components/club-dashboard/ProfilSekmesi';
-import { EtkinliklerSekmesi } from '../components/club-dashboard/EtkinliklerSekmesi';
-import { DuyurularSekmesi } from '../components/club-dashboard/DuyurularSekmesi';
-import { UyelerSekmesi } from '../components/club-dashboard/UyelerSekmesi';
+import type { PanelTab } from '../components/kulup-paneli/sabitler';
+import { ProfilSekmesi } from '../components/kulup-paneli/ProfilSekmesi';
+import { EtkinliklerSekmesi } from '../components/kulup-paneli/EtkinliklerSekmesi';
+import { DuyurularSekmesi } from '../components/kulup-paneli/DuyurularSekmesi';
+import { UyelerSekmesi } from '../components/kulup-paneli/UyelerSekmesi';
 
 export const KulupBaskaniPaneli = () => {
   const {

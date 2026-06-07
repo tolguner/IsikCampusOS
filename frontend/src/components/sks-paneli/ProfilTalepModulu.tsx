@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Pencil, XCircle } from 'lucide-react';
-import type { KulupProfilDegisiklikIstegi } from '../../store/kulupDeposu';
+import type { KulupProfilDegisiklikIstegi } from '../../depolar/kulupDeposu';
 import { inputClass } from './ortak';
 
 interface ProfilTalepModuluProps {

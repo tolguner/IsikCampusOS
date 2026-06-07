@@ -1,4 +1,4 @@
-import type { Etkinlik, EtkinlikDurumu, KatilimDurumu } from '../../store/etkinlikDeposu';
+import type { Etkinlik, EtkinlikDurumu, KatilimDurumu } from '../../depolar/etkinlikDeposu';
 
 export type PanelTab = 'profile' | 'events' | 'announcements' | 'members';
 

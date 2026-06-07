@@ -14,9 +14,9 @@ import {
   XCircle,
   QrCode,
 } from 'lucide-react';
-import type { Kulup } from '../../store/kulupDeposu';
-import { useEtkinlikDeposu, type Etkinlik } from '../../store/etkinlikDeposu';
-import { YOLLAR } from '../../utils/paths';
+import type { Kulup } from '../../depolar/kulupDeposu';
+import { useEtkinlikDeposu, type Etkinlik } from '../../depolar/etkinlikDeposu';
+import { YOLLAR } from '../../yardimcilar/yollar';
 import {
   inputClass,
   textareaClass,

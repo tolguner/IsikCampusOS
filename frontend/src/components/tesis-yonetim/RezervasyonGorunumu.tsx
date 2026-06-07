@@ -1,6 +1,6 @@
 import React from 'react';
 import { CalendarClock, Clock3, Calendar, User, FileText, Lock } from 'lucide-react';
-import type { Rezervasyon } from '../../store/rezervasyonDeposu';
+import type { Rezervasyon } from '../../depolar/rezervasyonDeposu';
 import { panelStyle, inputClass, BookingStatusBadge } from './ortak';
 
 interface RezervasyonGorunumuProps {

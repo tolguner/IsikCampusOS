@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { GraduationCap, ImagePlus, Send } from 'lucide-react';
-import type { Kulup } from '../../store/kulupDeposu';
-import { useKulupDeposu } from '../../store/kulupDeposu';
+import type { Kulup } from '../../depolar/kulupDeposu';
+import { useKulupDeposu } from '../../depolar/kulupDeposu';
 import { inputClass, textareaClass, squareImageFile } from './sabitler';
 
 interface ProfilSekmesiProps {

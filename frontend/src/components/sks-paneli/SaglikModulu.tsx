@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle2, Power, Users } from 'lucide-react';
-import type { KulupSaglik, DenetimGunlugu } from '../../store/kulupDeposu';
+import type { KulupSaglik, DenetimGunlugu } from '../../depolar/kulupDeposu';
 import { panelStyle, inputClass } from './ortak';
 
 interface SaglikModuluProps {
