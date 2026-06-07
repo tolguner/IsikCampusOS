@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export const useAutoDismissMessage = (
+export const useMesajOtomatikKapat = (
   message: string | null | undefined,
   dismiss: () => void,
   delayMs = 7000,

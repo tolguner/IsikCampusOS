@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useKimlikDeposu } from '../depolar/kimlikDeposu';
 import { useProfilDeposu } from '../depolar/profilDeposu';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAutoDismissMessage } from '../hooks/useAutoDismissMessage';
+import { useMesajOtomatikKapat } from '../kancalar/useMesajOtomatikKapat';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI, YETKILER } from '../yardimcilar/yetkiler';
 import { 
   User, Mail, GraduationCap, Building2, Calendar, 
@@ -53,8 +53,8 @@ export const ProfilSayfasi = () => {
     { code: 'FR', label: 'Fransa', dialCode: '+33', digits: 9, placeholder: '612345678', startsWith: ['6', '7'] },
   ];
 
-  useAutoDismissMessage(passError, () => setPassError(''));
-  useAutoDismissMessage(passSuccess, () => setPassSuccess(''));
+  useMesajOtomatikKapat(passError, () => setPassError(''));
+  useMesajOtomatikKapat(passSuccess, () => setPassSuccess(''));
 
   useEffect(() => {
     if (!user) return;
