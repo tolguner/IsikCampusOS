@@ -14,7 +14,7 @@ interface ProfileRequestsModuleProps {
   setRevisionTextByProfileRequest: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 }
 
-export const ProfileRequestsModule = ({
+export const ProfilTalepModulu = ({
   profileChangeRequests,
   clubsLoading,
   approveProfileChangeRequest,

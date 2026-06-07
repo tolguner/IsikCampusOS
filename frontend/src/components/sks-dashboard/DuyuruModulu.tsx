@@ -10,7 +10,7 @@ interface AnnouncementsModuleProps {
   announcementSenderName: string;
 }
 
-export const AnnouncementsModule = ({
+export const DuyuruModulu = ({
   announcement,
   setAnnouncement,
   handleAnnouncement,

@@ -45,7 +45,7 @@ interface CreateModuleProps {
   clubsLoading: boolean;
 }
 
-export const CreateModule = ({
+export const OlusturModulu = ({
   handleCreateClub,
   clubForm,
   setClubForm,
