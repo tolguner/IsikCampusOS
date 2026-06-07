@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { api } from '../lib/api';
 
 export type BildirimTuru =
@@ -33,6 +34,9 @@ interface BildirimState {
   yukleniyor: boolean;
   hata: string | null;
   hatayiTemizle: () => void;
+  /** Anlık bildirim akışını (SSE) başlatır — yeni bildirimler push ile gelir. */
+  akisBaslat: () => void;
+  akisDurdur: () => void;
   bildirimleriGetir: () => Promise<void>;
   okunduIsaretle: (bildirimId: string) => Promise<void>;
   duyuruOlustur: (veri: {
@@ -58,6 +62,9 @@ interface BildirimState {
 const okunmamisSay = (bildirimler: Bildirim[]) =>
   bildirimler.filter(bildirim => !bildirim.okundu).length;
 
+// SSE bağlantısı (zustand state dışında — gereksiz render önlenir)
+let akisKontrolcusu: AbortController | null = null;
+
 export const useBildirimDeposu = create<BildirimState>((set, get) => ({
   bildirimler: [],
   okunmamisSayisi: 0,
@@ -65,6 +72,45 @@ export const useBildirimDeposu = create<BildirimState>((set, get) => ({
   hata: null,
 
   hatayiTemizle: () => set({ hata: null }),
+
+  akisBaslat: () => {
+    const token = localStorage.getItem('token');
+    if (!token || akisKontrolcusu) return;
+    akisKontrolcusu = new AbortController();
+    fetchEventSource('/api/v1/bildirimler/akis', {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: akisKontrolcusu.signal,
+      openWhenHidden: true,
+      onopen: async (res) => {
+        if (res.status === 401 || res.status === 403) {
+          throw new Error('unauthorized'); // yeniden denemeyi durdur
+        }
+      },
+      onmessage: (ev) => {
+        if (ev.event !== 'bildirim' || !ev.data) return;
+        try {
+          const yeni: Bildirim = JSON.parse(ev.data);
+          const mevcut = get().bildirimler;
+          if (mevcut.some(b => b.id === yeni.id)) return;
+          const guncel = [yeni, ...mevcut];
+          set({ bildirimler: guncel, okunmamisSayisi: okunmamisSay(guncel) });
+        } catch {
+          // bozuk payload — atla
+        }
+      },
+      onerror: (err) => {
+        // Geçici hatalarda kütüphane yeniden bağlanır; fatal hatada (onopen throw) durur.
+        if (err instanceof Error && err.message === 'unauthorized') throw err;
+      },
+    }).catch(() => {
+      akisKontrolcusu = null;
+    });
+  },
+
+  akisDurdur: () => {
+    akisKontrolcusu?.abort();
+    akisKontrolcusu = null;
+  },
 
   bildirimleriGetir: async () => {
     set({ yukleniyor: true, hata: null });

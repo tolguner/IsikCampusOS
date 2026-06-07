@@ -2,10 +2,13 @@ package com.isik.kampusos.bildirim.controller;
 
 import com.isik.kampusos.bildirim.dto.BildirimYaniti;
 import com.isik.kampusos.bildirim.dto.OgrenciDuyuruTalebi;
+import com.isik.kampusos.bildirim.messaging.BildirimAkisYoneticisi;
 import com.isik.kampusos.bildirim.model.Bildirim;
 import com.isik.kampusos.bildirim.service.BildirimServisi;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +24,13 @@ import java.util.Map;
 public class BildirimDenetleyicisi {
 
     private final BildirimServisi bildirimServisi;
+    private final BildirimAkisYoneticisi akisYoneticisi;
+
+    /** Anlık bildirim akışı (SSE). İstemci açık tutar; yeni bildirimler anında iletilir. */
+    @GetMapping(value = "/akis", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter akis(Authentication auth) {
+        return akisYoneticisi.abone(auth.getName(), auth.getAuthorities().toString());
+    }
 
     /** İdari rollerin (öğrenci hariç) tüm öğrencilere kurumsal duyuru göndermesi. */
     @PostMapping("/toplu-duyuru")

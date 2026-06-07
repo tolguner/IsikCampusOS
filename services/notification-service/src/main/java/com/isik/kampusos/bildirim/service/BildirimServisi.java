@@ -28,6 +28,7 @@ public class BildirimServisi {
 
     private final BildirimDeposu bildirimDeposu;
     private final BildirimOkumaDeposu bildirimOkumaDeposu;
+    private final com.isik.kampusos.bildirim.messaging.BildirimAkisYoneticisi akisYoneticisi;
 
     /** Kafka olayından bildirim oluşturur (tüketici tarafından çağrılır). */
     public Bildirim olaydanOlustur(BildirimOlayi olay) {
@@ -44,7 +45,9 @@ public class BildirimServisi {
                 .olusturan(olay.getOlusturan())
                 .olusturanAdi(olay.getOlusturanAdi())
                 .build();
-        return bildirimDeposu.save(bildirim);
+        Bildirim kaydedilen = bildirimDeposu.save(bildirim);
+        akisYoneticisi.yayinla(kaydedilen);   // anlık (SSE) push
+        return kaydedilen;
     }
 
     /**
@@ -69,7 +72,9 @@ public class BildirimServisi {
                 .olusturan(olusturanId)
                 .olusturanAdi(olusturanAdi)
                 .build();
-        return bildirimDeposu.save(bildirim);
+        Bildirim kaydedilen = bildirimDeposu.save(bildirim);
+        akisYoneticisi.yayinla(kaydedilen);   // anlık (SSE) push
+        return kaydedilen;
     }
 
     public List<BildirimYaniti> gorunurBildirimleriListele(String kullaniciId, String yetkiler) {
