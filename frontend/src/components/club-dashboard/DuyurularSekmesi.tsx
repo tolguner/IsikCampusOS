@@ -5,11 +5,11 @@ import type { Kulup } from '../../store/clubStore';
 import { useClubStore } from '../../store/clubStore';
 import { inputClass, textareaClass, emptyAnnouncementForm } from './sabitler';
 
-interface AnnouncementsTabProps {
+interface DuyurularSekmesiProps {
   selectedClub: Kulup;
 }
 
-export const DuyurularSekmesi = ({ selectedClub }: AnnouncementsTabProps) => {
+export const DuyurularSekmesi = ({ selectedClub }: DuyurularSekmesiProps) => {
   const { isLoading, createClubAnnouncement } = useClubStore();
   const [announcementForm, setAnnouncementForm] = useState(emptyAnnouncementForm);
 

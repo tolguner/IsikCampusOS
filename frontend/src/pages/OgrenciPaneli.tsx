@@ -1,7 +1,7 @@
 import { useAuthStore } from '../store/authStore';
 import { YOLLAR } from '../utils/paths';
 
-export const StudentDashboard = () => {
+export const OgrenciPaneli = () => {
   const user = useAuthStore(state => state.user);
 
   return (

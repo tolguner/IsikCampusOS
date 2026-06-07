@@ -6,7 +6,7 @@ import { useStudentStore } from '../store/studentStore';
 import { useAcademicStaffStore } from '../store/academicStaffStore';
 import { useAutoDismissMessage } from '../hooks/useAutoDismissMessage';
 
-export const AutoClearMessages = () => {
+export const OtomatikMesajTemizleyici = () => {
   const authError = useAuthStore(state => state.error);
   const authSuccess = useAuthStore(state => state.successMessage);
   const clearAuthError = useAuthStore(state => state.clearError);
@@ -44,4 +44,4 @@ export const AutoClearMessages = () => {
   return null;
 };
 
-export default AutoClearMessages;
+export default OtomatikMesajTemizleyici;

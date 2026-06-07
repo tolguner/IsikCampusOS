@@ -3,14 +3,14 @@ import { CircleMarker, MapContainer, TileLayer, useMapEvents, useMap } from 'rea
 import { Search, Loader2, MapPin, X } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 
-interface LocationPickerProps {
+interface KonumSeciciProps {
   latitude: number;
   longitude: number;
   onChange: (lat: number, lng: number) => void;
   onLocationSelect?: (name: string) => void;
 }
 
-export const KonumSecici = ({ latitude, longitude, onChange, onLocationSelect }: LocationPickerProps) => {
+export const KonumSecici = ({ latitude, longitude, onChange, onLocationSelect }: KonumSeciciProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);

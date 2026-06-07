@@ -5,7 +5,7 @@ import { useStudentStore } from '../store/studentStore';
 import { useProfileStore, type ProfilDegisiklikIstegi } from '../store/profileStore';
 import { Search, Plus, MoreVertical, X, CheckCircle2, AlertCircle, Loader2, KeyRound, UserX, UserCheck, GraduationCap, Edit2, ChevronLeft, ChevronRight, ClipboardCheck, Trash2 } from 'lucide-react';
 
-export const RegistrarDashboard = () => {
+export const OgrenciIsleriPaneli = () => {
   const facultiesAndDepartments: Record<string, string[]> = {
     "İktisadi, İdari ve Sosyal Bilimler Fakültesi": [
       "Psikoloji (Türkçe)",

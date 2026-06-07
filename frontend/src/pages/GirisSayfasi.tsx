@@ -11,7 +11,7 @@ import {
 
 type AuthMode = 'login' | 'forgot' | 'reset';
 
-export const AuthPage = () => {
+export const GirisSayfasi = () => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

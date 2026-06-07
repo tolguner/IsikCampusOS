@@ -26,7 +26,7 @@ import { SaglikModulu } from '../components/sks-dashboard/SaglikModulu';
 import { KulupModulu } from '../components/sks-dashboard/KulupModulu';
 import { OlusturModulu } from '../components/sks-dashboard/OlusturModulu';
 
-export const SksDashboard = () => {
+export const SksPaneli = () => {
   const {
     clubs,
     isLoading: clubsLoading,

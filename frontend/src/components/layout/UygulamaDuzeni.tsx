@@ -9,7 +9,7 @@ import { useProfileStore } from '../../store/profileStore';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../../utils/roles';
 import { YOLLAR } from '../../utils/paths';
 
-export const AppLayout = ({ children }: { children: React.ReactNode }) => {
+export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, logout, user } = useAuthStore();
   const { bildirimler, okunmamisSayisi, bildirimleriGetir, okunduIsaretle } = useNotificationStore();
   const { managedClubs, fetchManagedClubs } = useClubStore();

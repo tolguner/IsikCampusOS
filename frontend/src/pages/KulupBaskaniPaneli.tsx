@@ -9,7 +9,7 @@ import { EtkinliklerSekmesi } from '../components/club-dashboard/EtkinliklerSekm
 import { DuyurularSekmesi } from '../components/club-dashboard/DuyurularSekmesi';
 import { UyelerSekmesi } from '../components/club-dashboard/UyelerSekmesi';
 
-export const ClubPresidentDashboard = () => {
+export const KulupBaskaniPaneli = () => {
   const {
     managedClubs,
     isLoading: clubsLoading,

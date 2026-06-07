@@ -2,7 +2,7 @@ import React from 'react';
 import { Bell, ImagePlus, Link as LinkIcon, Megaphone } from 'lucide-react';
 import { panelStyle, inputClass, type DuyuruFormu } from './ortak';
 
-interface AnnouncementsModuleProps {
+interface DuyuruModuluProps {
   announcement: DuyuruFormu;
   setAnnouncement: React.Dispatch<React.SetStateAction<DuyuruFormu>>;
   handleAnnouncement: (e: React.FormEvent) => void;
@@ -16,7 +16,7 @@ export const DuyuruModulu = ({
   handleAnnouncement,
   handleAnnouncementImageSelect,
   announcementSenderName,
-}: AnnouncementsModuleProps) => (
+}: DuyuruModuluProps) => (
   <form onSubmit={handleAnnouncement} className="rounded-3xl p-6 space-y-6" style={panelStyle}>
     <div className="grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-6">
       <section className="space-y-5">

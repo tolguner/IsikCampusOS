@@ -12,7 +12,7 @@ import { TakvimGorunumu } from '../components/facility-admin/TakvimGorunumu';
 import { RezervasyonGorunumu } from '../components/facility-admin/RezervasyonGorunumu';
 import { YapilandirmaGorunumu } from '../components/facility-admin/YapilandirmaGorunumu';
 
-export const FacilityAdminDashboard = () => {
+export const TesisYonetimPaneli = () => {
   const {
     facilities,
     selectedFacilityId,

@@ -19,7 +19,7 @@ const formatDate = (value?: string) => {
   }).format(new Date(value));
 };
 
-export const ClubDetailPage = () => {
+export const KulupDetaySayfasi = () => {
   const { clubId } = useParams();
   const user = useAuthStore(state => state.user);
   const { selectedClub, clubEvents, fetchClub, fetchClubEvents, joinClub, leaveClub, isLoading } = useClubStore();

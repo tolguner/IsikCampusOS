@@ -3,7 +3,7 @@ import { CalendarClock, Clock3, Calendar, User, FileText, Lock } from 'lucide-re
 import type { Rezervasyon } from '../../store/bookingStore';
 import { panelStyle, inputClass, BookingStatusBadge } from './ortak';
 
-interface BookingsViewProps {
+interface RezervasyonGorunumuProps {
   handleAddBlockSlot: (e: React.FormEvent) => void;
   blockResourceId: string;
   setBlockResourceId: React.Dispatch<React.SetStateAction<string>>;
@@ -47,7 +47,7 @@ export const RezervasyonGorunumu = ({
   allBookings,
   formatDateTime,
   handleUpdateBookingStatus,
-}: BookingsViewProps) => {
+}: RezervasyonGorunumuProps) => {
   return (
     <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
       {/* Column 1: Add Block / Team Training slot Form */}

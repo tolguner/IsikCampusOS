@@ -38,7 +38,7 @@ const mapCertificateVerification = (data: CertificateVerificationApiResponse): C
   sentAt: data.gonderilmeTarihi,
 });
 
-export const CertificateVerificationPage = () => {
+export const SertifikaDogrulamaSayfasi = () => {
   const [searchParams] = useSearchParams();
   const [certificateCode, setCertificateCode] = useState('');
   const [result, setResult] = useState<CertificateVerificationResponse | null>(null);
