@@ -32,6 +32,15 @@ export const initialClubForm = {
   presidentId: '',
 };
 
+export type KulupOlusturFormu = typeof initialClubForm;
+
+export interface LogoDragStart {
+  mouseX: number;
+  mouseY: number;
+  cropX: number;
+  cropY: number;
+}
+
 export interface KulupDuzenleFormu {
   ad: string;
   kisaAciklama: string;
