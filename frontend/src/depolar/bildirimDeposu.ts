@@ -44,12 +44,14 @@ interface BildirimState {
     olusturanAdi?: string;
     hedefKitle: 'TUM_OGRENCILER' | 'KULUP_BASKANLARI';
   }) => Promise<boolean>;
-  /** İdari roller (Öğrenci İşleri / Spor Müdürlüğü / Sistem Yönetimi) → tüm öğrencilere kurumsal duyuru. */
-  ogrencilereDuyuruGonder: (veri: {
+  /** İdari roller → öğrencilere veya (yalnızca sistem yöneticisi) tüm kullanıcılara kurumsal duyuru. */
+  topluDuyuruGonder: (veri: {
     baslik: string;
     mesaj: string;
     baglantiUrl?: string;
     baglantiEtiketi?: string;
+    resimUrl?: string;
+    hedefKitle?: 'TUM_OGRENCILER' | 'TUM_KULLANICILAR';
   }) => Promise<boolean>;
 }
 
@@ -112,7 +114,7 @@ export const useBildirimDeposu = create<BildirimState>((set, get) => ({
     }
   },
 
-  ogrencilereDuyuruGonder: async (veri) => {
+  topluDuyuruGonder: async (veri) => {
     set({ yukleniyor: true, hata: null });
     try {
       await api.post('/bildirimler/toplu-duyuru', veri);
