@@ -11,6 +11,7 @@ export const YETKI_GRUPLARI = {
   ogrenciIsleri: [YETKILER.OGRENCI_ISLERI],
   sksYonetimi: [YETKILER.SKS_YONETICISI, YETKILER.SISTEM_YONETICISI],
   tesisYonetimi: [YETKILER.TESIS_YONETICISI, YETKILER.SISTEM_YONETICISI],
+  sistemYonetimi: [YETKILER.SISTEM_YONETICISI],
 } as const;
 
 export const rolleriAyir = (roller?: string | null) =>
