@@ -1,46 +1,51 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
 
-export interface BookingCheckin {
+export type RezervasyonDurumu =
+  | 'TASLAK' | 'BEKLEMEDE' | 'ONAYLANDI' | 'IPTAL_EDILDI' | 'TAMAMLANDI' | 'GELMEDI' | 'BLOKE';
+export type YoklamaDurumu = 'BEKLEMEDE' | 'GIRIS_YAPILDI' | 'BASARISIZ';
+
+/** Backend (facility-service) yanıtları ile birebir — çeviri (mapper) yoktur. */
+export interface Yoklama {
   id: string;
-  bookingId: string;
-  userId: string;
-  checkedInAt: string;
-  method: 'QR' | 'MANUAL';
-  proofAssetId?: string;
-  status: 'PENDING' | 'CHECKED_IN' | 'FAILED';
+  rezervasyonId: string;
+  kullaniciId: string;
+  yoklamaTarihi: string;
+  yontem: 'QR' | 'MANUAL';
+  kanitDosyaId?: string;
+  durum: YoklamaDurumu;
 }
 
-export interface Booking {
+export interface Rezervasyon {
   id: string;
-  resourceId: string;
-  resourceName: string;
-  facilityId: string;
-  facilityName: string;
-  bookedByUserId: string;
-  startAt: string;
-  endAt: string;
-  purpose?: string;
-  participantCount: number;
-  status: 'DRAFT' | 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW' | 'BLOCKED';
-  cancelledAt?: string;
-  cancelReason?: string;
-  noShowAt?: string;
-  checkin?: BookingCheckin;
+  kaynakId: string;
+  kaynakAd: string;
+  tesisId: string;
+  tesisAd: string;
+  rezervasyonYapanKullaniciId: string;
+  baslangicTarihi: string;
+  bitisTarihi: string;
+  amac?: string;
+  katilimciSayisi: number;
+  durum: RezervasyonDurumu;
+  iptalEdilmeTarihi?: string;
+  iptalNedeni?: string;
+  gelmemeTarihi?: string;
+  yoklama?: Yoklama;
 }
 
-type BookingForm = {
-  resourceId: string;
-  startAt: string;
-  endAt: string;
-  purpose?: string;
-  participantCount: number;
+type RezervasyonFormu = {
+  kaynakId: string;
+  baslangicTarihi: string;
+  bitisTarihi: string;
+  amac?: string;
+  katilimciSayisi: number;
 };
 
 interface BookingState {
-  myBookings: Booking[];
-  allBookings: Booking[];
-  calendarBookings: Booking[];
+  myBookings: Rezervasyon[];
+  allBookings: Rezervasyon[];
+  calendarBookings: Rezervasyon[];
   isLoading: boolean;
   error: string | null;
   successMessage: string | null;
@@ -48,8 +53,8 @@ interface BookingState {
   fetchMyBookings: () => Promise<void>;
   fetchAllBookings: () => Promise<void>;
   fetchCalendarBookings: (resourceId: string, start: string, end: string) => Promise<void>;
-  createBooking: (data: BookingForm) => Promise<boolean>;
-  createBlockedSlot: (data: BookingForm) => Promise<boolean>;
+  createBooking: (data: RezervasyonFormu) => Promise<boolean>;
+  createBlockedSlot: (data: RezervasyonFormu) => Promise<boolean>;
   cancelBooking: (bookingId: string, reason?: string) => Promise<boolean>;
   checkin: (bookingId: string, method: 'QR' | 'MANUAL', proofAssetId?: string) => Promise<boolean>;
   updateBookingStatus: (bookingId: string, status: string) => Promise<boolean>;
@@ -58,71 +63,8 @@ interface BookingState {
 const getErrorMessage = (err: any, fallback: string) =>
   err?.response?.data?.message || err?.message || fallback;
 
-const mapBookingStatus = (status: string): Booking['status'] => {
-  switch (status) {
-    case 'TASLAK': return 'DRAFT';
-    case 'BEKLEMEDE': return 'PENDING';
-    case 'ONAYLANDI': return 'CONFIRMED';
-    case 'IPTAL_EDILDI': return 'CANCELLED';
-    case 'TAMAMLANDI': return 'COMPLETED';
-    case 'GELMEDI': return 'NO_SHOW';
-    case 'BLOKE': return 'BLOCKED';
-    default: return status as any;
-  }
-};
-
-const mapReverseBookingStatus = (status: Booking['status']): string => {
-  switch (status) {
-    case 'DRAFT': return 'TASLAK';
-    case 'PENDING': return 'BEKLEMEDE';
-    case 'CONFIRMED': return 'ONAYLANDI';
-    case 'CANCELLED': return 'IPTAL_EDILDI';
-    case 'COMPLETED': return 'TAMAMLANDI';
-    case 'NO_SHOW': return 'GELMEDI';
-    case 'BLOCKED': return 'BLOKE';
-    default: return status;
-  }
-};
-
-const mapCheckinStatus = (status: string): BookingCheckin['status'] => {
-  switch (status) {
-    case 'BEKLEMEDE': return 'PENDING';
-    case 'GIRIS_YAPILDI': return 'CHECKED_IN';
-    case 'BASARISIZ': return 'FAILED';
-    default: return status as any;
-  }
-};
-
-const mapCheckin = (data: any): BookingCheckin | undefined => {
-  if (!data) return undefined;
-  return {
-    id: data.id,
-    bookingId: data.rezervasyonId,
-    userId: data.kullaniciId,
-    checkedInAt: data.yoklamaTarihi,
-    method: data.yontem,
-    proofAssetId: data.kanitDosyaId,
-    status: mapCheckinStatus(data.durum)
-  };
-};
-
-const mapBooking = (data: any): Booking => ({
-  id: data.id,
-  resourceId: data.kaynakId,
-  resourceName: data.kaynakAd,
-  facilityId: data.tesisId,
-  facilityName: data.tesisAd,
-  bookedByUserId: data.rezervasyonYapanKullaniciId,
-  startAt: data.baslangicTarihi,
-  endAt: data.bitisTarihi,
-  purpose: data.amac,
-  participantCount: data.katilimciSayisi,
-  status: mapBookingStatus(data.durum),
-  cancelledAt: data.iptalEdilmeTarihi,
-  cancelReason: data.iptalNedeni,
-  noShowAt: data.gelmemeTarihi,
-  checkin: mapCheckin(data.yoklama)
-});
+// API (facility-service) yanıtları artık tiplerle birebir; çeviri yapılmaz (ince passthrough).
+const mapBooking = (data: any): Rezervasyon => data;
 
 export const useBookingStore = create<BookingState>((set, get) => ({
   myBookings: [],
@@ -167,13 +109,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   createBooking: async (data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      const payload = {
-        kaynakId: data.resourceId,
-        baslangicTarihi: data.startAt,
-        bitisTarihi: data.endAt,
-        amac: data.purpose,
-        katilimciSayisi: data.participantCount
-      };
+      const payload = data;
       await api.post('/tesisler/rezervasyonlar', payload);
       set({ successMessage: 'Rezervasyonunuz başarıyla oluşturuldu.', isLoading: false });
       await get().fetchMyBookings();
@@ -187,13 +123,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   createBlockedSlot: async (data) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      const payload = {
-        kaynakId: data.resourceId,
-        baslangicTarihi: data.startAt,
-        bitisTarihi: data.endAt,
-        amac: data.purpose,
-        katilimciSayisi: data.participantCount
-      };
+      const payload = data;
       await api.post('/tesisler/rezervasyonlar/bloke', payload);
       set({ successMessage: 'Zaman aralığı başarıyla bloke edildi / antrenman tanımlandı.', isLoading: false });
       await get().fetchAllBookings().catch(() => {});
@@ -239,8 +169,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   updateBookingStatus: async (bookingId, status) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      const dbStatus = mapReverseBookingStatus(status as any);
-      await api.patch(`/tesisler/rezervasyonlar/${bookingId}/durum?durum=${dbStatus}`);
+      await api.patch(`/tesisler/rezervasyonlar/${bookingId}/durum?durum=${status}`);
       set({ successMessage: 'Rezervasyon durumu güncellendi.', isLoading: false });
       await get().fetchAllBookings();
       return true;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useBookingStore, type Booking } from '../store/bookingStore';
+import { useBookingStore, type Rezervasyon } from '../store/bookingStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CalendarClock,
@@ -22,9 +22,9 @@ export const MyBookingsPage = () => {
   const [activeTab, setActiveTab] = useState<'active' | 'past'>('active');
   
   // Modals state
-  const [selectedBookingForCancel, setSelectedBookingForCancel] = useState<Booking | null>(null);
+  const [selectedBookingForCancel, setSelectedBookingForCancel] = useState<Rezervasyon | null>(null);
   const [cancelReason, setCancelReason] = useState<string>('');
-  const [selectedBookingForCheckin, setSelectedBookingForCheckin] = useState<Booking | null>(null);
+  const [selectedBookingForCheckin, setSelectedBookingForCheckin] = useState<Rezervasyon | null>(null);
   const [mockScanning, setMockScanning] = useState<boolean>(false);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export const MyBookingsPage = () => {
 
   // Filter bookings
   const filteredBookings = myBookings.filter((booking) => {
-    const isPast = ['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(booking.status);
+    const isPast = ['TAMAMLANDI', 'IPTAL_EDILDI', 'GELMEDI'].includes(booking.durum);
     return activeTab === 'active' ? !isPast : isPast;
   });
 
@@ -103,7 +103,7 @@ export const MyBookingsPage = () => {
               : 'border-transparent text-white/40 hover:text-white/60'
           }`}
         >
-          Aktif Rezervasyonlar ({myBookings.filter(b => !['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(b.status)).length})
+          Aktif Rezervasyonlar ({myBookings.filter(b => !['TAMAMLANDI', 'IPTAL_EDILDI', 'GELMEDI'].includes(b.durum)).length})
         </button>
         <button
           onClick={() => setActiveTab('past')}
@@ -113,7 +113,7 @@ export const MyBookingsPage = () => {
               : 'border-transparent text-white/40 hover:text-white/60'
           }`}
         >
-          Geçmiş / İptaller ({myBookings.filter(b => ['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(b.status)).length})
+          Geçmiş / İptaller ({myBookings.filter(b => ['TAMAMLANDI', 'IPTAL_EDILDI', 'GELMEDI'].includes(b.durum)).length})
         </button>
       </div>
 
@@ -122,8 +122,8 @@ export const MyBookingsPage = () => {
       ) : (
         <div className="space-y-4">
           {filteredBookings.map((booking) => {
-            const start = formatDateTime(booking.startAt);
-            const end = formatDateTime(booking.endAt);
+            const start = formatDateTime(booking.baslangicTarihi);
+            const end = formatDateTime(booking.bitisTarihi);
             return (
               <motion.div
                 key={booking.id}
@@ -135,11 +135,11 @@ export const MyBookingsPage = () => {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-lg font-black">{booking.facilityName}</span>
-                      {booking.facilityName !== booking.resourceName && (
-                        <span className="text-sm font-semibold text-white/60">/ {booking.resourceName}</span>
+                      <span className="text-lg font-black">{booking.tesisAd}</span>
+                      {booking.tesisAd !== booking.kaynakAd && (
+                        <span className="text-sm font-semibold text-white/60">/ {booking.kaynakAd}</span>
                       )}
-                      <StatusBadge status={booking.status} />
+                      <StatusBadge status={booking.durum} />
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs font-bold text-white/50 pt-1">
@@ -157,19 +157,19 @@ export const MyBookingsPage = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-cyan-300/60" />
-                        <span>{booking.participantCount} Katılımcı</span>
+                        <span>{booking.katilimciSayisi} Katılımcı</span>
                       </div>
                     </div>
 
-                    {booking.purpose && (
+                    {booking.amac && (
                       <p className="text-xs text-white/40 bg-[#111123] px-3.5 py-2.5 rounded-xl border border-white/5 inline-block mt-2">
-                        <strong className="text-white/60">Kullanım Amacı:</strong> {booking.purpose}
+                        <strong className="text-white/60">Kullanım Amacı:</strong> {booking.amac}
                       </p>
                     )}
 
-                    {booking.status === 'CANCELLED' && booking.cancelReason && (
+                    {booking.durum === 'IPTAL_EDILDI' && booking.iptalNedeni && (
                       <p className="text-xs text-red-300/70 bg-red-500/5 px-3.5 py-2.5 rounded-xl border border-red-500/10 inline-block mt-2">
-                        <strong className="text-red-400/80">İptal Nedeni:</strong> {booking.cancelReason}
+                        <strong className="text-red-400/80">İptal Nedeni:</strong> {booking.iptalNedeni}
                       </p>
                     )}
                   </div>
@@ -317,8 +317,8 @@ export const MyBookingsPage = () => {
               <div className="space-y-4">
                 <p className="text-xs leading-relaxed text-white/60">
                   <strong>
-                    {selectedBookingForCancel.facilityName}
-                    {selectedBookingForCancel.facilityName !== selectedBookingForCancel.resourceName && ` - ${selectedBookingForCancel.resourceName}`}
+                    {selectedBookingForCancel.tesisAd}
+                    {selectedBookingForCancel.tesisAd !== selectedBookingForCancel.kaynakAd && ` - ${selectedBookingForCancel.kaynakAd}`}
                   </strong>
                   <br />
                   rezervasyonunu iptal etmek istediğinize emin misiniz? İptal politikası gereği, son dakikalardaki iptaller puanınızı etkileyebilir.
@@ -365,25 +365,25 @@ export const MyBookingsPage = () => {
   );
 };
 
-const StatusBadge = ({ status }: { status: Booking['status'] }) => {
-  const colors: Record<Booking['status'], string> = {
-    DRAFT: 'bg-white/5 text-white/50 border border-white/10',
-    PENDING: 'bg-amber-400/10 text-amber-200 border border-amber-400/20',
-    CONFIRMED: 'bg-cyan-400/10 text-cyan-200 border border-cyan-400/20',
-    CANCELLED: 'bg-red-500/10 text-red-200 border border-red-500/20',
-    COMPLETED: 'bg-emerald-400/10 text-emerald-200 border border-emerald-400/20',
-    NO_SHOW: 'bg-amber-500/10 text-amber-300 border border-amber-500/20',
-    BLOCKED: 'bg-purple-500/10 text-purple-300 border border-purple-500/20',
+const StatusBadge = ({ status }: { status: Rezervasyon['durum'] }) => {
+  const colors: Record<Rezervasyon['durum'], string> = {
+    TASLAK: 'bg-white/5 text-white/50 border border-white/10',
+    BEKLEMEDE: 'bg-amber-400/10 text-amber-200 border border-amber-400/20',
+    ONAYLANDI: 'bg-cyan-400/10 text-cyan-200 border border-cyan-400/20',
+    IPTAL_EDILDI: 'bg-red-500/10 text-red-200 border border-red-500/20',
+    TAMAMLANDI: 'bg-emerald-400/10 text-emerald-200 border border-emerald-400/20',
+    GELMEDI: 'bg-amber-500/10 text-amber-300 border border-amber-500/20',
+    BLOKE: 'bg-purple-500/10 text-purple-300 border border-purple-500/20',
   };
 
-  const labels: Record<Booking['status'], string> = {
-    DRAFT: 'Taslak',
-    PENDING: 'Onay Bekliyor',
-    CONFIRMED: 'Onaylandı',
-    CANCELLED: 'İptal Edildi',
-    COMPLETED: 'Kullanıldı',
-    NO_SHOW: 'Gelmedi',
-    BLOCKED: 'Takım Antrenmanı / Bloke',
+  const labels: Record<Rezervasyon['durum'], string> = {
+    TASLAK: 'Taslak',
+    BEKLEMEDE: 'Onay Bekliyor',
+    ONAYLANDI: 'Onaylandı',
+    IPTAL_EDILDI: 'İptal Edildi',
+    TAMAMLANDI: 'Kullanıldı',
+    GELMEDI: 'Gelmedi',
+    BLOKE: 'Takım Antrenmanı / Bloke',
   };
 
   return (
