@@ -5,7 +5,7 @@ import {
   type YonetimKullanicisi,
   type KullaniciOlusturmaFormu,
 } from '../depolar/yonetimDeposu';
-import { OgrenciDuyuruButonu } from '../components/OgrenciDuyuruButonu';
+import { DuyuruButonu } from '../components/DuyuruButonu';
 
 type Sekme = 'kullanicilar' | 'loglar';
 
@@ -85,7 +85,7 @@ export const YonetimPaneli = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <OgrenciDuyuruButonu />
+          <DuyuruButonu />
           <button
             type="button"
             onClick={() => (sekme === 'kullanicilar' ? kullanicilariGetir(0, 20, arama, '', rolFiltre) : loglariGetir())}

@@ -8,18 +8,16 @@ import { useKulupDeposu, type Kulup } from '../depolar/kulupDeposu';
 import { useEtkinlikDeposu, type Etkinlik } from '../depolar/etkinlikDeposu';
 import { useBildirimDeposu } from '../depolar/bildirimDeposu';
 import { useOgrenciDeposu, type Student } from '../depolar/ogrenciDeposu';
-import { useKimlikDeposu } from '../depolar/kimlikDeposu';
 import { useAkademikKadroDeposu, type AcademicAdvisor } from '../depolar/akademikKadroDeposu';
+import { DuyuruButonu } from '../components/DuyuruButonu';
 
 import {
   type SksModule,
   panelStyle,
   initialClubForm,
   moduleMeta,
-  type DuyuruFormu,
   type KulupDuzenleFormu,
 } from '../components/sks-paneli/ortak';
-import { DuyuruModulu } from '../components/sks-paneli/DuyuruModulu';
 import { ProfilTalepModulu } from '../components/sks-paneli/ProfilTalepModulu';
 import { EtkinlikModulu } from '../components/sks-paneli/EtkinlikModulu';
 import { SaglikModulu } from '../components/sks-paneli/SaglikModulu';
@@ -59,8 +57,7 @@ export const SksPaneli = () => {
     approveEvent,
     requestRevision,
   } = useEtkinlikDeposu();
-  const { duyuruOlustur, hata: notificationError } = useBildirimDeposu();
-  const currentUser = useKimlikDeposu(state => state.user);
+  const { hata: notificationError } = useBildirimDeposu();
   const { students, fetchStudents, isLoading: studentsLoading } = useOgrenciDeposu();
   const {
     advisors,
@@ -103,18 +100,9 @@ export const SksPaneli = () => {
     baskanEposta: '',
   });
   const [revisionTextByEvent, setRevisionTextByEvent] = useState<Record<string, string>>({});
-  const [announcement, setAnnouncement] = useState<DuyuruFormu>({
-    title: '',
-    message: '',
-    linkUrl: '',
-    linkLabel: '',
-    imageUrl: '',
-    targetAudience: 'ALL_STUDENTS',
-  });
   const [revisionTextByProfileRequest, setRevisionTextByProfileRequest] = useState<Record<string, string>>({});
   const [healthMessageByClub, setHealthMessageByClub] = useState<Record<string, string>>({});
   const [healthLogSearchByClub, setHealthLogSearchByClub] = useState<Record<string, string>>({});
-  const announcementSenderName = currentUser?.tamAd || currentUser?.eposta || 'SKS Yönetimi';
 
   useEffect(() => {
     fetchAdminClubs();
@@ -495,39 +483,6 @@ export const SksPaneli = () => {
     if (ok) setRevisionTextByProfileRequest(prev => ({ ...prev, [requestId]: '' }));
   };
 
-  const handleAnnouncement = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const ok = await duyuruOlustur({
-      baslik: announcement.title,
-      mesaj: announcement.message,
-      baglantiUrl: announcement.linkUrl,
-      baglantiEtiketi: announcement.linkLabel,
-      resimUrl: announcement.imageUrl,
-      olusturanAdi: announcementSenderName,
-      hedefKitle: announcement.targetAudience === 'CLUB_PRESIDENTS' ? 'KULUP_BASKANLARI' : 'TUM_OGRENCILER',
-    });
-    if (ok) setAnnouncement({
-      title: '',
-      message: '',
-      linkUrl: '',
-      linkLabel: '',
-      imageUrl: '',
-      targetAudience: 'ALL_STUDENTS',
-    });
-  };
-
-  const handleAnnouncementImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (!['image/png', 'image/jpeg'].includes(file.type)) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setAnnouncement(prev => ({ ...prev, imageUrl: String(reader.result || '') }));
-    };
-    reader.readAsDataURL(file);
-  };
-
 
   const renderModuleHeaderActions = () => {
     if (activeModule === 'clubs') {
@@ -673,15 +628,6 @@ export const SksPaneli = () => {
     />
   );
 
-  const renderAnnouncementsModule = () => (
-    <DuyuruModulu
-      announcement={announcement}
-      setAnnouncement={setAnnouncement}
-      handleAnnouncement={handleAnnouncement}
-      handleAnnouncementImageSelect={handleAnnouncementImageSelect}
-      announcementSenderName={announcementSenderName}
-    />
-  );
 
   const renderHealthModule = () => (
     <SaglikModulu
@@ -709,8 +655,6 @@ export const SksPaneli = () => {
         return renderEventsModule();
       case 'profileRequests':
         return renderProfileRequestsModule();
-      case 'announcements':
-        return renderAnnouncementsModule();
       case 'health':
         return renderHealthModule();
       case 'clubs':
@@ -726,18 +670,21 @@ export const SksPaneli = () => {
           <p className="text-sm font-semibold text-purple-300">SKS Yönetimi</p>
           <h1 className="text-4xl font-extrabold gradient-text mt-2">Kulüpler Kontrol Paneli</h1>
           <p className="text-white/45 mt-3 max-w-3xl">
-            İş akışını seç, yalnızca o modüle odaklan. Kulüp yönetimi, kayıt oluşturma, etkinlik talepleri ve duyurular ayrı alanlarda çalışır.
+            İş akışını seç, yalnızca o modüle odaklan. Kulüp yönetimi, kayıt oluşturma ve etkinlik talepleri ayrı alanlarda çalışır.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleRefresh}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-          style={panelStyle}
-        >
-          <RefreshCw className="w-4 h-4" />
-          Yenile
-        </button>
+        <div className="flex items-center gap-3">
+          <DuyuruButonu />
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            style={panelStyle}
+          >
+            <RefreshCw className="w-4 h-4" />
+            Yenile
+          </button>
+        </div>
       </div>
 
       {(clubError || eventError || notificationError || advisorError || successMessage || eventSuccess) && (

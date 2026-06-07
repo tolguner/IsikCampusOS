@@ -1,7 +1,7 @@
 import type { ElementType } from 'react';
-import { Bell, CalendarDays, ClipboardCheck, Megaphone, Plus, Users } from 'lucide-react';
+import { Bell, CalendarDays, ClipboardCheck, Plus, Users } from 'lucide-react';
 
-export type SksModule = 'clubs' | 'create' | 'profileRequests' | 'events' | 'announcements' | 'health';
+export type SksModule = 'clubs' | 'create' | 'profileRequests' | 'events' | 'health';
 
 export const panelStyle = {
   background: 'rgba(255,255,255,0.045)',
@@ -88,11 +88,6 @@ export const moduleMeta: Record<SksModule, { label: string; description: string;
     label: 'Profil Talepleri',
     description: 'Kulüp başkanı profil güncelleme istekleri',
     icon: ClipboardCheck,
-  },
-  announcements: {
-    label: 'Duyuru',
-    description: 'Öğrencilere ve kulüp başkanlarına toplu iletişim',
-    icon: Megaphone,
   },
   health: {
     label: 'Sağlık',

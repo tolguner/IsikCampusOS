@@ -1,6 +1,6 @@
 import type { Etkinlik, EtkinlikDurumu, KatilimDurumu } from '../../depolar/etkinlikDeposu';
 
-export type PanelTab = 'profile' | 'events' | 'announcements' | 'members';
+export type PanelTab = 'profile' | 'events' | 'members';
 
 export const inputClass =
   'w-full rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-purple-400/60';
