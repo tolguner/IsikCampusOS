@@ -37,6 +37,8 @@ export const blankFacilityForm = {
   durum: 'AKTIF' as Tesis['durum'],
 };
 
+export type TesisFormState = typeof blankFacilityForm;
+
 export const defaultPolicy: TesisPolitikasi = {
   rezervasyonPenceresiGun: 14,
   minimumBildirimDakika: 120,
