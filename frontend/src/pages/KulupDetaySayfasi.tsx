@@ -3,9 +3,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import QRCode from 'qrcode';
 import { Link, useParams } from 'react-router-dom';
 import { Banknote, Bell, CalendarDays, CheckCircle2, ChevronLeft, Clock, GraduationCap, Link as LinkIcon, Loader2, MapPin, Maximize2, Megaphone, Ticket, UserRound, Users, X } from 'lucide-react';
-import { useClubStore } from '../store/clubStore';
-import { useEventStore, type Etkinlik, type EtkinlikDurumu } from '../store/eventStore';
-import { useAuthStore } from '../store/authStore';
+import { useKulupDeposu } from '../store/kulupDeposu';
+import { useEtkinlikDeposu, type Etkinlik, type EtkinlikDurumu } from '../store/etkinlikDeposu';
+import { useKimlikDeposu } from '../store/kimlikDeposu';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../utils/roles';
 import { YOLLAR } from '../utils/paths';
 
@@ -21,8 +21,8 @@ const formatDate = (value?: string) => {
 
 export const KulupDetaySayfasi = () => {
   const { clubId } = useParams();
-  const user = useAuthStore(state => state.user);
-  const { selectedClub, clubEvents, fetchClub, fetchClubEvents, joinClub, leaveClub, isLoading } = useClubStore();
+  const user = useKimlikDeposu(state => state.user);
+  const { selectedClub, clubEvents, fetchClub, fetchClubEvents, joinClub, leaveClub, isLoading } = useKulupDeposu();
   const {
     isLoading: eventActionLoading,
     error: eventError,
@@ -31,7 +31,7 @@ export const KulupDetaySayfasi = () => {
     fetchMyRsvps,
     createRsvp,
     cancelRsvp,
-  } = useEventStore();
+  } = useEtkinlikDeposu();
   const [eventFilter, setEventFilter] = useState<'active' | 'past'>('active');
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
   const [expandedPosterEvent, setExpandedPosterEvent] = useState<Etkinlik | null>(null);

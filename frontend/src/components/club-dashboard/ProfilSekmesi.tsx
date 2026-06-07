@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { GraduationCap, ImagePlus, Send } from 'lucide-react';
-import type { Kulup } from '../../store/clubStore';
-import { useClubStore } from '../../store/clubStore';
+import type { Kulup } from '../../store/kulupDeposu';
+import { useKulupDeposu } from '../../store/kulupDeposu';
 import { inputClass, textareaClass, squareImageFile } from './sabitler';
 
 interface ProfilSekmesiProps {
@@ -10,7 +10,7 @@ interface ProfilSekmesiProps {
 }
 
 export const ProfilSekmesi = ({ selectedClub }: ProfilSekmesiProps) => {
-  const { isLoading, requestClubProfileUpdate } = useClubStore();
+  const { isLoading, requestClubProfileUpdate } = useKulupDeposu();
 
   const [profileForm, setProfileForm] = useState({
     ad: '',

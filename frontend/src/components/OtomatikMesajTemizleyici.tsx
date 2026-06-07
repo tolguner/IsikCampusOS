@@ -1,34 +1,34 @@
-import { useAuthStore } from '../store/authStore';
-import { useClubStore } from '../store/clubStore';
-import { useEventStore } from '../store/eventStore';
-import { useNotificationStore } from '../store/notificationStore';
-import { useStudentStore } from '../store/studentStore';
-import { useAcademicStaffStore } from '../store/academicStaffStore';
+import { useKimlikDeposu } from '../store/kimlikDeposu';
+import { useKulupDeposu } from '../store/kulupDeposu';
+import { useEtkinlikDeposu } from '../store/etkinlikDeposu';
+import { useBildirimDeposu } from '../store/bildirimDeposu';
+import { useOgrenciDeposu } from '../store/ogrenciDeposu';
+import { useAkademikKadroDeposu } from '../store/akademikKadroDeposu';
 import { useAutoDismissMessage } from '../hooks/useAutoDismissMessage';
 
 export const OtomatikMesajTemizleyici = () => {
-  const authError = useAuthStore(state => state.error);
-  const authSuccess = useAuthStore(state => state.successMessage);
-  const clearAuthError = useAuthStore(state => state.clearError);
-  const clearAuthSuccess = useAuthStore(state => state.clearSuccess);
+  const authError = useKimlikDeposu(state => state.error);
+  const authSuccess = useKimlikDeposu(state => state.successMessage);
+  const clearAuthError = useKimlikDeposu(state => state.clearError);
+  const clearAuthSuccess = useKimlikDeposu(state => state.clearSuccess);
 
-  const clubError = useClubStore(state => state.error);
-  const clubSuccess = useClubStore(state => state.successMessage);
-  const clearClub = useClubStore(state => state.clearMessages);
+  const clubError = useKulupDeposu(state => state.error);
+  const clubSuccess = useKulupDeposu(state => state.successMessage);
+  const clearClub = useKulupDeposu(state => state.clearMessages);
 
-  const eventError = useEventStore(state => state.error);
-  const eventSuccess = useEventStore(state => state.successMessage);
-  const clearEvent = useEventStore(state => state.clearMessages);
+  const eventError = useEtkinlikDeposu(state => state.error);
+  const eventSuccess = useEtkinlikDeposu(state => state.successMessage);
+  const clearEvent = useEtkinlikDeposu(state => state.clearMessages);
 
-  const studentError = useStudentStore(state => state.error);
-  const studentSuccess = useStudentStore(state => state.successMessage);
-  const clearStudent = useStudentStore(state => state.clearMessages);
+  const studentError = useOgrenciDeposu(state => state.error);
+  const studentSuccess = useOgrenciDeposu(state => state.successMessage);
+  const clearStudent = useOgrenciDeposu(state => state.clearMessages);
 
-  const notificationError = useNotificationStore(state => state.hata);
-  const clearNotificationError = useNotificationStore(state => state.hatayiTemizle);
+  const notificationError = useBildirimDeposu(state => state.hata);
+  const clearNotificationError = useBildirimDeposu(state => state.hatayiTemizle);
 
-  const advisorError = useAcademicStaffStore(state => state.error);
-  const clearAdvisorError = useAcademicStaffStore(state => state.clearError);
+  const advisorError = useAkademikKadroDeposu(state => state.error);
+  const clearAdvisorError = useAkademikKadroDeposu(state => state.clearError);
 
   useAutoDismissMessage(authError, clearAuthError);
   useAutoDismissMessage(authSuccess, clearAuthSuccess);

@@ -96,7 +96,7 @@ const getErrorMessage = (err: any, fallback: string) =>
 // API (facility-service) yanıtları artık tiplerle birebir; çeviri yapılmaz (ince passthrough).
 const mapFacility = (data: any): Tesis => data;
 
-export const useFacilityStore = create<FacilityState>((set, get) => ({
+export const useTesisDeposu = create<FacilityState>((set, get) => ({
   facilities: [],
   selectedFacilityId: null,
   selectedResourceId: null,

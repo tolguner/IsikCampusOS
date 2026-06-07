@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle2, Clock3, Plus, Save, Settings2, Trash2 } from 'lucide-react';
-import type { Tesis, TesisPolitikasi } from '../../store/facilityStore';
+import type { Tesis, TesisPolitikasi } from '../../store/tesisDeposu';
 import {
   panelStyle,
   inputClass,

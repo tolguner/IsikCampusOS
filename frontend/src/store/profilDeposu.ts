@@ -52,7 +52,7 @@ interface ProfileState {
 const getErrorMessage = (err: any, fallback: string) =>
   err?.response?.data?.message || err?.message || fallback;
 
-export const useProfileStore = create<ProfileState>((set, get) => ({
+export const useProfilDeposu = create<ProfileState>((set, get) => ({
   profile: null,
   changeRequests: [],
   pendingChangeRequests: [],

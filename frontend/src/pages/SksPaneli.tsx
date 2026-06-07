@@ -4,12 +4,12 @@ import {
   RefreshCw,
   Search,
 } from 'lucide-react';
-import { useClubStore, type Kulup } from '../store/clubStore';
-import { useEventStore, type Etkinlik } from '../store/eventStore';
-import { useNotificationStore } from '../store/notificationStore';
-import { useStudentStore, type Student } from '../store/studentStore';
-import { useAuthStore } from '../store/authStore';
-import { useAcademicStaffStore, type AcademicAdvisor } from '../store/academicStaffStore';
+import { useKulupDeposu, type Kulup } from '../store/kulupDeposu';
+import { useEtkinlikDeposu, type Etkinlik } from '../store/etkinlikDeposu';
+import { useBildirimDeposu } from '../store/bildirimDeposu';
+import { useOgrenciDeposu, type Student } from '../store/ogrenciDeposu';
+import { useKimlikDeposu } from '../store/kimlikDeposu';
+import { useAkademikKadroDeposu, type AcademicAdvisor } from '../store/akademikKadroDeposu';
 
 import {
   type SksModule,
@@ -49,7 +49,7 @@ export const SksPaneli = () => {
     watchlistClub,
     requestClubHealthAction,
     fetchClubAuditLogs,
-  } = useClubStore();
+  } = useKulupDeposu();
   const {
     reviewQueue,
     isLoading: eventsLoading,
@@ -58,17 +58,17 @@ export const SksPaneli = () => {
     fetchReviewQueue,
     approveEvent,
     requestRevision,
-  } = useEventStore();
-  const { duyuruOlustur, hata: notificationError } = useNotificationStore();
-  const currentUser = useAuthStore(state => state.user);
-  const { students, fetchStudents, isLoading: studentsLoading } = useStudentStore();
+  } = useEtkinlikDeposu();
+  const { duyuruOlustur, hata: notificationError } = useBildirimDeposu();
+  const currentUser = useKimlikDeposu(state => state.user);
+  const { students, fetchStudents, isLoading: studentsLoading } = useOgrenciDeposu();
   const {
     advisors,
     searchAdvisors,
     syncAdvisors,
     isLoading: advisorsLoading,
     error: advisorError,
-  } = useAcademicStaffStore();
+  } = useAkademikKadroDeposu();
 
   const [activeModule, setActiveModule] = useState<SksModule>('clubs');
   const [clubForm, setClubForm] = useState(initialClubForm);

@@ -39,7 +39,7 @@ const mapAdvisor = (data: any): AcademicAdvisor => ({
   lastSyncedAt: data.sonSenkronizasyonTarihi
 });
 
-export const useAcademicStaffStore = create<AcademicStaffState>((set, get) => ({
+export const useAkademikKadroDeposu = create<AcademicStaffState>((set, get) => ({
   advisors: [],
   isLoading: false,
   error: null,

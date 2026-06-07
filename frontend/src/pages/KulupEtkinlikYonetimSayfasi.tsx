@@ -16,8 +16,8 @@ import {
   UsersRound,
   XCircle,
 } from 'lucide-react';
-import { useClubStore } from '../store/clubStore';
-import { useEventStore, type EtkinlikKatilimci } from '../store/eventStore';
+import { useKulupDeposu } from '../store/kulupDeposu';
+import { useEtkinlikDeposu, type EtkinlikKatilimci } from '../store/etkinlikDeposu';
 import { YOLLAR } from '../utils/paths';
 import {
   isCheckInWindowOpen,
@@ -65,8 +65,8 @@ const downloadXlsx = (filename: string, rows: Record<string, string>[]) => {
 export const KulupEtkinlikYonetimSayfasi = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
-  const managedClubs = useClubStore(state => state.managedClubs);
-  const fetchManagedClubs = useClubStore(state => state.fetchManagedClubs);
+  const managedClubs = useKulupDeposu(state => state.managedClubs);
+  const fetchManagedClubs = useKulupDeposu(state => state.fetchManagedClubs);
   const {
     managedEvents,
     participantsByEvent,
@@ -80,7 +80,7 @@ export const KulupEtkinlikYonetimSayfasi = () => {
     approvePayment,
     rejectPayment,
     issueCertificates,
-  } = useEventStore();
+  } = useEtkinlikDeposu();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'participants' | 'qr' | 'payments' | 'certificates' | 'logs'>('overview');
   const [checked, setChecked] = useState(false);

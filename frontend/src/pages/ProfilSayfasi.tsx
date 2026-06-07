@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useAuthStore } from '../store/authStore';
-import { useProfileStore } from '../store/profileStore';
+import { useKimlikDeposu } from '../store/kimlikDeposu';
+import { useProfilDeposu } from '../store/profilDeposu';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAutoDismissMessage } from '../hooks/useAutoDismissMessage';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI, YETKILER } from '../utils/roles';
@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 export const ProfilSayfasi = () => {
-  const { user, changePassword, isLoading } = useAuthStore();
+  const { user, changePassword, isLoading } = useKimlikDeposu();
   const {
     profile,
     changeRequests,
@@ -23,7 +23,7 @@ export const ProfilSayfasi = () => {
     updateMyProfile,
     requestProfileChange,
     clearMessages: clearProfileMessages,
-  } = useProfileStore();
+  } = useProfilDeposu();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [profilePic, setProfilePic] = useState<string | null>(null);

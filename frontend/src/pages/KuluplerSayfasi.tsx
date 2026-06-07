@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { AlertCircle, CalendarDays, CheckCircle2, Loader2, Search, Sparkles, Users, X } from 'lucide-react';
-import { useClubStore } from '../store/clubStore';
-import { useAuthStore } from '../store/authStore';
+import { useKulupDeposu } from '../store/kulupDeposu';
+import { useKimlikDeposu } from '../store/kimlikDeposu';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../utils/roles';
 import { YOLLAR } from '../utils/paths';
 
 export const KuluplerSayfasi = () => {
-  const { clubs, fetchClubs, joinClub, leaveClub, isLoading, error, successMessage, clearMessages } = useClubStore();
-  const user = useAuthStore(state => state.user);
+  const { clubs, fetchClubs, joinClub, leaveClub, isLoading, error, successMessage, clearMessages } = useKulupDeposu();
+  const user = useKimlikDeposu(state => state.user);
   const [searchTerm, setSearchTerm] = useState('');
   const [leaveTarget, setLeaveTarget] = useState<{ id: string; name: string } | null>(null);
   const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);

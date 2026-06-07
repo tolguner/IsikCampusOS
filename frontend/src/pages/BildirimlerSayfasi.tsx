@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Bell, CalendarDays, Link as LinkIcon, Search, X } from 'lucide-react';
-import { useNotificationStore } from '../store/notificationStore';
+import { useBildirimDeposu } from '../store/bildirimDeposu';
 
 type NotificationFilter = 'all' | 'announcements' | 'events';
 
@@ -18,7 +18,7 @@ const targetAudienceLabel = (value: string) => {
 };
 
 export const BildirimlerSayfasi = () => {
-  const { bildirimler, okunmamisSayisi, bildirimleriGetir, okunduIsaretle, yukleniyor, hata } = useNotificationStore();
+  const { bildirimler, okunmamisSayisi, bildirimleriGetir, okunduIsaretle, yukleniyor, hata } = useBildirimDeposu();
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const [previewImage, setPreviewImage] = useState<{ src: string; title: string } | null>(null);

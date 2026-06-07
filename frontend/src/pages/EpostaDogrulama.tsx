@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useAuthStore } from '../store/authStore';
+import { useKimlikDeposu } from '../store/kimlikDeposu';
 import { Mail, Loader2, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 
 export const EpostaDogrulama = () => {
   const [code, setCode] = useState('');
   const [countdown, setCountdown] = useState(0);
-  const { user, verifyEmail, resendVerification, isLoading, error, successMessage, clearError, clearSuccess, logout } = useAuthStore();
+  const { user, verifyEmail, resendVerification, isLoading, error, successMessage, clearError, clearSuccess, logout } = useKimlikDeposu();
   const sentRef = useRef(false);
 
   useEffect(() => {

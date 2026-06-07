@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { CalendarDays, FilePenLine, Megaphone, UsersRound } from 'lucide-react';
-import { useClubStore } from '../store/clubStore';
-import { useEventStore } from '../store/eventStore';
+import { useKulupDeposu } from '../store/kulupDeposu';
+import { useEtkinlikDeposu } from '../store/etkinlikDeposu';
 
 import type { PanelTab } from '../components/club-dashboard/sabitler';
 import { ProfilSekmesi } from '../components/club-dashboard/ProfilSekmesi';
@@ -16,13 +16,13 @@ export const KulupBaskaniPaneli = () => {
     error: clubError,
     successMessage: clubSuccess,
     fetchManagedClubs,
-  } = useClubStore();
+  } = useKulupDeposu();
   
   const {
     error: eventError,
     successMessage: eventSuccess,
     fetchManagedEvents,
-  } = useEventStore();
+  } = useEtkinlikDeposu();
 
   const [activeTab, setActiveTab] = useState<PanelTab>('profile');
   const [selectedClubId, setSelectedClubId] = useState('');

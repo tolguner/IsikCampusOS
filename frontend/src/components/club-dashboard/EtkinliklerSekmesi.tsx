@@ -14,8 +14,8 @@ import {
   XCircle,
   QrCode,
 } from 'lucide-react';
-import type { Kulup } from '../../store/clubStore';
-import { useEventStore, type Etkinlik } from '../../store/eventStore';
+import type { Kulup } from '../../store/kulupDeposu';
+import { useEtkinlikDeposu, type Etkinlik } from '../../store/etkinlikDeposu';
 import { YOLLAR } from '../../utils/paths';
 import {
   inputClass,
@@ -183,7 +183,7 @@ export const EtkinliklerSekmesi = ({ selectedClub }: EtkinliklerSekmesiProps) =>
     updateEvent,
     submitForApproval,
     cancelEvent,
-  } = useEventStore();
+  } = useEtkinlikDeposu();
 
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [cancellingEventId, setCancellingEventId] = useState<string | null>(null);

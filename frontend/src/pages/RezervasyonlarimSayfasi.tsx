@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useBookingStore, type Rezervasyon } from '../store/bookingStore';
+import { useRezervasyonDeposu, type Rezervasyon } from '../store/rezervasyonDeposu';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CalendarClock,
@@ -18,7 +18,7 @@ const panelStyle = {
 };
 
 export const RezervasyonlarimSayfasi = () => {
-  const { myBookings, isLoading, error, successMessage, fetchMyBookings, cancelBooking, checkin, clearMessages } = useBookingStore();
+  const { myBookings, isLoading, error, successMessage, fetchMyBookings, cancelBooking, checkin, clearMessages } = useRezervasyonDeposu();
   const [activeTab, setActiveTab] = useState<'active' | 'past'>('active');
   
   // Modals state

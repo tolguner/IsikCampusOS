@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
-import { useFacilityStore, type KullanimKurali, type TesisPolitikasi } from '../store/facilityStore';
-import { useBookingStore, type Rezervasyon } from '../store/bookingStore';
+import { useTesisDeposu, type KullanimKurali, type TesisPolitikasi } from '../store/tesisDeposu';
+import { useRezervasyonDeposu, type Rezervasyon } from '../store/rezervasyonDeposu';
 
 import {
   blankFacilityForm,
@@ -27,7 +27,7 @@ export const TesisYonetimPaneli = () => {
     updatePolicy,
     replaceAvailabilityRules,
     deleteFacility,
-  } = useFacilityStore();
+  } = useTesisDeposu();
 
   const {
     allBookings,
@@ -39,7 +39,7 @@ export const TesisYonetimPaneli = () => {
     isLoading: isBookingLoading,
     error: bookingError,
     successMessage: bookingSuccess,
-  } = useBookingStore();
+  } = useRezervasyonDeposu();
 
   const [activeView, setActiveView] = useState<'config' | 'bookings' | 'calendar'>('config');
 

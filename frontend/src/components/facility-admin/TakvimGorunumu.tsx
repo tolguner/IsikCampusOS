@@ -1,7 +1,7 @@
 import React from 'react';
 import { CalendarClock, Lock, X, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { Tesis, TesisKaynagi } from '../../store/facilityStore';
-import type { Rezervasyon } from '../../store/bookingStore';
+import type { Tesis, TesisKaynagi } from '../../store/tesisDeposu';
+import type { Rezervasyon } from '../../store/rezervasyonDeposu';
 import { panelStyle, inputClass, BookingStatusBadge } from './ortak';
 
 interface TakvimGorunumuProps {
