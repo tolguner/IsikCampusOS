@@ -9,4 +9,7 @@ import java.util.List;
 @Repository
 public interface DenetimGunluguDeposu extends JpaRepository<DenetimGunlugu, String> {
     List<DenetimGunlugu> findByVarlikTuruAndVarlikIdOrderByOlusturulmaTarihiDesc(DenetimGunlugu.VarlikTuru varlikTuru, String varlikId);
+
+    /** Sistem yöneticisi log görüntüleyici: en yeni 500 kayıt. */
+    List<DenetimGunlugu> findTop500ByOrderByOlusturulmaTarihiDesc();
 }

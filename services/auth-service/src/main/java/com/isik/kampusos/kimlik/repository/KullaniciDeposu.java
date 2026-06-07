@@ -18,6 +18,9 @@ public interface KullaniciDeposu extends JpaRepository<Kullanici, String>, JpaSp
     boolean existsByEposta(String eposta);
     boolean existsByOgrenciNumarasi(String ogrenciNumarasi);
     Optional<Kullanici> findByOgrenciNumarasi(String ogrenciNumarasi);
+
+    /** Belirli bir rolü içeren ve verilen durumda olan kullanıcı sayısı (son-admin koruması için). */
+    long countByRollerContainingAndDurum(String roller, KullaniciDurumu durum);
  
     @Query("SELECT k FROM Kullanici k WHERE k.roller LIKE '%ROLE_STUDENT%' " +
            "AND (:search IS NULL OR LOWER(k.ad) LIKE LOWER(CONCAT('%',:search,'%')) " +

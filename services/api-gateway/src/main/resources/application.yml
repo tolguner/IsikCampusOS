@@ -51,6 +51,14 @@ spring:
           filters:
             - KimlikDogrulama
 
+        # Sistem yöneticisi — kullanıcı/rol yönetimi (ROLE_ADMIN, Kimlik Servisi içinde korumalı)
+        - id: admin-user-management-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/v1/yonetim/**
+          filters:
+            - KimlikDogrulama
+
         - id: certificate-verification-service
           uri: lb://AUTH-SERVICE
           predicates:
@@ -72,6 +80,14 @@ spring:
           uri: lb://CLUB-SERVICE
           predicates:
             - Path=/api/v1/etkinlikler/**
+          filters:
+            - KimlikDogrulama
+
+        # Sistem yöneticisi — sistem denetim günlükleri (ROLE_ADMIN, club-service içinde korumalı)
+        - id: admin-audit-log-service
+          uri: lb://CLUB-SERVICE
+          predicates:
+            - Path=/api/v1/denetim-gunlukleri/**
           filters:
             - KimlikDogrulama
 
