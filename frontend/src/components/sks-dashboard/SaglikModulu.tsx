@@ -3,7 +3,7 @@ import { CheckCircle2, Power, Users } from 'lucide-react';
 import type { KulupSaglik, DenetimGunlugu } from '../../store/clubStore';
 import { panelStyle, inputClass } from './ortak';
 
-interface HealthModuleProps {
+interface SaglikModuluProps {
   totalClubCount: number;
   activeClubCount: number;
   inactiveClubCount: number;
@@ -33,7 +33,7 @@ export const SaglikModulu = ({
   watchlistClub,
   requestClubHealthAction,
   fetchClubAuditLogs,
-}: HealthModuleProps) => (
+}: SaglikModuluProps) => (
   <div className="space-y-6">
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div className="rounded-3xl p-5 flex items-center justify-between gap-4" style={panelStyle}>

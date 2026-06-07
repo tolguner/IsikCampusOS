@@ -3,11 +3,11 @@ import { UsersRound, ShieldCheck } from 'lucide-react';
 import type { Kulup } from '../../store/clubStore';
 import { useClubStore } from '../../store/clubStore';
 
-interface MembersTabProps {
+interface UyelerSekmesiProps {
   selectedClub: Kulup;
 }
 
-export const UyelerSekmesi = ({ selectedClub }: MembersTabProps) => {
+export const UyelerSekmesi = ({ selectedClub }: UyelerSekmesiProps) => {
   const {
     clubMembers,
     fetchClubMembers,

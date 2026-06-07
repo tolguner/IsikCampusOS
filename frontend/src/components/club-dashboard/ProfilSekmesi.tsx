@@ -5,11 +5,11 @@ import type { Kulup } from '../../store/clubStore';
 import { useClubStore } from '../../store/clubStore';
 import { inputClass, textareaClass, squareImageFile } from './sabitler';
 
-interface ProfileTabProps {
+interface ProfilSekmesiProps {
   selectedClub: Kulup;
 }
 
-export const ProfilSekmesi = ({ selectedClub }: ProfileTabProps) => {
+export const ProfilSekmesi = ({ selectedClub }: ProfilSekmesiProps) => {
   const { isLoading, requestClubProfileUpdate } = useClubStore();
 
   const [profileForm, setProfileForm] = useState({

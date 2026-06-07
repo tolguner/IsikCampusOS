@@ -4,7 +4,7 @@ import { CheckCircle2, Pencil, XCircle } from 'lucide-react';
 import type { KulupProfilDegisiklikIstegi } from '../../store/clubStore';
 import { inputClass } from './ortak';
 
-interface ProfileRequestsModuleProps {
+interface ProfilTalepModuluProps {
   profileChangeRequests: KulupProfilDegisiklikIstegi[];
   clubsLoading: boolean;
   approveProfileChangeRequest: (requestId: string) => void;
@@ -22,7 +22,7 @@ export const ProfilTalepModulu = ({
   handleProfileChangeReject,
   revisionTextByProfileRequest,
   setRevisionTextByProfileRequest,
-}: ProfileRequestsModuleProps) => (
+}: ProfilTalepModuluProps) => (
   <section className="space-y-4">
     {profileChangeRequests.map(request => (
       <motion.article key={request.id} layout className="rounded-2xl p-5 bg-white/[0.035] border border-white/5">

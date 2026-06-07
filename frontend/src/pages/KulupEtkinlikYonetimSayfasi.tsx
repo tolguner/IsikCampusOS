@@ -62,7 +62,7 @@ const downloadXlsx = (filename: string, rows: Record<string, string>[]) => {
   XLSX.writeFile(workbook, filename.replace(/[\\/:*?"<>|]/g, '-'));
 };
 
-export const ClubEventManagementPage = () => {
+export const KulupEtkinlikYonetimSayfasi = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
   const managedClubs = useClubStore(state => state.managedClubs);

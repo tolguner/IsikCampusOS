@@ -7,7 +7,7 @@ import { useAuthStore } from '../store/authStore';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../utils/roles';
 import { YOLLAR } from '../utils/paths';
 
-export const ClubsPage = () => {
+export const KuluplerSayfasi = () => {
   const { clubs, fetchClubs, joinClub, leaveClub, isLoading, error, successMessage, clearMessages } = useClubStore();
   const user = useAuthStore(state => state.user);
   const [searchTerm, setSearchTerm] = useState('');

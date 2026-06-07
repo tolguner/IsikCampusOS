@@ -14,7 +14,7 @@ import {
   type LogoDragStart,
 } from './ortak';
 
-interface CreateModuleProps {
+interface OlusturModuluProps {
   handleCreateClub: (e: React.FormEvent) => void;
   clubForm: KulupOlusturFormu;
   setClubForm: React.Dispatch<React.SetStateAction<KulupOlusturFormu>>;
@@ -74,7 +74,7 @@ export const OlusturModulu = ({
   selectedPresident,
   selectedPresidentUnavailable,
   clubsLoading,
-}: CreateModuleProps) => (
+}: OlusturModuluProps) => (
   <form onSubmit={handleCreateClub} className="grid grid-cols-1 2xl:grid-cols-[1.15fr_0.85fr] gap-5">
     <section className="rounded-3xl p-6 space-y-5" style={panelStyle}>
       <div>

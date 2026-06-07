@@ -4,14 +4,14 @@ import { Camera, QrCode } from 'lucide-react';
 import type { Etkinlik } from '../../store/eventStore';
 import { inputClass } from './sabitler';
 
-interface QrCheckInPanelProps {
+interface QrGirisPaneliProps {
   event: Etkinlik;
   isLoading: boolean;
   onClose: () => void;
   onSubmit: (token: string) => Promise<boolean>;
 }
 
-export const QrGirisPaneli = ({ event, isLoading, onClose, onSubmit }: QrCheckInPanelProps) => {
+export const QrGirisPaneli = ({ event, isLoading, onClose, onSubmit }: QrGirisPaneliProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);

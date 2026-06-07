@@ -1,26 +1,26 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
-import { AppLayout } from './components/layout/AppLayout';
-import { AuthPage } from './pages/AuthPage';
-import { EmailVerification } from './pages/EmailVerification';
-import { ChangePassword } from './pages/ChangePassword';
-import { RegistrarDashboard } from './pages/RegistrarDashboard';
-import { SksDashboard } from './pages/SksDashboard';
-import { ProfilePage } from './pages/ProfilePage';
-import { SettingsPage } from './pages/SettingsPage';
-import { ClubsPage } from './pages/ClubsPage';
-import { ClubDetailPage } from './pages/ClubDetailPage';
-import { NotificationsPage } from './pages/NotificationsPage';
-import { StudentDashboard } from './pages/StudentDashboard';
-import { ClubPresidentDashboard } from './pages/ClubPresidentDashboard';
-import { ClubEventManagementPage } from './pages/ClubEventManagementPage';
-import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
-import { FacilityAdminDashboard } from './pages/FacilityAdminDashboard';
-import { FacilityBookingPage } from './pages/FacilityBookingPage';
-import { MyBookingsPage } from './pages/MyBookingsPage';
+import { UygulamaDuzeni } from './components/layout/UygulamaDuzeni';
+import { GirisSayfasi } from './pages/GirisSayfasi';
+import { EpostaDogrulama } from './pages/EpostaDogrulama';
+import { SifreDegistir } from './pages/SifreDegistir';
+import { OgrenciIsleriPaneli } from './pages/OgrenciIsleriPaneli';
+import { SksPaneli } from './pages/SksPaneli';
+import { ProfilSayfasi } from './pages/ProfilSayfasi';
+import { AyarlarSayfasi } from './pages/AyarlarSayfasi';
+import { KuluplerSayfasi } from './pages/KuluplerSayfasi';
+import { KulupDetaySayfasi } from './pages/KulupDetaySayfasi';
+import { BildirimlerSayfasi } from './pages/BildirimlerSayfasi';
+import { OgrenciPaneli } from './pages/OgrenciPaneli';
+import { KulupBaskaniPaneli } from './pages/KulupBaskaniPaneli';
+import { KulupEtkinlikYonetimSayfasi } from './pages/KulupEtkinlikYonetimSayfasi';
+import { SertifikaDogrulamaSayfasi } from './pages/SertifikaDogrulamaSayfasi';
+import { TesisYonetimPaneli } from './pages/TesisYonetimPaneli';
+import { TesisRezervasyonSayfasi } from './pages/TesisRezervasyonSayfasi';
+import { RezervasyonlarimSayfasi } from './pages/RezervasyonlarimSayfasi';
 import { useAuthStore } from './store/authStore';
 import { useClubStore } from './store/clubStore';
-import { AutoClearMessages } from './components/AutoClearMessages';
+import { OtomatikMesajTemizleyici } from './components/OtomatikMesajTemizleyici';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from './utils/roles';
 import { YOLLAR } from './utils/paths';
 
@@ -62,22 +62,22 @@ const DashboardRoute = () => {
   const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);
 
   if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.sksYonetimi)) {
-    return <SksDashboard />;
+    return <SksPaneli />;
   }
 
   if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenciIsleri)) {
-    return <RegistrarDashboard />;
+    return <OgrenciIsleriPaneli />;
   }
 
   if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.tesisYonetimi)) {
-    return <FacilityAdminDashboard />;
+    return <TesisYonetimPaneli />;
   }
 
   if (isStudent) {
-    return <StudentDashboard />;
+    return <OgrenciPaneli />;
   }
 
-  return <StudentDashboard />;
+  return <OgrenciPaneli />;
 };
 
 const ClubManagementRoute = () => {
@@ -103,7 +103,7 @@ const ClubManagementRoute = () => {
     return <Navigate to={YOLLAR.kulupler} replace />;
   }
 
-  return <ClubPresidentDashboard />;
+  return <KulupBaskaniPaneli />;
 };
 
 const EskiYolYonlendirme = ({ yeniYol }: { yeniYol: string }) => {
@@ -128,18 +128,18 @@ function App() {
 
   return (
     <BrowserRouter>
-      <AutoClearMessages />
+      <OtomatikMesajTemizleyici />
       <Routes>
         {/* Auth — giriş sayfası */}
-        <Route path={YOLLAR.giris} element={!hasSession ? <AuthPage /> : <Navigate to={YOLLAR.anaSayfa} />} />
+        <Route path={YOLLAR.giris} element={!hasSession ? <GirisSayfasi /> : <Navigate to={YOLLAR.anaSayfa} />} />
         <Route path="/login" element={<EskiYolYonlendirme yeniYol={YOLLAR.giris} />} />
-        <Route path={YOLLAR.sertifikaDogrula} element={<CertificateVerificationPage />} />
+        <Route path={YOLLAR.sertifikaDogrula} element={<SertifikaDogrulamaSayfasi />} />
         <Route path="/certificates/verify" element={<EskiYolYonlendirme yeniYol={YOLLAR.sertifikaDogrula} />} />
 
         {/* E-posta doğrulama — giriş yapmış ama doğrulanmamış */}
         <Route path={YOLLAR.epostaDogrula} element={
           hasSession && !user.epostaDogrulandi
-            ? <EmailVerification />
+            ? <EpostaDogrulama />
             : <Navigate to={hasSession ? YOLLAR.anaSayfa : YOLLAR.giris} />
         } />
         <Route path="/verify-email" element={<EskiYolYonlendirme yeniYol={YOLLAR.epostaDogrula} />} />
@@ -147,7 +147,7 @@ function App() {
         {/* Şifre değiştirme — giriş yapmış ama ilk şifre değişikliği bekliyor */}
         <Route path={YOLLAR.sifreDegistir} element={
           hasSession && user.sifreDegistirmeli
-            ? <ChangePassword />
+            ? <SifreDegistir />
             : <Navigate to={hasSession ? YOLLAR.anaSayfa : YOLLAR.giris} />
         } />
         <Route path="/change-password" element={<EskiYolYonlendirme yeniYol={YOLLAR.sifreDegistir} />} />
@@ -155,98 +155,98 @@ function App() {
         {/* Dashboard and other protected routes */}
         <Route path="/" element={
           <ProtectedRoute>
-            <AppLayout>
+            <UygulamaDuzeni>
               <DashboardRoute />
-            </AppLayout>
+            </UygulamaDuzeni>
           </ProtectedRoute>
         } />
 
         <Route path={YOLLAR.profil} element={
           <ProtectedRoute>
-            <AppLayout>
-              <ProfilePage />
-            </AppLayout>
+            <UygulamaDuzeni>
+              <ProfilSayfasi />
+            </UygulamaDuzeni>
           </ProtectedRoute>
         } />
         <Route path="/profile" element={<EskiYolYonlendirme yeniYol={YOLLAR.profil} />} />
 
         <Route path={YOLLAR.ayarlar} element={
           <ProtectedRoute>
-            <AppLayout>
-              <SettingsPage />
-            </AppLayout>
+            <UygulamaDuzeni>
+              <AyarlarSayfasi />
+            </UygulamaDuzeni>
           </ProtectedRoute>
         } />
         <Route path="/settings" element={<EskiYolYonlendirme yeniYol={YOLLAR.ayarlar} />} />
 
         <Route path={YOLLAR.kulupler} element={
           <ProtectedRoute>
-            <AppLayout>
-              <ClubsPage />
-            </AppLayout>
+            <UygulamaDuzeni>
+              <KuluplerSayfasi />
+            </UygulamaDuzeni>
           </ProtectedRoute>
         } />
         <Route path="/clubs" element={<EskiYolYonlendirme yeniYol={YOLLAR.kulupler} />} />
 
         <Route path={YOLLAR.kulupDetay(':clubId')} element={
           <ProtectedRoute>
-            <AppLayout>
-              <ClubDetailPage />
-            </AppLayout>
+            <UygulamaDuzeni>
+              <KulupDetaySayfasi />
+            </UygulamaDuzeni>
           </ProtectedRoute>
         } />
         <Route path="/clubs/:clubId" element={<EskiKulupDetayYonlendirme />} />
 
         <Route path={YOLLAR.bildirimler} element={
           <ProtectedRoute>
-            <AppLayout>
-              <NotificationsPage />
-            </AppLayout>
+            <UygulamaDuzeni>
+              <BildirimlerSayfasi />
+            </UygulamaDuzeni>
           </ProtectedRoute>
         } />
         <Route path="/notifications" element={<EskiYolYonlendirme yeniYol={YOLLAR.bildirimler} />} />
 
         <Route path={YOLLAR.kulupYonetimi} element={
           <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.ogrenci}>
-            <AppLayout>
+            <UygulamaDuzeni>
               <ClubManagementRoute />
-            </AppLayout>
+            </UygulamaDuzeni>
           </ProtectedRoute>
         } />
         <Route path="/club-management" element={<EskiYolYonlendirme yeniYol={YOLLAR.kulupYonetimi} />} />
 
         <Route path={YOLLAR.kulupEtkinlikYonetimi(':eventId')} element={
           <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.ogrenci}>
-            <AppLayout>
-              <ClubEventManagementPage />
-            </AppLayout>
+            <UygulamaDuzeni>
+              <KulupEtkinlikYonetimSayfasi />
+            </UygulamaDuzeni>
           </ProtectedRoute>
         } />
         <Route path="/club-management/events/:eventId" element={<EskiKulupEtkinlikYonlendirme />} />
 
         <Route path={YOLLAR.tesisYonetimi} element={
           <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.tesisYonetimi}>
-            <AppLayout>
-              <FacilityAdminDashboard />
-            </AppLayout>
+            <UygulamaDuzeni>
+              <TesisYonetimPaneli />
+            </UygulamaDuzeni>
           </ProtectedRoute>
         } />
         <Route path="/facility-management" element={<EskiYolYonlendirme yeniYol={YOLLAR.tesisYonetimi} />} />
 
         <Route path={YOLLAR.tesisRezervasyon} element={
           <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.ogrenci}>
-            <AppLayout>
-              <FacilityBookingPage />
-            </AppLayout>
+            <UygulamaDuzeni>
+              <TesisRezervasyonSayfasi />
+            </UygulamaDuzeni>
           </ProtectedRoute>
         } />
         <Route path="/bookings" element={<EskiYolYonlendirme yeniYol={YOLLAR.tesisRezervasyon} />} />
 
         <Route path={YOLLAR.rezervasyonlarim} element={
           <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.ogrenci}>
-            <AppLayout>
-              <MyBookingsPage />
-            </AppLayout>
+            <UygulamaDuzeni>
+              <RezervasyonlarimSayfasi />
+            </UygulamaDuzeni>
           </ProtectedRoute>
         } />
         <Route path="/my-bookings" element={<EskiYolYonlendirme yeniYol={YOLLAR.rezervasyonlarim} />} />

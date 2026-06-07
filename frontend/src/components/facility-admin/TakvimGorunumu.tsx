@@ -4,7 +4,7 @@ import type { Tesis, TesisKaynagi } from '../../store/facilityStore';
 import type { Rezervasyon } from '../../store/bookingStore';
 import { panelStyle, inputClass, BookingStatusBadge } from './ortak';
 
-interface CalendarViewProps {
+interface TakvimGorunumuProps {
   facilities: Tesis[];
   calendarFacilityId: string;
   setCalendarFacilityId: React.Dispatch<React.SetStateAction<string>>;
@@ -64,7 +64,7 @@ export const TakvimGorunumu = ({
   handleUpdateBookingStatus,
   formatDateTime,
   isBookingLoading,
-}: CalendarViewProps) => {
+}: TakvimGorunumuProps) => {
   const calendarWeekDays: Date[] = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(calendarWeekStart);

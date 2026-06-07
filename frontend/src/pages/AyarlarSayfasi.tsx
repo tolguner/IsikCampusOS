@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Shield, Monitor, Moon, Sun, MonitorSmartphone, Globe, Palette } from 'lucide-react';
 
-export const SettingsPage = () => {
+export const AyarlarSayfasi = () => {
   const [theme, setTheme] = useState('system');
   const [notifications, setNotifications] = useState({
     email: true,

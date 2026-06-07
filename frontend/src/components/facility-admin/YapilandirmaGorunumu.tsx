@@ -14,7 +14,7 @@ import {
   NumberField,
 } from './ortak';
 
-interface ConfigViewProps {
+interface YapilandirmaGorunumuProps {
   facilities: Tesis[];
   selectedFacilityId: string | null;
   selectFacility: (facilityId: string | null) => void;
@@ -50,7 +50,7 @@ export const YapilandirmaGorunumu = ({
   weeklyHours,
   setWeeklyHours,
   handleSaveRules,
-}: ConfigViewProps) => {
+}: YapilandirmaGorunumuProps) => {
   return (
     <>
       <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">

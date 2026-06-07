@@ -17,7 +17,7 @@ const panelStyle = {
   border: '1px solid rgba(255,255,255,0.08)',
 };
 
-export const MyBookingsPage = () => {
+export const RezervasyonlarimSayfasi = () => {
   const { myBookings, isLoading, error, successMessage, fetchMyBookings, cancelBooking, checkin, clearMessages } = useBookingStore();
   const [activeTab, setActiveTab] = useState<'active' | 'past'>('active');
   

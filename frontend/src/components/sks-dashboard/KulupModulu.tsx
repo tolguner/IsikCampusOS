@@ -13,7 +13,7 @@ import {
   type KulupDuzenleFormu,
 } from './ortak';
 
-interface ClubsModuleProps {
+interface KulupModuluProps {
   filteredClubs: Kulup[];
   clubsLoading: boolean;
   editingClubId: string | null;
@@ -63,7 +63,7 @@ export const KulupModulu = ({
   isAdvisorAssignedToAnotherClub,
   handleEditAdvisorSelect,
   selectedEditAdvisorDisplayName,
-}: ClubsModuleProps) => (
+}: KulupModuluProps) => (
   <section className="space-y-5">
     <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.025]">
       <table className="w-full min-w-[1120px] border-separate border-spacing-0">

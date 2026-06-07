@@ -17,7 +17,7 @@ const targetAudienceLabel = (value: string) => {
   return 'Kişisel bildirim';
 };
 
-export const NotificationsPage = () => {
+export const BildirimlerSayfasi = () => {
   const { bildirimler, okunmamisSayisi, bildirimleriGetir, okunduIsaretle, yukleniyor, hata } = useNotificationStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<NotificationFilter>('all');

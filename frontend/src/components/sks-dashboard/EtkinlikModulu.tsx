@@ -4,7 +4,7 @@ import { Banknote, CheckCircle2, Clock, Link as LinkIcon, MapPin, Users, XCircle
 import type { Etkinlik } from '../../store/eventStore';
 import { inputClass } from './ortak';
 
-interface EventsModuleProps {
+interface EtkinlikModuluProps {
   reviewQueue: Etkinlik[];
   eventsLoading: boolean;
   formatEventDate: (value?: string) => string;
@@ -24,7 +24,7 @@ export const EtkinlikModulu = ({
   handleRevision,
   revisionTextByEvent,
   setRevisionTextByEvent,
-}: EventsModuleProps) => (
+}: EtkinlikModuluProps) => (
   <section className="space-y-5">
     <div className="space-y-4">
       {reviewQueue.map(event => (

@@ -10,7 +10,7 @@ import {
   ShieldCheck, MapPin, Phone
 } from 'lucide-react';
 
-export const ProfilePage = () => {
+export const ProfilSayfasi = () => {
   const { user, changePassword, isLoading } = useAuthStore();
   const {
     profile,

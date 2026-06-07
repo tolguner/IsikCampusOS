@@ -31,7 +31,7 @@ import {
 } from './sabitler';
 import { KonumSecici } from './KonumSecici';
 
-interface EventsTabProps {
+interface EtkinliklerSekmesiProps {
   selectedClub: Kulup;
 }
 
@@ -175,7 +175,7 @@ const DateTimePicker = ({ label, value, min, defaultTime, onChange }: DateTimePi
   );
 };
 
-export const EtkinliklerSekmesi = ({ selectedClub }: EventsTabProps) => {
+export const EtkinliklerSekmesi = ({ selectedClub }: EtkinliklerSekmesiProps) => {
   const {
     managedEvents,
     isLoading: eventsLoading,
