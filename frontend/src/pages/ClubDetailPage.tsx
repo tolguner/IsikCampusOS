@@ -4,7 +4,7 @@ import QRCode from 'qrcode';
 import { Link, useParams } from 'react-router-dom';
 import { Banknote, Bell, CalendarDays, CheckCircle2, ChevronLeft, Clock, GraduationCap, Link as LinkIcon, Loader2, MapPin, Maximize2, Megaphone, Ticket, UserRound, Users, X } from 'lucide-react';
 import { useClubStore } from '../store/clubStore';
-import { useEventStore, type Event } from '../store/eventStore';
+import { useEventStore, type Etkinlik, type EtkinlikDurumu } from '../store/eventStore';
 import { useAuthStore } from '../store/authStore';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../utils/roles';
 import { YOLLAR } from '../utils/paths';
@@ -34,8 +34,8 @@ export const ClubDetailPage = () => {
   } = useEventStore();
   const [eventFilter, setEventFilter] = useState<'active' | 'past'>('active');
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
-  const [expandedPosterEvent, setExpandedPosterEvent] = useState<Event | null>(null);
-  const [qrTicket, setQrTicket] = useState<{ event: Event; dataUrl: string } | null>(null);
+  const [expandedPosterEvent, setExpandedPosterEvent] = useState<Etkinlik | null>(null);
+  const [qrTicket, setQrTicket] = useState<{ event: Etkinlik; dataUrl: string } | null>(null);
   const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);
 
   useEffect(() => {
@@ -47,11 +47,11 @@ export const ClubDetailPage = () => {
 
   const filteredEvents = useMemo(() => {
     const now = new Date();
-    const visibleStatuses = new Set<Event['status']>(['PUBLISHED', 'COMPLETED', 'CANCELLED']);
+    const visibleStatuses = new Set<EtkinlikDurumu>(['YAYINLANDI', 'TAMAMLANDI', 'IPTAL_EDILDI']);
     return clubEvents.filter(event => {
-      if (!visibleStatuses.has(event.status)) return false;
-      const endDate = event.endTime ? new Date(event.endTime) : event.startTime ? new Date(event.startTime) : null;
-      const isPast = endDate ? endDate < now || event.status === 'COMPLETED' || event.status === 'CANCELLED' : false;
+      if (!visibleStatuses.has(event.durum)) return false;
+      const endDate = event.bitisTarihi ? new Date(event.bitisTarihi) : event.baslangicTarihi ? new Date(event.baslangicTarihi) : null;
+      const isPast = endDate ? endDate < now || event.durum === 'TAMAMLANDI' || event.durum === 'IPTAL_EDILDI' : false;
       return eventFilter === 'past' ? isPast : !isPast;
     });
   }, [clubEvents, eventFilter]);
@@ -122,25 +122,25 @@ export const ClubDetailPage = () => {
     }
   };
 
-  const isEventFull = (event: Event) =>
-    Boolean(event.hasCapacityLimit || event.capacityLimited) && event.currentRsvpCount >= event.capacity;
+  const isEventFull = (event: Etkinlik) =>
+    Boolean(event.kontenjanSiniriVar || event.kontenjanSinirli) && event.mevcutRsvpSayisi >= event.kontenjan;
 
-  const isEventRegisterable = (event: Event) => {
-    const endDate = event.endTime ? new Date(event.endTime) : event.startTime ? new Date(event.startTime) : null;
-    return event.status === 'PUBLISHED' && (!endDate || endDate >= new Date()) && !isEventFull(event);
+  const isEventRegisterable = (event: Etkinlik) => {
+    const endDate = event.bitisTarihi ? new Date(event.bitisTarihi) : event.baslangicTarihi ? new Date(event.baslangicTarihi) : null;
+    return event.durum === 'YAYINLANDI' && (!endDate || endDate >= new Date()) && !isEventFull(event);
   };
 
   const activeRsvpFor = (eventId: string) => {
     const rsvp = myRsvpsByEvent[eventId];
-    return rsvp && rsvp.status !== 'CANCELLED' ? rsvp : null;
+    return rsvp && rsvp.durum !== 'IPTAL_EDILDI' ? rsvp : null;
   };
 
-  const canWithdrawRsvp = (event: Event, status: string) => {
-    const endDate = event.endTime ? new Date(event.endTime) : event.startTime ? new Date(event.startTime) : null;
-    return event.status === 'PUBLISHED' && status !== 'ATTENDED' && (!endDate || endDate >= new Date());
+  const canWithdrawRsvp = (event: Etkinlik, status: string) => {
+    const endDate = event.bitisTarihi ? new Date(event.bitisTarihi) : event.baslangicTarihi ? new Date(event.baslangicTarihi) : null;
+    return event.durum === 'YAYINLANDI' && status !== 'KATILDI' && (!endDate || endDate >= new Date());
   };
 
-  const showQrTicket = async (event: Event, token?: string) => {
+  const showQrTicket = async (event: Etkinlik, token?: string) => {
     if (!token) return;
     const dataUrl = await QRCode.toDataURL(JSON.stringify({ eventId: event.id, token }), {
       width: 360,
@@ -312,14 +312,14 @@ export const ClubDetailPage = () => {
                   const activeRsvp = activeRsvpFor(event.id);
                   return (
                 <div className="grid grid-cols-1 xl:grid-cols-[8rem_1fr_auto] gap-4">
-                  {event.posterImageUrl && (
+                  {event.afisResmiUrl && (
                     <button
                       type="button"
                       onClick={() => setExpandedPosterEvent(event)}
                       className="group relative w-full max-w-48 xl:max-w-none aspect-[297/420] rounded-2xl overflow-hidden border border-white/10 bg-white/[0.025]"
-                      aria-label={`${event.title} afişini büyüt`}
+                      aria-label={`${event.baslik} afişini büyüt`}
                     >
-                      <img src={event.posterImageUrl} alt={event.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                      <img src={event.afisResmiUrl} alt={event.baslik} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                       <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition-all group-hover:bg-black/45 group-hover:opacity-100">
                         <Maximize2 className="w-6 h-6" />
                       </span>
@@ -328,54 +328,54 @@ export const ClubDetailPage = () => {
                   <div className="space-y-4 min-w-0">
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-cyan-500/10 text-cyan-200 border border-cyan-500/20">{event.eventMode === 'ONLINE' ? 'Online' : 'Yüz yüze'}</span>
-                        {event.certificateEnabled && <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-500/10 text-indigo-200 border border-indigo-500/20">Sertifikalı</span>}
-                        {event.qrCheckInEnabled && <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-200 border border-emerald-500/20">QR yoklama</span>}
-                        {event.paid && <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-200 border border-amber-500/20">Ücretli</span>}
+                        <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-cyan-500/10 text-cyan-200 border border-cyan-500/20">{event.etkinlikTuru === 'CEVRIMICI' ? 'Online' : 'Yüz yüze'}</span>
+                        {event.sertifikaEtkin && <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-500/10 text-indigo-200 border border-indigo-500/20">Sertifikalı</span>}
+                        {event.qrGirisEtkin && <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-200 border border-emerald-500/20">QR yoklama</span>}
+                        {event.ucretli && <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-200 border border-amber-500/20">Ücretli</span>}
                       </div>
-                      <h3 className="text-xl font-black text-white leading-snug">{event.title}</h3>
-                      <p className="text-sm text-white/55 whitespace-pre-line leading-relaxed">{event.description}</p>
+                      <h3 className="text-xl font-black text-white leading-snug">{event.baslik}</h3>
+                      <p className="text-sm text-white/55 whitespace-pre-line leading-relaxed">{event.aciklama}</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-white/55">
-                      <span className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2"><CalendarDays className="w-4 h-4 text-indigo-200" />Başlangıç: {formatDate(event.startTime)}</span>
-                      <span className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2"><Clock className="w-4 h-4 text-indigo-200" />Bitiş: {formatDate(event.endTime)}</span>
-                      <span className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2"><MapPin className="w-4 h-4 text-cyan-200" />{event.eventMode === 'ONLINE' ? event.onlinePlatform || 'Online' : event.locationName || event.location || 'Lokasyon bekleniyor'}</span>
-                      <span className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2"><Users className="w-4 h-4 text-cyan-200" />{event.hasCapacityLimit || event.capacityLimited ? `${event.currentRsvpCount}/${event.capacity} kayıt` : `${event.currentRsvpCount} kayıt`}</span>
+                      <span className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2"><CalendarDays className="w-4 h-4 text-indigo-200" />Başlangıç: {formatDate(event.baslangicTarihi)}</span>
+                      <span className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2"><Clock className="w-4 h-4 text-indigo-200" />Bitiş: {formatDate(event.bitisTarihi)}</span>
+                      <span className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2"><MapPin className="w-4 h-4 text-cyan-200" />{event.etkinlikTuru === 'CEVRIMICI' ? event.cevrimiciPlatform || 'Online' : event.konumAdi || event.konum || 'Lokasyon bekleniyor'}</span>
+                      <span className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2"><Users className="w-4 h-4 text-cyan-200" />{event.kontenjanSiniriVar || event.kontenjanSinirli ? `${event.mevcutRsvpSayisi}/${event.kontenjan} kayıt` : `${event.mevcutRsvpSayisi} kayıt`}</span>
                     </div>
 
-                    {event.certificateEnabled && event.certificateTitle && (
+                    {event.sertifikaEtkin && event.sertifikaBasligi && (
                       <p className="rounded-2xl border border-indigo-400/15 bg-indigo-500/10 px-4 py-3 text-xs font-semibold text-indigo-100">
-                        Sertifika: {event.certificateTitle}
+                        Sertifika: {event.sertifikaBasligi}
                       </p>
                     )}
 
-                    {event.eventMode === 'ONLINE' && event.onlineMeetingUrl && (
-                      <a href={event.onlineMeetingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-cyan-100 bg-cyan-500/10 border border-cyan-400/20 hover:bg-cyan-500/15">
+                    {event.etkinlikTuru === 'CEVRIMICI' && event.cevrimiciToplantiUrl && (
+                      <a href={event.cevrimiciToplantiUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-cyan-100 bg-cyan-500/10 border border-cyan-400/20 hover:bg-cyan-500/15">
                         <LinkIcon className="w-3.5 h-3.5" />
                         Online etkinliğe git
                       </a>
                     )}
 
-                    {event.eventMode === 'IN_PERSON' && event.latitude && event.longitude && (
+                    {event.etkinlikTuru === 'YUZ_YUZE' && event.enlem && event.boylam && (
                       <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.025] max-w-2xl">
                         <iframe
-                          title={`${event.title} konumu`}
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${event.longitude - 0.004}%2C${event.latitude - 0.004}%2C${event.longitude + 0.004}%2C${event.latitude + 0.004}&layer=mapnik&marker=${event.latitude}%2C${event.longitude}`}
+                          title={`${event.baslik} konumu`}
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${event.boylam - 0.004}%2C${event.enlem - 0.004}%2C${event.boylam + 0.004}%2C${event.enlem + 0.004}&layer=mapnik&marker=${event.enlem}%2C${event.boylam}`}
                           className="w-full h-44 border-0"
                         />
                         <div className="px-3 py-2 text-xs text-white/45 space-y-1">
-                          <p>{event.locationName || event.location}</p>
-                          {event.locationDetail && <p>{event.locationDetail}</p>}
+                          <p>{event.konumAdi || event.konum}</p>
+                          {event.konumDetayi && <p>{event.konumDetayi}</p>}
                         </div>
                       </div>
                     )}
 
-                    {event.paid && (
+                    {event.ucretli && (
                       <div className="rounded-2xl border border-amber-300/15 bg-amber-500/10 p-3 text-xs text-amber-50/80">
-                        <div className="font-black flex items-center gap-2"><Banknote className="w-4 h-4" />Ücretli etkinlik: {event.feeAmount || 0} TL</div>
+                        <div className="font-black flex items-center gap-2"><Banknote className="w-4 h-4" />Ücretli etkinlik: {event.ucretTutari || 0} TL</div>
                         {event.iban && <div className="mt-1 break-all">IBAN: {event.iban}</div>}
-                        {event.paymentInstructions && <div className="mt-1">{event.paymentInstructions}</div>}
+                        {event.odemeTalimatlari && <div className="mt-1">{event.odemeTalimatlari}</div>}
                       </div>
                     )}
                   </div>
@@ -387,10 +387,10 @@ export const ClubDetailPage = () => {
                       </div>
                     ) : activeRsvp ? (
                       <>
-                        {event.qrCheckInEnabled && activeRsvp.checkInToken && (
+                        {event.qrGirisEtkin && activeRsvp.yoklamaBelirteci && (
                           <button
                             type="button"
-                            onClick={() => showQrTicket(event, activeRsvp.checkInToken)}
+                            onClick={() => showQrTicket(event, activeRsvp.yoklamaBelirteci)}
                             className="w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black text-emerald-100 bg-emerald-500/15 border border-emerald-400/20 hover:bg-emerald-500/25"
                           >
                             <Ticket className="w-4 h-4" />
@@ -399,7 +399,7 @@ export const ClubDetailPage = () => {
                         )}
                         <button
                           type="button"
-                          disabled={eventActionLoading || isManager || !canWithdrawRsvp(event, activeRsvp.status)}
+                          disabled={eventActionLoading || isManager || !canWithdrawRsvp(event, activeRsvp.durum)}
                           onClick={() => handleEventRegistrationCancel(event.id)}
                           className="w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black text-red-100 bg-red-500/15 border border-red-400/20 hover:bg-red-500/25 disabled:opacity-45 disabled:cursor-not-allowed"
                         >
@@ -415,16 +415,16 @@ export const ClubDetailPage = () => {
                         className="w-full inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black text-white gradient-btn disabled:opacity-45 disabled:cursor-not-allowed"
                       >
                         <Ticket className="w-4 h-4" />
-                        {event.paid ? 'Kayıt Ol' : 'Etkinliğe Katıl'}
+                        {event.ucretli ? 'Kayıt Ol' : 'Etkinliğe Katıl'}
                       </button>
                     )}
-                    {activeRsvp?.status === 'PENDING_PAYMENT' && <p className="text-xs text-amber-100/75 text-center">Ödeme onayı bekliyor.</p>}
-                    {activeRsvp?.status === 'CONFIRMED' && <p className="text-xs text-emerald-100/75 text-center">Kaydın kesinleşti.</p>}
-                    {activeRsvp?.status === 'ATTENDED' && <p className="text-xs text-cyan-100/75 text-center">Katılımın işaretlendi.</p>}
+                    {activeRsvp?.durum === 'ODEME_BEKLIYOR' && <p className="text-xs text-amber-100/75 text-center">Ödeme onayı bekliyor.</p>}
+                    {activeRsvp?.durum === 'ONAYLANDI' && <p className="text-xs text-emerald-100/75 text-center">Kaydın kesinleşti.</p>}
+                    {activeRsvp?.durum === 'KATILDI' && <p className="text-xs text-cyan-100/75 text-center">Katılımın işaretlendi.</p>}
                     {isManager && <p className="text-xs text-white/35 text-center">Yöneticisi olduğun etkinliğe kayıt alınmaz.</p>}
                     {isEventFull(event) && <p className="text-xs text-amber-100 text-center">Kontenjan dolu.</p>}
-                    {event.paid && !activeRsvp && <p className="text-xs text-amber-100/75 text-center">Kayıt, ödeme onayı sonrası kesinleşir.</p>}
-                    {event.status !== 'PUBLISHED' && <p className="text-xs text-white/35 text-center">Etkinlik yayında değil.</p>}
+                    {event.ucretli && !activeRsvp && <p className="text-xs text-amber-100/75 text-center">Kayıt, ödeme onayı sonrası kesinleşir.</p>}
+                    {event.durum !== 'YAYINLANDI' && <p className="text-xs text-white/35 text-center">Etkinlik yayında değil.</p>}
                   </div>
                 </div>
                   );
@@ -484,10 +484,10 @@ export const ClubDetailPage = () => {
               </button>
               <div className="pr-12">
                 <h3 className="text-xl font-black text-white">QR Bilet</h3>
-                <p className="mt-1 text-sm text-white/45">{qrTicket.event.title}</p>
+                <p className="mt-1 text-sm text-white/45">{qrTicket.event.baslik}</p>
               </div>
               <div className="mt-5 rounded-3xl bg-white p-4">
-                <img src={qrTicket.dataUrl} alt={`${qrTicket.event.title} QR bileti`} className="w-full" />
+                <img src={qrTicket.dataUrl} alt={`${qrTicket.event.baslik} QR bileti`} className="w-full" />
               </div>
               <p className="mt-4 text-xs text-white/45 leading-relaxed">
                 Bu QR yalnızca senin kaydına özeldir. Etkinlik girişinde kulüp yöneticisine okut.
@@ -496,7 +496,7 @@ export const ClubDetailPage = () => {
           </motion.div>
         )}
 
-        {expandedPosterEvent?.posterImageUrl && (
+        {expandedPosterEvent?.afisResmiUrl && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -519,13 +519,13 @@ export const ClubDetailPage = () => {
               >
                 <X className="w-5 h-5" />
               </button>
-              <img src={expandedPosterEvent.posterImageUrl} alt={expandedPosterEvent.title} className="max-h-[92vh] w-auto rounded-2xl border border-white/10 object-contain shadow-2xl" />
+              <img src={expandedPosterEvent.afisResmiUrl} alt={expandedPosterEvent.baslik} className="max-h-[92vh] w-auto rounded-2xl border border-white/10 object-contain shadow-2xl" />
               <div className="mt-3 rounded-2xl border border-white/10 bg-[#111123]/95 px-4 py-3">
                 <div className="flex items-center gap-2 text-sm font-black text-white">
                   <CheckCircle2 className="w-4 h-4 text-emerald-200" />
-                  {expandedPosterEvent.title}
+                  {expandedPosterEvent.baslik}
                 </div>
-                <p className="mt-1 text-xs text-white/45">{formatDate(expandedPosterEvent.startTime)}</p>
+                <p className="mt-1 text-xs text-white/45">{formatDate(expandedPosterEvent.baslangicTarihi)}</p>
               </div>
             </motion.div>
           </motion.div>

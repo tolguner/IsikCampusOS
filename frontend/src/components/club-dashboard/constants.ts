@@ -1,4 +1,4 @@
-import type { Event, EventParticipant } from '../../store/eventStore';
+import type { Etkinlik, EtkinlikDurumu, KatilimDurumu } from '../../store/eventStore';
 
 export type PanelTab = 'profile' | 'events' | 'announcements' | 'members';
 
@@ -17,7 +17,7 @@ export const emptyEventForm = {
   startTime: '',
   endTime: '',
   location: '',
-  eventMode: 'IN_PERSON' as 'ONLINE' | 'IN_PERSON',
+  eventMode: 'YUZ_YUZE' as 'CEVRIMICI' | 'YUZ_YUZE',
   onlinePlatform: 'Google Meet',
   onlineMeetingUrl: '',
   locationName: '',
@@ -55,44 +55,44 @@ export const reminderOptions = [
   { value: 1440, label: '1 gün önce' },
 ];
 
-export const statusLabel: Record<Event['status'], string> = {
-  DRAFT: 'Taslak',
-  PENDING_SKS_APPROVAL: 'SKS onayında',
-  REVISION_REQUESTED: 'Revizyon istendi',
-  PUBLISHED: 'Yayında',
-  REJECTED: 'Reddedildi',
-  CANCELLED: 'İptal',
-  COMPLETED: 'Tamamlandı',
+export const statusLabel: Record<EtkinlikDurumu, string> = {
+  TASLAK: 'Taslak',
+  SKS_ONAYI_BEKLIYOR: 'SKS onayında',
+  REVIZYON_TALEP_EDILDI: 'Revizyon istendi',
+  YAYINLANDI: 'Yayında',
+  REDDEDILDI: 'Reddedildi',
+  IPTAL_EDILDI: 'İptal',
+  TAMAMLANDI: 'Tamamlandı',
 };
 
-export const statusClass: Record<Event['status'], string> = {
-  DRAFT: 'bg-white/10 text-white/70',
-  PENDING_SKS_APPROVAL: 'bg-amber-500/15 text-amber-100',
-  REVISION_REQUESTED: 'bg-red-500/15 text-red-100',
-  PUBLISHED: 'bg-emerald-500/15 text-emerald-100',
-  REJECTED: 'bg-red-500/15 text-red-100',
-  CANCELLED: 'bg-white/10 text-white/45',
-  COMPLETED: 'bg-cyan-500/15 text-cyan-100',
+export const statusClass: Record<EtkinlikDurumu, string> = {
+  TASLAK: 'bg-white/10 text-white/70',
+  SKS_ONAYI_BEKLIYOR: 'bg-amber-500/15 text-amber-100',
+  REVIZYON_TALEP_EDILDI: 'bg-red-500/15 text-red-100',
+  YAYINLANDI: 'bg-emerald-500/15 text-emerald-100',
+  REDDEDILDI: 'bg-red-500/15 text-red-100',
+  IPTAL_EDILDI: 'bg-white/10 text-white/45',
+  TAMAMLANDI: 'bg-cyan-500/15 text-cyan-100',
 };
 
-export const participantStatusLabel: Record<EventParticipant['status'], string> = {
-  PENDING_PAYMENT: 'Ödeme bekliyor',
-  CONFIRMED: 'Katılım onaylı',
-  WAITLISTED: 'Yedekte',
-  CANCELLED: 'İptal',
-  ATTENDED: 'Katıldı',
-  NO_SHOW: 'Katılmadı',
+export const participantStatusLabel: Record<KatilimDurumu, string> = {
+  ODEME_BEKLIYOR: 'Ödeme bekliyor',
+  ONAYLANDI: 'Katılım onaylı',
+  YEDEKTE: 'Yedekte',
+  IPTAL_EDILDI: 'İptal',
+  KATILDI: 'Katıldı',
+  GELMEDI: 'Katılmadı',
 };
 
-export const isPastEvent = (event: Event) => {
-  const boundary = event.endTime || event.startTime;
+export const isPastEvent = (event: Etkinlik) => {
+  const boundary = event.bitisTarihi || event.baslangicTarihi;
   return Boolean(boundary && new Date(boundary) < new Date());
 };
 
-export const isCheckInWindowOpen = (event: Event) => {
-  if (!event.startTime) return false;
-  const startTime = new Date(event.startTime).getTime();
-  const endTime = new Date(event.endTime || event.startTime).getTime();
+export const isCheckInWindowOpen = (event: Etkinlik) => {
+  if (!event.baslangicTarihi) return false;
+  const startTime = new Date(event.baslangicTarihi).getTime();
+  const endTime = new Date(event.bitisTarihi || event.baslangicTarihi).getTime();
   const now = Date.now();
   const oneHour = 60 * 60 * 1000;
   return now >= startTime - oneHour && now <= endTime + oneHour;
