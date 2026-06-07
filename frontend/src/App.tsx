@@ -21,6 +21,7 @@ import { RezervasyonlarimSayfasi } from './pages/RezervasyonlarimSayfasi';
 import { YonetimPaneli } from './pages/YonetimPaneli';
 import { DuyuruSayfasi } from './pages/DuyuruSayfasi';
 import { useKimlikDeposu } from './depolar/kimlikDeposu';
+import { useBildirimDeposu } from './depolar/bildirimDeposu';
 import { useKulupDeposu } from './depolar/kulupDeposu';
 import { OtomatikMesajTemizleyici } from './components/OtomatikMesajTemizleyici';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from './yardimcilar/yetkiler';
@@ -132,6 +133,16 @@ function App() {
   const isAuthenticated = useKimlikDeposu(state => state.isAuthenticated);
   const user = useKimlikDeposu(state => state.user);
   const hasSession = isAuthenticated && !!user;
+  const akisBaslat = useBildirimDeposu(state => state.akisBaslat);
+  const akisDurdur = useBildirimDeposu(state => state.akisDurdur);
+
+  // Oturum açıkken anlık bildirim akışını (SSE) başlat; çıkışta durdur.
+  React.useEffect(() => {
+    if (hasSession) {
+      akisBaslat();
+      return () => akisDurdur();
+    }
+  }, [hasSession, akisBaslat, akisDurdur]);
 
   return (
     <BrowserRouter>
