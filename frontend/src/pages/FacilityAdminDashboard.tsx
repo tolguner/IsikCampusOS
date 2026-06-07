@@ -8,9 +8,9 @@ import {
   defaultPolicy,
   type WeeklyHourDay,
 } from '../components/facility-admin/ortak';
-import { CalendarView } from '../components/facility-admin/CalendarView';
-import { BookingsView } from '../components/facility-admin/BookingsView';
-import { ConfigView } from '../components/facility-admin/ConfigView';
+import { TakvimGorunumu } from '../components/facility-admin/TakvimGorunumu';
+import { RezervasyonGorunumu } from '../components/facility-admin/RezervasyonGorunumu';
+import { YapilandirmaGorunumu } from '../components/facility-admin/YapilandirmaGorunumu';
 
 export const FacilityAdminDashboard = () => {
   const {
@@ -497,7 +497,7 @@ export const FacilityAdminDashboard = () => {
       )}
 
       {activeView === 'config' ? (
-        <ConfigView
+        <YapilandirmaGorunumu
           facilities={facilities}
           selectedFacilityId={selectedFacilityId}
           selectFacility={selectFacility}
@@ -516,7 +516,7 @@ export const FacilityAdminDashboard = () => {
           handleSaveRules={handleSaveRules}
         />
       ) : activeView === 'bookings' ? (
-        <BookingsView
+        <RezervasyonGorunumu
           handleAddBlockSlot={handleAddBlockSlot}
           blockResourceId={blockResourceId}
           setBlockResourceId={setBlockResourceId}
@@ -539,7 +539,7 @@ export const FacilityAdminDashboard = () => {
           handleUpdateBookingStatus={handleUpdateBookingStatus}
         />
       ) : (
-        <CalendarView
+        <TakvimGorunumu
           facilities={facilities}
           calendarFacilityId={calendarFacilityId}
           setCalendarFacilityId={setCalendarFacilityId}
