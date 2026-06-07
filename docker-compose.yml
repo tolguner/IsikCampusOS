@@ -201,6 +201,8 @@ services:
     image: node:20-alpine
     container_name: campusos-frontend
     working_dir: /app
+    ports:
+      - "5173:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
