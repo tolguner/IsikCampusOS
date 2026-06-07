@@ -2,7 +2,10 @@ package com.isik.kampusos.bildirim.controller;
 
 import com.isik.kampusos.bildirim.dto.BildirimYaniti;
 import com.isik.kampusos.bildirim.dto.OgrenciDuyuruTalebi;
+import com.isik.kampusos.bildirim.model.Bildirim;
 import com.isik.kampusos.bildirim.service.BildirimServisi;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,11 +27,22 @@ public class BildirimDenetleyicisi {
     @PreAuthorize("hasAnyAuthority('ROLE_SKS_ADMIN','ROLE_ADMIN','ROLE_REGISTRAR','ROLE_FACILITY_ADMIN')")
     public ResponseEntity<Map<String, String>> topluDuyuruGonder(Authentication auth,
                                                                  @RequestBody OgrenciDuyuruTalebi talep) {
-        String gonderenAdi = kurumsalGonderenAdi(auth.getAuthorities().toString());
-        bildirimServisi.topluOgrenciDuyurusuOlustur(
+        String yetkiler = auth.getAuthorities().toString();
+        // "Tüm kullanıcılar" hedef kitlesi yalnızca sistem yöneticisine açıktır; diğerleri tüm öğrencilere gönderir.
+        Bildirim.HedefKitle kitle = Bildirim.HedefKitle.TUM_OGRENCILER;
+        if ("TUM_KULLANICILAR".equalsIgnoreCase(talep.getHedefKitle())) {
+            if (!yetkiler.contains("ROLE_ADMIN")) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Tüm kullanıcılara duyuru yalnızca sistem yöneticisi tarafından gönderilebilir.");
+            }
+            kitle = Bildirim.HedefKitle.TUM_KULLANICILAR;
+        }
+        String gonderenAdi = kurumsalGonderenAdi(yetkiler);
+        bildirimServisi.topluDuyuruOlustur(
                 talep.getBaslik(), talep.getMesaj(), talep.getBaglantiUrl(),
-                talep.getBaglantiEtiketi(), talep.getResimUrl(), auth.getName(), gonderenAdi);
-        return ResponseEntity.ok(Map.of("mesaj", "Duyuru tüm öğrencilere gönderildi.", "gonderen", gonderenAdi));
+                talep.getBaglantiEtiketi(), talep.getResimUrl(), kitle, auth.getName(), gonderenAdi);
+        String hedef = kitle == Bildirim.HedefKitle.TUM_KULLANICILAR ? "tüm kullanıcılara" : "tüm öğrencilere";
+        return ResponseEntity.ok(Map.of("mesaj", "Duyuru " + hedef + " gönderildi.", "gonderen", gonderenAdi));
     }
 
     /** Gönderenin kurumsal kimliğini JWT rolünden çözer (öğrenciye gösterilir). */

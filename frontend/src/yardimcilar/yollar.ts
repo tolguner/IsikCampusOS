@@ -15,4 +15,5 @@ export const YOLLAR = {
   tesisRezervasyon: '/tesis-rezervasyon',
   rezervasyonlarim: '/rezervasyonlarim',
   yonetim: '/yonetim',
+  duyuru: '/duyuru',
 } as const;

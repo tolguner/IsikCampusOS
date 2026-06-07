@@ -51,9 +51,10 @@ public class BildirimServisi {
      * İdari rollerin tüm öğrencilere gönderdiği toplu duyuruyu kalıcılaştırır.
      * Gönderenin kurumsal kimliği (olusturanAdi) öğrenciye gösterilir.
      */
-    public Bildirim topluOgrenciDuyurusuOlustur(String baslik, String mesaj, String baglantiUrl,
-                                                String baglantiEtiketi, String resimUrl,
-                                                String olusturanId, String olusturanAdi) {
+    public Bildirim topluDuyuruOlustur(String baslik, String mesaj, String baglantiUrl,
+                                       String baglantiEtiketi, String resimUrl,
+                                       Bildirim.HedefKitle hedefKitle,
+                                       String olusturanId, String olusturanAdi) {
         if (baslik == null || baslik.isBlank() || mesaj == null || mesaj.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Başlık ve mesaj zorunludur.");
         }
@@ -64,7 +65,7 @@ public class BildirimServisi {
                 .baglantiEtiketi(baglantiEtiketi)
                 .resimUrl(resimUrl)
                 .tur(Bildirim.BildirimTuru.DUYURU)
-                .hedefKitle(Bildirim.HedefKitle.TUM_OGRENCILER)
+                .hedefKitle(hedefKitle)
                 .olusturan(olusturanId)
                 .olusturanAdi(olusturanAdi)
                 .build();
@@ -100,6 +101,8 @@ public class BildirimServisi {
 
     private List<Bildirim.HedefKitle> gorunurKitleler(String yetkiler) {
         List<Bildirim.HedefKitle> kitleler = new ArrayList<>();
+        // Tüm kimliği doğrulanmış kullanıcılar "tüm kullanıcılar" duyurularını görür.
+        kitleler.add(Bildirim.HedefKitle.TUM_KULLANICILAR);
         if (yetkiler != null && yetkiler.contains("ROLE_STUDENT")) {
             kitleler.add(Bildirim.HedefKitle.TUM_OGRENCILER);
         }

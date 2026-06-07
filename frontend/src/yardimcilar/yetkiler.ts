@@ -12,6 +12,13 @@ export const YETKI_GRUPLARI = {
   sksYonetimi: [YETKILER.SKS_YONETICISI, YETKILER.SISTEM_YONETICISI],
   tesisYonetimi: [YETKILER.TESIS_YONETICISI, YETKILER.SISTEM_YONETICISI],
   sistemYonetimi: [YETKILER.SISTEM_YONETICISI],
+  // Öğrencilere/kullanıcılara toplu duyuru gönderebilen idari roller (öğrenci hariç).
+  duyuruYetkilileri: [
+    YETKILER.SISTEM_YONETICISI,
+    YETKILER.OGRENCI_ISLERI,
+    YETKILER.TESIS_YONETICISI,
+    YETKILER.SKS_YONETICISI,
+  ],
 } as const;
 
 export const rolleriAyir = (roller?: string | null) =>

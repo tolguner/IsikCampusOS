@@ -19,6 +19,7 @@ import { TesisYonetimPaneli } from './pages/TesisYonetimPaneli';
 import { TesisRezervasyonSayfasi } from './pages/TesisRezervasyonSayfasi';
 import { RezervasyonlarimSayfasi } from './pages/RezervasyonlarimSayfasi';
 import { YonetimPaneli } from './pages/YonetimPaneli';
+import { DuyuruSayfasi } from './pages/DuyuruSayfasi';
 import { useKimlikDeposu } from './depolar/kimlikDeposu';
 import { useKulupDeposu } from './depolar/kulupDeposu';
 import { OtomatikMesajTemizleyici } from './components/OtomatikMesajTemizleyici';
@@ -171,6 +172,14 @@ function App() {
           <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.sistemYonetimi}>
             <UygulamaDuzeni>
               <YonetimPaneli />
+            </UygulamaDuzeni>
+          </ProtectedRoute>
+        } />
+
+        <Route path={YOLLAR.duyuru} element={
+          <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.duyuruYetkilileri}>
+            <UygulamaDuzeni>
+              <DuyuruSayfasi />
             </UygulamaDuzeni>
           </ProtectedRoute>
         } />
