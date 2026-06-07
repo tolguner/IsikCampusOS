@@ -32,6 +32,24 @@ export const initialClubForm = {
   presidentId: '',
 };
 
+export interface KulupDuzenleFormu {
+  ad: string;
+  kisaAciklama: string;
+  vizyon: string;
+  aciklama: string;
+  logoUrl: string;
+  danismanAkademikKadroId: string;
+  danismanUnvani: string;
+  danismanAdSoyad: string;
+  danismanEposta: string;
+  danismanBolumu: string;
+  advisorSearch: string;
+  presidentSearch: string;
+  presidentId: string;
+  baskanAdSoyad: string;
+  baskanEposta: string;
+}
+
 export interface DuyuruFormu {
   title: string;
   message: string;
