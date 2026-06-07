@@ -16,10 +16,10 @@ IsikCampusOS, **mikroservis mimarisi** ile inşa edilmiştir. Her domain bağım
 | `api-gateway` | 8080 | Yönlendirme, CORS, merkezi JWT doğrulama | `com.isik.kampusos.gecit` |
 | `auth-service` | 8081 | Kimlik, JWT, e-posta doğrulama, öğrenci yönetimi, sertifika doğrulama | `com.isik.kampusos.kimlik` |
 | `profile-service` | 8082 | Profil kayıtları, profil değişiklik onayı | `com.isik.kampusos.profil` |
-| `event-service` | 8089 | Kulüp, etkinlik, RSVP, check-in, **bildirim**, akademik kadro, denetim günlüğü | `com.isik.kampusos.etkinlik` |
+| `club-service` | 8089 | Kulüp, etkinlik, RSVP, check-in, **bildirim**, akademik kadro, denetim günlüğü | `com.isik.kampusos.kulup` |
 | `facility-service` | 8086 | Tesis, kaynak, rezervasyon, uygunluk, check-in | `com.isik.kampusos.tesis` |
 
-**Not:** Bildirim (notification) işlevi ayrı bir servis değildir; `event-service` içinde gömülü olarak (in-app, `event_db`) çalışmaktadır. Bu, bilinçli bir mimari karardır: bildirimin bugün tek tüketicisi event-service olduğu için ayrı servise çıkarılmamış; ikinci bir modül bildirim üretmeye başladığında olay güdümlü bağımsız `notification-service` olarak ayrılması planlanmıştır (bkz. [08-yol-haritasi-ve-durum.md](08-yol-haritasi-ve-durum.md), ADR-001).
+**Not:** Bildirim (notification) işlevi ayrı bir servis değildir; `club-service` içinde gömülü olarak (in-app, `club_db`) çalışmaktadır. Bu, bilinçli bir mimari karardır: bildirimin bugün tek tüketicisi club-service olduğu için ayrı servise çıkarılmamış; ikinci bir modül bildirim üretmeye başladığında olay güdümlü bağımsız `notification-service` olarak ayrılması planlanmıştır (bkz. [08-yol-haritasi-ve-durum.md](08-yol-haritasi-ve-durum.md), ADR-001).
 
 ### 2.2. Planlanan Servisler (henüz kodlanmadı)
 
@@ -79,7 +79,7 @@ Servis keşfi **Eureka** ile yapılır; servisler birbirini IP yerine servis ad�
 Kritik domain olayları Kafka topic'lerine yayılır ve ilgili servisler tüketir. Kodda fiilen kullanılan başlıca akışlar:
 
 - `user.registered` → `auth-service` (üretir) → `profile-service` (tüketir, otomatik profil oluşturur)
-- Sertifika oluşturma olayı → `event-service` (üretir) → `auth-service` (tüketir, sertifika PDF/teslimat)
+- Sertifika oluşturma olayı → `club-service` (üretir) → `auth-service` (tüketir, sertifika PDF/teslimat)
 
 > Mimari dokümanlardaki diğer olay adları (`booking.created`, `order.placed`, `ride.match.created` vb.) **hedef tasarımdır**; ilgili modüller kodlandığında devreye girecektir.
 
@@ -94,11 +94,11 @@ Kritik domain olayları Kafka topic'lerine yayılır ve ilgili servisler tüketi
 | `/api/v1/kullanicilar/**` | auth-service | Evet |
 | `/api/v1/sertifikalar/**` | auth-service | Hayır (sertifika doğrulama public) |
 | `/api/v1/profiller/**` | profile-service | Evet |
-| `/api/v1/etkinlikler/**` | event-service | Evet |
-| `/api/v1/kulupler/**` | event-service | Evet |
-| `/api/v1/bildirimler/**` | event-service | Evet |
-| `/api/v1/yonetim/**` | event-service | Evet |
-| `/api/v1/akademik-kadro/**` | event-service | Evet |
+| `/api/v1/etkinlikler/**` | club-service | Evet |
+| `/api/v1/kulupler/**` | club-service | Evet |
+| `/api/v1/bildirimler/**` | club-service | Evet |
+| `/api/v1/yonetim/**` | club-service | Evet |
+| `/api/v1/akademik-kadro/**` | club-service | Evet |
 | `/api/v1/tesisler/**` | facility-service | Evet |
 | `/api/v1/tesis-kaynaklari/**` | facility-service | Evet |
 | `/api/v1/tesis-yonetim/**` | facility-service | Evet |
@@ -112,7 +112,7 @@ flowchart TD
     Gateway -->|Servis Keşfi| Eureka[Eureka :8761]
     Gateway -->|X-User-Id / X-User-Roles| Auth[auth-service :8081]
     Gateway --> Profile[profile-service :8082]
-    Gateway --> Event[event-service :8089]
+    Gateway --> Event[club-service :8089]
     Gateway --> Facility[facility-service :8086]
 
     Auth -->|user.registered| Kafka[(Apache Kafka)]
@@ -122,7 +122,7 @@ flowchart TD
 
     Auth --> AuthDB[(auth_db)]
     Profile --> ProfDB[(profile_db)]
-    Event --> EventDB[(event_db)]
+    Event --> EventDB[(club_db)]
     Facility --> FacDB[(facility_db)]
 
     subgraph "Planlanan (henüz yok)"

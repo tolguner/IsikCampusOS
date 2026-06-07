@@ -476,7 +476,7 @@
     ],
     [
      "Domain",
-     "event-service",
+     "club-service",
      "8089",
      "Kulüp, etkinlik, RSVP, bildirim"
     ],
@@ -528,7 +528,7 @@
   },
   {
    "k": "li",
-   "t": "API Gateway (Spring Cloud Gateway): İstemci hiçbir domain servisine doğrudan erişemez. Tüm istekler /api/v1/... temel yolu üzerinden Gateway tarafından karşılanır. Gateway; rota eşleme, CORS politikaları, kimlik doğrulama filtresi ve hız sınırlama (rate limiting) sorumluluklarını üstlenir. Gateway'in yönlendirme yapısı Türkçe yol adları üzerine kuruludur (örneğin /api/v1/kimlik/ → auth-service, /api/v1/kulupler/ → event-service, /api/v1/tesisler/** → facility-service)."
+   "t": "API Gateway (Spring Cloud Gateway): İstemci hiçbir domain servisine doğrudan erişemez. Tüm istekler /api/v1/... temel yolu üzerinden Gateway tarafından karşılanır. Gateway; rota eşleme, CORS politikaları, kimlik doğrulama filtresi ve hız sınırlama (rate limiting) sorumluluklarını üstlenir. Gateway'in yönlendirme yapısı Türkçe yol adları üzerine kuruludur (örneğin /api/v1/kimlik/ → auth-service, /api/v1/kulupler/ → club-service, /api/v1/tesisler/** → facility-service)."
   },
   {
    "k": "li",
@@ -541,7 +541,7 @@
   },
   {
    "k": "p",
-   "t": "Mikroservis mimarisinde \"her işlev için ayrı servis\" yaklaşımı her zaman doğru değildir; gereksiz servis ayrımı operasyonel karmaşıklığı artırır (Taibi vd., 2017). Bu farkındalıkla, bildirim (in-app notification) işlevi ayrı bir servise çıkarılmak yerine, mevcut sürümde bildirimin yegâne tüketicisi olan event-service içinde konumlandırılmıştır. Bu, kanıta dayalı bilinçli bir tasarım kararıdır: bildirim üreten ikinci bir modül devreye girdiğinde, bildirim olay güdümlü bağımsız bir servise ayrılacak biçimde tasarlanmıştır. Bu yaklaşım, mimari kararların gereksinimlerle birlikte evrildiği artımlı geliştirme felsefesiyle tutarlıdır."
+   "t": "Mikroservis mimarisinde \"her işlev için ayrı servis\" yaklaşımı her zaman doğru değildir; gereksiz servis ayrımı operasyonel karmaşıklığı artırır (Taibi vd., 2017). Bu farkındalıkla, bildirim (in-app notification) işlevi ayrı bir servise çıkarılmak yerine, mevcut sürümde bildirimin yegâne tüketicisi olan club-service içinde konumlandırılmıştır. Bu, kanıta dayalı bilinçli bir tasarım kararıdır: bildirim üreten ikinci bir modül devreye girdiğinde, bildirim olay güdümlü bağımsız bir servise ayrılacak biçimde tasarlanmıştır. Bu yaklaşım, mimari kararların gereksinimlerle birlikte evrildiği artımlı geliştirme felsefesiyle tutarlıdır."
   },
   {
    "k": "h",
@@ -683,19 +683,19 @@
     ],
     [
      "etkinlik.yayinlandi",
-     "event-service",
+     "club-service",
      "(ilgili tüketiciler)",
      "Etkinlik yayını bildirimi"
     ],
     [
      "etkinlik.iptal-edildi",
-     "event-service",
+     "club-service",
      "(ilgili tüketiciler)",
      "Etkinlik iptali bildirimi"
     ],
     [
      "etkinlik.sertifika.olusturma-talep-edildi",
-     "event-service",
+     "club-service",
      "auth-service",
      "Sertifika üretim ve teslimat süreci"
     ]
@@ -763,7 +763,7 @@
      "profiledb"
     ],
     [
-     "event-service",
+     "club-service",
      "eventdb"
     ],
     [

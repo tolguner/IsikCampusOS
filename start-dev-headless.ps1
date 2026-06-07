@@ -14,7 +14,7 @@ Write-Host "2. Starting Backend Services..." -ForegroundColor Cyan
 Start-Process -NoNewWindow -FilePath "powershell" -ArgumentList "-Command", ".\mvnw.cmd spring-boot:run -pl services/api-gateway > logs/api-gateway.live.log 2> logs/api-gateway.live.err.log"
 Start-Process -NoNewWindow -FilePath "powershell" -ArgumentList "-Command", ".\mvnw.cmd spring-boot:run -pl services/auth-service > logs/auth-service.live.log 2> logs/auth-service.live.err.log"
 Start-Process -NoNewWindow -FilePath "powershell" -ArgumentList "-Command", ".\mvnw.cmd spring-boot:run -pl services/profile-service > logs/profile-service.live.log 2> logs/profile-service.live.err.log"
-Start-Process -NoNewWindow -FilePath "powershell" -ArgumentList "-Command", ".\mvnw.cmd spring-boot:run -pl services/event-service > logs/event-service.live.log 2> logs/event-service.live.err.log"
+Start-Process -NoNewWindow -FilePath "powershell" -ArgumentList "-Command", ".\mvnw.cmd spring-boot:run -pl services/club-service > logs/club-service.live.log 2> logs/club-service.live.err.log"
 Start-Process -NoNewWindow -FilePath "powershell" -ArgumentList "-Command", ".\mvnw.cmd spring-boot:run -pl services/facility-service > logs/facility-service.live.log 2> logs/facility-service.live.err.log"
 
 Write-Host "Waiting 15 seconds for Backend Services to compile and start..."

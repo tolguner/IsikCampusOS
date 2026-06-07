@@ -68,23 +68,23 @@ spring:
           filters:
             - KimlikDogrulama
 
-        - id: event-service
-          uri: lb://EVENT-SERVICE
+        - id: etkinlik-service
+          uri: lb://CLUB-SERVICE
           predicates:
             - Path=/api/v1/etkinlikler/**
           filters:
             - KimlikDogrulama
 
         - id: club-service
-          uri: lb://EVENT-SERVICE
+          uri: lb://CLUB-SERVICE
           predicates:
             - Path=/api/v1/kulupler/**
           filters:
             - KimlikDogrulama
 
-        # SKS toplu duyuru ucu event-service'te kalır (kulüp başkanı verisi orada — fan-out)
+        # SKS toplu duyuru ucu club-service'te kalır (kulüp başkanı verisi orada — fan-out)
         - id: notification-announcement-service
-          uri: lb://EVENT-SERVICE
+          uri: lb://CLUB-SERVICE
           predicates:
             - Path=/api/v1/bildirimler/duyurular
             - Method=POST
@@ -99,15 +99,15 @@ spring:
           filters:
             - KimlikDogrulama
 
-        - id: event-admin-service
-          uri: lb://EVENT-SERVICE
+        - id: yonetim-service
+          uri: lb://CLUB-SERVICE
           predicates:
             - Path=/api/v1/yonetim/**
           filters:
             - KimlikDogrulama
 
         - id: academic-staff-service
-          uri: lb://EVENT-SERVICE
+          uri: lb://CLUB-SERVICE
           predicates:
             - Path=/api/v1/akademik-kadro/**
           filters:

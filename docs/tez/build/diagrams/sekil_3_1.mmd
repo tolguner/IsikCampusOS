@@ -12,7 +12,7 @@ flowchart TD
     end
 
     subgraph Domain["Fonksiyonel Modüller"]
-        Gateway --> Event["event-service :8089"]
+        Gateway --> Event["club-service :8089"]
         Gateway --> Facility["facility-service :8086"]
         Gateway --> Food["food-service :8087"]
         Gateway --> Ride["ride-service :8088"]
@@ -27,7 +27,7 @@ flowchart TD
 
     Auth --> AuthDB[("auth_db")]
     Profile --> ProfDB[("profile_db")]
-    Event --> EventDB[("event_db")]
+    Event --> EventDB[("club_db")]
     Facility --> FacDB[("facility_db")]
     Food --> FoodDB[("food_db")]
     Ride --> RideDB[("ride_db")]

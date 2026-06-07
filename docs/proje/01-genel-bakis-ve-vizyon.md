@@ -16,7 +16,7 @@ IsikCampusOS, Işık Üniversitesi öğrencileri ve personeli için tasarlanmı�
 |-------|--------|-------|
 | **Kimlik ve Yetkilendirme** | Üniversite e-postası ile giriş, JWT, e-posta doğrulama, öğrenci yönetimi | ✅ **Kodlandı** (`auth-service`) |
 | **Profil Yönetimi** | Otomatik profil oluşturma, profil görüntüleme/güncelleme, onay akışı | ✅ **Kodlandı** (`profile-service`) |
-| **Kulüp ve Etkinlik Yönetimi** | Kulüp kuruluşu, üyelik, etkinlik, RSVP, QR check-in, sertifika, bildirim | ✅ **Kodlandı** (`event-service`) |
+| **Kulüp ve Etkinlik Yönetimi** | Kulüp kuruluşu, üyelik, etkinlik, RSVP, QR check-in, sertifika, bildirim | ✅ **Kodlandı** (`club-service`) |
 | **Spor Tesisleri Rezervasyon** | Tesis/kaynak, uygunluk, çakışmasız rezervasyon, check-in | ✅ **Kodlandı** (`facility-service`) |
 | **Kampüs Yemek Sipariş ve Yönetim** | Satıcı, menü, sipariş, asenkron durum takibi | 🔵 **Planlandı** (henüz kodlanmadı) |
 | **Paylaşımlı Yolculuk (CampusRide)** | Sürücü/yolcu ilanı, rota ve uygunluk temelli eşleştirme | 🔵 **Planlandı** (henüz kodlanmadı) |

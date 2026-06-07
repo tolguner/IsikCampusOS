@@ -53,7 +53,7 @@ Platform, altyapı servisleri ve domain servisleri olmak üzere iki katmandan ol
 | Domain | `facility-service` | 8086 | Tesis ve kaynak rezervasyonu, çakışma kontrolü |
 | Domain | `food-service` | 8087 | Satıcı, menü ve sipariş yönetimi |
 | Domain | `ride-service` | 8088 | Paylaşımlı yolculuk ilanı ve eşleştirme |
-| Domain | `event-service` | 8089 | Kulüp, etkinlik, RSVP, bildirim |
+| Domain | `club-service` | 8089 | Kulüp, etkinlik, RSVP, bildirim |
 | Domain | `projectmatch-service` | 8090 | Beceri tabanlı proje ekip eşleştirme |
 | Domain | `microjob-service` | 8091 | Kampüs içi mikro iş ilanı ve teklif |
 
@@ -80,7 +80,7 @@ flowchart TD
     end
 
     subgraph Domain["Fonksiyonel Modüller"]
-        Gateway --> Event["event-service :8089"]
+        Gateway --> Event["club-service :8089"]
         Gateway --> Facility["facility-service :8086"]
         Gateway --> Food["food-service :8087"]
         Gateway --> Ride["ride-service :8088"]
@@ -95,7 +95,7 @@ flowchart TD
 
     Auth --> AuthDB[("auth_db")]
     Profile --> ProfDB[("profile_db")]
-    Event --> EventDB[("event_db")]
+    Event --> EventDB[("club_db")]
     Facility --> FacDB[("facility_db")]
     Food --> FoodDB[("food_db")]
     Ride --> RideDB[("ride_db")]
@@ -107,12 +107,12 @@ flowchart TD
 
 Servisler arası ağ trafiği ve dış dünyadan gelen istekler, Spring Cloud bileşenleriyle yönetilmiştir:
 
-- **API Gateway (Spring Cloud Gateway):** İstemci hiçbir domain servisine doğrudan erişemez. Tüm istekler `/api/v1/...` temel yolu üzerinden Gateway tarafından karşılanır. Gateway; rota eşleme, CORS politikaları, kimlik doğrulama filtresi ve hız sınırlama (rate limiting) sorumluluklarını üstlenir. Gateway'in yönlendirme yapısı Türkçe yol adları üzerine kuruludur (örneğin `/api/v1/kimlik/**` → auth-service, `/api/v1/kulupler/**` → event-service, `/api/v1/tesisler/**` → facility-service).
+- **API Gateway (Spring Cloud Gateway):** İstemci hiçbir domain servisine doğrudan erişemez. Tüm istekler `/api/v1/...` temel yolu üzerinden Gateway tarafından karşılanır. Gateway; rota eşleme, CORS politikaları, kimlik doğrulama filtresi ve hız sınırlama (rate limiting) sorumluluklarını üstlenir. Gateway'in yönlendirme yapısı Türkçe yol adları üzerine kuruludur (örneğin `/api/v1/kimlik/**` → auth-service, `/api/v1/kulupler/**` → club-service, `/api/v1/tesisler/**` → facility-service).
 - **Eureka (Service Registry & Discovery):** Tüm servisler başlangıçta Eureka'ya kendi adları ve ağ konumlarıyla kaydolur. Servisler birbirini sabit IP adresi yerine servis adıyla bulur; bu, dinamik ölçeklenmeyi kolaylaştırır.
 
 ### 3.2.5. Mimari Karar: Bildirim Sorumluluğunun Konumu
 
-Mikroservis mimarisinde "her işlev için ayrı servis" yaklaşımı her zaman doğru değildir; gereksiz servis ayrımı operasyonel karmaşıklığı artırır (Taibi vd., 2017). Bu farkındalıkla, bildirim (in-app notification) işlevi ayrı bir servise çıkarılmak yerine, mevcut sürümde bildirimin yegâne tüketicisi olan event-service içinde konumlandırılmıştır. Bu, kanıta dayalı bilinçli bir tasarım kararıdır: bildirim üreten ikinci bir modül devreye girdiğinde, bildirim olay güdümlü bağımsız bir servise ayrılacak biçimde tasarlanmıştır. Bu yaklaşım, mimari kararların gereksinimlerle birlikte evrildiği artımlı geliştirme felsefesiyle tutarlıdır.
+Mikroservis mimarisinde "her işlev için ayrı servis" yaklaşımı her zaman doğru değildir; gereksiz servis ayrımı operasyonel karmaşıklığı artırır (Taibi vd., 2017). Bu farkındalıkla, bildirim (in-app notification) işlevi ayrı bir servise çıkarılmak yerine, mevcut sürümde bildirimin yegâne tüketicisi olan club-service içinde konumlandırılmıştır. Bu, kanıta dayalı bilinçli bir tasarım kararıdır: bildirim üreten ikinci bir modül devreye girdiğinde, bildirim olay güdümlü bağımsız bir servise ayrılacak biçimde tasarlanmıştır. Bu yaklaşım, mimari kararların gereksinimlerle birlikte evrildiği artımlı geliştirme felsefesiyle tutarlıdır.
 
 ---
 
@@ -192,9 +192,9 @@ Servisler, ürettikleri durum değişikliklerini Kafka topic'lerine birer **doma
 |--------------|--------|---------|------|
 | `kullanici.kaydedildi` | auth-service | profile-service | Yeni kullanıcı için otomatik profil oluşturma |
 | `kullanici.silindi` | auth-service | profile-service | Profil kaydının senkron tutulması |
-| `etkinlik.yayinlandi` | event-service | (ilgili tüketiciler) | Etkinlik yayını bildirimi |
-| `etkinlik.iptal-edildi` | event-service | (ilgili tüketiciler) | Etkinlik iptali bildirimi |
-| `etkinlik.sertifika.olusturma-talep-edildi` | event-service | auth-service | Sertifika üretim ve teslimat süreci |
+| `etkinlik.yayinlandi` | club-service | (ilgili tüketiciler) | Etkinlik yayını bildirimi |
+| `etkinlik.iptal-edildi` | club-service | (ilgili tüketiciler) | Etkinlik iptali bildirimi |
+| `etkinlik.sertifika.olusturma-talep-edildi` | club-service | auth-service | Sertifika üretim ve teslimat süreci |
 
 > **Not (yazım rehberi):** Yukarıdaki topic adları projedeki gerçek adlandırma kuralını (Türkçe, `nesne.aksiyon` biçimi) yansıtır. Yeni modüller devreye alındığında (örneğin `siparis.olusturuldu`, `yolculuk.eslesti`, `is.tamamlandi`) aynı kurala uygun olarak bu tabloya eklenir.
 
@@ -246,7 +246,7 @@ Veri tabanı dağılımı Tablo 3.3'te sunulmuştur.
 |--------|-------------|
 | auth-service | `auth_db` |
 | profile-service | `profile_db` |
-| event-service | `event_db` |
+| club-service | `club_db` |
 | facility-service | `facility_db` |
 | food-service | `food_db` |
 | ride-service | `ride_db` |

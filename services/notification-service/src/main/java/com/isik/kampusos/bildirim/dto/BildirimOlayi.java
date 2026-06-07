@@ -5,7 +5,7 @@ import lombok.Data;
 
 /**
  * {@code bildirim.olustur} Kafka olayının payload modeli.
- * Üretici (event-service) bildirimin tüm içeriğini hazırlar; bu servis yalnızca persist eder.
+ * Üretici (club-service) bildirimin tüm içeriğini hazırlar; bu servis yalnızca persist eder.
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)

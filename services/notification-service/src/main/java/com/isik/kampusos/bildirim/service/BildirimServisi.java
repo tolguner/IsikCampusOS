@@ -18,7 +18,7 @@ import java.util.List;
  * Bildirim persistance ve okuma servisi.
  *
  * <p>Bildirimler artık yalnızca {@code bildirim.olustur} Kafka olayı üzerinden oluşturulur
- * (üretici: event-service). Görünürlük, isteği yapan kullanıcının JWT rollerinden çözülür;
+ * (üretici: club-service). Görünürlük, isteği yapan kullanıcının JWT rollerinden çözülür;
  * bu servisin başka servislerin (örn. kulüp) veritabanına erişimi yoktur — kulüp başkanına
  * özel duyurular üretici tarafında tek tek alıcıya (KULLANICI) fan-out edilir.
  */
