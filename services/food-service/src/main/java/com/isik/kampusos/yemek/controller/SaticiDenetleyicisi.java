@@ -36,8 +36,17 @@ public class SaticiDenetleyicisi {
     // --- Herkese açık (giriş yapmış her kullanıcı) ---
 
     @GetMapping("/api/v1/saticilar")
-    public ResponseEntity<List<SaticiYaniti>> aktifSaticilar() {
-        return ResponseEntity.ok(saticiServisi.aktifSaticilar());
+    public ResponseEntity<List<SaticiYaniti>> aktifSaticilar(
+            @RequestParam(required = false) String ara,
+            @RequestParam(required = false) String mutfak,
+            @RequestParam(required = false) String sirala) {
+        return ResponseEntity.ok(saticiServisi.aktifSaticilar(ara, mutfak, sirala));
+    }
+
+    /** Filtrelerde kullanılacak mevcut mutfak türleri (boş olmayan, benzersiz). */
+    @GetMapping("/api/v1/saticilar/mutfak-turleri")
+    public ResponseEntity<List<String>> mutfakTurleri() {
+        return ResponseEntity.ok(saticiServisi.mevcutMutfakTurleri());
     }
 
     @GetMapping("/api/v1/saticilar/{saticiId}")

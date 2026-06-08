@@ -37,8 +37,47 @@ public class SaticiServisi {
     // --- Öğrenci / herkese görünür ---
 
     public List<SaticiYaniti> aktifSaticilar() {
-        return saticiDeposu.findByDurumOrderByAdAsc(Satici.SaticiDurumu.AKTIF)
-                .stream().map(this::yanitYap).toList();
+        return aktifSaticilar(null, null, null);
+    }
+
+    /**
+     * Arama/filtre/sıralama ile aktif satıcılar.
+     * @param ara    ad/açıklama içinde geçen metin (büyük/küçük harf duyarsız)
+     * @param mutfak mutfak türü filtresi (tam eşleşme)
+     * @param sirala "isim" | "sure" | (varsayılan: açık olanlar önce, sonra isim)
+     */
+    public List<SaticiYaniti> aktifSaticilar(String ara, String mutfak, String sirala) {
+        String q = ara == null ? "" : ara.trim().toLowerCase();
+        List<SaticiYaniti> liste = new java.util.ArrayList<>(
+                saticiDeposu.findByDurumOrderByAdAsc(Satici.SaticiDurumu.AKTIF).stream()
+                        .filter(s -> mutfak == null || mutfak.isBlank() || mutfak.equalsIgnoreCase(s.getMutfakTuru()))
+                        .filter(s -> q.isEmpty()
+                                || (s.getAd() != null && s.getAd().toLowerCase().contains(q))
+                                || (s.getAciklama() != null && s.getAciklama().toLowerCase().contains(q))
+                                || (s.getMutfakTuru() != null && s.getMutfakTuru().toLowerCase().contains(q)))
+                        .map(this::yanitYap).toList());
+
+        java.util.Comparator<SaticiYaniti> kar;
+        if ("isim".equalsIgnoreCase(sirala)) {
+            kar = java.util.Comparator.comparing(y -> y.getAd() == null ? "" : y.getAd().toLowerCase());
+        } else if ("sure".equalsIgnoreCase(sirala)) {
+            kar = java.util.Comparator.comparing((SaticiYaniti y) ->
+                    y.getTahminiTeslimatDakika() == null ? Integer.MAX_VALUE : y.getTahminiTeslimatDakika());
+        } else {
+            // Varsayılan: açık olanlar önce, sonra isim
+            kar = java.util.Comparator.comparing((SaticiYaniti y) -> y.isSuAnAcik() ? 0 : 1)
+                    .thenComparing(y -> y.getAd() == null ? "" : y.getAd().toLowerCase());
+        }
+        liste.sort(kar);
+        return liste;
+    }
+
+    /** Aktif satıcılarda kullanılan benzersiz mutfak türleri (filtre çipleri için). */
+    public List<String> mevcutMutfakTurleri() {
+        return saticiDeposu.findByDurumOrderByAdAsc(Satici.SaticiDurumu.AKTIF).stream()
+                .map(Satici::getMutfakTuru)
+                .filter(m -> m != null && !m.isBlank())
+                .distinct().sorted().toList();
     }
 
     public SaticiYaniti saticiDetay(String saticiId) {
