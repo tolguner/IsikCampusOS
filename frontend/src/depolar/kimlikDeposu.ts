@@ -139,6 +139,18 @@ export const useKimlikDeposu = create<AuthState>((set, get) => ({
       set({ isLoading: false, successMessage: 'Şifre sıfırlama kodu e-posta adresinize gönderildi.' });
       return true;
     } catch (err: any) {
+      // Kayıtlı olmayan kullanıcı: domaine göre yönlendirme (öğrenci → Öğrenci İşleri, personel → admin).
+      if (err?.response?.status === 404) {
+        const e = email.trim().toLowerCase();
+        let mesaj = 'Bu e-posta adresiyle kayıtlı bir kullanıcı bulunamadı.';
+        if (e.endsWith('@isikun.edu.tr')) {
+          mesaj += ' Personel hesapları sistem yöneticisi tarafından oluşturulur; lütfen sistem yöneticisi (admin) ile iletişime geçin.';
+        } else if (e.endsWith('@isik.edu.tr')) {
+          mesaj += ' Öğrenci hesapları Öğrenci İşleri tarafından oluşturulur; lütfen Öğrenci İşleri ile iletişime geçin.';
+        }
+        set({ error: mesaj, isLoading: false });
+        return false;
+      }
       set({ error: getErrorMessage(err, 'İşlem başarısız.'), isLoading: false });
       return false;
     }

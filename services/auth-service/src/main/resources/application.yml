@@ -32,6 +32,11 @@ spring:
       mail:
         smtp:
           auth: ${MAIL_SMTP_AUTH:false}
+          # Bağlantı/okuma/yazma zaman aşımları (ms) — yavaş ya da askıda kalan
+          # SMTP bağlantısında uzun bekleme yerine temiz/hızlı hata verir.
+          connectiontimeout: ${MAIL_SMTP_CONNECTION_TIMEOUT:5000}
+          timeout: ${MAIL_SMTP_TIMEOUT:5000}
+          writetimeout: ${MAIL_SMTP_WRITE_TIMEOUT:5000}
           starttls:
             enable: ${MAIL_SMTP_STARTTLS:false}
             required: ${MAIL_SMTP_STARTTLS_REQUIRED:false}
