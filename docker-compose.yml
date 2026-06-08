@@ -217,13 +217,14 @@ services:
     networks:
       - campusos-net
 
-  # FRONTEND
+  # FRONTEND — host'a port AÇMAZ; tek giriş noktası API Gateway (8080).
+  # Gateway, "/**" isteklerini bu container'a (frontend:5173) proxy'ler.
   frontend:
     image: node:20-alpine
     container_name: campusos-frontend
     working_dir: /app
-    ports:
-      - "5173:5173"
+    expose:
+      - "5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules

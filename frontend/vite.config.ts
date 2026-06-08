@@ -6,7 +6,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
-    allowedHosts: ['frontend'],
+    // Uygulama tek giriş noktası olan API Gateway (8080) üzerinden sunulur.
+    // Gateway, isteği frontend:5173'e proxy'ler; bu yüzden tüm host başlıklarına izin verilir.
+    allowedHosts: true,
+    // HMR websocket'i de gateway (8080) üzerinden bağlanır.
+    hmr: {
+      clientPort: 8080,
+    },
     watch: {
       usePolling: true,
     },
