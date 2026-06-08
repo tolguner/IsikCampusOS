@@ -118,9 +118,12 @@ const SiparisKarti = ({ siparis, onIptal, iptalEdiliyor }: { siparis: Siparis; o
       {/* Kalemler */}
       <div className="mt-4 space-y-1.5 border-t border-white/8 pt-3">
         {siparis.kalemler.map(k => (
-          <div key={k.id} className="flex items-center justify-between text-sm">
-            <span className="text-white/70"><span className="font-bold text-white/90">{k.adet}×</span> {k.urunAdi}</span>
-            <span className="text-white/50">{paraBicimle(k.araToplam)}</span>
+          <div key={k.id} className="flex items-start justify-between text-sm gap-3">
+            <span className="text-white/70">
+              <span className="font-bold text-white/90">{k.adet}×</span> {k.urunAdi}
+              {k.secimlerOzeti && <span className="block text-[11px] text-white/40">{k.secimlerOzeti}</span>}
+            </span>
+            <span className="text-white/50 shrink-0">{paraBicimle(k.araToplam)}</span>
           </div>
         ))}
       </div>

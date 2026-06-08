@@ -10,6 +10,19 @@ export interface KampanyaFormu {
   aktif?: boolean;
 }
 
+export interface SecenekFormu {
+  ad: string;
+  ekFiyat: number;
+  siralama?: number;
+}
+export interface SecenekGrubuFormu {
+  ad: string;
+  tur: 'TEK_SECIM' | 'COKLU_SECIM';
+  zorunlu: boolean;
+  siralama?: number;
+  secenekler: SecenekFormu[];
+}
+
 export interface MenuOgesiFormu {
   ad: string;
   aciklama?: string;
@@ -17,6 +30,8 @@ export interface MenuOgesiFormu {
   fiyat: number;
   gorselUrl?: string;
   mevcut?: boolean;
+  oneCikan?: boolean;
+  secenekGruplari?: SecenekGrubuFormu[];
 }
 
 export interface SaticiAyarFormu {

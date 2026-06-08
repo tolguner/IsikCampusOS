@@ -9,6 +9,8 @@ import com.isik.kampusos.yemek.dto.SaticiYaniti;
 import com.isik.kampusos.yemek.model.CalismaSaati;
 import com.isik.kampusos.yemek.model.Kampanya;
 import com.isik.kampusos.yemek.model.MenuOgesi;
+import com.isik.kampusos.yemek.model.MenuSecenekGrubu;
+import com.isik.kampusos.yemek.model.MenuSecenegi;
 import com.isik.kampusos.yemek.model.Satici;
 import com.isik.kampusos.yemek.repository.CalismaSaatiDeposu;
 import com.isik.kampusos.yemek.repository.KampanyaDeposu;
@@ -266,7 +268,9 @@ public class SaticiServisi {
                 .fiyat(talep.getFiyat())
                 .gorselUrl(talep.getGorselUrl())
                 .mevcut(talep.getMevcut() == null || talep.getMevcut())
+                .oneCikan(talep.getOneCikan() != null && talep.getOneCikan())
                 .durum(MenuOgesi.MenuDurumu.AKTIF)
+                .secenekGruplari(secenekGruplariKur(talep.getSecenekGruplari()))
                 .build();
         return menuOgesiDeposu.save(oge);
     }
@@ -284,7 +288,46 @@ public class SaticiServisi {
         }
         if (talep.getGorselUrl() != null) oge.setGorselUrl(talep.getGorselUrl());
         if (talep.getMevcut() != null) oge.setMevcut(talep.getMevcut());
+        if (talep.getOneCikan() != null) oge.setOneCikan(talep.getOneCikan());
+        if (talep.getSecenekGruplari() != null) {
+            // Seçenek gruplarını topluca değiştir (orphanRemoval eskileri siler).
+            oge.getSecenekGruplari().clear();
+            oge.getSecenekGruplari().addAll(secenekGruplariKur(talep.getSecenekGruplari()));
+        }
         return menuOgesiDeposu.save(oge);
+    }
+
+    private java.util.List<MenuSecenekGrubu> secenekGruplariKur(java.util.List<MenuOgesiTalebi.SecenekGrubu> talepler) {
+        java.util.List<MenuSecenekGrubu> gruplar = new java.util.ArrayList<>();
+        if (talepler == null) return gruplar;
+        for (MenuOgesiTalebi.SecenekGrubu gt : talepler) {
+            if (gt.getAd() == null || gt.getAd().isBlank()) continue;
+            MenuSecenekGrubu.SecenekTuru tur;
+            try {
+                tur = MenuSecenekGrubu.SecenekTuru.valueOf(gt.getTur() == null ? "TEK_SECIM" : gt.getTur().trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz seçenek türü: " + gt.getTur());
+            }
+            java.util.List<MenuSecenegi> secenekler = new java.util.ArrayList<>();
+            if (gt.getSecenekler() != null) {
+                for (MenuOgesiTalebi.Secenek st : gt.getSecenekler()) {
+                    if (st.getAd() == null || st.getAd().isBlank()) continue;
+                    secenekler.add(MenuSecenegi.builder()
+                            .ad(st.getAd().trim())
+                            .ekFiyat(st.getEkFiyat() != null ? st.getEkFiyat() : java.math.BigDecimal.ZERO)
+                            .siralama(st.getSiralama())
+                            .build());
+                }
+            }
+            gruplar.add(MenuSecenekGrubu.builder()
+                    .ad(gt.getAd().trim())
+                    .tur(tur)
+                    .zorunlu(gt.isZorunlu())
+                    .siralama(gt.getSiralama())
+                    .secenekler(secenekler)
+                    .build());
+        }
+        return gruplar;
     }
 
     @Transactional

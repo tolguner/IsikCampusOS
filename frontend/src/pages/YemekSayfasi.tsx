@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   UtensilsCrossed, MapPin, ShoppingBag, Plus, Minus, Trash2,
-  ArrowLeft, Store, ClipboardList, X, Wallet, CreditCard, Clock, Truck, Timer, Search,
+  ArrowLeft, Store, ClipboardList, X, Wallet, CreditCard, Clock, Truck, Timer, Search, Star,
 } from 'lucide-react';
 import { useYemekDeposu, type MenuOgesi, type OdemeYontemi, type Satici } from '../depolar/yemekDeposu';
 import { YOLLAR } from '../yardimcilar/yollar';
@@ -46,9 +46,16 @@ export const YemekSayfasi = () => {
   } = useYemekDeposu();
 
   const [odemeAcik, setOdemeAcik] = useState(false);
+  const [secenekModaliOge, setSecenekModaliOge] = useState<MenuOgesi | null>(null);
   const [ara, setAra] = useState('');
   const [mutfak, setMutfak] = useState('');
   const [sirala, setSirala] = useState('');
+
+  // Seçenekli ürün → modal aç; seçeneksiz → doğrudan sepete ekle
+  const urunEkle = (oge: MenuOgesi) => {
+    if (oge.secenekGruplari && oge.secenekGruplari.length > 0) setSecenekModaliOge(oge);
+    else if (seciliSatici) sepeteEkle(seciliSatici, oge);
+  };
 
   useEffect(() => { mutfakTurleriGetir(); }, [mutfakTurleriGetir]);
   useEffect(() => () => { clearMessages(); }, [clearMessages]);
@@ -218,12 +225,15 @@ export const YemekSayfasi = () => {
                         <img src={oge.gorselUrl} alt={oge.ad} className="w-16 h-16 shrink-0 rounded-lg object-cover border border-white/10" />
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-white">{oge.ad}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-bold text-white">{oge.ad}</p>
+                          {oge.oneCikan && <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-200 bg-amber-500/15 border border-amber-400/20 px-1.5 py-0.5 rounded"><Star className="w-2.5 h-2.5 fill-amber-300 text-amber-300" /> Öne çıkan</span>}
+                        </div>
                         {oge.aciklama && <p className="text-xs text-white/40 mt-0.5 line-clamp-2">{oge.aciklama}</p>}
-                        <p className="text-sm font-extrabold text-orange-200 mt-1">{paraBicimle(oge.fiyat)}</p>
+                        <p className="text-sm font-extrabold text-orange-200 mt-1">{paraBicimle(oge.fiyat)}{oge.secenekGruplari && oge.secenekGruplari.length > 0 && <span className="text-[11px] text-white/35 font-normal"> + seçenekler</span>}</p>
                       </div>
                       <button
-                        onClick={() => sepeteEkle(seciliSatici, oge)}
+                        onClick={() => urunEkle(oge)}
                         className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold text-white gradient-btn shadow-lg shadow-orange-500/10"
                       >
                         <Plus className="w-4 h-4" /> Ekle
@@ -255,20 +265,21 @@ export const YemekSayfasi = () => {
                   )}
                   <div className="space-y-2 mb-4">
                     {sepet.map(k => (
-                      <div key={k.menuOgesiId} className="flex items-center gap-2">
+                      <div key={k.sepetId} className="flex items-center gap-2">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold text-white truncate">{k.ad}</p>
+                          {k.secimlerOzeti && <p className="text-[11px] text-white/45 truncate">{k.secimlerOzeti}</p>}
                           <p className="text-[11px] text-white/40">{paraBicimle(k.birimFiyat)}</p>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <button onClick={() => adetDegistir(k.menuOgesiId, k.adet - 1)} className="w-6 h-6 rounded-lg bg-white/8 hover:bg-white/15 flex items-center justify-center text-white/70">
+                          <button onClick={() => adetDegistir(k.sepetId, k.adet - 1)} className="w-6 h-6 rounded-lg bg-white/8 hover:bg-white/15 flex items-center justify-center text-white/70">
                             <Minus className="w-3 h-3" />
                           </button>
                           <span className="w-5 text-center text-sm font-bold text-white">{k.adet}</span>
-                          <button onClick={() => adetDegistir(k.menuOgesiId, k.adet + 1)} className="w-6 h-6 rounded-lg bg-white/8 hover:bg-white/15 flex items-center justify-center text-white/70">
+                          <button onClick={() => adetDegistir(k.sepetId, k.adet + 1)} className="w-6 h-6 rounded-lg bg-white/8 hover:bg-white/15 flex items-center justify-center text-white/70">
                             <Plus className="w-3 h-3" />
                           </button>
-                          <button onClick={() => sepettenCikar(k.menuOgesiId)} className="w-6 h-6 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-red-300/70 hover:text-red-300">
+                          <button onClick={() => sepettenCikar(k.sepetId)} className="w-6 h-6 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-red-300/70 hover:text-red-300">
                             <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
@@ -335,6 +346,91 @@ export const YemekSayfasi = () => {
           }}
         />
       )}
+
+      {secenekModaliOge && seciliSatici && (
+        <SecenekModali
+          oge={secenekModaliOge}
+          onKapat={() => setSecenekModaliOge(null)}
+          onEkle={(secilenIdler, ozet, birimFiyat) => {
+            sepeteEkle(seciliSatici, secenekModaliOge, secilenIdler, ozet, birimFiyat);
+            setSecenekModaliOge(null);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+const SecenekModali = ({ oge, onKapat, onEkle }: {
+  oge: MenuOgesi;
+  onKapat: () => void;
+  onEkle: (secilenIdler: string[], ozet: string, birimFiyat: number) => void;
+}) => {
+  // grupId -> seçilen seçenek id'leri
+  const [secimler, setSecimler] = useState<Record<string, string[]>>({});
+  const gruplar = oge.secenekGruplari ?? [];
+
+  const tekSecim = (grupId: string, secenekId: string) => setSecimler(s => ({ ...s, [grupId]: [secenekId] }));
+  const cokluSecim = (grupId: string, secenekId: string) => setSecimler(s => {
+    const mevcut = s[grupId] ?? [];
+    return { ...s, [grupId]: mevcut.includes(secenekId) ? mevcut.filter(x => x !== secenekId) : [...mevcut, secenekId] };
+  });
+
+  const tumSecilenler = Object.values(secimler).flat();
+  const secilenSecenekler = gruplar.flatMap(g => g.secenekler).filter(sec => tumSecilenler.includes(sec.id));
+  const birimFiyat = oge.fiyat + secilenSecenekler.reduce((t, s) => t + s.ekFiyat, 0);
+  const ozet = secilenSecenekler.map(s => s.ad).join(', ');
+  const zorunluEksik = gruplar.some(g => g.zorunlu && (secimler[g.id]?.length ?? 0) === 0);
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onKapat}>
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} onClick={e => e.stopPropagation()}
+        className="w-full max-w-md rounded-3xl p-6 border border-white/10 max-h-[85vh] overflow-y-auto" style={{ background: 'rgba(14,14,28,0.98)' }}>
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-lg font-extrabold text-white">{oge.ad}</h2>
+          <button onClick={onKapat} className="p-1.5 rounded-lg hover:bg-white/10 text-white/50"><X className="w-5 h-5" /></button>
+        </div>
+        {oge.aciklama && <p className="text-xs text-white/45 mb-4">{oge.aciklama}</p>}
+
+        <div className="space-y-4">
+          {gruplar.map(grup => (
+            <div key={grup.id}>
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-sm font-bold text-white/80">{grup.ad}</p>
+                {grup.zorunlu && <span className="text-[10px] font-bold text-amber-200 bg-amber-500/15 border border-amber-400/20 px-1.5 py-0.5 rounded">Zorunlu</span>}
+                <span className="text-[10px] text-white/35">{grup.tur === 'TEK_SECIM' ? 'tek seçim' : 'çoklu'}</span>
+              </div>
+              <div className="space-y-1.5">
+                {grup.secenekler.map(sec => {
+                  const secili = (secimler[grup.id] ?? []).includes(sec.id);
+                  return (
+                    <button key={sec.id}
+                      onClick={() => grup.tur === 'TEK_SECIM' ? tekSecim(grup.id, sec.id) : cokluSecim(grup.id, sec.id)}
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm border transition-colors ${secili ? 'text-orange-100 bg-orange-500/15 border-orange-400/30' : 'text-white/70 bg-white/5 border-white/10 hover:bg-white/10'}`}>
+                      <span className="flex items-center gap-2">
+                        <span className={`w-4 h-4 rounded-${grup.tur === 'TEK_SECIM' ? 'full' : 'md'} border flex items-center justify-center ${secili ? 'border-orange-400 bg-orange-400' : 'border-white/25'}`}>
+                          {secili && <span className="w-1.5 h-1.5 rounded-full bg-[#0c0c18]" />}
+                        </span>
+                        {sec.ad}
+                      </span>
+                      {sec.ekFiyat > 0 && <span className="text-xs font-bold text-white/50">+{paraBicimle(sec.ekFiyat)}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-white/10 pt-4 mt-5">
+          <span className="text-sm font-bold text-white/60">Birim fiyat</span>
+          <span className="text-lg font-extrabold text-orange-200">{paraBicimle(birimFiyat)}</span>
+        </div>
+        <button disabled={zorunluEksik} onClick={() => onEkle(tumSecilenler, ozet, birimFiyat)}
+          className="w-full mt-4 px-4 py-3 rounded-xl text-sm font-extrabold text-white gradient-btn shadow-lg shadow-orange-500/20 disabled:opacity-40 disabled:cursor-not-allowed">
+          {zorunluEksik ? 'Zorunlu seçim yapın' : 'Sepete Ekle'}
+        </button>
+      </motion.div>
     </div>
   );
 };

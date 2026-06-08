@@ -17,5 +17,6 @@ public class SiparisOlusturmaTalebi {
     public static class KalemTalebi {
         private String menuOgesiId;
         private int adet;
+        private List<String> secilenSecenekIdleri;
     }
 }

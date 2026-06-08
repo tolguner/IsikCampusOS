@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "menu_ogeleri")
@@ -38,9 +40,18 @@ public class MenuOgesi {
     @Builder.Default
     private boolean mevcut = true;
 
+    @Builder.Default
+    private boolean oneCikan = false;
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private MenuDurumu durum = MenuDurumu.AKTIF;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JoinColumn(name = "menu_ogesi_id", nullable = false)
+    @OrderBy("siralama ASC")
+    @Builder.Default
+    private List<MenuSecenekGrubu> secenekGruplari = new ArrayList<>();
 
     private LocalDateTime olusturulmaTarihi;
     private LocalDateTime guncellenmeTarihi;

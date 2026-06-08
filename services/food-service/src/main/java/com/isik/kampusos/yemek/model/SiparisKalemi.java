@@ -31,4 +31,8 @@ public class SiparisKalemi {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal araToplam;
+
+    /** Seçilen opsiyonların okunabilir özeti (örn. "Büyük, Ekstra peynir"). */
+    @Column(length = 500)
+    private String secimlerOzeti;
 }
