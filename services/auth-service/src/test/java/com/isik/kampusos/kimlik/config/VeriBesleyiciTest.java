@@ -8,8 +8,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
- 
+
 import java.util.List;
  
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,12 +25,14 @@ class VeriBesleyiciTest {
     private KullaniciDeposu kullaniciDeposu;
     @Mock
     private PasswordEncoder passwordEncoder;
- 
+    @Mock
+    private JdbcTemplate jdbcTemplate;
+
     @Test
     void seedsAtakanCetinerAsFacilityAdminForSportsFacilities() {
         when(passwordEncoder.encode(anyString())).thenAnswer(invocation -> "hashed:" + invocation.getArgument(0));
  
-        new VeriBesleyici(kullaniciDeposu, passwordEncoder).run();
+        new VeriBesleyici(kullaniciDeposu, passwordEncoder, jdbcTemplate).run();
  
         ArgumentCaptor<Kullanici> userCaptor = ArgumentCaptor.forClass(Kullanici.class);
         verify(kullaniciDeposu, org.mockito.Mockito.atLeastOnce()).save(userCaptor.capture());

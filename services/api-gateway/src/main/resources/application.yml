@@ -51,6 +51,36 @@ spring:
           filters:
             - KimlikDogrulama
 
+        # UniEats yemek modülü (food-service) — sıralama önemli:
+        # /api/v1/yonetim/saticilar/** generic /api/v1/yonetim/** rotalarından ÖNCE gelmeli.
+        - id: food-admin-vendor-service
+          uri: lb://FOOD-SERVICE
+          predicates:
+            - Path=/api/v1/yonetim/saticilar/**
+          filters:
+            - KimlikDogrulama
+
+        - id: food-vendor-listing-service
+          uri: lb://FOOD-SERVICE
+          predicates:
+            - Path=/api/v1/saticilar/**
+          filters:
+            - KimlikDogrulama
+
+        - id: food-vendor-admin-service
+          uri: lb://FOOD-SERVICE
+          predicates:
+            - Path=/api/v1/satici/**
+          filters:
+            - KimlikDogrulama
+
+        - id: food-order-service
+          uri: lb://FOOD-SERVICE
+          predicates:
+            - Path=/api/v1/siparisler/**
+          filters:
+            - KimlikDogrulama
+
         # Sistem yöneticisi — kullanıcı/rol yönetimi (ROLE_ADMIN, Kimlik Servisi içinde korumalı)
         - id: admin-user-management-service
           uri: lb://AUTH-SERVICE
