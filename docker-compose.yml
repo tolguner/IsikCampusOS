@@ -105,6 +105,11 @@ services:
       - eureka-server
       - postgres
       - kafka
+    # Dış SMTP (smtp.gmail.com) çözümlemesi için açık DNS sunucuları —
+    # Docker'ın gömülü çözümleyicisindeki kesintili UnknownHostException'ı önler.
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       - ./services/auth-service/target:/app
     command: sh -c "java -jar /app/*.jar"
