@@ -22,6 +22,7 @@ import { YonetimPaneli } from './pages/YonetimPaneli';
 import { DuyuruSayfasi } from './pages/DuyuruSayfasi';
 import { YemekSayfasi } from './pages/YemekSayfasi';
 import { YemekSiparislerimSayfasi } from './pages/YemekSiparislerimSayfasi';
+import { IsletmePaneli } from './pages/IsletmePaneli';
 import { useKimlikDeposu } from './depolar/kimlikDeposu';
 import { useBildirimDeposu } from './depolar/bildirimDeposu';
 import { useKulupDeposu } from './depolar/kulupDeposu';
@@ -81,6 +82,10 @@ const DashboardRoute = () => {
 
   if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.tesisYonetimi)) {
     return <TesisYonetimPaneli />;
+  }
+
+  if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.isletmeYonetimi)) {
+    return <IsletmePaneli />;
   }
 
   if (isStudent) {
