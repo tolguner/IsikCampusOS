@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useKimlikDeposu } from '../../depolar/kimlikDeposu';
-import { Bell, Building2, LayoutDashboard, Link as LinkIcon, ShieldCheck, UsersRound, Calendar, UserCog } from 'lucide-react';
+import { Bell, Building2, LayoutDashboard, Link as LinkIcon, ShieldCheck, UsersRound, Calendar, UserCog, UtensilsCrossed } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useBildirimDeposu } from '../../depolar/bildirimDeposu';
@@ -81,6 +81,9 @@ export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
                 </Link>
                 <Link to={YOLLAR.rezervasyonlarim} className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Tesis Rezervasyonlarım">
                   <Building2 className="w-5 h-5 text-white/40 hover:text-white/70" />
+                </Link>
+                <Link to={YOLLAR.yemek} className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="UniEats — Yemek Siparişi">
+                  <UtensilsCrossed className="w-5 h-5 text-white/40 hover:text-white/70" />
                 </Link>
               </>
             )}
