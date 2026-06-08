@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   UtensilsCrossed, MapPin, ShoppingBag, Plus, Minus, Trash2,
-  ArrowLeft, Store, ClipboardList, X, Wallet, CreditCard, Clock, Truck, Timer, Search, Star,
+  ArrowLeft, Store, ClipboardList, X, Wallet, CreditCard, Clock, Truck, Timer, Search, Star, Heart,
 } from 'lucide-react';
 import { useYemekDeposu, type MenuOgesi, type OdemeYontemi, type Satici } from '../depolar/yemekDeposu';
 import { YOLLAR } from '../yardimcilar/yollar';
@@ -38,9 +38,9 @@ const TeslimatOzet = ({ satici }: { satici: Satici }) => {
 
 export const YemekSayfasi = () => {
   const {
-    saticilar, mutfakTurleri, seciliSatici, menu, sepet, sepetSaticiId,
+    saticilar, mutfakTurleri, favoriIdleri, seciliSatici, menu, sepet, sepetSaticiId,
     isLoading, error, successMessage,
-    saticilariGetir, mutfakTurleriGetir, menuGetir, seciliSaticiyiTemizle,
+    saticilariGetir, mutfakTurleriGetir, favorileriGetir, favoriToggle, menuGetir, seciliSaticiyiTemizle,
     sepeteEkle, adetDegistir, sepettenCikar, sepetiTemizle, sepetToplami,
     siparisVer, clearMessages,
   } = useYemekDeposu();
@@ -50,6 +50,7 @@ export const YemekSayfasi = () => {
   const [ara, setAra] = useState('');
   const [mutfak, setMutfak] = useState('');
   const [sirala, setSirala] = useState('');
+  const [sadeceFavoriler, setSadeceFavoriler] = useState(false);
 
   // Seçenekli ürün → modal aç; seçeneksiz → doğrudan sepete ekle
   const urunEkle = (oge: MenuOgesi) => {
@@ -57,8 +58,10 @@ export const YemekSayfasi = () => {
     else if (seciliSatici) sepeteEkle(seciliSatici, oge);
   };
 
-  useEffect(() => { mutfakTurleriGetir(); }, [mutfakTurleriGetir]);
+  useEffect(() => { mutfakTurleriGetir(); favorileriGetir(); }, [mutfakTurleriGetir, favorileriGetir]);
   useEffect(() => () => { clearMessages(); }, [clearMessages]);
+
+  const gosterilenSaticilar = sadeceFavoriler ? saticilar.filter(s => favoriIdleri.includes(s.id)) : saticilar;
 
   // Arama/filtre/sıralama değişince (arama için debounce) satıcıları yeniden çek
   useEffect(() => {
@@ -132,28 +135,30 @@ export const YemekSayfasi = () => {
             </select>
           </div>
 
-          {/* Mutfak türü çipleri */}
-          {mutfakTurleri.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              <Cip aktif={mutfak === ''} onClick={() => setMutfak('')}>Tümü</Cip>
-              {mutfakTurleri.map(m => (
-                <Cip key={m} aktif={mutfak === m} onClick={() => setMutfak(mutfak === m ? '' : m)}>{m}</Cip>
-              ))}
-            </div>
-          )}
+          {/* Mutfak türü + favori çipleri */}
+          <div className="flex flex-wrap gap-2">
+            <Cip aktif={mutfak === '' && !sadeceFavoriler} onClick={() => { setMutfak(''); setSadeceFavoriler(false); }}>Tümü</Cip>
+            <Cip aktif={sadeceFavoriler} onClick={() => setSadeceFavoriler(v => !v)}>
+              <span className="inline-flex items-center gap-1"><Heart className={`w-3 h-3 ${sadeceFavoriler ? 'fill-pink-300 text-pink-300' : ''}`} /> Favorilerim</span>
+            </Cip>
+            {mutfakTurleri.map(m => (
+              <Cip key={m} aktif={mutfak === m} onClick={() => { setMutfak(mutfak === m ? '' : m); setSadeceFavoriler(false); }}>{m}</Cip>
+            ))}
+          </div>
 
           {isLoading && saticilar.length === 0 && (
             <p className="text-sm text-white/40">Satıcılar yükleniyor...</p>
           )}
-          {!isLoading && saticilar.length === 0 && (
+          {!isLoading && gosterilenSaticilar.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Store className="w-12 h-12 text-white/20 mb-4" />
-              <p className="text-white/50 font-semibold">{ara || mutfak ? 'Aramanızla eşleşen satıcı yok.' : 'Şu anda açık satıcı bulunmuyor.'}</p>
+              <p className="text-white/50 font-semibold">{sadeceFavoriler ? 'Henüz favori satıcınız yok.' : (ara || mutfak ? 'Aramanızla eşleşen satıcı yok.' : 'Şu anda açık satıcı bulunmuyor.')}</p>
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {saticilar.map(satici => (
-              <SaticiKarti key={satici.id} satici={satici} onSec={() => menuGetir(satici)} />
+            {gosterilenSaticilar.map(satici => (
+              <SaticiKarti key={satici.id} satici={satici} favori={favoriIdleri.includes(satici.id)}
+                onSec={() => menuGetir(satici)} onFavori={() => favoriToggle(satici.id)} />
             ))}
           </div>
         </div>
@@ -444,7 +449,7 @@ const Cip = ({ aktif, onClick, children }: { aktif: boolean; onClick: () => void
   </button>
 );
 
-const SaticiKarti = ({ satici, onSec }: { satici: Satici; onSec: () => void }) => (
+const SaticiKarti = ({ satici, favori, onSec, onFavori }: { satici: Satici; favori?: boolean; onSec: () => void; onFavori?: () => void }) => (
   <motion.button
     initial={{ opacity: 0, y: 12 }}
     animate={{ opacity: 1, y: 0 }}
@@ -459,6 +464,15 @@ const SaticiKarti = ({ satici, onSec }: { satici: Satici; onSec: () => void }) =
         <div className="w-full h-full flex items-center justify-center"><UtensilsCrossed className="w-8 h-8 text-white/20" /></div>
       )}
       <div className="absolute top-2 right-2"><AcikKapaliRozet satici={satici} /></div>
+      {onFavori && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onFavori(); }}
+          className="absolute top-2 left-2 w-8 h-8 rounded-full bg-black/45 backdrop-blur-sm border border-white/10 flex items-center justify-center hover:bg-black/65 transition-colors"
+          title={favori ? 'Favorilerden çıkar' : 'Favorilere ekle'}
+        >
+          <Heart className={`w-4 h-4 ${favori ? 'fill-pink-400 text-pink-400' : 'text-white/70'}`} />
+        </button>
+      )}
       {satici.mutfakTuru && (
         <span className="absolute bottom-2 left-2 text-[10px] font-bold text-white bg-black/50 backdrop-blur-sm border border-white/10 px-2 py-0.5 rounded">{satici.mutfakTuru}</span>
       )}

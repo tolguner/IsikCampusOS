@@ -148,6 +148,7 @@ export interface SaticiFiltre {
 interface YemekState {
   saticilar: Satici[];
   mutfakTurleri: string[];
+  favoriIdleri: string[];
   seciliSatici: Satici | null;
   menu: MenuOgesi[];
   siparisler: Siparis[];
@@ -160,6 +161,8 @@ interface YemekState {
   clearMessages: () => void;
   saticilariGetir: (filtre?: SaticiFiltre) => Promise<void>;
   mutfakTurleriGetir: () => Promise<void>;
+  favorileriGetir: () => Promise<void>;
+  favoriToggle: (saticiId: string) => Promise<void>;
   menuGetir: (satici: Satici) => Promise<void>;
   seciliSaticiyiTemizle: () => void;
 
@@ -182,6 +185,7 @@ const getErrorMessage = (err: any, fallback: string) =>
 export const useYemekDeposu = create<YemekState>((set, get) => ({
   saticilar: [],
   mutfakTurleri: [],
+  favoriIdleri: [],
   seciliSatici: null,
   menu: [],
   siparisler: [],
@@ -214,6 +218,28 @@ export const useYemekDeposu = create<YemekState>((set, get) => ({
       set({ mutfakTurleri: res.data });
     } catch {
       // sessiz
+    }
+  },
+
+  favorileriGetir: async () => {
+    try {
+      const res = await api.get<string[]>('/favoriler');
+      set({ favoriIdleri: res.data });
+    } catch {
+      // sessiz
+    }
+  },
+
+  favoriToggle: async (saticiId) => {
+    const favori = get().favoriIdleri.includes(saticiId);
+    // İyimser güncelle
+    set({ favoriIdleri: favori ? get().favoriIdleri.filter(id => id !== saticiId) : [...get().favoriIdleri, saticiId] });
+    try {
+      if (favori) await api.delete(`/favoriler/${saticiId}`);
+      else await api.post(`/favoriler/${saticiId}`);
+    } catch {
+      // Hata olursa geri al
+      get().favorileriGetir();
     }
   },
 
