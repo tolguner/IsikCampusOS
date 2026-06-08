@@ -3,13 +3,38 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   UtensilsCrossed, MapPin, ShoppingBag, Plus, Minus, Trash2,
-  ArrowLeft, Store, ClipboardList, X, Wallet, CreditCard,
+  ArrowLeft, Store, ClipboardList, X, Wallet, CreditCard, Clock, Truck, Timer,
 } from 'lucide-react';
 import { useYemekDeposu, type MenuOgesi, type OdemeYontemi, type Satici } from '../depolar/yemekDeposu';
 import { YOLLAR } from '../yardimcilar/yollar';
 
 const paraBicimle = (tutar: number) =>
   new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(tutar);
+
+const GUN_ADLARI = ['', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+const saatKisalt = (s?: string | null) => (s ? s.slice(0, 5) : '');
+
+/** Satıcının açık/kapalı rozeti + kapalıysa sonraki açılış. */
+const AcikKapaliRozet = ({ satici, buyuk }: { satici: Satici; buyuk?: boolean }) => {
+  const acik = !!satici.suAnAcik;
+  const boyut = buyuk ? 'text-xs px-2.5 py-1' : 'text-[11px] px-2 py-0.5';
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-lg font-black border ${boyut} ${acik ? 'text-emerald-200 bg-emerald-500/15 border-emerald-400/25' : 'text-white/50 bg-white/5 border-white/10'}`}>
+      <Clock className="w-3 h-3" />
+      {acik ? 'Açık' : (satici.sonrakiAcilis ? `${satici.sonrakiAcilis}'da açılır` : 'Kapalı')}
+    </span>
+  );
+};
+
+/** Teslimat ücreti / süre / min. sepet özeti (değer varsa gösterir). */
+const TeslimatOzet = ({ satici }: { satici: Satici }) => {
+  const parcalar: React.ReactNode[] = [];
+  if (satici.tahminiTeslimatDakika) parcalar.push(<span key="s" className="inline-flex items-center gap-1"><Timer className="w-3 h-3" /> ~{satici.tahminiTeslimatDakika} dk</span>);
+  if (satici.teslimatUcreti != null) parcalar.push(<span key="u" className="inline-flex items-center gap-1"><Truck className="w-3 h-3" /> {satici.teslimatUcreti > 0 ? paraBicimle(satici.teslimatUcreti) : 'Ücretsiz'}</span>);
+  if (satici.minimumSepetTutari && satici.minimumSepetTutari > 0) parcalar.push(<span key="m">Min. {paraBicimle(satici.minimumSepetTutari)}</span>);
+  if (parcalar.length === 0) return null;
+  return <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/45">{parcalar}</div>;
+};
 
 export const YemekSayfasi = () => {
   const {
@@ -97,12 +122,36 @@ export const YemekSayfasi = () => {
             </button>
 
             <div className="rounded-2xl p-5 border border-white/10 bg-white/[0.03]">
-              <h2 className="text-xl font-extrabold text-white">{seciliSatici.ad}</h2>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="text-xl font-extrabold text-white">{seciliSatici.ad}</h2>
+                {seciliSatici.mutfakTuru && <span className="text-[11px] font-bold text-orange-200/80 bg-orange-500/10 border border-orange-400/15 px-2 py-0.5 rounded">{seciliSatici.mutfakTuru}</span>}
+                <AcikKapaliRozet satici={seciliSatici} buyuk />
+              </div>
               {seciliSatici.aciklama && <p className="text-sm text-white/50 mt-1">{seciliSatici.aciklama}</p>}
-              {seciliSatici.konumMetni && (
-                <p className="inline-flex items-center gap-1.5 text-xs text-white/40 mt-2">
-                  <MapPin className="w-3.5 h-3.5" /> {seciliSatici.konumMetni}
-                </p>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2">
+                {seciliSatici.konumMetni && (
+                  <p className="inline-flex items-center gap-1.5 text-xs text-white/40">
+                    <MapPin className="w-3.5 h-3.5" /> {seciliSatici.konumMetni}
+                  </p>
+                )}
+                <TeslimatOzet satici={seciliSatici} />
+              </div>
+              {seciliSatici.calismaSaatleri && seciliSatici.calismaSaatleri.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-white/8">
+                  <p className="text-[11px] font-bold text-white/40 mb-1.5 inline-flex items-center gap-1"><Clock className="w-3 h-3" /> Çalışma Saatleri</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-0.5">
+                    {[1,2,3,4,5,6,7].map(g => {
+                      const cs = seciliSatici.calismaSaatleri!.find(c => c.gun === g);
+                      const bugun = new Date().getDay() === 0 ? 7 : new Date().getDay();
+                      return (
+                        <div key={g} className={`flex justify-between text-[11px] ${g === bugun ? 'text-white/80 font-bold' : 'text-white/40'}`}>
+                          <span>{GUN_ADLARI[g]}</span>
+                          <span>{!cs || cs.kapali ? 'Kapalı' : `${saatKisalt(cs.acilis)}-${saatKisalt(cs.kapanis)}`}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
             </div>
 
@@ -181,13 +230,19 @@ export const YemekSayfasi = () => {
                     <span className="text-lg font-extrabold text-orange-200">{paraBicimle(toplam)}</span>
                   </div>
 
+                  {!seciliSatici.suAnAcik && (
+                    <p className="text-[11px] text-amber-200/80 mb-2 text-center">
+                      Satıcı şu anda kapalı{seciliSatici.sonrakiAcilis ? ` — ${seciliSatici.sonrakiAcilis}'da açılır` : ''}. Sipariş verilemiyor.
+                    </p>
+                  )}
                   <div className="flex gap-2">
                     <button onClick={sepetiTemizle} className="px-3 py-2.5 rounded-xl text-sm font-bold text-white/60 bg-white/5 hover:bg-white/10 transition-colors">
                       Temizle
                     </button>
                     <button
                       onClick={() => setOdemeAcik(true)}
-                      className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white gradient-btn shadow-lg shadow-orange-500/15"
+                      disabled={!seciliSatici.suAnAcik}
+                      className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white gradient-btn shadow-lg shadow-orange-500/15 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       Sipariş Ver
                     </button>
@@ -230,19 +285,23 @@ const SaticiKarti = ({ satici, onSec }: { satici: Satici; onSec: () => void }) =
           <Store className="w-5 h-5 text-orange-200" />
         )}
       </div>
-      <div className="min-w-0">
-        <p className="text-base font-extrabold text-white truncate group-hover:text-orange-100">{satici.ad}</p>
-        <span className={`text-[11px] font-bold ${satici.acik ? 'text-emerald-300' : 'text-white/40'}`}>
-          {satici.acik ? '● Açık' : '○ Kapalı'}
-        </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="text-base font-extrabold text-white truncate group-hover:text-orange-100">{satici.ad}</p>
+          {satici.mutfakTuru && <span className="shrink-0 text-[10px] font-bold text-orange-200/80 bg-orange-500/10 border border-orange-400/15 px-1.5 py-0.5 rounded">{satici.mutfakTuru}</span>}
+        </div>
+        <div className="mt-1"><AcikKapaliRozet satici={satici} /></div>
       </div>
     </div>
     {satici.aciklama && <p className="text-xs text-white/45 line-clamp-2">{satici.aciklama}</p>}
-    {satici.konumMetni && (
-      <p className="inline-flex items-center gap-1.5 text-[11px] text-white/35 mt-2">
-        <MapPin className="w-3 h-3" /> {satici.konumMetni}
-      </p>
-    )}
+    <div className="mt-2 space-y-1.5">
+      {satici.konumMetni && (
+        <p className="inline-flex items-center gap-1.5 text-[11px] text-white/35">
+          <MapPin className="w-3 h-3" /> {satici.konumMetni}
+        </p>
+      )}
+      <TeslimatOzet satici={satici} />
+    </div>
   </motion.button>
 );
 

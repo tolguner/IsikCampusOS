@@ -1,10 +1,14 @@
 package com.isik.kampusos.yemek.service;
 
+import com.isik.kampusos.yemek.dto.CalismaSaatiTalebi;
 import com.isik.kampusos.yemek.dto.MenuOgesiTalebi;
 import com.isik.kampusos.yemek.dto.SaticiGuncellemeTalebi;
 import com.isik.kampusos.yemek.dto.SaticiOlusturmaTalebi;
+import com.isik.kampusos.yemek.dto.SaticiYaniti;
+import com.isik.kampusos.yemek.model.CalismaSaati;
 import com.isik.kampusos.yemek.model.MenuOgesi;
 import com.isik.kampusos.yemek.model.Satici;
+import com.isik.kampusos.yemek.repository.CalismaSaatiDeposu;
 import com.isik.kampusos.yemek.repository.MenuOgesiDeposu;
 import com.isik.kampusos.yemek.repository.SaticiDeposu;
 import lombok.RequiredArgsConstructor;
@@ -13,19 +17,34 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class SaticiServisi {
 
+    private static final String[] GUN_ADLARI = {"", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"};
+    private static final DateTimeFormatter SAAT_BICIMI = DateTimeFormatter.ofPattern("HH:mm");
+
     private final SaticiDeposu saticiDeposu;
     private final MenuOgesiDeposu menuOgesiDeposu;
+    private final CalismaSaatiDeposu calismaSaatiDeposu;
 
     // --- Öğrenci / herkese görünür ---
 
-    public List<Satici> aktifSaticilar() {
-        return saticiDeposu.findByDurumOrderByAdAsc(Satici.SaticiDurumu.AKTIF);
+    public List<SaticiYaniti> aktifSaticilar() {
+        return saticiDeposu.findByDurumOrderByAdAsc(Satici.SaticiDurumu.AKTIF)
+                .stream().map(this::yanitYap).toList();
+    }
+
+    public SaticiYaniti saticiDetay(String saticiId) {
+        Satici s = saticiDeposu.findById(saticiId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Satıcı bulunamadı."));
+        return yanitYap(s);
     }
 
     public List<MenuOgesi> saticiMenusu(String saticiId) {
@@ -48,7 +67,57 @@ public class SaticiServisi {
         if (talep.getKonumMetni() != null) s.setKonumMetni(talep.getKonumMetni());
         if (talep.getLogoUrl() != null) s.setLogoUrl(talep.getLogoUrl());
         if (talep.getAcik() != null) s.setAcik(talep.getAcik());
+        if (talep.getMutfakTuru() != null) s.setMutfakTuru(talep.getMutfakTuru());
+        if (talep.getKapakGorselUrl() != null) s.setKapakGorselUrl(talep.getKapakGorselUrl());
+        if (talep.getTeslimatUcreti() != null) {
+            if (talep.getTeslimatUcreti().signum() < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Teslimat ücreti negatif olamaz.");
+            s.setTeslimatUcreti(talep.getTeslimatUcreti());
+        }
+        if (talep.getMinimumSepetTutari() != null) {
+            if (talep.getMinimumSepetTutari().signum() < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Minimum sepet tutarı negatif olamaz.");
+            s.setMinimumSepetTutari(talep.getMinimumSepetTutari());
+        }
+        if (talep.getTahminiTeslimatDakika() != null) s.setTahminiTeslimatDakika(talep.getTahminiTeslimatDakika());
         return saticiDeposu.save(s);
+    }
+
+    // --- Çalışma saatleri (işletme yöneticisi) ---
+
+    public List<CalismaSaati> benimCalismaSaatlerim(String yoneticiId) {
+        Satici s = saticiBul(yoneticiId);
+        return calismaSaatiDeposu.findBySaticiIdOrderByGunAsc(s.getId());
+    }
+
+    @Transactional
+    public List<CalismaSaati> calismaSaatleriKaydet(String yoneticiId, CalismaSaatiTalebi talep) {
+        Satici s = saticiBul(yoneticiId);
+        // Tüm haftayı topluca değiştir: önce mevcutları sil, sonra geleni yaz.
+        calismaSaatiDeposu.deleteBySaticiId(s.getId());
+        if (talep.getGunler() != null) {
+            for (CalismaSaatiTalebi.Gun g : talep.getGunler()) {
+                if (g.getGun() < 1 || g.getGun() > 7) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz gün: " + g.getGun());
+                }
+                CalismaSaati cs = CalismaSaati.builder()
+                        .saticiId(s.getId())
+                        .gun(g.getGun())
+                        .kapali(g.isKapali())
+                        .acilis(g.isKapali() ? null : saatCoz(g.getAcilis()))
+                        .kapanis(g.isKapali() ? null : saatCoz(g.getKapanis()))
+                        .build();
+                calismaSaatiDeposu.save(cs);
+            }
+        }
+        return calismaSaatiDeposu.findBySaticiIdOrderByGunAsc(s.getId());
+    }
+
+    private LocalTime saatCoz(String deger) {
+        if (deger == null || deger.isBlank()) return null;
+        try {
+            return LocalTime.parse(deger.trim(), SAAT_BICIMI);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz saat biçimi (HH:mm bekleniyor): " + deger);
+        }
     }
 
     public List<MenuOgesi> benimMenum(String yoneticiId) {
@@ -140,6 +209,49 @@ public class SaticiServisi {
             }
         }
         return saticiDeposu.save(s);
+    }
+
+    // --- yardımcılar: açık/kapalı hesaplama + yanıt üretimi ---
+
+    /** Satıcıyı çalışma saatleriyle birlikte zenginleştirilmiş yanıta dönüştürür. */
+    private SaticiYaniti yanitYap(Satici s) {
+        List<CalismaSaati> saatler = calismaSaatiDeposu.findBySaticiIdOrderByGunAsc(s.getId());
+        LocalDateTime now = LocalDateTime.now();
+        boolean suAnAcik = suAnAcikMi(s, saatler, now);
+        String sonraki = suAnAcik ? null : sonrakiAcilisMetni(saatler, now);
+        return SaticiYaniti.of(s, suAnAcik, sonraki, saatler);
+    }
+
+    /** durum AKTIF + manuel açık + bugünkü çalışma saati aralığında mı? */
+    private boolean suAnAcikMi(Satici s, List<CalismaSaati> saatler, LocalDateTime now) {
+        if (s.getDurum() != Satici.SaticiDurumu.AKTIF || !s.isAcik()) return false;
+        short bugun = (short) now.getDayOfWeek().getValue(); // 1=Pzt … 7=Paz
+        Optional<CalismaSaati> bugunkuOpt = saatler.stream().filter(c -> c.getGun() == bugun).findFirst();
+        if (bugunkuOpt.isEmpty()) return false; // saat tanımlı değilse kapalı kabul
+        CalismaSaati c = bugunkuOpt.get();
+        if (c.isKapali() || c.getAcilis() == null || c.getKapanis() == null) return false;
+        LocalTime t = now.toLocalTime();
+        return !t.isBefore(c.getAcilis()) && t.isBefore(c.getKapanis());
+    }
+
+    /** Kapalıyken bir sonraki açılışı insan-okur metne çevirir (örn. "Bugün 18:00", "Yarın 09:00", "Pazartesi 09:00"). */
+    private String sonrakiAcilisMetni(List<CalismaSaati> saatler, LocalDateTime now) {
+        if (saatler.isEmpty()) return null;
+        LocalTime simdi = now.toLocalTime();
+        for (int ileri = 0; ileri < 7; ileri++) {
+            short gun = (short) now.plusDays(ileri).getDayOfWeek().getValue();
+            Optional<CalismaSaati> opt = saatler.stream().filter(c -> c.getGun() == gun).findFirst();
+            if (opt.isEmpty()) continue;
+            CalismaSaati c = opt.get();
+            if (c.isKapali() || c.getAcilis() == null) continue;
+            // Bugünse ve açılış zaten geçtiyse atla (kapanmış demektir)
+            if (ileri == 0 && !c.getAcilis().isAfter(simdi)) continue;
+            String saat = c.getAcilis().format(SAAT_BICIMI);
+            if (ileri == 0) return "Bugün " + saat;
+            if (ileri == 1) return "Yarın " + saat;
+            return GUN_ADLARI[gun] + " " + saat;
+        }
+        return null;
     }
 
     // --- yardımcılar ---

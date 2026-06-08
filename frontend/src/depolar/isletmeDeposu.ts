@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
-import type { Satici, MenuOgesi, Siparis, OdemeYontemi } from './yemekDeposu';
+import type { Satici, MenuOgesi, Siparis, OdemeYontemi, CalismaSaati } from './yemekDeposu';
 
 export interface MenuOgesiFormu {
   ad: string;
@@ -17,6 +17,19 @@ export interface SaticiAyarFormu {
   konumMetni?: string;
   logoUrl?: string;
   acik?: boolean;
+  mutfakTuru?: string;
+  kapakGorselUrl?: string;
+  teslimatUcreti?: number;
+  minimumSepetTutari?: number;
+  tahminiTeslimatDakika?: number;
+}
+
+/** Haftalık çalışma saati kaydı talebi (gün: 1=Pzt … 7=Paz, saat "HH:mm"). */
+export interface CalismaSaatiGun {
+  gun: number;
+  acilis?: string;
+  kapanis?: string;
+  kapali: boolean;
 }
 
 export interface CiroRaporu {
@@ -31,6 +44,7 @@ interface IsletmeState {
   menu: MenuOgesi[];
   siparisler: Siparis[];
   ciro: CiroRaporu | null;
+  calismaSaatleri: CalismaSaati[];
   isLoading: boolean;
   error: string | null;
   successMessage: string | null;
@@ -38,6 +52,8 @@ interface IsletmeState {
   clearMessages: () => void;
   saticimiGetir: () => Promise<void>;
   saticiGuncelle: (form: SaticiAyarFormu) => Promise<boolean>;
+  calismaSaatleriGetir: () => Promise<void>;
+  calismaSaatleriKaydet: (gunler: CalismaSaatiGun[]) => Promise<boolean>;
 
   menumGetir: () => Promise<void>;
   menuEkle: (form: MenuOgesiFormu) => Promise<boolean>;
@@ -60,11 +76,33 @@ export const useIsletmeDeposu = create<IsletmeState>((set, get) => ({
   menu: [],
   siparisler: [],
   ciro: null,
+  calismaSaatleri: [],
   isLoading: false,
   error: null,
   successMessage: null,
 
   clearMessages: () => set({ error: null, successMessage: null }),
+
+  calismaSaatleriGetir: async () => {
+    try {
+      const res = await api.get<CalismaSaati[]>('/satici/calisma-saatleri');
+      set({ calismaSaatleri: res.data });
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Çalışma saatleri yüklenemedi.') });
+    }
+  },
+
+  calismaSaatleriKaydet: async (gunler) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      const res = await api.put<CalismaSaati[]>('/satici/calisma-saatleri', { gunler });
+      set({ calismaSaatleri: res.data, successMessage: 'Çalışma saatleri kaydedildi.', isLoading: false });
+      return true;
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Çalışma saatleri kaydedilemedi.'), isLoading: false });
+      return false;
+    }
+  },
 
   saticimiGetir: async () => {
     set({ isLoading: true, error: null });

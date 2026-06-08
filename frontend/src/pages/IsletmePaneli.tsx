@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Store, ClipboardList, UtensilsCrossed, TrendingUp, Power, MapPin } from 'lucide-react';
+import { Store, ClipboardList, UtensilsCrossed, TrendingUp, Power, MapPin, Settings } from 'lucide-react';
 import { useIsletmeDeposu } from '../depolar/isletmeDeposu';
 import { SiparislerSekmesi } from '../components/isletme-paneli/SiparislerSekmesi';
 import { MenuSekmesi } from '../components/isletme-paneli/MenuSekmesi';
 import { CiroSekmesi } from '../components/isletme-paneli/CiroSekmesi';
+import { AyarlarSekmesi } from '../components/isletme-paneli/AyarlarSekmesi';
 
-type Sekme = 'siparisler' | 'menu' | 'ciro';
+type Sekme = 'siparisler' | 'menu' | 'ciro' | 'ayarlar';
 
 export const IsletmePaneli = () => {
   const { satici, error, successMessage, saticimiGetir, saticiGuncelle, clearMessages } = useIsletmeDeposu();
@@ -22,6 +23,7 @@ export const IsletmePaneli = () => {
     { id: 'siparisler', etiket: 'Siparişler', ikon: <ClipboardList className="w-4 h-4" /> },
     { id: 'menu', etiket: 'Menü', ikon: <UtensilsCrossed className="w-4 h-4" /> },
     { id: 'ciro', etiket: 'Ciro', ikon: <TrendingUp className="w-4 h-4" /> },
+    { id: 'ayarlar', etiket: 'Ayarlar', ikon: <Settings className="w-4 h-4" /> },
   ];
 
   return (
@@ -74,6 +76,7 @@ export const IsletmePaneli = () => {
         {sekme === 'siparisler' && <SiparislerSekmesi />}
         {sekme === 'menu' && <MenuSekmesi />}
         {sekme === 'ciro' && <CiroSekmesi />}
+        {sekme === 'ayarlar' && <AyarlarSekmesi />}
       </div>
     </div>
   );
