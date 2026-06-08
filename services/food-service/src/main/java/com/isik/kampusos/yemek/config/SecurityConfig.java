@@ -32,8 +32,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Satıcı/menü görüntüleme: tüm kimliği doğrulanmış kullanıcılar
                         .requestMatchers(HttpMethod.GET, "/api/v1/saticilar", "/api/v1/saticilar/**").authenticated()
-                        // Öğrenci siparişleri
+                        // Öğrenci siparişleri + favorileri
                         .requestMatchers("/api/v1/siparisler/**").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers("/api/v1/favoriler/**").hasAuthority("ROLE_STUDENT")
                         // İşletme (satıcı yöneticisi)
                         .requestMatchers("/api/v1/satici/**").hasAuthority("ROLE_VENDOR_ADMIN")
                         // Sistem yöneticisi: satıcı kayıt yönetimi

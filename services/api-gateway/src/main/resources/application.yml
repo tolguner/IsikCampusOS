@@ -81,6 +81,13 @@ spring:
           filters:
             - KimlikDogrulama
 
+        - id: food-favorite-service
+          uri: lb://FOOD-SERVICE
+          predicates:
+            - Path=/api/v1/favoriler/**
+          filters:
+            - KimlikDogrulama
+
         # Sistem yöneticisi — kullanıcı/rol yönetimi (ROLE_ADMIN, Kimlik Servisi içinde korumalı)
         - id: admin-user-management-service
           uri: lb://AUTH-SERVICE
