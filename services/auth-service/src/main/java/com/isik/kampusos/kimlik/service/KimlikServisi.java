@@ -8,9 +8,11 @@ import com.isik.kampusos.kimlik.repository.KullaniciDeposu;
 import com.isik.kampusos.kimlik.repository.DogrulamaKoduDeposu;
 import com.isik.kampusos.kimlik.util.JwtSaglayici;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
  
 import java.time.LocalDateTime;
 import java.util.Random;
@@ -88,8 +90,9 @@ public class KimlikServisi {
     @Transactional
     public void sifremiUnuttum(SifremiUnuttumIstegi request) {
         Kullanici kullanici = kullaniciDeposu.findByEposta(request.getEposta())
-                .orElseThrow(() -> new RuntimeException("Bu e-posta adresiyle kayıtlı bir hesap bulunamadı."));
- 
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Bu e-posta adresiyle kayıtlı bir kullanıcı bulunamadı."));
+
         String kod = kodUret();
  
         DogrulamaKodu dk = DogrulamaKodu.builder()
