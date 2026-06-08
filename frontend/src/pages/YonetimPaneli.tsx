@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ShieldCheck, Users, ScrollText, Plus, RefreshCw, KeyRound, Trash2, Pencil, X, Search } from 'lucide-react';
+import { ShieldCheck, Users, ScrollText, Plus, RefreshCw, KeyRound, Trash2, Pencil, X, Search, Store } from 'lucide-react';
 import {
   useYonetimDeposu,
   type YonetimKullanicisi,
   type KullaniciOlusturmaFormu,
 } from '../depolar/yonetimDeposu';
 import { DuyuruButonu } from '../components/DuyuruButonu';
+import { SaticilarSekmesi } from '../components/yonetim/SaticilarSekmesi';
 
-type Sekme = 'kullanicilar' | 'loglar';
+type Sekme = 'kullanicilar' | 'loglar' | 'saticilar';
 
 // Sistem yöneticisi yalnızca PERSONEL rollerini yönetir — öğrenci hariç (Öğrenci İşleri'ne ait).
 const ROL_ETIKETLERI: Record<string, string> = {
@@ -15,6 +16,7 @@ const ROL_ETIKETLERI: Record<string, string> = {
   ROLE_SKS_ADMIN: 'SKS Yöneticisi',
   ROLE_FACILITY_ADMIN: 'Tesis Yöneticisi',
   ROLE_REGISTRAR: 'Öğrenci İşleri',
+  ROLE_VENDOR_ADMIN: 'İşletme Yöneticisi',
 };
 const ROLLER = Object.keys(ROL_ETIKETLERI);
 
@@ -102,6 +104,10 @@ export const YonetimPaneli = () => {
           className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'kullanicilar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
           <Users className="h-4 w-4" /> Kullanıcı & Rol Yönetimi ({toplamKullanici})
         </button>
+        <button onClick={() => setSekme('saticilar')}
+          className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'saticilar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
+          <Store className="h-4 w-4" /> Satıcı Yönetimi
+        </button>
         <button onClick={() => setSekme('loglar')}
           className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'loglar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
           <ScrollText className="h-4 w-4" /> Sistem Logları
@@ -115,7 +121,9 @@ export const YonetimPaneli = () => {
         </div>
       )}
 
-      {sekme === 'kullanicilar' ? (
+      {sekme === 'saticilar' && <SaticilarSekmesi />}
+
+      {sekme === 'kullanicilar' && (
         <section className="space-y-5">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -172,7 +180,9 @@ export const YonetimPaneli = () => {
             </table>
           </div>
         </section>
-      ) : (
+      )}
+
+      {sekme === 'loglar' && (
         <section className="space-y-5">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">

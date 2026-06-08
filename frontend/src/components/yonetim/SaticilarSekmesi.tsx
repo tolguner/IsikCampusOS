@@ -1,0 +1,185 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Plus, Pencil, X, Store, MapPin } from 'lucide-react';
+import {
+  useAdminSaticiDeposu,
+  type SaticiOlusturmaFormu,
+  type SaticiGuncellemeFormu,
+} from '../../depolar/adminSaticiDeposu';
+import type { Satici } from '../../depolar/yemekDeposu';
+
+const inputClass =
+  'w-full rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-purple-400/60';
+
+export const SaticilarSekmesi = () => {
+  const {
+    saticilar, vendorAdminler, isLoading,
+    saticilariGetir, vendorAdminleriGetir, saticiOlustur, saticiGuncelle,
+  } = useAdminSaticiDeposu();
+
+  const [olusturModal, setOlusturModal] = useState(false);
+  const [duzenle, setDuzenle] = useState<Satici | null>(null);
+
+  useEffect(() => { saticilariGetir(); vendorAdminleriGetir(); }, [saticilariGetir, vendorAdminleriGetir]);
+
+  const yoneticiHaritasi = useMemo(() => {
+    const m = new Map<string, string>();
+    vendorAdminler.forEach(v => m.set(v.id, v.eposta));
+    return m;
+  }, [vendorAdminler]);
+
+  return (
+    <section className="space-y-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-white/45">{saticilar.length} satıcı kayıtlı</p>
+        <button onClick={() => setOlusturModal(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-500 hover:bg-purple-400 px-5 py-3 text-sm font-black text-white transition cursor-pointer">
+          <Plus className="h-4 w-4" /> Yeni Satıcı
+        </button>
+      </div>
+
+      <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.025]">
+        <table className="w-full min-w-[900px] text-left border-collapse">
+          <thead>
+            <tr className="text-xs uppercase tracking-wide text-white/35 bg-white/[0.025] border-b border-white/10">
+              <th className="px-5 py-4 font-bold">Satıcı</th>
+              <th className="px-5 py-4 font-bold">Yönetici</th>
+              <th className="px-5 py-4 font-bold">Durum</th>
+              <th className="px-5 py-4 font-bold">Sipariş</th>
+              <th className="px-5 py-4 font-bold text-right">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5">
+            {saticilar.map(s => (
+              <tr key={s.id} className="hover:bg-white/[0.02]">
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-orange-500/15 border border-orange-400/20 text-orange-200 overflow-hidden">
+                      {s.logoUrl ? <img src={s.logoUrl} alt={s.ad} className="h-full w-full object-cover" /> : <Store className="h-4 w-4" />}
+                    </div>
+                    <div>
+                      <div className="font-bold text-white text-sm">{s.ad}</div>
+                      {s.konumMetni && <div className="inline-flex items-center gap-1 text-xs text-white/40"><MapPin className="h-3 w-3" /> {s.konumMetni}</div>}
+                    </div>
+                  </div>
+                </td>
+                <td className="px-5 py-4 text-xs text-white/55">{yoneticiHaritasi.get(s.yoneticiKullaniciId) || s.yoneticiKullaniciId.slice(0, 8)}</td>
+                <td className="px-5 py-4">
+                  <span className={`rounded-lg px-2.5 py-1 text-xs font-semibold border ${s.durum === 'AKTIF' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-white/5 text-white/50 border-white/10'}`}>
+                    {s.durum === 'AKTIF' ? 'Aktif' : 'Pasif'}
+                  </span>
+                </td>
+                <td className="px-5 py-4">
+                  <span className={`text-xs font-bold ${s.acik ? 'text-emerald-300' : 'text-white/40'}`}>{s.acik ? '● Açık' : '○ Kapalı'}</span>
+                </td>
+                <td className="px-5 py-4">
+                  <div className="flex items-center justify-end">
+                    <button onClick={() => setDuzenle(s)} title="Düzenle" className="p-2 rounded-xl text-blue-300 hover:bg-white/5 cursor-pointer"><Pencil className="h-4 w-4" /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {saticilar.length === 0 && (
+              <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-white/35">Henüz satıcı kaydı yok.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {olusturModal && (
+        <SaticiOlusturModal
+          vendorAdminler={vendorAdminler}
+          isLoading={isLoading}
+          onKapat={() => setOlusturModal(false)}
+          onKaydet={async (form) => { const ok = await saticiOlustur(form); if (ok) setOlusturModal(false); }}
+        />
+      )}
+
+      {duzenle && (
+        <SaticiDuzenleModal
+          satici={duzenle}
+          isLoading={isLoading}
+          onKapat={() => setDuzenle(null)}
+          onKaydet={async (form) => { const ok = await saticiGuncelle(duzenle.id, form); if (ok) setDuzenle(null); }}
+        />
+      )}
+    </section>
+  );
+};
+
+const ModalKabuk = ({ baslik, onKapat, children }: { baslik: string; onKapat: () => void; children: React.ReactNode }) => (
+  <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="w-full max-w-md rounded-3xl p-6 space-y-5 relative text-white bg-[#0f0f1c] border border-white/10 shadow-2xl">
+      <button type="button" onClick={onKapat} className="absolute top-4 right-4 text-white/40 hover:text-white/70 cursor-pointer"><X className="h-5 w-5" /></button>
+      <h3 className="text-lg font-black">{baslik}</h3>
+      {children}
+    </div>
+  </div>
+);
+
+const SaticiOlusturModal = ({ vendorAdminler, isLoading, onKapat, onKaydet }: {
+  vendorAdminler: { id: string; eposta: string }[];
+  isLoading: boolean;
+  onKapat: () => void;
+  onKaydet: (f: SaticiOlusturmaFormu) => void;
+}) => {
+  const [form, setForm] = useState<SaticiOlusturmaFormu>({ ad: '', yoneticiKullaniciId: '', konumMetni: '', aciklama: '', logoUrl: '' });
+  const gecerli = form.ad.trim().length >= 2 && !!form.yoneticiKullaniciId;
+
+  return (
+    <ModalKabuk baslik="Yeni Satıcı" onKapat={onKapat}>
+      <div className="space-y-3">
+        <input className={inputClass} placeholder="Satıcı adı (örn. Kampüs Kantini)" value={form.ad} onChange={e => setForm(p => ({ ...p, ad: e.target.value }))} />
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-white/35 mb-1.5">İşletme Yöneticisi</label>
+          {vendorAdminler.length === 0 ? (
+            <p className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-100">
+              Önce "Kullanıcı & Rol Yönetimi" sekmesinden <b>İşletme Yöneticisi</b> (ROLE_VENDOR_ADMIN) rolünde bir kullanıcı oluşturun.
+            </p>
+          ) : (
+            <select className={inputClass} value={form.yoneticiKullaniciId} onChange={e => setForm(p => ({ ...p, yoneticiKullaniciId: e.target.value }))}>
+              <option value="">Yönetici seçin</option>
+              {vendorAdminler.map(v => <option key={v.id} value={v.id}>{v.eposta}</option>)}
+            </select>
+          )}
+        </div>
+        <input className={inputClass} placeholder="Konum (örn. A Blok zemin kat)" value={form.konumMetni} onChange={e => setForm(p => ({ ...p, konumMetni: e.target.value }))} />
+        <input className={inputClass} placeholder="Açıklama (ops.)" value={form.aciklama} onChange={e => setForm(p => ({ ...p, aciklama: e.target.value }))} />
+        <input className={inputClass} placeholder="Logo URL (ops.)" value={form.logoUrl} onChange={e => setForm(p => ({ ...p, logoUrl: e.target.value }))} />
+        <button disabled={!gecerli || isLoading} onClick={() => onKaydet({ ...form, ad: form.ad.trim() })} className="w-full rounded-2xl bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed px-5 py-3 text-sm font-black text-white cursor-pointer">
+          {isLoading ? 'Oluşturuluyor...' : 'Oluştur'}
+        </button>
+      </div>
+    </ModalKabuk>
+  );
+};
+
+const SaticiDuzenleModal = ({ satici, isLoading, onKapat, onKaydet }: {
+  satici: Satici;
+  isLoading: boolean;
+  onKapat: () => void;
+  onKaydet: (f: SaticiGuncellemeFormu) => void;
+}) => {
+  const [form, setForm] = useState<SaticiGuncellemeFormu>({
+    ad: satici.ad, konumMetni: satici.konumMetni ?? '', aciklama: satici.aciklama ?? '',
+    logoUrl: satici.logoUrl ?? '', durum: satici.durum,
+  });
+
+  return (
+    <ModalKabuk baslik={`Düzenle — ${satici.ad}`} onKapat={onKapat}>
+      <div className="space-y-3">
+        <input className={inputClass} placeholder="Satıcı adı" value={form.ad} onChange={e => setForm(p => ({ ...p, ad: e.target.value }))} />
+        <input className={inputClass} placeholder="Konum" value={form.konumMetni} onChange={e => setForm(p => ({ ...p, konumMetni: e.target.value }))} />
+        <input className={inputClass} placeholder="Açıklama" value={form.aciklama} onChange={e => setForm(p => ({ ...p, aciklama: e.target.value }))} />
+        <input className={inputClass} placeholder="Logo URL" value={form.logoUrl} onChange={e => setForm(p => ({ ...p, logoUrl: e.target.value }))} />
+        <label className="block text-xs font-bold uppercase tracking-wider text-white/35">Durum</label>
+        <select className={inputClass} value={form.durum} onChange={e => setForm(p => ({ ...p, durum: e.target.value as 'AKTIF' | 'PASIF' }))}>
+          <option value="AKTIF">Aktif</option>
+          <option value="PASIF">Pasif</option>
+        </select>
+        <p className="text-xs text-white/35">Pasif satıcılar öğrencilere listelenmez. "Siparişe açık/kapalı" durumunu işletme kendi panelinden yönetir.</p>
+        <button disabled={isLoading} onClick={() => onKaydet(form)} className="w-full rounded-2xl bg-purple-500 hover:bg-purple-400 disabled:opacity-40 px-5 py-3 text-sm font-black text-white cursor-pointer">
+          {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
+        </button>
+      </div>
+    </ModalKabuk>
+  );
+};
