@@ -196,6 +196,24 @@ services:
     networks:
       - campusos-net
 
+  food-service:
+    image: eclipse-temurin:21-jre-alpine
+    container_name: campusos-food
+    depends_on:
+      - eureka-server
+      - postgres
+      - kafka
+    volumes:
+      - ./services/food-service/target:/app
+    command: sh -c "java -jar /app/*.jar"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/food_db
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
+    networks:
+      - campusos-net
+
   # FRONTEND
   frontend:
     image: node:20-alpine

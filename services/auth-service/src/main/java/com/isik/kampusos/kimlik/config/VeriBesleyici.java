@@ -8,8 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
 
 @Component
 @Profile("dev")  // Yalnızca 'dev' profilinde çalışır
@@ -19,9 +22,17 @@ public class VeriBesleyici implements CommandLineRunner {
 
     private final KullaniciDeposu kullaniciDeposu;
     private final PasswordEncoder passwordEncoder;
+    private final JdbcTemplate jdbcTemplate;
 
     // Sistem yöneticisi seed parolası ortam değişkeninden okunur (varsayılan yalnızca geliştirme içindir).
     private static final String VARSAYILAN_ADMIN_SIFRE = "Admin123!";
+
+    /**
+     * UniEats işletme yöneticisi (kantin) için SABİT kullanıcı kimliği.
+     * food-service seed'i, örnek satıcıyı bu kimliğe bağlar (servisler arası id eşleşmesi).
+     * Sabit id gerektiği için native INSERT kullanılır (UUID üreteci manuel id'yi ezer).
+     */
+    private static final String KANTIN_KULLANICI_ID = "f00d0000-0000-4000-8000-000000000001";
 
     @Value("${ADMIN_SEED_PASSWORD:" + VARSAYILAN_ADMIN_SIFRE + "}")
     private String adminSeedSifre;
@@ -128,6 +139,26 @@ public class VeriBesleyici implements CommandLineRunner {
         }
  
  
+        // UniEats işletme yöneticisi (kantin) — sabit kimlikle (food-service satıcı eşleşmesi için)
+        if (!kullaniciDeposu.existsByEposta("kantin@isikun.edu.tr")) {
+            jdbcTemplate.update(
+                    "INSERT INTO kullanicilar " +
+                            "(id, eposta, sifre, roller, ad, soyad, durum, eposta_dogrulandi, sifre_degistirmeli, olusturulma_tarihi, guncellenme_tarihi) " +
+                            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                    KANTIN_KULLANICI_ID,
+                    "kantin@isikun.edu.tr",
+                    passwordEncoder.encode("kantin.123"),
+                    "ROLE_VENDOR_ADMIN",
+                    "Kampüs",
+                    "Kantini",
+                    KullaniciDurumu.AKTIF.name(),
+                    true,
+                    false,
+                    LocalDateTime.now(),
+                    LocalDateTime.now());
+            log.info("✅ Seed: UniEats işletme yöneticisi oluşturuldu — kantin@isikun.edu.tr / kantin.123 (id={})", KANTIN_KULLANICI_ID);
+        }
+
         // Özlem Ak — Öğrenci İşleri Daire Başkanlığı personeli
         if (!kullaniciDeposu.existsByEposta("ozlem.ak@isikun.edu.tr")) {
             Kullanici ozlemAk = Kullanici.builder()
