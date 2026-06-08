@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Pencil, Trash2, X, EyeOff, Eye } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, EyeOff, Eye, Star } from 'lucide-react';
 import { useIsletmeDeposu, type MenuOgesiFormu } from '../../depolar/isletmeDeposu';
 import type { MenuOgesi } from '../../depolar/yemekDeposu';
 
@@ -83,15 +83,30 @@ const MenuFormModali = ({ baslangic, isLoading, onKapat, onKaydet }: {
   const [form, setForm] = useState<MenuOgesiFormu>(baslangic ? {
     ad: baslangic.ad, aciklama: baslangic.aciklama ?? '', kategori: baslangic.kategori ?? '',
     fiyat: baslangic.fiyat, gorselUrl: baslangic.gorselUrl ?? '', mevcut: baslangic.mevcut,
-  } : { ...BOS_FORM });
+    oneCikan: baslangic.oneCikan ?? false,
+    secenekGruplari: (baslangic.secenekGruplari ?? []).map(g => ({
+      ad: g.ad, tur: g.tur, zorunlu: g.zorunlu, siralama: g.siralama,
+      secenekler: g.secenekler.map(s => ({ ad: s.ad, ekFiyat: s.ekFiyat, siralama: s.siralama })),
+    })),
+  } : { ...BOS_FORM, oneCikan: false, secenekGruplari: [] });
 
   const gecerli = form.ad.trim().length >= 2 && form.fiyat > 0;
   const guncelle = (k: Partial<MenuOgesiFormu>) => setForm(f => ({ ...f, ...k }));
 
+  const gruplar = form.secenekGruplari ?? [];
+  const grupEkle = () => guncelle({ secenekGruplari: [...gruplar, { ad: '', tur: 'TEK_SECIM', zorunlu: false, secenekler: [] }] });
+  const grupSil = (gi: number) => guncelle({ secenekGruplari: gruplar.filter((_, i) => i !== gi) });
+  const grupGuncelle = (gi: number, k: Partial<typeof gruplar[number]>) =>
+    guncelle({ secenekGruplari: gruplar.map((g, i) => i === gi ? { ...g, ...k } : g) });
+  const secenekEkle = (gi: number) => grupGuncelle(gi, { secenekler: [...gruplar[gi].secenekler, { ad: '', ekFiyat: 0 }] });
+  const secenekSil = (gi: number, si: number) => grupGuncelle(gi, { secenekler: gruplar[gi].secenekler.filter((_, i) => i !== si) });
+  const secenekGuncelle = (gi: number, si: number, k: Partial<{ ad: string; ekFiyat: number }>) =>
+    grupGuncelle(gi, { secenekler: gruplar[gi].secenekler.map((s, i) => i === si ? { ...s, ...k } : s) });
+
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onKapat}>
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} onClick={e => e.stopPropagation()}
-        className="w-full max-w-md rounded-3xl p-6 border border-white/10" style={{ background: 'rgba(14,14,28,0.98)' }}>
+        className="w-full max-w-lg rounded-3xl p-6 border border-white/10 max-h-[88vh] overflow-y-auto" style={{ background: 'rgba(14,14,28,0.98)' }}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-extrabold text-white">{baslangic ? 'Ürünü Düzenle' : 'Yeni Ürün'}</h2>
           <button onClick={onKapat} className="p-1.5 rounded-lg hover:bg-white/10 text-white/50"><X className="w-5 h-5" /></button>
@@ -115,13 +130,66 @@ const MenuFormModali = ({ baslangic, isLoading, onKapat, onKaydet }: {
           <Alan etiket="Görsel URL">
             <input value={form.gorselUrl} onChange={e => guncelle({ gorselUrl: e.target.value })} className={girisSinifi} placeholder="https://..." />
           </Alan>
-          <button
-            onClick={() => guncelle({ mevcut: !form.mevcut })}
-            className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold border transition-colors ${form.mevcut ? 'text-emerald-200 bg-emerald-500/15 border-emerald-400/20' : 'text-white/50 bg-white/5 border-white/10'}`}
-          >
-            {form.mevcut ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-            {form.mevcut ? 'Satışta' : 'Satış dışı'}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => guncelle({ mevcut: !form.mevcut })}
+              className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold border transition-colors ${form.mevcut ? 'text-emerald-200 bg-emerald-500/15 border-emerald-400/20' : 'text-white/50 bg-white/5 border-white/10'}`}
+            >
+              {form.mevcut ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              {form.mevcut ? 'Satışta' : 'Satış dışı'}
+            </button>
+            <button
+              onClick={() => guncelle({ oneCikan: !form.oneCikan })}
+              className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold border transition-colors ${form.oneCikan ? 'text-amber-200 bg-amber-500/15 border-amber-400/20' : 'text-white/50 bg-white/5 border-white/10'}`}
+            >
+              <Star className={`w-4 h-4 ${form.oneCikan ? 'fill-amber-300 text-amber-300' : ''}`} /> Öne çıkan
+            </button>
+          </div>
+
+          {/* Seçenek grupları */}
+          <div className="border-t border-white/8 pt-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-bold text-white/60">Seçenek Grupları (boy, ekstra...)</p>
+              <button onClick={grupEkle} className="inline-flex items-center gap-1 text-xs font-bold text-orange-200 hover:text-orange-100">
+                <Plus className="w-3.5 h-3.5" /> Grup
+              </button>
+            </div>
+            <div className="space-y-3">
+              {gruplar.map((g, gi) => (
+                <div key={gi} className="rounded-xl p-3 border border-white/10 bg-white/[0.02] space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input value={g.ad} onChange={e => grupGuncelle(gi, { ad: e.target.value })} placeholder="Grup adı (örn. Boy)" className={`${girisSinifi} flex-1`} />
+                    <button onClick={() => grupSil(gi)} className="p-2 rounded-lg hover:bg-red-500/20 text-red-300/70"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select value={g.tur} onChange={e => grupGuncelle(gi, { tur: e.target.value as 'TEK_SECIM' | 'COKLU_SECIM' })} className={girisSinifi}>
+                      <option value="TEK_SECIM">Tek seçim</option>
+                      <option value="COKLU_SECIM">Çoklu seçim</option>
+                    </select>
+                    <button onClick={() => grupGuncelle(gi, { zorunlu: !g.zorunlu })}
+                      className={`shrink-0 px-3 py-2 rounded-xl text-xs font-bold border ${g.zorunlu ? 'text-amber-200 bg-amber-500/15 border-amber-400/20' : 'text-white/50 bg-white/5 border-white/10'}`}>
+                      {g.zorunlu ? 'Zorunlu' : 'İsteğe bağlı'}
+                    </button>
+                  </div>
+                  <div className="space-y-1.5 pl-1">
+                    {g.secenekler.map((s, si) => (
+                      <div key={si} className="flex items-center gap-2">
+                        <input value={s.ad} onChange={e => secenekGuncelle(gi, si, { ad: e.target.value })} placeholder="Seçenek (örn. Büyük)" className={`${girisSinifi} flex-1`} />
+                        <div className="relative w-24 shrink-0">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-white/30">+₺</span>
+                          <input type="number" min={0} step="0.5" value={s.ekFiyat || ''} onChange={e => secenekGuncelle(gi, si, { ekFiyat: parseFloat(e.target.value) || 0 })} className={`${girisSinifi} pl-7`} placeholder="0" />
+                        </div>
+                        <button onClick={() => secenekSil(gi, si)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-300/60"><X className="w-3.5 h-3.5" /></button>
+                      </div>
+                    ))}
+                    <button onClick={() => secenekEkle(gi)} className="inline-flex items-center gap-1 text-[11px] font-bold text-white/50 hover:text-white/80">
+                      <Plus className="w-3 h-3" /> Seçenek ekle
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         <button

@@ -63,14 +63,39 @@ public class SiparisServisi {
             if (!oge.getSaticiId().equals(satici.getId()) || oge.getDurum() != MenuOgesi.MenuDurumu.AKTIF || !oge.isMevcut()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Ürün şu anda sunulamıyor: " + oge.getAd());
             }
-            BigDecimal kalemAraToplam = oge.getFiyat().multiply(BigDecimal.valueOf(kt.getAdet()));
+
+            // Seçilen opsiyonları doğrula + ek fiyat + özet hesapla
+            List<String> secilenIdler = kt.getSecilenSecenekIdleri() != null ? kt.getSecilenSecenekIdleri() : List.of();
+            BigDecimal ekFiyat = BigDecimal.ZERO;
+            List<String> secimAdlari = new ArrayList<>();
+            for (com.isik.kampusos.yemek.model.MenuSecenekGrubu grup : oge.getSecenekGruplari()) {
+                List<com.isik.kampusos.yemek.model.MenuSecenegi> grupSecimleri = grup.getSecenekler().stream()
+                        .filter(sec -> secilenIdler.contains(sec.getId())).toList();
+                if (grup.isZorunlu() && grupSecimleri.isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            oge.getAd() + " için '" + grup.getAd() + "' seçimi zorunludur.");
+                }
+                if (grup.getTur() == com.isik.kampusos.yemek.model.MenuSecenekGrubu.SecenekTuru.TEK_SECIM
+                        && grupSecimleri.size() > 1) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "'" + grup.getAd() + "' için yalnızca bir seçim yapılabilir.");
+                }
+                for (var sec : grupSecimleri) {
+                    ekFiyat = ekFiyat.add(sec.getEkFiyat());
+                    secimAdlari.add(sec.getAd());
+                }
+            }
+
+            BigDecimal birimFiyat = oge.getFiyat().add(ekFiyat);
+            BigDecimal kalemAraToplam = birimFiyat.multiply(BigDecimal.valueOf(kt.getAdet()));
             araToplam = araToplam.add(kalemAraToplam);
             kalemler.add(SiparisKalemi.builder()
                     .menuOgesiId(oge.getId())
                     .urunAdi(oge.getAd())
-                    .birimFiyat(oge.getFiyat())
+                    .birimFiyat(birimFiyat)
                     .adet(kt.getAdet())
                     .araToplam(kalemAraToplam)
+                    .secimlerOzeti(secimAdlari.isEmpty() ? null : String.join(", ", secimAdlari))
                     .build());
         }
 

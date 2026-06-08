@@ -41,6 +41,24 @@ export interface Satici {
   guncellenmeTarihi?: string;
 }
 
+export type SecenekTuru = 'TEK_SECIM' | 'COKLU_SECIM';
+
+export interface MenuSecenegi {
+  id: string;
+  ad: string;
+  ekFiyat: number;
+  siralama?: number;
+}
+
+export interface MenuSecenekGrubu {
+  id: string;
+  ad: string;
+  tur: SecenekTuru;
+  zorunlu: boolean;
+  siralama?: number;
+  secenekler: MenuSecenegi[];
+}
+
 export interface MenuOgesi {
   id: string;
   saticiId: string;
@@ -50,7 +68,9 @@ export interface MenuOgesi {
   fiyat: number;
   gorselUrl?: string;
   mevcut: boolean;
+  oneCikan?: boolean;
   durum: MenuDurumu;
+  secenekGruplari?: MenuSecenekGrubu[];
 }
 
 export interface SiparisKalemi {
@@ -60,6 +80,7 @@ export interface SiparisKalemi {
   birimFiyat: number;
   adet: number;
   araToplam: number;
+  secimlerOzeti?: string;
 }
 
 export type KampanyaTuru = 'YUZDE' | 'TUTAR' | 'UCRETSIZ_TESLIMAT';
@@ -102,10 +123,13 @@ export interface Siparis {
 
 /** Sepet kalemi (yalnızca istemci tarafı). */
 export interface SepetKalemi {
+  sepetId: string;            // istemci tarafı benzersiz satır kimliği
   menuOgesiId: string;
   ad: string;
-  birimFiyat: number;
+  birimFiyat: number;         // ürün fiyatı + seçilen opsiyon ek fiyatları
   adet: number;
+  secilenSecenekIdleri?: string[];
+  secimlerOzeti?: string;     // "Büyük, Ekstra peynir"
 }
 
 export interface SiparisTalebi {
@@ -140,9 +164,9 @@ interface YemekState {
   seciliSaticiyiTemizle: () => void;
 
   // Sepet (istemci tarafı)
-  sepeteEkle: (satici: Satici, oge: MenuOgesi) => void;
-  adetDegistir: (menuOgesiId: string, adet: number) => void;
-  sepettenCikar: (menuOgesiId: string) => void;
+  sepeteEkle: (satici: Satici, oge: MenuOgesi, secilenSecenekIdleri?: string[], secimlerOzeti?: string, birimFiyat?: number) => void;
+  adetDegistir: (sepetId: string, adet: number) => void;
+  sepettenCikar: (sepetId: string) => void;
   sepetiTemizle: () => void;
   sepetToplami: () => number;
 
@@ -205,34 +229,37 @@ export const useYemekDeposu = create<YemekState>((set, get) => ({
 
   seciliSaticiyiTemizle: () => set({ seciliSatici: null, menu: [] }),
 
-  sepeteEkle: (satici, oge) => {
+  sepeteEkle: (satici, oge, secilenSecenekIdleri, secimlerOzeti, birimFiyat) => {
+    const fiyat = birimFiyat ?? oge.fiyat;
+    const yeniKalem: SepetKalemi = {
+      sepetId: `${oge.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      menuOgesiId: oge.id, ad: oge.ad, birimFiyat: fiyat, adet: 1,
+      secilenSecenekIdleri, secimlerOzeti,
+    };
     const { sepet, sepetSaticiId } = get();
     // Farklı satıcıdan ekleniyorsa sepeti sıfırla (tek satıcı kuralı).
     if (sepetSaticiId && sepetSaticiId !== satici.id) {
-      set({
-        sepet: [{ menuOgesiId: oge.id, ad: oge.ad, birimFiyat: oge.fiyat, adet: 1 }],
-        sepetSaticiId: satici.id,
-      });
+      set({ sepet: [yeniKalem], sepetSaticiId: satici.id });
       return;
     }
-    const mevcut = sepet.find(k => k.menuOgesiId === oge.id);
+    // Aynı ürün + aynı seçimler → adet artır; yoksa yeni satır.
+    const ayniImza = (k: SepetKalemi) =>
+      k.menuOgesiId === oge.id && (k.secimlerOzeti ?? '') === (secimlerOzeti ?? '');
+    const mevcut = sepet.find(ayniImza);
     if (mevcut) {
-      set({ sepet: sepet.map(k => k.menuOgesiId === oge.id ? { ...k, adet: k.adet + 1 } : k) });
+      set({ sepet: sepet.map(k => k.sepetId === mevcut.sepetId ? { ...k, adet: k.adet + 1 } : k) });
     } else {
-      set({
-        sepet: [...sepet, { menuOgesiId: oge.id, ad: oge.ad, birimFiyat: oge.fiyat, adet: 1 }],
-        sepetSaticiId: satici.id,
-      });
+      set({ sepet: [...sepet, yeniKalem], sepetSaticiId: satici.id });
     }
   },
 
-  adetDegistir: (menuOgesiId, adet) => {
-    if (adet <= 0) { get().sepettenCikar(menuOgesiId); return; }
-    set({ sepet: get().sepet.map(k => k.menuOgesiId === menuOgesiId ? { ...k, adet } : k) });
+  adetDegistir: (sepetId, adet) => {
+    if (adet <= 0) { get().sepettenCikar(sepetId); return; }
+    set({ sepet: get().sepet.map(k => k.sepetId === sepetId ? { ...k, adet } : k) });
   },
 
-  sepettenCikar: (menuOgesiId) => {
-    const yeni = get().sepet.filter(k => k.menuOgesiId !== menuOgesiId);
+  sepettenCikar: (sepetId) => {
+    const yeni = get().sepet.filter(k => k.sepetId !== sepetId);
     set({ sepet: yeni, sepetSaticiId: yeni.length ? get().sepetSaticiId : null });
   },
 
@@ -254,7 +281,7 @@ export const useYemekDeposu = create<YemekState>((set, get) => ({
         odemeYontemi: talep.odemeYontemi,
         telefon: talep.telefon,
         musteriNotu: talep.musteriNotu,
-        kalemler: sepet.map(k => ({ menuOgesiId: k.menuOgesiId, adet: k.adet })),
+        kalemler: sepet.map(k => ({ menuOgesiId: k.menuOgesiId, adet: k.adet, secilenSecenekIdleri: k.secilenSecenekIdleri })),
       });
       set({ successMessage: 'Siparişiniz alındı! Durumu "Siparişlerim" sayfasından takip edebilirsiniz.', isLoading: false, sepet: [], sepetSaticiId: null });
       await get().siparislerimGetir();
