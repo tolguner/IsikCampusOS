@@ -21,6 +21,10 @@ export const OgrenciPaneli = () => {
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
           Tesis Rezerve Et
         </button>
+        <button onClick={() => window.location.href = YOLLAR.yemek} className="px-8 py-3 rounded-2xl font-semibold text-white cursor-pointer transition-all"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          Yemek Siparişi Ver
+        </button>
       </div>
     </div>
   );

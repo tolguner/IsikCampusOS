@@ -4,6 +4,7 @@ export const YETKILER = {
   OGRENCI_ISLERI: 'ROLE_REGISTRAR',
   SKS_YONETICISI: 'ROLE_SKS_ADMIN',
   TESIS_YONETICISI: 'ROLE_FACILITY_ADMIN',
+  ISLETME_YONETICISI: 'ROLE_VENDOR_ADMIN',
 } as const;
 
 export const YETKI_GRUPLARI = {
@@ -12,6 +13,7 @@ export const YETKI_GRUPLARI = {
   sksYonetimi: [YETKILER.SKS_YONETICISI, YETKILER.SISTEM_YONETICISI],
   tesisYonetimi: [YETKILER.TESIS_YONETICISI, YETKILER.SISTEM_YONETICISI],
   sistemYonetimi: [YETKILER.SISTEM_YONETICISI],
+  isletmeYonetimi: [YETKILER.ISLETME_YONETICISI],
   // Öğrencilere/kullanıcılara toplu duyuru gönderebilen idari roller (öğrenci hariç).
   duyuruYetkilileri: [
     YETKILER.SISTEM_YONETICISI,

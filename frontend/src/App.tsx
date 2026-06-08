@@ -20,6 +20,8 @@ import { TesisRezervasyonSayfasi } from './pages/TesisRezervasyonSayfasi';
 import { RezervasyonlarimSayfasi } from './pages/RezervasyonlarimSayfasi';
 import { YonetimPaneli } from './pages/YonetimPaneli';
 import { DuyuruSayfasi } from './pages/DuyuruSayfasi';
+import { YemekSayfasi } from './pages/YemekSayfasi';
+import { YemekSiparislerimSayfasi } from './pages/YemekSiparislerimSayfasi';
 import { useKimlikDeposu } from './depolar/kimlikDeposu';
 import { useBildirimDeposu } from './depolar/bildirimDeposu';
 import { useKulupDeposu } from './depolar/kulupDeposu';
@@ -286,6 +288,21 @@ function App() {
           </ProtectedRoute>
         } />
         <Route path="/my-bookings" element={<EskiYolYonlendirme yeniYol={YOLLAR.rezervasyonlarim} />} />
+
+        <Route path={YOLLAR.yemek} element={
+          <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.ogrenci}>
+            <UygulamaDuzeni>
+              <YemekSayfasi />
+            </UygulamaDuzeni>
+          </ProtectedRoute>
+        } />
+        <Route path={YOLLAR.yemekSiparislerim} element={
+          <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.ogrenci}>
+            <UygulamaDuzeni>
+              <YemekSiparislerimSayfasi />
+            </UygulamaDuzeni>
+          </ProtectedRoute>
+        } />
       </Routes>
     </BrowserRouter>
   );
