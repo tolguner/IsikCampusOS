@@ -127,8 +127,6 @@ services:
       - MAIL_SMTP_STARTTLS_REQUIRED=${MAIL_SMTP_STARTTLS_REQUIRED:-false}
       - MAIL_ENABLED=${MAIL_ENABLED:-true}
       - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
-      # Sistem yöneticisi seed parolası — üretimde host ortam değişkeniyle override edin.
-      - ADMIN_SEED_PASSWORD=${ADMIN_SEED_PASSWORD:-Admin123!}
     networks:
       - campusos-net
 
