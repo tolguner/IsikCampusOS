@@ -3,6 +3,7 @@ package com.isik.kampusos.yemek.service;
 import com.isik.kampusos.yemek.dto.CiroYaniti;
 import com.isik.kampusos.yemek.dto.SiparisOlusturmaTalebi;
 import com.isik.kampusos.yemek.messaging.BildirimYayinlayici;
+import com.isik.kampusos.yemek.model.Kampanya;
 import com.isik.kampusos.yemek.model.MenuOgesi;
 import com.isik.kampusos.yemek.model.Satici;
 import com.isik.kampusos.yemek.model.Siparis;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ public class SiparisServisi {
     private final SaticiDeposu saticiDeposu;
     private final MenuOgesiDeposu menuOgesiDeposu;
     private final BildirimYayinlayici bildirimYayinlayici;
+    private final SaticiServisi saticiServisi;
 
     // --- Öğrenci ---
 
@@ -45,12 +48,12 @@ public class SiparisServisi {
 
         Satici satici = saticiDeposu.findById(talep.getSaticiId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Satıcı bulunamadı."));
-        if (satici.getDurum() != Satici.SaticiDurumu.AKTIF || !satici.isAcik()) {
+        if (!saticiServisi.acikMi(satici)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Satıcı şu anda siparişe kapalı.");
         }
 
         List<SiparisKalemi> kalemler = new ArrayList<>();
-        BigDecimal toplam = BigDecimal.ZERO;
+        BigDecimal araToplam = BigDecimal.ZERO;
         for (SiparisOlusturmaTalebi.KalemTalebi kt : talep.getKalemler()) {
             if (kt.getAdet() <= 0) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Adet en az 1 olmalıdır.");
@@ -60,21 +63,45 @@ public class SiparisServisi {
             if (!oge.getSaticiId().equals(satici.getId()) || oge.getDurum() != MenuOgesi.MenuDurumu.AKTIF || !oge.isMevcut()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Ürün şu anda sunulamıyor: " + oge.getAd());
             }
-            BigDecimal araToplam = oge.getFiyat().multiply(BigDecimal.valueOf(kt.getAdet()));
-            toplam = toplam.add(araToplam);
+            BigDecimal kalemAraToplam = oge.getFiyat().multiply(BigDecimal.valueOf(kt.getAdet()));
+            araToplam = araToplam.add(kalemAraToplam);
             kalemler.add(SiparisKalemi.builder()
                     .menuOgesiId(oge.getId())
                     .urunAdi(oge.getAd())
                     .birimFiyat(oge.getFiyat())
                     .adet(kt.getAdet())
-                    .araToplam(araToplam)
+                    .araToplam(kalemAraToplam)
                     .build());
         }
+
+        // Minimum sepet kontrolü
+        BigDecimal minSepet = satici.getMinimumSepetTutari() != null ? satici.getMinimumSepetTutari() : BigDecimal.ZERO;
+        if (araToplam.compareTo(minSepet) < 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Bu satıcının minimum sepet tutarı " + minSepet + " ₺. Sepetinizi tamamlayın.");
+        }
+
+        BigDecimal teslimatUcreti = satici.getTeslimatUcreti() != null ? satici.getTeslimatUcreti() : BigDecimal.ZERO;
+
+        // En iyi aktif kampanyayı uygula
+        BigDecimal indirim = BigDecimal.ZERO;
+        String kampanyaId = null;
+        Kampanya enIyi = enIyiKampanya(araToplam, teslimatUcreti, saticiServisi.aktifKampanyalar(satici.getId()));
+        if (enIyi != null) {
+            indirim = kampanyaIndirimi(enIyi, araToplam, teslimatUcreti);
+            kampanyaId = enIyi.getId();
+        }
+
+        BigDecimal toplam = araToplam.add(teslimatUcreti).subtract(indirim).max(BigDecimal.ZERO);
 
         Siparis siparis = Siparis.builder()
                 .saticiId(satici.getId())
                 .musteriKullaniciId(musteriId)
                 .durum(Siparis.SiparisDurumu.BEKLEMEDE)
+                .araToplam(araToplam)
+                .teslimatUcreti(teslimatUcreti)
+                .indirimTutari(indirim)
+                .kampanyaId(kampanyaId)
                 .toplamTutar(toplam)
                 .teslimAdresi(talep.getTeslimAdresi().trim())
                 .odemeYontemi(odeme)
@@ -83,6 +110,26 @@ public class SiparisServisi {
                 .kalemler(kalemler)
                 .build();
         return siparisDeposu.save(siparis);
+    }
+
+    /** Uygun kampanyalar arasından en yüksek indirimi sağlayanı seçer. */
+    private Kampanya enIyiKampanya(BigDecimal araToplam, BigDecimal teslimat, List<Kampanya> kampanyalar) {
+        Kampanya enIyi = null;
+        BigDecimal enYuksek = BigDecimal.ZERO;
+        for (Kampanya k : kampanyalar) {
+            if (araToplam.compareTo(k.getMinSepetTutari()) < 0) continue;
+            BigDecimal ind = kampanyaIndirimi(k, araToplam, teslimat);
+            if (ind.compareTo(enYuksek) > 0) { enYuksek = ind; enIyi = k; }
+        }
+        return enIyi;
+    }
+
+    private BigDecimal kampanyaIndirimi(Kampanya k, BigDecimal araToplam, BigDecimal teslimat) {
+        return switch (k.getTur()) {
+            case YUZDE -> araToplam.multiply(k.getDeger()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            case TUTAR -> k.getDeger().min(araToplam);
+            case UCRETSIZ_TESLIMAT -> teslimat;
+        };
     }
 
     public List<Siparis> benimSiparislerim(String musteriId) {

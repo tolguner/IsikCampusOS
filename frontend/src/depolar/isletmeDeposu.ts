@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
-import type { Satici, MenuOgesi, Siparis, OdemeYontemi, CalismaSaati } from './yemekDeposu';
+import type { Satici, MenuOgesi, Siparis, OdemeYontemi, CalismaSaati, Kampanya, KampanyaTuru } from './yemekDeposu';
+
+export interface KampanyaFormu {
+  ad: string;
+  tur: KampanyaTuru;
+  deger?: number;
+  minSepetTutari?: number;
+  aktif?: boolean;
+}
 
 export interface MenuOgesiFormu {
   ad: string;
@@ -45,6 +53,7 @@ interface IsletmeState {
   siparisler: Siparis[];
   ciro: CiroRaporu | null;
   calismaSaatleri: CalismaSaati[];
+  kampanyalar: Kampanya[];
   isLoading: boolean;
   error: string | null;
   successMessage: string | null;
@@ -54,6 +63,10 @@ interface IsletmeState {
   saticiGuncelle: (form: SaticiAyarFormu) => Promise<boolean>;
   calismaSaatleriGetir: () => Promise<void>;
   calismaSaatleriKaydet: (gunler: CalismaSaatiGun[]) => Promise<boolean>;
+  kampanyalariGetir: () => Promise<void>;
+  kampanyaEkle: (form: KampanyaFormu) => Promise<boolean>;
+  kampanyaGuncelle: (id: string, form: KampanyaFormu) => Promise<boolean>;
+  kampanyaSil: (id: string) => Promise<boolean>;
 
   menumGetir: () => Promise<void>;
   menuEkle: (form: MenuOgesiFormu) => Promise<boolean>;
@@ -77,11 +90,60 @@ export const useIsletmeDeposu = create<IsletmeState>((set, get) => ({
   siparisler: [],
   ciro: null,
   calismaSaatleri: [],
+  kampanyalar: [],
   isLoading: false,
   error: null,
   successMessage: null,
 
   clearMessages: () => set({ error: null, successMessage: null }),
+
+  kampanyalariGetir: async () => {
+    try {
+      const res = await api.get<Kampanya[]>('/satici/kampanyalar');
+      set({ kampanyalar: res.data });
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Kampanyalar yüklenemedi.') });
+    }
+  },
+
+  kampanyaEkle: async (form) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      await api.post('/satici/kampanyalar', form);
+      set({ successMessage: 'Kampanya eklendi.', isLoading: false });
+      await get().kampanyalariGetir();
+      return true;
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Kampanya eklenemedi.'), isLoading: false });
+      return false;
+    }
+  },
+
+  kampanyaGuncelle: async (id, form) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      await api.put(`/satici/kampanyalar/${id}`, form);
+      set({ successMessage: 'Kampanya güncellendi.', isLoading: false });
+      await get().kampanyalariGetir();
+      return true;
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Kampanya güncellenemedi.'), isLoading: false });
+      return false;
+    }
+  },
+
+  kampanyaSil: async (id) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      await api.delete(`/satici/kampanyalar/${id}`);
+      set({ successMessage: 'Kampanya silindi.', isLoading: false });
+      await get().kampanyalariGetir();
+      return true;
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Kampanya silinemedi.'), isLoading: false });
+      return false;
+    }
+  },
 
   calismaSaatleriGetir: async () => {
     try {

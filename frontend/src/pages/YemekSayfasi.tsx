@@ -276,14 +276,32 @@ export const YemekSayfasi = () => {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between border-t border-white/10 pt-3 mb-4">
-                    <span className="text-sm font-bold text-white/60">Toplam</span>
-                    <span className="text-lg font-extrabold text-orange-200">{paraBicimle(toplam)}</span>
+                  <div className="border-t border-white/10 pt-3 mb-3 space-y-1.5">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-white/50">Ara toplam</span>
+                      <span className="text-white/70">{paraBicimle(toplam)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-white/50">Teslimat</span>
+                      <span className="text-white/70">{(seciliSatici.teslimatUcreti ?? 0) > 0 ? paraBicimle(seciliSatici.teslimatUcreti!) : 'Ücretsiz'}</span>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-white/8 pt-1.5">
+                      <span className="text-sm font-bold text-white/60">Toplam</span>
+                      <span className="text-lg font-extrabold text-orange-200">{paraBicimle(toplam + (seciliSatici.teslimatUcreti ?? 0))}</span>
+                    </div>
+                    {(seciliSatici.minimumSepetTutari ?? 0) > 0 && (
+                      <p className="text-[11px] text-white/35">Varsa kampanya indirimi ödeme adımında uygulanır.</p>
+                    )}
                   </div>
 
                   {!seciliSatici.suAnAcik && (
                     <p className="text-[11px] text-amber-200/80 mb-2 text-center">
                       Satıcı şu anda kapalı{seciliSatici.sonrakiAcilis ? ` — ${seciliSatici.sonrakiAcilis}'da açılır` : ''}. Sipariş verilemiyor.
+                    </p>
+                  )}
+                  {seciliSatici.suAnAcik && toplam < (seciliSatici.minimumSepetTutari ?? 0) && (
+                    <p className="text-[11px] text-amber-200/80 mb-2 text-center">
+                      Minimum sepet tutarı {paraBicimle(seciliSatici.minimumSepetTutari!)}. {paraBicimle((seciliSatici.minimumSepetTutari ?? 0) - toplam)} daha ekleyin.
                     </p>
                   )}
                   <div className="flex gap-2">
@@ -292,7 +310,7 @@ export const YemekSayfasi = () => {
                     </button>
                     <button
                       onClick={() => setOdemeAcik(true)}
-                      disabled={!seciliSatici.suAnAcik}
+                      disabled={!seciliSatici.suAnAcik || toplam < (seciliSatici.minimumSepetTutari ?? 0)}
                       className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white gradient-btn shadow-lg shadow-orange-500/15 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       Sipariş Ver
@@ -443,9 +461,20 @@ const OdemeModali = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-white/10 pt-4 mt-5">
-          <span className="text-sm font-bold text-white/60">Toplam</span>
-          <span className="text-xl font-extrabold text-orange-200">{paraBicimle(toplam)}</span>
+        <div className="border-t border-white/10 pt-4 mt-5 space-y-1.5">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-white/50">Ara toplam</span>
+            <span className="text-white/70">{paraBicimle(toplam)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-white/50">Teslimat</span>
+            <span className="text-white/70">{(satici.teslimatUcreti ?? 0) > 0 ? paraBicimle(satici.teslimatUcreti!) : 'Ücretsiz'}</span>
+          </div>
+          <div className="flex items-center justify-between border-t border-white/8 pt-1.5">
+            <span className="text-sm font-bold text-white/60">Toplam</span>
+            <span className="text-xl font-extrabold text-orange-200">{paraBicimle(toplam + (satici.teslimatUcreti ?? 0))}</span>
+          </div>
+          <p className="text-[11px] text-white/30">Uygun kampanya indirimi sipariş sonrası toplamdan düşülür.</p>
         </div>
 
         <button

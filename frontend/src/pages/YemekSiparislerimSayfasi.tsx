@@ -125,6 +125,20 @@ const SiparisKarti = ({ siparis, onIptal, iptalEdiliyor }: { siparis: Siparis; o
         ))}
       </div>
 
+      {/* Tutar dökümü */}
+      {(siparis.araToplam != null) && (
+        <div className="mt-3 pt-3 border-t border-white/8 space-y-1 text-sm">
+          <div className="flex justify-between"><span className="text-white/45">Ara toplam</span><span className="text-white/60">{paraBicimle(siparis.araToplam)}</span></div>
+          {(siparis.teslimatUcreti ?? 0) > 0 && (
+            <div className="flex justify-between"><span className="text-white/45">Teslimat</span><span className="text-white/60">{paraBicimle(siparis.teslimatUcreti!)}</span></div>
+          )}
+          {(siparis.indirimTutari ?? 0) > 0 && (
+            <div className="flex justify-between"><span className="text-emerald-300/80">Kampanya indirimi</span><span className="text-emerald-300/80">−{paraBicimle(siparis.indirimTutari!)}</span></div>
+          )}
+          <div className="flex justify-between border-t border-white/8 pt-1.5"><span className="font-bold text-white/70">Toplam</span><span className="font-extrabold text-orange-200">{paraBicimle(siparis.toplamTutar)}</span></div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between gap-4 flex-wrap mt-4 pt-3 border-t border-white/8">
         <div className="space-y-1">
           <p className="inline-flex items-center gap-1.5 text-xs text-white/45"><MapPin className="w-3.5 h-3.5" /> {siparis.teslimAdresi}</p>

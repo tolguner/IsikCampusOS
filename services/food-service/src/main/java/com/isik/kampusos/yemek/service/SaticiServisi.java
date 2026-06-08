@@ -1,14 +1,17 @@
 package com.isik.kampusos.yemek.service;
 
 import com.isik.kampusos.yemek.dto.CalismaSaatiTalebi;
+import com.isik.kampusos.yemek.dto.KampanyaTalebi;
 import com.isik.kampusos.yemek.dto.MenuOgesiTalebi;
 import com.isik.kampusos.yemek.dto.SaticiGuncellemeTalebi;
 import com.isik.kampusos.yemek.dto.SaticiOlusturmaTalebi;
 import com.isik.kampusos.yemek.dto.SaticiYaniti;
 import com.isik.kampusos.yemek.model.CalismaSaati;
+import com.isik.kampusos.yemek.model.Kampanya;
 import com.isik.kampusos.yemek.model.MenuOgesi;
 import com.isik.kampusos.yemek.model.Satici;
 import com.isik.kampusos.yemek.repository.CalismaSaatiDeposu;
+import com.isik.kampusos.yemek.repository.KampanyaDeposu;
 import com.isik.kampusos.yemek.repository.MenuOgesiDeposu;
 import com.isik.kampusos.yemek.repository.SaticiDeposu;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +36,7 @@ public class SaticiServisi {
     private final SaticiDeposu saticiDeposu;
     private final MenuOgesiDeposu menuOgesiDeposu;
     private final CalismaSaatiDeposu calismaSaatiDeposu;
+    private final KampanyaDeposu kampanyaDeposu;
 
     // --- Öğrenci / herkese görünür ---
 
@@ -156,6 +160,92 @@ public class SaticiServisi {
             return LocalTime.parse(deger.trim(), SAAT_BICIMI);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz saat biçimi (HH:mm bekleniyor): " + deger);
+        }
+    }
+
+    // --- Kampanyalar (işletme yöneticisi) ---
+
+    public List<Kampanya> kampanyalarim(String yoneticiId) {
+        Satici s = saticiBul(yoneticiId);
+        return kampanyaDeposu.findBySaticiIdOrderByOlusturulmaTarihiDesc(s.getId());
+    }
+
+    @Transactional
+    public Kampanya kampanyaEkle(String yoneticiId, KampanyaTalebi talep) {
+        Satici s = saticiBul(yoneticiId);
+        Kampanya k = Kampanya.builder()
+                .saticiId(s.getId())
+                .ad(talep.getAd())
+                .tur(kampanyaTuruCoz(talep.getTur()))
+                .deger(talep.getDeger() != null ? talep.getDeger() : java.math.BigDecimal.ZERO)
+                .minSepetTutari(talep.getMinSepetTutari() != null ? talep.getMinSepetTutari() : java.math.BigDecimal.ZERO)
+                .aktif(talep.getAktif() == null || talep.getAktif())
+                .build();
+        kampanyaDogrula(k);
+        return kampanyaDeposu.save(k);
+    }
+
+    @Transactional
+    public Kampanya kampanyaGuncelle(String yoneticiId, String id, KampanyaTalebi talep) {
+        Satici s = saticiBul(yoneticiId);
+        Kampanya k = kampanyaSahipligiyleBul(id, s.getId());
+        if (talep.getAd() != null) k.setAd(talep.getAd());
+        if (talep.getTur() != null) k.setTur(kampanyaTuruCoz(talep.getTur()));
+        if (talep.getDeger() != null) k.setDeger(talep.getDeger());
+        if (talep.getMinSepetTutari() != null) k.setMinSepetTutari(talep.getMinSepetTutari());
+        if (talep.getAktif() != null) k.setAktif(talep.getAktif());
+        kampanyaDogrula(k);
+        return kampanyaDeposu.save(k);
+    }
+
+    @Transactional
+    public void kampanyaSil(String yoneticiId, String id) {
+        Satici s = saticiBul(yoneticiId);
+        Kampanya k = kampanyaSahipligiyleBul(id, s.getId());
+        kampanyaDeposu.delete(k);
+    }
+
+    /** SiparisServisi için: satıcının aktif kampanyaları. */
+    public List<Kampanya> aktifKampanyalar(String saticiId) {
+        return kampanyaDeposu.findBySaticiIdAndAktifTrue(saticiId);
+    }
+
+    /** SiparisServisi için: satıcı o an sipariş alabilir mi (durum + manuel + çalışma saati). */
+    public boolean acikMi(Satici s) {
+        List<CalismaSaati> saatler = calismaSaatiDeposu.findBySaticiIdOrderByGunAsc(s.getId());
+        return suAnAcikMi(s, saatler, LocalDateTime.now());
+    }
+
+    private Kampanya kampanyaSahipligiyleBul(String id, String saticiId) {
+        Kampanya k = kampanyaDeposu.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kampanya bulunamadı."));
+        if (!k.getSaticiId().equals(saticiId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu kampanya sizin satıcınıza ait değil.");
+        }
+        return k;
+    }
+
+    private Kampanya.KampanyaTuru kampanyaTuruCoz(String deger) {
+        if (deger == null || deger.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kampanya türü zorunludur.");
+        }
+        try {
+            return Kampanya.KampanyaTuru.valueOf(deger.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz kampanya türü: " + deger);
+        }
+    }
+
+    private void kampanyaDogrula(Kampanya k) {
+        if (k.getAd() == null || k.getAd().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kampanya adı zorunludur.");
+        }
+        if (k.getTur() == Kampanya.KampanyaTuru.YUZDE
+                && (k.getDeger().signum() <= 0 || k.getDeger().compareTo(java.math.BigDecimal.valueOf(100)) > 0)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Yüzde indirimi 1-100 arası olmalıdır.");
+        }
+        if (k.getTur() == Kampanya.KampanyaTuru.TUTAR && k.getDeger().signum() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tutar indirimi pozitif olmalıdır.");
         }
     }
 

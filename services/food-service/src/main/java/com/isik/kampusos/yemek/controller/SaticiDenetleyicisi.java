@@ -2,10 +2,12 @@ package com.isik.kampusos.yemek.controller;
 
 import com.isik.kampusos.yemek.dto.CalismaSaatiTalebi;
 import com.isik.kampusos.yemek.dto.CiroYaniti;
+import com.isik.kampusos.yemek.dto.KampanyaTalebi;
 import com.isik.kampusos.yemek.dto.MenuOgesiTalebi;
 import com.isik.kampusos.yemek.dto.SaticiGuncellemeTalebi;
 import com.isik.kampusos.yemek.dto.SaticiYaniti;
 import com.isik.kampusos.yemek.model.CalismaSaati;
+import com.isik.kampusos.yemek.model.Kampanya;
 import com.isik.kampusos.yemek.model.MenuOgesi;
 import com.isik.kampusos.yemek.model.Satici;
 import com.isik.kampusos.yemek.model.Siparis;
@@ -87,6 +89,34 @@ public class SaticiDenetleyicisi {
     public ResponseEntity<List<CalismaSaati>> calismaSaatleriKaydet(Authentication auth,
                                                                     @RequestBody CalismaSaatiTalebi talep) {
         return ResponseEntity.ok(saticiServisi.calismaSaatleriKaydet(auth.getName(), talep));
+    }
+
+    // --- İşletme yöneticisi: kampanyalar ---
+
+    @GetMapping("/api/v1/satici/kampanyalar")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<List<Kampanya>> kampanyalarim(Authentication auth) {
+        return ResponseEntity.ok(saticiServisi.kampanyalarim(auth.getName()));
+    }
+
+    @PostMapping("/api/v1/satici/kampanyalar")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<Kampanya> kampanyaEkle(Authentication auth, @RequestBody KampanyaTalebi talep) {
+        return ResponseEntity.ok(saticiServisi.kampanyaEkle(auth.getName(), talep));
+    }
+
+    @PutMapping("/api/v1/satici/kampanyalar/{id}")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<Kampanya> kampanyaGuncelle(Authentication auth, @PathVariable String id,
+                                                     @RequestBody KampanyaTalebi talep) {
+        return ResponseEntity.ok(saticiServisi.kampanyaGuncelle(auth.getName(), id, talep));
+    }
+
+    @DeleteMapping("/api/v1/satici/kampanyalar/{id}")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<Map<String, String>> kampanyaSil(Authentication auth, @PathVariable String id) {
+        saticiServisi.kampanyaSil(auth.getName(), id);
+        return ResponseEntity.ok(Map.of("mesaj", "Kampanya silindi."));
     }
 
     // --- İşletme yöneticisi: menü yönetimi ---
