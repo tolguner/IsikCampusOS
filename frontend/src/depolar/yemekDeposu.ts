@@ -99,8 +99,15 @@ export interface SiparisTalebi {
   musteriNotu?: string;
 }
 
+export interface SaticiFiltre {
+  ara?: string;
+  mutfak?: string;
+  sirala?: string;
+}
+
 interface YemekState {
   saticilar: Satici[];
+  mutfakTurleri: string[];
   seciliSatici: Satici | null;
   menu: MenuOgesi[];
   siparisler: Siparis[];
@@ -111,7 +118,8 @@ interface YemekState {
   successMessage: string | null;
 
   clearMessages: () => void;
-  saticilariGetir: () => Promise<void>;
+  saticilariGetir: (filtre?: SaticiFiltre) => Promise<void>;
+  mutfakTurleriGetir: () => Promise<void>;
   menuGetir: (satici: Satici) => Promise<void>;
   seciliSaticiyiTemizle: () => void;
 
@@ -133,6 +141,7 @@ const getErrorMessage = (err: any, fallback: string) =>
 
 export const useYemekDeposu = create<YemekState>((set, get) => ({
   saticilar: [],
+  mutfakTurleri: [],
   seciliSatici: null,
   menu: [],
   siparisler: [],
@@ -144,13 +153,27 @@ export const useYemekDeposu = create<YemekState>((set, get) => ({
 
   clearMessages: () => set({ error: null, successMessage: null }),
 
-  saticilariGetir: async () => {
+  saticilariGetir: async (filtre) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await api.get<Satici[]>('/saticilar');
+      const params = new URLSearchParams();
+      if (filtre?.ara) params.append('ara', filtre.ara);
+      if (filtre?.mutfak) params.append('mutfak', filtre.mutfak);
+      if (filtre?.sirala) params.append('sirala', filtre.sirala);
+      const qs = params.toString();
+      const res = await api.get<Satici[]>(`/saticilar${qs ? `?${qs}` : ''}`);
       set({ saticilar: res.data, isLoading: false });
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Satıcılar yüklenemedi.'), isLoading: false });
+    }
+  },
+
+  mutfakTurleriGetir: async () => {
+    try {
+      const res = await api.get<string[]>('/saticilar/mutfak-turleri');
+      set({ mutfakTurleri: res.data });
+    } catch {
+      // sessiz
     }
   },
 
