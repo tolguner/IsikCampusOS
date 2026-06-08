@@ -3,6 +3,7 @@ package com.isik.kampusos.yemek.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -31,6 +32,24 @@ public class Satici {
     @Column(nullable = false)
     private String yoneticiKullaniciId;
 
+    /** Mutfak türü / kategori (örn. "Fast Food", "Kafe", "Tatlı"). Filtreleme için. */
+    private String mutfakTuru;
+
+    @Column(columnDefinition = "TEXT")
+    private String kapakGorselUrl;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal teslimatUcreti = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal minimumSepetTutari = BigDecimal.ZERO;
+
+    /** Tahmini teslimat süresi (dakika). */
+    private Integer tahminiTeslimatDakika;
+
+    /** Manuel ana anahtar — false ise satıcı çalışma saatine bakılmaksızın kapalıdır (yoğunluk vb.). */
     @Builder.Default
     private boolean acik = true;
 

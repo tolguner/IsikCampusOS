@@ -8,6 +8,16 @@ export type SiparisDurumu =
   | 'BEKLEMEDE' | 'KABUL_EDILDI' | 'HAZIRLANIYOR' | 'HAZIR'
   | 'YOLDA' | 'TESLIM_EDILDI' | 'REDDEDILDI' | 'IPTAL_EDILDI';
 
+/** Bir günün çalışma saati (1=Pazartesi … 7=Pazar). */
+export interface CalismaSaati {
+  id?: string;
+  saticiId?: string;
+  gun: number;
+  acilis?: string | null;   // "HH:mm:ss" veya "HH:mm"
+  kapanis?: string | null;
+  kapali: boolean;
+}
+
 /** Backend (food-service) yanıtları ile birebir — çeviri (mapper) yoktur. */
 export interface Satici {
   id: string;
@@ -15,9 +25,18 @@ export interface Satici {
   aciklama?: string;
   konumMetni?: string;
   logoUrl?: string;
-  yoneticiKullaniciId: string;
+  yoneticiKullaniciId?: string;
+  mutfakTuru?: string;
+  kapakGorselUrl?: string;
+  teslimatUcreti?: number;
+  minimumSepetTutari?: number;
+  tahminiTeslimatDakika?: number | null;
   acik: boolean;
   durum: SaticiDurumu;
+  // /saticilar ve /saticilar/{id} yanıtında hesaplanmış alanlar:
+  suAnAcik?: boolean;
+  sonrakiAcilis?: string | null;
+  calismaSaatleri?: CalismaSaati[];
   olusturulmaTarihi?: string;
   guncellenmeTarihi?: string;
 }

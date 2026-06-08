@@ -1,8 +1,11 @@
 package com.isik.kampusos.yemek.controller;
 
+import com.isik.kampusos.yemek.dto.CalismaSaatiTalebi;
 import com.isik.kampusos.yemek.dto.CiroYaniti;
 import com.isik.kampusos.yemek.dto.MenuOgesiTalebi;
 import com.isik.kampusos.yemek.dto.SaticiGuncellemeTalebi;
+import com.isik.kampusos.yemek.dto.SaticiYaniti;
+import com.isik.kampusos.yemek.model.CalismaSaati;
 import com.isik.kampusos.yemek.model.MenuOgesi;
 import com.isik.kampusos.yemek.model.Satici;
 import com.isik.kampusos.yemek.model.Siparis;
@@ -33,8 +36,13 @@ public class SaticiDenetleyicisi {
     // --- Herkese açık (giriş yapmış her kullanıcı) ---
 
     @GetMapping("/api/v1/saticilar")
-    public ResponseEntity<List<Satici>> aktifSaticilar() {
+    public ResponseEntity<List<SaticiYaniti>> aktifSaticilar() {
         return ResponseEntity.ok(saticiServisi.aktifSaticilar());
+    }
+
+    @GetMapping("/api/v1/saticilar/{saticiId}")
+    public ResponseEntity<SaticiYaniti> saticiDetay(@PathVariable String saticiId) {
+        return ResponseEntity.ok(saticiServisi.saticiDetay(saticiId));
     }
 
     @GetMapping("/api/v1/saticilar/{saticiId}/menu")
@@ -55,6 +63,21 @@ public class SaticiDenetleyicisi {
     public ResponseEntity<Satici> saticiGuncelle(Authentication auth,
                                                  @RequestBody SaticiGuncellemeTalebi talep) {
         return ResponseEntity.ok(saticiServisi.saticiGuncelle(auth.getName(), talep));
+    }
+
+    // --- İşletme yöneticisi: çalışma saatleri ---
+
+    @GetMapping("/api/v1/satici/calisma-saatleri")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<List<CalismaSaati>> benimCalismaSaatlerim(Authentication auth) {
+        return ResponseEntity.ok(saticiServisi.benimCalismaSaatlerim(auth.getName()));
+    }
+
+    @PutMapping("/api/v1/satici/calisma-saatleri")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<List<CalismaSaati>> calismaSaatleriKaydet(Authentication auth,
+                                                                    @RequestBody CalismaSaatiTalebi talep) {
+        return ResponseEntity.ok(saticiServisi.calismaSaatleriKaydet(auth.getName(), talep));
     }
 
     // --- İşletme yöneticisi: menü yönetimi ---

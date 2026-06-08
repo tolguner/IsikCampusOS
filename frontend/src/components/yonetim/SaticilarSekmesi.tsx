@@ -61,7 +61,7 @@ export const SaticilarSekmesi = () => {
                     </div>
                   </div>
                 </td>
-                <td className="px-5 py-4 text-xs text-white/55">{yoneticiHaritasi.get(s.yoneticiKullaniciId) || s.yoneticiKullaniciId.slice(0, 8)}</td>
+                <td className="px-5 py-4 text-xs text-white/55">{(s.yoneticiKullaniciId && yoneticiHaritasi.get(s.yoneticiKullaniciId)) || (s.yoneticiKullaniciId ? s.yoneticiKullaniciId.slice(0, 8) : '—')}</td>
                 <td className="px-5 py-4">
                   <span className={`rounded-lg px-2.5 py-1 text-xs font-semibold border ${s.durum === 'AKTIF' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-white/5 text-white/50 border-white/10'}`}>
                     {s.durum === 'AKTIF' ? 'Aktif' : 'Pasif'}
