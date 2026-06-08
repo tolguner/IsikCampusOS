@@ -62,11 +62,27 @@ export interface SiparisKalemi {
   araToplam: number;
 }
 
+export type KampanyaTuru = 'YUZDE' | 'TUTAR' | 'UCRETSIZ_TESLIMAT';
+
+export interface Kampanya {
+  id: string;
+  saticiId: string;
+  ad: string;
+  tur: KampanyaTuru;
+  deger: number;
+  minSepetTutari: number;
+  aktif: boolean;
+}
+
 export interface Siparis {
   id: string;
   saticiId: string;
   musteriKullaniciId: string;
   durum: SiparisDurumu;
+  araToplam?: number;
+  teslimatUcreti?: number;
+  indirimTutari?: number;
+  kampanyaId?: string;
   toplamTutar: number;
   teslimAdresi: string;
   odemeYontemi: OdemeYontemi;

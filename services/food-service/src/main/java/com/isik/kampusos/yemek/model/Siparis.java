@@ -31,6 +31,20 @@ public class Siparis {
     private SiparisDurumu durum;
 
     @Column(nullable = false, precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal araToplam = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal teslimatUcreti = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal indirimTutari = BigDecimal.ZERO;
+
+    private String kampanyaId;
+
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal toplamTutar;
 
     @Column(nullable = false, length = 500)
