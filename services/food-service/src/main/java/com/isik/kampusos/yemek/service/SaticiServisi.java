@@ -13,6 +13,7 @@ import com.isik.kampusos.yemek.model.MenuSecenekGrubu;
 import com.isik.kampusos.yemek.model.MenuSecenegi;
 import com.isik.kampusos.yemek.model.Satici;
 import com.isik.kampusos.yemek.repository.CalismaSaatiDeposu;
+import com.isik.kampusos.yemek.repository.IsletmePersonelDeposu;
 import com.isik.kampusos.yemek.repository.KampanyaDeposu;
 import com.isik.kampusos.yemek.repository.MenuOgesiDeposu;
 import com.isik.kampusos.yemek.repository.SaticiDeposu;
@@ -39,6 +40,7 @@ public class SaticiServisi {
     private final MenuOgesiDeposu menuOgesiDeposu;
     private final CalismaSaatiDeposu calismaSaatiDeposu;
     private final KampanyaDeposu kampanyaDeposu;
+    private final IsletmePersonelDeposu personelDeposu;
 
     // --- Öğrenci / herkese görünür ---
 
@@ -100,8 +102,21 @@ public class SaticiServisi {
 
     // --- İşletme yöneticisi (kendi satıcısı) ---
 
-    public Satici benimSaticim(String yoneticiId) {
-        return saticiBul(yoneticiId);
+    public Satici benimSaticim(String kullaniciId) {
+        return saticiCozumle(kullaniciId);
+    }
+
+    /**
+     * Bir kullanıcının (işletme sahibi VEYA personeli) bağlı olduğu işletmeyi çözer.
+     * Önce sahip (yonetici_kullanici_id), bulunamazsa personel bağı (isletme_personeli) denenir.
+     * Sipariş akışında kullanılır; menü/ayar gibi sahip-özel işlemlerde {@link #saticiBul} kullanılır.
+     */
+    public Satici saticiCozumle(String kullaniciId) {
+        return saticiDeposu.findByYoneticiKullaniciId(kullaniciId)
+                .or(() -> personelDeposu.findByKullaniciId(kullaniciId)
+                        .flatMap(p -> saticiDeposu.findById(p.getSaticiId())))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Hesabınıza bağlı bir işletme bulunamadı."));
     }
 
     @Transactional

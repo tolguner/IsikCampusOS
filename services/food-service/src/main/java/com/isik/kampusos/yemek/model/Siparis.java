@@ -64,6 +64,9 @@ public class Siparis {
     private String redNedeni;
     private Integer tahminiHazirDakika;
 
+    /** Kabul/red kararını veren işletme kullanıcısı (sahip veya personel). */
+    private String isleyenKullaniciId;
+
     private LocalDateTime olusturulmaTarihi;
     private LocalDateTime kabulTarihi;
     private LocalDateTime hazirTarihi;

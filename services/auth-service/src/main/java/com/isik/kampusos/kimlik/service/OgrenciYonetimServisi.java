@@ -238,8 +238,11 @@ public class OgrenciYonetimServisi {
         kullanici.setSifre(passwordEncoder.encode(tcKimlikNo));
         kullanici.setTcKimlikMaskeli(tcKimlikMaskele(tcKimlikNo));
         kullanici.setSifreDegistirmeli(true);
+        // Güvenlik: şifre sıfırlandığında e-posta doğrulaması da yenilenir.
+        // Öğrenci ilk girişte önce mail koduyla kimliğini doğrular, sonra yeni şifre belirler.
+        kullanici.setEpostaDogrulandi(false);
         kullaniciDeposu.save(kullanici);
- 
+
         log.info("Öğrenci şifresi sıfırlandı: {}", kullanici.getOgrenciNumarasi());
     }
  

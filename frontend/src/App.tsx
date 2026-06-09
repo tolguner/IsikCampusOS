@@ -84,7 +84,7 @@ const DashboardRoute = () => {
     return <TesisYonetimPaneli />;
   }
 
-  if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.isletmeYonetimi)) {
+  if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.isletmePaneli)) {
     return <IsletmePaneli />;
   }
 

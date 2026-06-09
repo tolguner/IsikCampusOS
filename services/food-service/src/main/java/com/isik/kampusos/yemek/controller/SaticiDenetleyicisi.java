@@ -64,7 +64,7 @@ public class SaticiDenetleyicisi {
     // --- İşletme yöneticisi: satıcı profili ---
 
     @GetMapping("/api/v1/satici")
-    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_VENDOR_ADMIN','ROLE_VENDOR_STAFF')")
     public ResponseEntity<Satici> benimSaticim(Authentication auth) {
         return ResponseEntity.ok(saticiServisi.benimSaticim(auth.getName()));
     }
@@ -152,19 +152,19 @@ public class SaticiDenetleyicisi {
     // --- İşletme yöneticisi: siparişler ---
 
     @GetMapping("/api/v1/satici/siparisler")
-    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_VENDOR_ADMIN','ROLE_VENDOR_STAFF')")
     public ResponseEntity<List<Siparis>> saticiSiparisleri(Authentication auth) {
         return ResponseEntity.ok(siparisServisi.saticiSiparisleri(auth.getName()));
     }
 
     @PostMapping("/api/v1/satici/siparisler/{id}/kabul")
-    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_VENDOR_ADMIN','ROLE_VENDOR_STAFF')")
     public ResponseEntity<Siparis> kabul(Authentication auth, @PathVariable String id) {
         return ResponseEntity.ok(siparisServisi.kabul(auth.getName(), id));
     }
 
     @PostMapping("/api/v1/satici/siparisler/{id}/reddet")
-    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_VENDOR_ADMIN','ROLE_VENDOR_STAFF')")
     public ResponseEntity<Siparis> reddet(Authentication auth, @PathVariable String id,
                                           @RequestBody(required = false) Map<String, String> govde) {
         String neden = govde != null ? govde.get("neden") : null;
@@ -172,25 +172,25 @@ public class SaticiDenetleyicisi {
     }
 
     @PostMapping("/api/v1/satici/siparisler/{id}/hazirla")
-    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_VENDOR_ADMIN','ROLE_VENDOR_STAFF')")
     public ResponseEntity<Siparis> hazirla(Authentication auth, @PathVariable String id) {
         return ResponseEntity.ok(siparisServisi.hazirla(auth.getName(), id));
     }
 
     @PostMapping("/api/v1/satici/siparisler/{id}/hazir")
-    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_VENDOR_ADMIN','ROLE_VENDOR_STAFF')")
     public ResponseEntity<Siparis> hazir(Authentication auth, @PathVariable String id) {
         return ResponseEntity.ok(siparisServisi.hazir(auth.getName(), id));
     }
 
     @PostMapping("/api/v1/satici/siparisler/{id}/yolda")
-    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_VENDOR_ADMIN','ROLE_VENDOR_STAFF')")
     public ResponseEntity<Siparis> yolda(Authentication auth, @PathVariable String id) {
         return ResponseEntity.ok(siparisServisi.yolda(auth.getName(), id));
     }
 
     @PostMapping("/api/v1/satici/siparisler/{id}/teslim")
-    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_VENDOR_ADMIN','ROLE_VENDOR_STAFF')")
     public ResponseEntity<Siparis> teslim(Authentication auth, @PathVariable String id,
                                           @RequestBody Map<String, String> govde) {
         return ResponseEntity.ok(siparisServisi.teslim(auth.getName(), id, govde.get("tahsilEdilenOdeme")));

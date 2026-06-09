@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Store, ClipboardList, UtensilsCrossed, TrendingUp, Power, MapPin, Settings, Tag } from 'lucide-react';
+import { Store, ClipboardList, UtensilsCrossed, TrendingUp, Power, MapPin, Settings, Tag, Users } from 'lucide-react';
 import { useIsletmeDeposu } from '../depolar/isletmeDeposu';
+import { useKimlikDeposu } from '../depolar/kimlikDeposu';
+import { rolleriAyir, YETKILER } from '../yardimcilar/yetkiler';
 import { SiparislerSekmesi } from '../components/isletme-paneli/SiparislerSekmesi';
 import { MenuSekmesi } from '../components/isletme-paneli/MenuSekmesi';
 import { CiroSekmesi } from '../components/isletme-paneli/CiroSekmesi';
 import { AyarlarSekmesi } from '../components/isletme-paneli/AyarlarSekmesi';
 import { KampanyalarSekmesi } from '../components/isletme-paneli/KampanyalarSekmesi';
+import { PersonelSekmesi } from '../components/isletme-paneli/PersonelSekmesi';
 
-type Sekme = 'siparisler' | 'menu' | 'kampanyalar' | 'ciro' | 'ayarlar';
+type Sekme = 'siparisler' | 'menu' | 'kampanyalar' | 'ciro' | 'ayarlar' | 'personel';
 
 export const IsletmePaneli = () => {
   const { satici, error, successMessage, saticimiGetir, saticiGuncelle, clearMessages } = useIsletmeDeposu();
+  const user = useKimlikDeposu(state => state.user);
+  const sahipMi = rolleriAyir(user?.roller).includes(YETKILER.ISLETME_YONETICISI);
   const [sekme, setSekme] = useState<Sekme>('siparisler');
 
   useEffect(() => { saticimiGetir(); }, [saticimiGetir]);
@@ -20,13 +25,19 @@ export const IsletmePaneli = () => {
     if (satici) saticiGuncelle({ acik: !satici.acik });
   };
 
-  const sekmeler: { id: Sekme; etiket: string; ikon: React.ReactNode }[] = [
-    { id: 'siparisler', etiket: 'Siparişler', ikon: <ClipboardList className="w-4 h-4" /> },
-    { id: 'menu', etiket: 'Menü', ikon: <UtensilsCrossed className="w-4 h-4" /> },
-    { id: 'kampanyalar', etiket: 'Kampanyalar', ikon: <Tag className="w-4 h-4" /> },
-    { id: 'ciro', etiket: 'Ciro', ikon: <TrendingUp className="w-4 h-4" /> },
-    { id: 'ayarlar', etiket: 'Ayarlar', ikon: <Settings className="w-4 h-4" /> },
-  ];
+  // Personel yalnızca siparişleri görür; sahip tüm sekmeleri + personel yönetimini görür.
+  const sekmeler: { id: Sekme; etiket: string; ikon: React.ReactNode }[] = sahipMi
+    ? [
+        { id: 'siparisler', etiket: 'Siparişler', ikon: <ClipboardList className="w-4 h-4" /> },
+        { id: 'menu', etiket: 'Menü', ikon: <UtensilsCrossed className="w-4 h-4" /> },
+        { id: 'kampanyalar', etiket: 'Kampanyalar', ikon: <Tag className="w-4 h-4" /> },
+        { id: 'personel', etiket: 'Personel', ikon: <Users className="w-4 h-4" /> },
+        { id: 'ciro', etiket: 'Ciro', ikon: <TrendingUp className="w-4 h-4" /> },
+        { id: 'ayarlar', etiket: 'Ayarlar', ikon: <Settings className="w-4 h-4" /> },
+      ]
+    : [
+        { id: 'siparisler', etiket: 'Siparişler', ikon: <ClipboardList className="w-4 h-4" /> },
+      ];
 
   return (
     <div className="space-y-6">
@@ -44,7 +55,7 @@ export const IsletmePaneli = () => {
           </div>
         </div>
 
-        {satici && (
+        {satici && sahipMi && (
           <button
             onClick={acikDurumDegistir}
             className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-colors ${satici.acik ? 'text-emerald-200 bg-emerald-500/15 border-emerald-400/25 hover:bg-emerald-500/25' : 'text-white/50 bg-white/5 border-white/10 hover:bg-white/10'}`}
@@ -76,10 +87,11 @@ export const IsletmePaneli = () => {
       {/* İçerik */}
       <div>
         {sekme === 'siparisler' && <SiparislerSekmesi />}
-        {sekme === 'menu' && <MenuSekmesi />}
-        {sekme === 'kampanyalar' && <KampanyalarSekmesi />}
-        {sekme === 'ciro' && <CiroSekmesi />}
-        {sekme === 'ayarlar' && <AyarlarSekmesi />}
+        {sahipMi && sekme === 'menu' && <MenuSekmesi />}
+        {sahipMi && sekme === 'kampanyalar' && <KampanyalarSekmesi />}
+        {sahipMi && sekme === 'personel' && <PersonelSekmesi />}
+        {sahipMi && sekme === 'ciro' && <CiroSekmesi />}
+        {sahipMi && sekme === 'ayarlar' && <AyarlarSekmesi />}
       </div>
     </div>
   );

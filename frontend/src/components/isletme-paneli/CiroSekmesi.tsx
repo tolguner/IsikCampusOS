@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Wallet, CreditCard, ShoppingBag } from 'lucide-react';
-import { useIsletmeDeposu } from '../../depolar/isletmeDeposu';
+import { TrendingUp, Wallet, CreditCard, ShoppingBag, ListChecks, Clock, User, UserCog } from 'lucide-react';
+import { useIsletmeDeposu, type CiroKaydi } from '../../depolar/isletmeDeposu';
+import { SIPARIS_DURUM_BILGISI, type SiparisDurumu } from '../../depolar/yemekDeposu';
 
 const paraBicimle = (t: number) =>
   new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(t);
+const tarihBicimle = (t?: string) => t ? new Date(t).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
 
 const bugun = () => new Date().toISOString().slice(0, 10);
 const gunOnce = (n: number) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
@@ -60,10 +62,84 @@ export const CiroSekmesi = () => {
         </div>
       )}
 
+      {ciro && (
+        <>
+          {/* İkincil sayımlar */}
+          <div className="grid grid-cols-3 gap-3">
+            <MiniIstatistik etiket="Toplam Sipariş" deger={ciro.toplamSiparis} renk="notr" />
+            <MiniIstatistik etiket="Müşteri İptali" deger={ciro.iptalSayisi} renk="amber" />
+            <MiniIstatistik etiket="Reddedilen" deger={ciro.redSayisi} renk="red" />
+          </div>
+
+          {/* Sipariş hareketleri (aktivite günlüğü) */}
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/8 flex items-center gap-2">
+              <ListChecks className="w-4 h-4 text-white/50" />
+              <p className="text-sm font-bold text-white/80">Sipariş Hareketleri</p>
+              <span className="text-xs text-white/35">({ciro.kayitlar.length})</span>
+            </div>
+            {ciro.kayitlar.length === 0 ? (
+              <p className="text-sm text-white/40 px-4 py-8 text-center">Bu aralıkta sipariş hareketi yok.</p>
+            ) : (
+              <div className="divide-y divide-white/5">
+                {ciro.kayitlar.map(k => <KayitSatiri key={k.siparisId} kayit={k} />)}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       <p className="text-[11px] text-white/30">
         Ciro yalnızca <span className="text-white/50 font-semibold">teslim edilen</span> online siparişlerden hesaplanır; tahsilat,
-        kuryenin teslimde işaretlediği gerçek ödeme yöntemine göre ayrılır.
+        kuryenin teslimde işaretlediği gerçek ödeme yöntemine göre ayrılır. Hareketler sipariş oluşturulma tarihine göre listelenir.
       </p>
+    </div>
+  );
+};
+
+const MiniIstatistik = ({ etiket, deger, renk }: { etiket: string; deger: number; renk: 'notr' | 'amber' | 'red' }) => {
+  const renkSinifi = renk === 'amber' ? 'text-amber-200' : renk === 'red' ? 'text-red-200' : 'text-white';
+  return (
+    <div className="rounded-2xl p-4 border border-white/10 bg-white/[0.03]">
+      <p className="text-xs font-bold text-white/45">{etiket}</p>
+      <p className={`text-xl font-extrabold mt-1 ${renkSinifi}`}>{deger}</p>
+    </div>
+  );
+};
+
+const KayitSatiri = ({ kayit }: { kayit: CiroKaydi }) => {
+  const bilgi = SIPARIS_DURUM_BILGISI[kayit.durum as SiparisDurumu];
+  const teslim = kayit.durum === 'TESLIM_EDILDI';
+  const odeme = kayit.odemeYontemi === 'NAKIT' ? 'Nakit' : kayit.odemeYontemi === 'KREDI_KARTI' ? 'Kart' : '';
+  return (
+    <div className="flex items-center gap-x-3 gap-y-1 px-4 py-3 flex-wrap">
+      <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black border ${bilgi?.renk ?? 'text-white/50 border-white/15'}`}>
+        {bilgi?.etiket ?? kayit.durum}
+      </span>
+      <span className="text-[11px] text-white/35 inline-flex items-center gap-1"><Clock className="w-3 h-3" /> {tarihBicimle(kayit.tarih)}</span>
+      <span className="text-[11px] text-white/30">#{kayit.siparisId.slice(0, 8)}</span>
+      {kayit.musteriAdi && (
+        <span className="text-[11px] text-white/55 inline-flex items-center gap-1" title="Siparişi veren">
+          <User className="w-3 h-3" /> {kayit.musteriAdi}
+        </span>
+      )}
+      {kayit.isleyenAdi && (
+        <span className="text-[11px] text-cyan-200/70 inline-flex items-center gap-1" title="Kabul/red eden personel">
+          <UserCog className="w-3 h-3" /> {kayit.isleyenAdi}
+        </span>
+      )}
+      {odeme && (
+        <span className="text-[11px] text-white/40">
+          {odeme}{kayit.tahsilEdilenOdeme ? ' · tahsil edildi' : ''}
+        </span>
+      )}
+      {kayit.redNedeni && <span className="text-[11px] text-red-300/70 italic">{kayit.redNedeni}</span>}
+      <div className="ml-auto text-right">
+        <p className="text-[11px] text-white/40">{paraBicimle(kayit.tutar)}</p>
+        <p className={`text-sm font-extrabold ${teslim ? 'text-emerald-300' : 'text-white/25'}`}>
+          {teslim ? '+' + paraBicimle(kayit.kazanc) : '—'}
+        </p>
+      </div>
     </div>
   );
 };

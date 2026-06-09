@@ -1,8 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Shield, Monitor, Moon, Sun, MonitorSmartphone, Globe, Palette } from 'lucide-react';
+import { Bell, Shield, Monitor, Moon, Sun, MonitorSmartphone, Globe, Palette, Phone } from 'lucide-react';
+import { useProfilDeposu } from '../depolar/profilDeposu';
 
 export const AyarlarSayfasi = () => {
+  const { profile, fetchMyProfile, updateMyProfile, isLoading } = useProfilDeposu();
+  const iletisimIzni = !!profile?.iletisimPaylasimIzni;
+
+  useEffect(() => { fetchMyProfile(); }, [fetchMyProfile]);
+
+  const iletisimIzniDegistir = () =>
+    updateMyProfile(
+      { iletisimPaylasimIzni: !iletisimIzni },
+      !iletisimIzni ? 'İletişim paylaşımı açıldı.' : 'İletişim paylaşımı kapatıldı.',
+    );
+
   const [theme, setTheme] = useState('system');
   const [notifications, setNotifications] = useState({
     email: true,
@@ -129,6 +141,33 @@ export const AyarlarSayfasi = () => {
                 </button>
               </div>
 
+            </div>
+          </motion.div>
+
+          {/* Privacy Section */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="p-6 rounded-3xl border border-white/5 bg-white/[0.02]"
+          >
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-emerald-400" /> Gizlilik
+            </h2>
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
+              <div className="pr-4">
+                <h4 className="text-sm font-medium text-white flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-emerald-400" /> İletişim Bilgilerimi İşletmelerle Paylaş
+                </h4>
+                <p className="text-xs text-white/40 mt-0.5">
+                  UniEats siparişlerinde bir sorun olursa işletmenin seni telefonla arayabilmesi için telefon numaran paylaşılır.
+                  Kapalıyken telefonun işletmeye iletilmez.
+                </p>
+              </div>
+              <button
+                onClick={iletisimIzniDegistir}
+                disabled={isLoading}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer shrink-0 disabled:opacity-50 ${iletisimIzni ? 'bg-emerald-500' : 'bg-white/20'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${iletisimIzni ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
             </div>
           </motion.div>
 

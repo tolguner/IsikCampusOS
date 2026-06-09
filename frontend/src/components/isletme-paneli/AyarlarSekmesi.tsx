@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Clock, Store as StoreIcon, Save } from 'lucide-react';
 import { useIsletmeDeposu, type SaticiAyarFormu, type CalismaSaatiGun } from '../../depolar/isletmeDeposu';
+import { GorselYukleyici } from '../ortak/GorselYukleyici';
 
 export const MUTFAK_TURLERI = [
   'Fast Food', 'Kafe', 'Tatlı & Pastane', 'Ev Yemekleri', 'Pizza & Burger',
@@ -91,11 +92,11 @@ export const AyarlarSekmesi = () => {
           <Alan etiket="Tahmini Teslimat (dakika)">
             <input type="number" min={0} className={girisSinifi} value={profil.tahminiTeslimatDakika ?? ''} onChange={e => setProfil(p => ({ ...p, tahminiTeslimatDakika: e.target.value ? parseInt(e.target.value) : undefined }))} placeholder="örn. 30" />
           </Alan>
-          <Alan etiket="Logo URL">
-            <input className={girisSinifi} value={profil.logoUrl ?? ''} onChange={e => setProfil(p => ({ ...p, logoUrl: e.target.value }))} placeholder="https://..." />
+          <Alan etiket="Logo">
+            <GorselYukleyici value={profil.logoUrl} onChange={url => setProfil(p => ({ ...p, logoUrl: url }))} oranSinifi="aspect-square" maksKenar={400} />
           </Alan>
-          <Alan etiket="Kapak Görseli URL">
-            <input className={girisSinifi} value={profil.kapakGorselUrl ?? ''} onChange={e => setProfil(p => ({ ...p, kapakGorselUrl: e.target.value }))} placeholder="https://..." />
+          <Alan etiket="Kapak Görseli">
+            <GorselYukleyici value={profil.kapakGorselUrl} onChange={url => setProfil(p => ({ ...p, kapakGorselUrl: url }))} oranSinifi="aspect-[3/1]" maksKenar={1200} />
           </Alan>
           <button
             disabled={isLoading}

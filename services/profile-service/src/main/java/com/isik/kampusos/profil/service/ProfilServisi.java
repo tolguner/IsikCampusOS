@@ -73,7 +73,8 @@ public class ProfilServisi {
         
         if (updateDto.getHakkinda() != null) profil.setHakkinda(updateDto.getHakkinda());
         if (updateDto.getYetenekler() != null) profil.setYetenekler(updateDto.getYetenekler());
-        
+        if (updateDto.getIletisimPaylasimIzni() != null) profil.setIletisimPaylasimIzni(updateDto.getIletisimPaylasimIzni());
+
         return profilDeposu.save(profil);
     }
  

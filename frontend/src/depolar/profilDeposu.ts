@@ -17,9 +17,10 @@ export interface Profil {
   hakkinda?: string;
   yetenekler?: string;
   guvenSkoru?: number;
+  iletisimPaylasimIzni?: boolean;
 }
 
-type ProfilGuncelleme = Partial<Pick<Profil, 'ad' | 'soyad' | 'bolum' | 'profilResmiUrl' | 'hakkinda' | 'yetenekler'>>;
+type ProfilGuncelleme = Partial<Pick<Profil, 'ad' | 'soyad' | 'bolum' | 'profilResmiUrl' | 'hakkinda' | 'yetenekler' | 'iletisimPaylasimIzni'>>;
 
 export interface ProfilDegisiklikIstegi {
   id: string;

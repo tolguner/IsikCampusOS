@@ -1,6 +1,7 @@
 package com.isik.kampusos.kimlik.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.isik.kampusos.kimlik.dto.IsletmePersoneliOlusturmaTalebi;
 import com.isik.kampusos.kimlik.dto.KullaniciDenetimYaniti;
 import com.isik.kampusos.kimlik.dto.KullaniciYonetimGuncellemeTalebi;
 import com.isik.kampusos.kimlik.dto.KullaniciYonetimOlusturmaTalebi;
@@ -178,6 +179,57 @@ public class KullaniciYonetimServisi {
         kullaniciDeposu.delete(kullanici);
         denetimKaydet(id, "KULLANICI_SILINDI", yapanId, "Kullanıcı silindi: " + eposta + " (" + roller + ")");
         log.info("Yönetici kullanıcıyı sildi: {} ({})", eposta, roller);
+    }
+
+    /**
+     * İşletme sahibi tarafından eklenen personel hesabı (ROLE_VENDOR_STAFF).
+     * food-service köprüsü çağırır. Varsayılan şifre = TC; ilk girişte değiştirme zorunlu;
+     * mail onayı yok (personel sınıfı, mevcut ROLE_VENDOR_ADMIN ile aynı).
+     */
+    @Transactional
+    public KullaniciYonetimYaniti isletmePersoneliOlustur(IsletmePersoneliOlusturmaTalebi talep, String sahipId) {
+        if (talep.getEposta() == null || talep.getEposta().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-posta zorunludur.");
+        }
+        tcDogrula(talep.getTcKimlikNo());
+        String eposta = talep.getEposta().trim().toLowerCase();
+        if (kullaniciDeposu.existsByEposta(eposta)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu e-posta ile bir hesap zaten mevcut.");
+        }
+        Kullanici kullanici = Kullanici.builder()
+                .eposta(eposta)
+                .sifre(passwordEncoder.encode(talep.getTcKimlikNo()))   // varsayılan şifre = TC
+                .roller("ROLE_VENDOR_STAFF")
+                .ad(talep.getAd())
+                .soyad(talep.getSoyad())
+                .tcKimlikMaskeli(tcKimlikMaskele(talep.getTcKimlikNo()))
+                .durum(KullaniciDurumu.AKTIF)
+                .epostaDogrulandi(true)        // personel sınıfı: mail onayı yok
+                .sifreDegistirmeli(true)
+                .build();
+        Kullanici kaydedilen = kullaniciDeposu.save(kullanici);
+        profilOlusturmaOlayiYayinla(kaydedilen);
+        denetimKaydet(kaydedilen.getId(), "PERSONEL_OLUSTURULDU", sahipId,
+                "İşletme personeli oluşturuldu: " + kaydedilen.getEposta());
+        log.info("İşletme personeli oluşturuldu: {} (sahip {})", kaydedilen.getEposta(), sahipId);
+        return yanitOlustur(kaydedilen);
+    }
+
+    /**
+     * Personel hesabını kalıcı siler. İşletmeden çıkarma + telafi (food link adımı hata verirse)
+     * için food köprüsü çağırır. Yalnızca ROLE_VENDOR_STAFF hesaplarına izin verir.
+     */
+    @Transactional
+    public void isletmePersoneliSil(String id, String yapanId) {
+        Kullanici kullanici = kullaniciDeposu.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Personel bulunamadı."));
+        if (kullanici.getRoller() == null || !kullanici.getRoller().contains("ROLE_VENDOR_STAFF")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu hesap bir işletme personeli değil.");
+        }
+        String eposta = kullanici.getEposta();
+        kullaniciDeposu.delete(kullanici);
+        denetimKaydet(id, "PERSONEL_SILINDI", yapanId, "İşletme personeli silindi: " + eposta);
+        log.info("İşletme personeli silindi: {} (yapan {})", eposta, yapanId);
     }
 
     public List<KullaniciDenetimYaniti> denetimGunlukleriniGetir() {
