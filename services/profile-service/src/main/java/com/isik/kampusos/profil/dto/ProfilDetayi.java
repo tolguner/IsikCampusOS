@@ -10,4 +10,5 @@ public class ProfilDetayi {
     private String profilResmiUrl;
     private String hakkinda;
     private String yetenekler;
+    private Boolean iletisimPaylasimIzni;
 }

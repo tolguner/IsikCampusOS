@@ -1,7 +1,9 @@
 package com.isik.kampusos.yemek.service;
 
+import com.isik.kampusos.yemek.dto.CiroKaydi;
 import com.isik.kampusos.yemek.dto.CiroYaniti;
 import com.isik.kampusos.yemek.dto.SiparisOlusturmaTalebi;
+import com.isik.kampusos.yemek.messaging.AuthKimlikIstemcisi;
 import com.isik.kampusos.yemek.messaging.BildirimYayinlayici;
 import com.isik.kampusos.yemek.model.Kampanya;
 import com.isik.kampusos.yemek.model.MenuOgesi;
@@ -33,6 +35,7 @@ public class SiparisServisi {
     private final MenuOgesiDeposu menuOgesiDeposu;
     private final BildirimYayinlayici bildirimYayinlayici;
     private final SaticiServisi saticiServisi;
+    private final AuthKimlikIstemcisi authIstemci;
 
     // --- Öğrenci ---
 
@@ -178,8 +181,8 @@ public class SiparisServisi {
 
     // --- İşletme yöneticisi ---
 
-    public List<Siparis> saticiSiparisleri(String yoneticiId) {
-        Satici satici = saticiBul(yoneticiId);
+    public List<Siparis> saticiSiparisleri(String kullaniciId) {
+        Satici satici = saticiServisi.saticiCozumle(kullaniciId);   // sahip veya personel
         return siparisDeposu.findBySaticiIdOrderByOlusturulmaTarihiDesc(satici.getId());
     }
 
@@ -189,6 +192,7 @@ public class SiparisServisi {
         gecisGuard(v.siparis, Siparis.SiparisDurumu.BEKLEMEDE);
         v.siparis.setDurum(Siparis.SiparisDurumu.KABUL_EDILDI);
         v.siparis.setKabulTarihi(LocalDateTime.now());
+        v.siparis.setIsleyenKullaniciId(yoneticiId);   // kabul eden personel/sahip
         return kaydetVeBildir(v, "Siparişiniz onaylandı", "Siparişiniz işletme tarafından onaylandı, hazırlanmaya başlanacak.");
     }
 
@@ -202,6 +206,7 @@ public class SiparisServisi {
         v.siparis.setDurum(Siparis.SiparisDurumu.REDDEDILDI);
         v.siparis.setRedNedeni(neden);
         v.siparis.setIptalTarihi(LocalDateTime.now());
+        v.siparis.setIsleyenKullaniciId(yoneticiId);   // reddeden personel/sahip
         return kaydetVeBildir(v, "Siparişiniz reddedildi", "Siparişiniz reddedildi" + (neden != null && !neden.isBlank() ? ": " + neden : "."));
     }
 
@@ -246,20 +251,55 @@ public class SiparisServisi {
         Satici satici = saticiBul(yoneticiId);
         LocalDateTime bas = (baslangic != null ? baslangic : LocalDate.now().minusDays(30)).atStartOfDay();
         LocalDateTime bit = (bitis != null ? bitis : LocalDate.now()).atTime(23, 59, 59);
-        List<Siparis> teslimler = siparisDeposu.findBySaticiIdAndDurumAndTeslimTarihiBetween(
-                satici.getId(), Siparis.SiparisDurumu.TESLIM_EDILDI, bas, bit);
+        // Aralıktaki tüm siparişler (oluşturulma tarihine göre) — hem özet hem aktivite günlüğü.
+        List<Siparis> hepsi = siparisDeposu.findBySaticiIdAndOlusturulmaTarihiBetweenOrderByOlusturulmaTarihiDesc(
+                satici.getId(), bas, bit);
+
+        // İsim çözümleme: müşteri + işleyen personel id'lerini auth'tan tek seferde topluca al.
+        java.util.Set<String> idler = new java.util.HashSet<>();
+        for (Siparis s : hepsi) {
+            if (s.getMusteriKullaniciId() != null) idler.add(s.getMusteriKullaniciId());
+            if (s.getIsleyenKullaniciId() != null) idler.add(s.getIsleyenKullaniciId());
+        }
+        java.util.Map<String, String> adlar = authIstemci.adlariGetir(yoneticiId, new ArrayList<>(idler));
 
         BigDecimal toplam = BigDecimal.ZERO, nakit = BigDecimal.ZERO, kk = BigDecimal.ZERO;
-        for (Siparis s : teslimler) {
-            toplam = toplam.add(s.getToplamTutar());
-            if (s.getTahsilEdilenOdeme() == Siparis.OdemeYontemi.NAKIT) nakit = nakit.add(s.getToplamTutar());
-            else if (s.getTahsilEdilenOdeme() == Siparis.OdemeYontemi.KREDI_KARTI) kk = kk.add(s.getToplamTutar());
+        long teslim = 0, iptal = 0, red = 0;
+        List<CiroKaydi> kayitlar = new ArrayList<>();
+        for (Siparis s : hepsi) {
+            boolean teslimEdildi = s.getDurum() == Siparis.SiparisDurumu.TESLIM_EDILDI;
+            if (teslimEdildi) {
+                teslim++;
+                toplam = toplam.add(s.getToplamTutar());
+                if (s.getTahsilEdilenOdeme() == Siparis.OdemeYontemi.NAKIT) nakit = nakit.add(s.getToplamTutar());
+                else if (s.getTahsilEdilenOdeme() == Siparis.OdemeYontemi.KREDI_KARTI) kk = kk.add(s.getToplamTutar());
+            } else if (s.getDurum() == Siparis.SiparisDurumu.IPTAL_EDILDI) {
+                iptal++;
+            } else if (s.getDurum() == Siparis.SiparisDurumu.REDDEDILDI) {
+                red++;
+            }
+            kayitlar.add(CiroKaydi.builder()
+                    .siparisId(s.getId())
+                    .tarih(s.getOlusturulmaTarihi())
+                    .musteriAdi(soyadSansurle(adlar.get(s.getMusteriKullaniciId())))
+                    .isleyenAdi(s.getIsleyenKullaniciId() != null ? adlar.get(s.getIsleyenKullaniciId()) : null)
+                    .durum(s.getDurum().name())
+                    .tutar(s.getToplamTutar())
+                    .kazanc(teslimEdildi ? s.getToplamTutar() : BigDecimal.ZERO)
+                    .odemeYontemi(s.getOdemeYontemi() != null ? s.getOdemeYontemi().name() : null)
+                    .tahsilEdilenOdeme(s.getTahsilEdilenOdeme() != null ? s.getTahsilEdilenOdeme().name() : null)
+                    .redNedeni(s.getRedNedeni())
+                    .build());
         }
         return CiroYaniti.builder()
-                .siparisSayisi(teslimler.size())
+                .siparisSayisi(teslim)
+                .toplamSiparis(hepsi.size())
+                .iptalSayisi(iptal)
+                .redSayisi(red)
                 .toplamCiro(toplam)
                 .nakitToplam(nakit)
                 .krediKartiToplam(kk)
+                .kayitlar(kayitlar)
                 .build();
     }
 
@@ -267,8 +307,8 @@ public class SiparisServisi {
 
     private record Veri(Siparis siparis, Satici satici) {}
 
-    private Veri sahiplikle(String yoneticiId, String siparisId) {
-        Satici satici = saticiBul(yoneticiId);
+    private Veri sahiplikle(String kullaniciId, String siparisId) {
+        Satici satici = saticiServisi.saticiCozumle(kullaniciId);   // sahip veya personel
         Siparis s = siparisDeposu.findById(siparisId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sipariş bulunamadı."));
         if (!s.getSaticiId().equals(satici.getId())) {
@@ -293,6 +333,21 @@ public class SiparisServisi {
     private Satici saticiBul(String yoneticiId) {
         return saticiDeposu.findByYoneticiKullaniciId(yoneticiId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hesabınıza bağlı bir satıcı bulunamadı."));
+    }
+
+    /** "Tolga Olguner" → "Tolga O*****" (ad tam, soyad ilk harf + yıldız; tek kelimeyse o kısmen maskelenir). */
+    private String soyadSansurle(String tamAd) {
+        if (tamAd == null || tamAd.isBlank()) return null;
+        String[] parcalar = tamAd.trim().split("\\s+");
+        String soyad = parcalar[parcalar.length - 1];
+        String maskeli = soyad.substring(0, 1) + "*".repeat(Math.max(1, soyad.length() - 1));
+        if (parcalar.length == 1) return maskeli;
+        StringBuilder ad = new StringBuilder();
+        for (int i = 0; i < parcalar.length - 1; i++) {
+            if (i > 0) ad.append(" ");
+            ad.append(parcalar[i]);
+        }
+        return ad + " " + maskeli;
     }
 
     private Siparis.OdemeYontemi odemeCoz(String deger) {

@@ -55,11 +55,28 @@ export interface CalismaSaatiGun {
   kapali: boolean;
 }
 
+export interface CiroKaydi {
+  siparisId: string;
+  tarih: string;
+  musteriAdi?: string | null;
+  isleyenAdi?: string | null;
+  durum: string;
+  tutar: number;
+  kazanc: number;
+  odemeYontemi?: string | null;
+  tahsilEdilenOdeme?: string | null;
+  redNedeni?: string | null;
+}
+
 export interface CiroRaporu {
-  siparisSayisi: number;
+  siparisSayisi: number;        // teslim edilen
+  toplamSiparis: number;        // aralıktaki tüm siparişler
+  iptalSayisi: number;
+  redSayisi: number;
   toplamCiro: number;
   nakitToplam: number;
   krediKartiToplam: number;
+  kayitlar: CiroKaydi[];
 }
 
 interface IsletmeState {

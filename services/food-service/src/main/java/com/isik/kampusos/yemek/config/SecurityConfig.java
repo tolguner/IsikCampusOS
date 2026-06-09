@@ -35,7 +35,13 @@ public class SecurityConfig {
                         // Öğrenci siparişleri + favorileri
                         .requestMatchers("/api/v1/siparisler/**").hasAuthority("ROLE_STUDENT")
                         .requestMatchers("/api/v1/favoriler/**").hasAuthority("ROLE_STUDENT")
-                        // İşletme (satıcı yöneticisi)
+                        // İşletme siparişleri: sahip VE personel (sıra önemli — genel kuraldan önce)
+                        .requestMatchers("/api/v1/satici/siparisler/**")
+                            .hasAnyAuthority("ROLE_VENDOR_ADMIN", "ROLE_VENDOR_STAFF")
+                        // Personel kendi işletmesini görebilsin
+                        .requestMatchers(HttpMethod.GET, "/api/v1/satici")
+                            .hasAnyAuthority("ROLE_VENDOR_ADMIN", "ROLE_VENDOR_STAFF")
+                        // İşletme yönetimi (menü/ayar/kampanya/çalışma saati/personel/ciro): yalnız sahip
                         .requestMatchers("/api/v1/satici/**").hasAuthority("ROLE_VENDOR_ADMIN")
                         // Sistem yöneticisi: satıcı kayıt yönetimi
                         .requestMatchers("/api/v1/yonetim/saticilar/**").hasAuthority("ROLE_ADMIN")

@@ -6,6 +6,7 @@ import {
   ArrowLeft, Store, ClipboardList, X, Wallet, CreditCard, Clock, Truck, Timer, Search, Star, Heart,
 } from 'lucide-react';
 import { useYemekDeposu, type MenuOgesi, type OdemeYontemi, type Satici } from '../depolar/yemekDeposu';
+import { useProfilDeposu } from '../depolar/profilDeposu';
 import { YOLLAR } from '../yardimcilar/yollar';
 
 const paraBicimle = (tutar: number) =>
@@ -504,6 +505,7 @@ const OdemeModali = ({
   const [telefon, setTelefon] = useState('');
   const [musteriNotu, setMusteriNotu] = useState('');
   const [odemeYontemi, setOdemeYontemi] = useState<OdemeYontemi>('NAKIT');
+  const iletisimIzni = useProfilDeposu(s => !!s.profile?.iletisimPaylasimIzni);
   const gecerli = teslimAdresi.trim().length >= 3;
 
   return (
@@ -534,15 +536,23 @@ const OdemeModali = ({
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-white/60 mb-1.5">Telefon</label>
-            <input
-              value={telefon}
-              onChange={e => setTelefon(e.target.value)}
-              placeholder="05XX XXX XX XX"
-              className="w-full rounded-xl px-3.5 py-2.5 text-sm text-white bg-white/5 border border-white/10 focus:border-orange-400/40 focus:outline-none"
-            />
-          </div>
+          {iletisimIzni ? (
+            <div>
+              <label className="block text-xs font-bold text-white/60 mb-1.5">Telefon</label>
+              <input
+                value={telefon}
+                onChange={e => setTelefon(e.target.value)}
+                placeholder="05XX XXX XX XX"
+                className="w-full rounded-xl px-3.5 py-2.5 text-sm text-white bg-white/5 border border-white/10 focus:border-orange-400/40 focus:outline-none"
+              />
+              <p className="text-[11px] text-white/30 mt-1.5">Bir sorun olursa işletme bu numaradan sizi arayabilir.</p>
+            </div>
+          ) : (
+            <div className="rounded-xl px-3.5 py-2.5 text-[11px] text-white/45 bg-white/[0.03] border border-white/10">
+              İletişim paylaşımı <span className="text-white/70 font-semibold">kapalı</span> — telefonunuz işletmeyle paylaşılmaz.
+              Açmak için <span className="text-orange-200/80 font-semibold">Ayarlar &gt; Gizlilik</span>.
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-bold text-white/60 mb-1.5">Ödeme Yöntemi</label>
@@ -589,7 +599,7 @@ const OdemeModali = ({
 
         <button
           disabled={!gecerli || isLoading}
-          onClick={() => onOnayla({ teslimAdresi: teslimAdresi.trim(), odemeYontemi, telefon: telefon.trim() || undefined, musteriNotu: musteriNotu.trim() || undefined })}
+          onClick={() => onOnayla({ teslimAdresi: teslimAdresi.trim(), odemeYontemi, telefon: iletisimIzni ? (telefon.trim() || undefined) : undefined, musteriNotu: musteriNotu.trim() || undefined })}
           className="w-full mt-4 px-4 py-3 rounded-xl text-sm font-extrabold text-white gradient-btn shadow-lg shadow-orange-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isLoading ? 'Gönderiliyor...' : 'Siparişi Onayla'}

@@ -45,6 +45,9 @@ public class Profil {
     
     private int guvenSkoru;
 
+    /** İletişim bilgilerinin (telefon) işletmelerle paylaşılmasına izin (varsayılan kapalı). */
+    private boolean iletisimPaylasimIzni;
+
     private LocalDateTime olusturulmaTarihi;
     private LocalDateTime guncellenmeTarihi;
 

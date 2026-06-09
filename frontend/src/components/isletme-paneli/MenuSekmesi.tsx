@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2, X, EyeOff, Eye, Star } from 'lucide-react';
 import { useIsletmeDeposu, type MenuOgesiFormu } from '../../depolar/isletmeDeposu';
 import type { MenuOgesi } from '../../depolar/yemekDeposu';
+import { GorselYukleyici } from '../ortak/GorselYukleyici';
 
 const paraBicimle = (t: number) =>
   new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(t);
@@ -127,8 +128,8 @@ const MenuFormModali = ({ baslangic, isLoading, onKapat, onKaydet }: {
           <Alan etiket="Açıklama">
             <input value={form.aciklama} onChange={e => guncelle({ aciklama: e.target.value })} className={girisSinifi} placeholder="İzgara tavuk, marul, domates" />
           </Alan>
-          <Alan etiket="Görsel URL">
-            <input value={form.gorselUrl} onChange={e => guncelle({ gorselUrl: e.target.value })} className={girisSinifi} placeholder="https://..." />
+          <Alan etiket="Ürün Görseli">
+            <GorselYukleyici value={form.gorselUrl} onChange={url => guncelle({ gorselUrl: url })} oranSinifi="aspect-video" maksKenar={900} />
           </Alan>
           <div className="flex flex-wrap gap-2">
             <button

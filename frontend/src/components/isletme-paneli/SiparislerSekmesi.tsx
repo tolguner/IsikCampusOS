@@ -1,15 +1,77 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Wallet, CreditCard, Clock, RefreshCw } from 'lucide-react';
+import { MapPin, Phone, Wallet, CreditCard, Clock, RefreshCw, Check, Ban } from 'lucide-react';
 import { useIsletmeDeposu } from '../../depolar/isletmeDeposu';
-import { SIPARIS_DURUM_BILGISI, type Siparis } from '../../depolar/yemekDeposu';
+import { SIPARIS_DURUM_BILGISI, type Siparis, type SiparisDurumu } from '../../depolar/yemekDeposu';
 
 const paraBicimle = (t: number) =>
   new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(t);
 const tarihBicimle = (t?: string) => t ? new Date(t).toLocaleString('tr-TR') : '';
+const saatBicimle = (t?: string) => t ? new Date(t).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
 
 // Aktif (işlem bekleyen) ve tamamlanmış siparişleri ayır
 const AKTIF_DURUMLAR = ['BEKLEMEDE', 'KABUL_EDILDI', 'HAZIRLANIYOR', 'HAZIR', 'YOLDA'];
+
+// Sipariş sürecinin normal akışı (zaman çizelgesi için)
+const AKIS: SiparisDurumu[] = ['BEKLEMEDE', 'KABUL_EDILDI', 'HAZIRLANIYOR', 'HAZIR', 'YOLDA', 'TESLIM_EDILDI'];
+// Her aşamanın gerçekleştiği zaman damgası (varsa)
+const asamaZamani = (s: Siparis, durum: SiparisDurumu): string | undefined => ({
+  BEKLEMEDE: s.olusturulmaTarihi,
+  KABUL_EDILDI: s.kabulTarihi,
+  HAZIRLANIYOR: undefined,
+  HAZIR: s.hazirTarihi,
+  YOLDA: s.yolaCikisTarihi,
+  TESLIM_EDILDI: s.teslimTarihi,
+  REDDEDILDI: undefined,
+  IPTAL_EDILDI: undefined,
+}[durum]);
+
+/** Siparişin hangi aşamada olduğunu adım adım gösteren süreç çizelgesi. */
+const SurecCizelgesi = ({ siparis }: { siparis: Siparis }) => {
+  const sonlandi = siparis.durum === 'REDDEDILDI' || siparis.durum === 'IPTAL_EDILDI';
+
+  if (sonlandi) {
+    const bilgi = SIPARIS_DURUM_BILGISI[siparis.durum];
+    return (
+      <div className="mt-4 flex items-center gap-2 rounded-xl px-3 py-2.5 border border-red-400/20 bg-red-500/10">
+        <Ban className="w-4 h-4 text-red-300 shrink-0" />
+        <span className="text-xs font-bold text-red-200">{bilgi.etiket}</span>
+        {siparis.redNedeni && <span className="text-xs text-red-300/70">· {siparis.redNedeni}</span>}
+      </div>
+    );
+  }
+
+  const aktifIndex = AKIS.indexOf(siparis.durum);
+  return (
+    <div className="mt-4">
+      <div className="flex items-start">
+        {AKIS.map((adim, i) => {
+          const tamamlandi = i < aktifIndex;
+          const suanki = i === aktifIndex;
+          const zaman = asamaZamani(siparis, adim);
+          return (
+            <div key={adim} className="flex-1 flex flex-col items-center relative">
+              {/* Bağlayıcı çizgi (ilk adım hariç) */}
+              {i > 0 && (
+                <div className={`absolute top-3 right-1/2 left-[-50%] h-0.5 ${i <= aktifIndex ? 'bg-orange-400/70' : 'bg-white/10'}`} />
+              )}
+              <div className={`relative z-10 w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors
+                ${tamamlandi ? 'bg-orange-400 border-orange-400 text-black'
+                  : suanki ? 'border-orange-400 text-orange-300 bg-[#1a1014] ring-4 ring-orange-400/15'
+                  : 'border-white/15 text-white/30 bg-white/[0.03]'}`}>
+                {tamamlandi ? <Check className="w-3.5 h-3.5" /> : <span className="text-[10px] font-black">{i + 1}</span>}
+              </div>
+              <p className={`mt-1.5 text-[9px] font-bold text-center leading-tight ${i <= aktifIndex ? 'text-white/70' : 'text-white/30'}`}>
+                {SIPARIS_DURUM_BILGISI[adim].etiket}
+              </p>
+              {zaman && <p className="text-[9px] text-white/30 mt-0.5">{saatBicimle(zaman)}</p>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export const SiparislerSekmesi = () => {
   const { siparisler, isLoading, siparisleriGetir } = useIsletmeDeposu();
@@ -86,6 +148,9 @@ const SiparisKarti = ({ siparis }: { siparis: Siparis }) => {
         </div>
         <p className="text-lg font-extrabold text-orange-200">{paraBicimle(siparis.toplamTutar)}</p>
       </div>
+
+      {/* Süreç çizelgesi */}
+      <SurecCizelgesi siparis={siparis} />
 
       {/* Kalemler */}
       <div className="mt-3 space-y-1.5 border-t border-white/8 pt-3">
