@@ -52,4 +52,24 @@ public class YonetimSaticiDenetleyicisi {
         String eski = saticiServisi.yoneticiDegistir(id, govde.get("yeniYoneticiId"));
         return ResponseEntity.ok(Map.of("eskiYoneticiId", eski != null ? eski : ""));
     }
+
+    // --- İşletme genel bilgi değişikliği talepleri (admin inceleme) ---
+
+    @GetMapping("/talepler")
+    public ResponseEntity<List<com.isik.kampusos.yemek.dto.SaticiDegisiklikIstegiYaniti>> bekleyenTalepler() {
+        return ResponseEntity.ok(saticiServisi.bekleyenTalepler());
+    }
+
+    @PostMapping("/talepler/{id}/onayla")
+    public ResponseEntity<Map<String, String>> talepOnayla(@PathVariable String id, Authentication auth) {
+        saticiServisi.talepOnayla(id, auth.getName());
+        return ResponseEntity.ok(Map.of("mesaj", "Değişiklik onaylandı ve uygulandı."));
+    }
+
+    @PostMapping("/talepler/{id}/revize")
+    public ResponseEntity<Map<String, String>> talepRevize(@PathVariable String id, Authentication auth,
+                                                           @RequestBody(required = false) Map<String, String> govde) {
+        saticiServisi.talepRevize(id, auth.getName(), govde != null ? govde.get("geriBildirim") : null);
+        return ResponseEntity.ok(Map.of("mesaj", "Revize talep edildi."));
+    }
 }
