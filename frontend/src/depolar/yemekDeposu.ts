@@ -36,6 +36,7 @@ export interface Satici {
   // /saticilar ve /saticilar/{id} yanıtında hesaplanmış alanlar:
   suAnAcik?: boolean;
   sonrakiAcilis?: string | null;
+  yogunlukEkDakika?: number;     // >0 ise işletme yoğun, tahmini süreye eklenmiş
   calismaSaatleri?: CalismaSaati[];
   olusturulmaTarihi?: string;
   guncellenmeTarihi?: string;
@@ -67,6 +68,7 @@ export interface MenuOgesi {
   kategori?: string;
   fiyat: number;
   gorselUrl?: string;
+  etiketler?: string | null;    // allerjen/içerik CSV (örn. "VEGAN,ACILI")
   mevcut: boolean;
   oneCikan?: boolean;
   durum: MenuDurumu;
@@ -118,6 +120,10 @@ export interface Siparis {
   yolaCikisTarihi?: string;
   teslimTarihi?: string;
   iptalTarihi?: string;
+  isleyenKullaniciId?: string | null;
+  isleyenAdi?: string | null;
+  teslimatTuru?: TeslimatTuru;
+  kuryeKullaniciId?: string | null;
   kalemler: SiparisKalemi[];
 }
 
@@ -132,9 +138,12 @@ export interface SepetKalemi {
   secimlerOzeti?: string;     // "Büyük, Ekstra peynir"
 }
 
+export type TeslimatTuru = 'ADRESE_TESLIMAT' | 'GEL_AL';
+
 export interface SiparisTalebi {
   teslimAdresi: string;
   odemeYontemi: OdemeYontemi;
+  teslimatTuru?: TeslimatTuru;
   telefon?: string;
   musteriNotu?: string;
 }
@@ -175,8 +184,20 @@ interface YemekState {
 
   // Sipariş
   siparisVer: (saticiId: string, talep: SiparisTalebi) => Promise<boolean>;
+  siparisOnizle: (saticiId: string, teslimatTuru?: TeslimatTuru) => Promise<SiparisOnizleme | null>;
   siparislerimGetir: () => Promise<void>;
   siparisIptal: (siparisId: string) => Promise<boolean>;
+}
+
+/** Sipariş öncesi gerçek tutar dökümü (backend hesaplar, kampanya dahil). */
+export interface SiparisOnizleme {
+  araToplam: number;
+  teslimatUcreti: number;
+  indirimTutari: number;
+  kampanyaAd?: string | null;
+  toplamTutar: number;
+  minimumSepetTutari: number;
+  minimumKarsilandi: boolean;
 }
 
 const getErrorMessage = (err: any, fallback: string) =>
@@ -305,6 +326,7 @@ export const useYemekDeposu = create<YemekState>((set, get) => ({
         saticiId,
         teslimAdresi: talep.teslimAdresi,
         odemeYontemi: talep.odemeYontemi,
+        teslimatTuru: talep.teslimatTuru,
         telefon: talep.telefon,
         musteriNotu: talep.musteriNotu,
         kalemler: sepet.map(k => ({ menuOgesiId: k.menuOgesiId, adet: k.adet, secilenSecenekIdleri: k.secilenSecenekIdleri })),
@@ -315,6 +337,21 @@ export const useYemekDeposu = create<YemekState>((set, get) => ({
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Sipariş oluşturulamadı.'), isLoading: false });
       return false;
+    }
+  },
+
+  siparisOnizle: async (saticiId, teslimatTuru) => {
+    const { sepet } = get();
+    if (!sepet.length) return null;
+    try {
+      const res = await api.post<SiparisOnizleme>('/siparisler/onizleme', {
+        saticiId,
+        teslimatTuru,
+        kalemler: sepet.map(k => ({ menuOgesiId: k.menuOgesiId, adet: k.adet, secilenSecenekIdleri: k.secilenSecenekIdleri })),
+      });
+      return res.data;
+    } catch {
+      return null; // önizleme alınamazsa modal yerel hesapla devam eder
     }
   },
 

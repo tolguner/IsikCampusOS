@@ -72,7 +72,10 @@ const SiparisKarti = ({ siparis, onIptal, iptalEdiliyor }: { siparis: Siparis; o
   const durumBilgi = SIPARIS_DURUM_BILGISI[siparis.durum];
   const iptalEdilebilir = siparis.durum === 'BEKLEMEDE';
   const sonlandi = siparis.durum === 'REDDEDILDI' || siparis.durum === 'IPTAL_EDILDI';
-  const aktifIndex = AKIS.indexOf(siparis.durum);
+  const gelAl = siparis.teslimatTuru === 'GEL_AL';
+  // Gel-al'da kurye aşaması (YOLDA) yoktur: HAZIR → TESLİM
+  const akis = gelAl ? AKIS.filter(d => d !== 'YOLDA') : AKIS;
+  const aktifIndex = akis.indexOf(siparis.durum);
 
   return (
     <motion.div
@@ -82,19 +85,32 @@ const SiparisKarti = ({ siparis, onIptal, iptalEdiliyor }: { siparis: Siparis; o
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <span className={`px-2.5 py-1 rounded-lg text-[11px] font-black border ${durumBilgi.renk}`}>{durumBilgi.etiket}</span>
+            {gelAl && (
+              <span className="px-2 py-0.5 rounded-lg text-[11px] font-bold text-purple-200 bg-purple-500/15 border border-purple-400/20">🏃 Gel-Al</span>
+            )}
             <span className="inline-flex items-center gap-1 text-[11px] text-white/35"><Clock className="w-3 h-3" /> {tarihBicimle(siparis.olusturulmaTarihi)}</span>
+            {siparis.tahminiHazirDakika != null && (siparis.durum === 'KABUL_EDILDI' || siparis.durum === 'HAZIRLANIYOR') && (
+              <span className="px-2 py-0.5 rounded-lg text-[11px] font-bold text-amber-200 bg-amber-500/15 border border-amber-400/20">
+                Tahmini hazırlık ~{siparis.tahminiHazirDakika} dk
+              </span>
+            )}
+            {siparis.isleyenAdi && ['KABUL_EDILDI', 'HAZIRLANIYOR', 'HAZIR', 'YOLDA'].includes(siparis.durum) && (
+              <span className="px-2 py-0.5 rounded-lg text-[11px] font-bold text-cyan-200 bg-cyan-500/15 border border-cyan-400/20">
+                👨‍🍳 {siparis.isleyenAdi} ilgileniyor
+              </span>
+            )}
           </div>
           <p className="text-[11px] text-white/30 mt-1.5">Sipariş #{siparis.id.slice(0, 8)}</p>
         </div>
         <p className="text-lg font-extrabold text-orange-200">{paraBicimle(siparis.toplamTutar)}</p>
       </div>
 
-      {/* Zaman çizelgesi (yalnızca aktif/normal akış) */}
+      {/* Zaman çizelgesi (yalnızca aktif/normal akış; gel-al'da YOLDA adımı yok) */}
       {!sonlandi && (
         <div className="flex items-center gap-1 mt-4">
-          {AKIS.map((adim, i) => (
+          {akis.map((adim, i) => (
             <div key={adim} className="flex-1 flex items-center gap-1">
               <div className={`h-1.5 flex-1 rounded-full ${i <= aktifIndex ? 'bg-gradient-to-r from-orange-400 to-pink-400' : 'bg-white/10'}`} />
             </div>
@@ -103,7 +119,7 @@ const SiparisKarti = ({ siparis, onIptal, iptalEdiliyor }: { siparis: Siparis; o
       )}
       {!sonlandi && (
         <div className="flex justify-between mt-1.5">
-          {AKIS.map((adim, i) => (
+          {akis.map((adim, i) => (
             <span key={adim} className={`text-[9px] font-bold ${i <= aktifIndex ? 'text-white/55' : 'text-white/25'}`}>
               {SIPARIS_DURUM_BILGISI[adim].etiket}
             </span>

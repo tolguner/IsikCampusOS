@@ -37,9 +37,14 @@ public class SaticiYaniti {
     /** Kapalıysa bir sonraki açılış bilgisi (örn. "Bugün 18:00", "Yarın 09:00"); açıksa null. */
     private String sonrakiAcilis;
 
+    /** Yoğunluk eki (dk): aktif sipariş sayısına göre tahmini süreye eklendi; 0 ise yoğun değil. */
+    private int yogunlukEkDakika;
+
     private List<CalismaSaati> calismaSaatleri;
 
-    public static SaticiYaniti of(Satici s, boolean suAnAcik, String sonrakiAcilis, List<CalismaSaati> saatler) {
+    public static SaticiYaniti of(Satici s, boolean suAnAcik, String sonrakiAcilis, List<CalismaSaati> saatler,
+                                  int yogunlukEkDakika) {
+        Integer temelSure = s.getTahminiTeslimatDakika();
         return SaticiYaniti.builder()
                 .id(s.getId())
                 .ad(s.getAd())
@@ -50,7 +55,9 @@ public class SaticiYaniti {
                 .kapakGorselUrl(s.getKapakGorselUrl())
                 .teslimatUcreti(s.getTeslimatUcreti())
                 .minimumSepetTutari(s.getMinimumSepetTutari())
-                .tahminiTeslimatDakika(s.getTahminiTeslimatDakika())
+                // Yoğunlukta tahmini süre dinamik artar (temel + ek); süre tanımsızsa ek gösterilmez.
+                .tahminiTeslimatDakika(temelSure != null ? temelSure + yogunlukEkDakika : null)
+                .yogunlukEkDakika(temelSure != null ? yogunlukEkDakika : 0)
                 .acik(s.isAcik())
                 .durum(s.getDurum().name())
                 .suAnAcik(suAnAcik)

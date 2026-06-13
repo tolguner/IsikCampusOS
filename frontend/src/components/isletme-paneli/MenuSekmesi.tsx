@@ -4,11 +4,12 @@ import { Plus, Pencil, Trash2, X, EyeOff, Eye, Star } from 'lucide-react';
 import { useIsletmeDeposu, type MenuOgesiFormu } from '../../depolar/isletmeDeposu';
 import type { MenuOgesi } from '../../depolar/yemekDeposu';
 import { GorselYukleyici } from '../ortak/GorselYukleyici';
+import { MENU_ETIKETLERI, etiketleriAyir, etiketEtiketi } from '../../yardimcilar/menuEtiketleri';
 
 const paraBicimle = (t: number) =>
   new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(t);
 
-const BOS_FORM: MenuOgesiFormu = { ad: '', aciklama: '', kategori: '', fiyat: 0, gorselUrl: '', mevcut: true };
+const BOS_FORM: MenuOgesiFormu = { ad: '', aciklama: '', kategori: '', fiyat: 0, gorselUrl: '', etiketler: '', mevcut: true };
 
 export const MenuSekmesi = () => {
   const { menu, isLoading, menumGetir, menuEkle, menuGuncelle, menuSil } = useIsletmeDeposu();
@@ -46,6 +47,13 @@ export const MenuSekmesi = () => {
               </div>
               {oge.kategori && <p className="text-[11px] text-white/35 mt-0.5">{oge.kategori}</p>}
               {oge.aciklama && <p className="text-xs text-white/40 mt-1 line-clamp-2">{oge.aciklama}</p>}
+              {etiketleriAyir(oge.etiketler).length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {etiketleriAyir(oge.etiketler).map(kod => (
+                    <span key={kod} className="text-[10px] font-bold text-white/55 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded">{etiketEtiketi(kod)}</span>
+                  ))}
+                </div>
+              )}
               <p className="text-sm font-extrabold text-orange-200 mt-1.5">{paraBicimle(oge.fiyat)}</p>
             </div>
             <div className="flex flex-col gap-1.5 shrink-0">
@@ -83,7 +91,7 @@ const MenuFormModali = ({ baslangic, isLoading, onKapat, onKaydet }: {
 }) => {
   const [form, setForm] = useState<MenuOgesiFormu>(baslangic ? {
     ad: baslangic.ad, aciklama: baslangic.aciklama ?? '', kategori: baslangic.kategori ?? '',
-    fiyat: baslangic.fiyat, gorselUrl: baslangic.gorselUrl ?? '', mevcut: baslangic.mevcut,
+    fiyat: baslangic.fiyat, gorselUrl: baslangic.gorselUrl ?? '', etiketler: baslangic.etiketler ?? '', mevcut: baslangic.mevcut,
     oneCikan: baslangic.oneCikan ?? false,
     secenekGruplari: (baslangic.secenekGruplari ?? []).map(g => ({
       ad: g.ad, tur: g.tur, zorunlu: g.zorunlu, siralama: g.siralama,
@@ -130,6 +138,24 @@ const MenuFormModali = ({ baslangic, isLoading, onKapat, onKaydet }: {
           </Alan>
           <Alan etiket="Ürün Görseli">
             <GorselYukleyici value={form.gorselUrl} onChange={url => guncelle({ gorselUrl: url })} oranSinifi="aspect-video" maksKenar={900} />
+          </Alan>
+          <Alan etiket="İçerik / Allerjen Etiketleri">
+            <div className="flex flex-wrap gap-1.5">
+              {Object.keys(MENU_ETIKETLERI).map(kod => {
+                const secili = etiketleriAyir(form.etiketler).includes(kod);
+                return (
+                  <button key={kod} type="button"
+                    onClick={() => {
+                      const mevcutlar = etiketleriAyir(form.etiketler);
+                      const yeni = secili ? mevcutlar.filter(e => e !== kod) : [...mevcutlar, kod];
+                      guncelle({ etiketler: yeni.join(',') });
+                    }}
+                    className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-colors ${secili ? 'text-orange-100 bg-orange-500/20 border-orange-400/40' : 'text-white/50 bg-white/5 border-white/10 hover:bg-white/10'}`}>
+                    {etiketEtiketi(kod)}
+                  </button>
+                );
+              })}
+            </div>
           </Alan>
           <div className="flex flex-wrap gap-2">
             <button

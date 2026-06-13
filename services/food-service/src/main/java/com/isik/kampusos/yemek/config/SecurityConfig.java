@@ -38,8 +38,8 @@ public class SecurityConfig {
                         // İşletme siparişleri: sahip VE personel (sıra önemli — genel kuraldan önce)
                         .requestMatchers("/api/v1/satici/siparisler/**")
                             .hasAnyAuthority("ROLE_VENDOR_ADMIN", "ROLE_VENDOR_STAFF")
-                        // Personel kendi işletmesini görebilsin
-                        .requestMatchers(HttpMethod.GET, "/api/v1/satici")
+                        // Personel kendi işletmesini ve rolünü görebilsin
+                        .requestMatchers(HttpMethod.GET, "/api/v1/satici", "/api/v1/satici/personel/benim-rol")
                             .hasAnyAuthority("ROLE_VENDOR_ADMIN", "ROLE_VENDOR_STAFF")
                         // İşletme yönetimi (menü/ayar/kampanya/çalışma saati/personel/ciro): yalnız sahip
                         .requestMatchers("/api/v1/satici/**").hasAuthority("ROLE_VENDOR_ADMIN")

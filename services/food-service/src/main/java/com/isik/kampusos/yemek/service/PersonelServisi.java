@@ -58,6 +58,7 @@ public class PersonelServisi {
                             + (talep.getSoyad() != null && !talep.getSoyad().isBlank() ? " " + talep.getSoyad().trim() : ""))
                     .eposta(hesap.eposta())
                     .durum(IsletmePersoneli.PersonelDurumu.AKTIF)
+                    .rol(rolCoz(talep.getRol()))
                     .build();
             return PersonelYaniti.of(personelDeposu.save(p));
         } catch (Exception e) {
@@ -75,6 +76,26 @@ public class PersonelServisi {
     }
 
     /**
+     * Personeli askıya alır (PASIF) veya yeniden aktifleştirir. PASIF personel giriş yapabilir
+     * ama hiçbir işletme işlemine erişemez (saticiCozumle dışlar); bildirim de almaz.
+     */
+    @Transactional
+    public PersonelYaniti durumDegistir(String sahipId, String kullaniciId, String durum) {
+        Satici s = sahibinSaticisi(sahipId);
+        IsletmePersoneli p = personelDeposu.findBySaticiIdAndKullaniciId(s.getId(), kullaniciId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Bu işletmede böyle bir personel bulunamadı."));
+        IsletmePersoneli.PersonelDurumu yeni;
+        try {
+            yeni = IsletmePersoneli.PersonelDurumu.valueOf(durum == null ? "" : durum.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Durum AKTIF veya PASIF olmalıdır.");
+        }
+        p.setDurum(yeni);
+        return PersonelYaniti.of(personelDeposu.save(p));
+    }
+
+    /**
      * Personeli işletmeden çıkarır: önce bağı kaldırır, sonra auth hesabını siler.
      * auth silme hatası olursa işlem geri alınır (tutarlılık korunur).
      */
@@ -87,6 +108,27 @@ public class PersonelServisi {
         personelDeposu.delete(p);
         // Tenant izolasyonu food tarafında doğrulandı; auth hesabını kalıcı sil.
         authIstemci.personelSil(sahipId, kullaniciId);
+    }
+
+    /** Panel için: çağıran kullanıcının işletmedeki rolü (SAHIP / PERSONEL / KURYE). */
+    public java.util.Map<String, String> benimRol(String kullaniciId) {
+        if (saticiDeposu.findByYoneticiKullaniciId(kullaniciId).isPresent()) {
+            return java.util.Map.of("rol", "SAHIP");
+        }
+        return personelDeposu.findByKullaniciId(kullaniciId)
+                .filter(p -> p.getDurum() == IsletmePersoneli.PersonelDurumu.AKTIF)
+                .map(p -> java.util.Map.of("rol", p.getRol() != null ? p.getRol().name() : "PERSONEL"))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Hesabınıza bağlı bir işletme bulunamadı."));
+    }
+
+    private IsletmePersoneli.PersonelRolu rolCoz(String rol) {
+        if (rol == null || rol.isBlank()) return IsletmePersoneli.PersonelRolu.PERSONEL;
+        try {
+            return IsletmePersoneli.PersonelRolu.valueOf(rol.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rol PERSONEL veya KURYE olmalıdır.");
+        }
     }
 
     private void dogrula(PersonelOlusturmaTalebi talep) {
