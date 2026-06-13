@@ -168,12 +168,18 @@ export const useYonetimDeposu = create<YonetimState>((set, get) => ({
   loglariGetir: async () => {
     set({ isLoading: true, hata: null });
     try {
-      // Kullanıcı işlemleri (auth) + kulüp/etkinlik işlemleri (club) tek görünümde birleşir.
-      const [kullaniciLog, kulupLog] = await Promise.all([
+      // Kullanıcı (auth) + kulüp/etkinlik (club) + işletme/personel/talep (food) tek görünümde birleşir.
+      const [kullaniciLog, kulupLog, foodLogRaw] = await Promise.all([
         api.get<DenetimKaydi[]>('/yonetim/denetim-gunlukleri').then(r => r.data).catch(() => []),
         api.get<DenetimKaydi[]>('/denetim-gunlukleri').then(r => r.data).catch(() => []),
+        api.get<any[]>('/yonetim/saticilar/denetim').then(r => r.data).catch(() => []),
       ]);
-      const birlesik = [...kullaniciLog, ...kulupLog].sort(
+      // food alan adları (yapanId/yapanRol) ortak şemaya eşlenir.
+      const foodLog: DenetimKaydi[] = (foodLogRaw || []).map(l => ({
+        id: l.id, varlikTuru: l.varlikTuru, varlikId: l.varlikId, islem: l.islem,
+        islemYapanId: l.yapanId, islemYapanRol: l.yapanRol, mesaj: l.mesaj, olusturulmaTarihi: l.olusturulmaTarihi,
+      }));
+      const birlesik = [...kullaniciLog, ...kulupLog, ...foodLog].sort(
         (a, b) => new Date(b.olusturulmaTarihi).getTime() - new Date(a.olusturulmaTarihi).getTime()
       );
       set({ loglar: birlesik, isLoading: false });

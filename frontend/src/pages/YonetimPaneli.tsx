@@ -189,6 +189,9 @@ export const YonetimPaneli = () => {
               <option value="KULLANICI">Kullanıcı</option>
               <option value="KULUP">Kulüp</option>
               <option value="ETKINLIK">Etkinlik</option>
+              <option value="ISLETME">İşletme</option>
+              <option value="PERSONEL">Personel</option>
+              <option value="DEGISIKLIK_TALEBI">Değişiklik Talebi</option>
             </select>
           </div>
 

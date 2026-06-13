@@ -52,6 +52,7 @@ public class SaticiServisi {
     private final FavoriSaticiDeposu favoriDeposu;
     private final AuthKimlikIstemcisi authIstemci;
     private final com.isik.kampusos.yemek.repository.SaticiDegisiklikIstegiDeposu talepDeposu;
+    private final DenetimServisi denetim;
 
     /** Onaya tabi genel/kimlik alanları (sahip doğrudan değiştiremez, talep açar). */
     private static final java.util.Set<String> ONAYA_TABI_ALANLAR =
@@ -441,6 +442,8 @@ public class SaticiServisi {
         favoriDeposu.deleteBySaticiId(id);
 
         saticiDeposu.delete(s);
+        denetim.kaydet("ISLETME", id, "ISLETME_SILINDI", adminId, "ROLE_ADMIN",
+                "İşletme silindi: " + s.getAd());
         return s;   // yoneticiKullaniciId frontend tarafından PASIF'e alınır
     }
 
@@ -449,7 +452,7 @@ public class SaticiServisi {
      * (frontend eski yöneticiyi PASIF'e alır — denetim için silinmez).
      */
     @Transactional
-    public String yoneticiDegistir(String id, String yeniYoneticiId) {
+    public String yoneticiDegistir(String id, String yeniYoneticiId, String adminId) {
         if (yeniYoneticiId == null || yeniYoneticiId.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Yeni yönetici zorunludur.");
         }
@@ -463,6 +466,8 @@ public class SaticiServisi {
         String eski = s.getYoneticiKullaniciId();
         s.setYoneticiKullaniciId(yeniYoneticiId);
         saticiDeposu.save(s);
+        denetim.kaydet("ISLETME", id, "YONETICI_DEGISTI", adminId, "ROLE_ADMIN",
+                s.getAd() + " yöneticisi değişti (" + eski + " → " + yeniYoneticiId + ")");
         return eski;
     }
 
@@ -486,7 +491,10 @@ public class SaticiServisi {
                 .talepEdilenDeger(talep.getTalepEdilenDeger())
                 .durum(SaticiDegisiklikIstegi.Durum.BEKLEMEDE)
                 .build();
-        return SaticiDegisiklikIstegiYaniti.of(talepDeposu.save(istek), s.getAd());
+        SaticiDegisiklikIstegi kayit = talepDeposu.save(istek);
+        denetim.kaydet("DEGISIKLIK_TALEBI", kayit.getId(), "TALEP_ACILDI", yoneticiId, "ROLE_VENDOR_ADMIN",
+                s.getAd() + " — '" + alan + "' için değişiklik talebi");
+        return SaticiDegisiklikIstegiYaniti.of(kayit, s.getAd());
     }
 
     /** Sahip: kendi taleplerim. */
@@ -516,6 +524,8 @@ public class SaticiServisi {
         istek.setInceleyen(adminId);
         istek.setIncelemeTarihi(LocalDateTime.now());
         talepDeposu.save(istek);
+        denetim.kaydet("DEGISIKLIK_TALEBI", istek.getId(), "TALEP_ONAYLANDI", adminId, "ROLE_ADMIN",
+                s.getAd() + " — '" + istek.getAlanAdi() + "' değişikliği onaylandı");
     }
 
     /** Admin: revize iste (geri bildirimle) — değer uygulanmaz. */
@@ -527,6 +537,8 @@ public class SaticiServisi {
         istek.setGeriBildirim(geriBildirim);
         istek.setIncelemeTarihi(LocalDateTime.now());
         talepDeposu.save(istek);
+        denetim.kaydet("DEGISIKLIK_TALEBI", istek.getId(), "TALEP_REVIZE", adminId, "ROLE_ADMIN",
+                "'" + istek.getAlanAdi() + "' için revize istendi" + (geriBildirim != null ? ": " + geriBildirim : ""));
     }
 
     private SaticiDegisiklikIstegi bekleyenTalep(String istekId) {
