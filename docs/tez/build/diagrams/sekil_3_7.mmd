@@ -1,0 +1,9 @@
+stateDiagram-v2
+    [*] --> SiparisVerildi
+    SiparisVerildi --> Kabul : Satıcı kabul etti
+    SiparisVerildi --> Iptal : Sipariş iptal edildi
+    Kabul --> Hazirlaniyor : Hazırlığa başlandı
+    Hazirlaniyor --> TeslimeHazir : Hazırlık tamamlandı
+    TeslimeHazir --> TeslimAlindi : Teslim kodu ile alındı
+    TeslimAlindi --> [*]
+    Iptal --> [*]

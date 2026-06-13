@@ -1,0 +1,8 @@
+stateDiagram-v2
+    [*] --> Acik : İlan yayımla (arz/talep)
+    Acik --> Anlasildi : Teklif kabul edildi
+    Acik --> Iptal : İlan iptal edildi
+    Anlasildi --> Tamamlandi : İş teslim edildi
+    Tamamlandi --> Puanlandi : Çift yönlü puanlama
+    Puanlandi --> [*]
+    Iptal --> [*]

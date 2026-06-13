@@ -1,0 +1,13 @@
+package com.isik.kampusos.profil;
+ 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+ 
+@SpringBootApplication
+@EnableDiscoveryClient
+public class ProfilUygulamasi {
+    public static void main(String[] args) {
+        SpringApplication.run(ProfilUygulamasi.class, args);
+    }
+}

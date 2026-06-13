@@ -18,7 +18,7 @@
 - Run a single test class/method (when tests exist):
   - `.\mvnw.cmd -pl services/auth-service -Dtest=AuthServiceTest test`
   - `.\mvnw.cmd -pl services/auth-service -Dtest=AuthServiceTest#login_shouldReturnToken test`
-- Filter by pattern in one service (when tests exist): `.\mvnw.cmd -pl services/event-service -Dtest=*Security* test`
+- Filter by pattern in one service (when tests exist): `.\mvnw.cmd -pl services/club-service -Dtest=*Security* test`
 
 ### Local infra / full dev startup
 - Infra only: `docker compose -f infra/docker-compose.infra.yml up -d`
@@ -35,9 +35,9 @@
   - `services/api-gateway`
   - `services/auth-service`
   - `services/profile-service`
-  - `services/event-service`
+  - `services/club-service`
 - PostgreSQL/Kafka/Redis/Zipkin/Mailpit are started via `infra/docker-compose.infra.yml`.
-- `auth-service` is identity/token issuer and user lifecycle service; `profile-service` consumes `user.registered` Kafka events to create profiles; `event-service` handles clubs/events/RSVP.
+- `auth-service` is identity/token issuer and user lifecycle service; `profile-service` consumes `user.registered` Kafka events to create profiles; `club-service` handles clubs/events/RSVP.
 
 ### Backend request + auth flow
 - User logs in via `POST /api/v1/auth/login` (gateway route to `auth-service`), receives JWT.
@@ -46,8 +46,8 @@
 - Service routes currently configured in gateway:
   - `/api/v1/auth/**` and `/api/v1/students/**` -> `auth-service`
   - `/api/v1/profiles/**` -> `profile-service`
-  - `/api/v1/events/**` and `/api/v1/clubs/**` -> `event-service`
-- `event-service` also validates JWT locally (`JwtAuthFilter`) for defense in depth; keep gateway and service rules aligned when adding endpoints.
+  - `/api/v1/events/**` and `/api/v1/clubs/**` -> `club-service`
+- `club-service` also validates JWT locally (`JwtAuthFilter`) for defense in depth; keep gateway and service rules aligned when adding endpoints.
 
 ## MCP server guidance (web stack)
 
@@ -63,7 +63,7 @@
 
 - **API versioning/pathing:** backend endpoints use `/api/v1/...`; frontend stores call relative paths like `/auth/...`, `/students/...`, `/events/...` via a shared Axios base URL (`/api/v1`).
 - **Gateway auth propagation:** gateway validates bearer JWT and forwards user context via `X-User-Id` and `X-User-Roles` headers.
-- **Shared JWT secret:** `security.jwt.secret` must match across `api-gateway`, `auth-service`, and `event-service` (`JWT_SECRET` env var is the intended source).
+- **Shared JWT secret:** `security.jwt.secret` must match across `api-gateway`, `auth-service`, and `club-service` (`JWT_SECRET` env var is the intended source).
 - **Role format:** roles are stored/handled as Spring-style authority strings (e.g. `ROLE_REGISTRAR`, `ROLE_ADMIN`, `ROLE_STUDENT`, `ROLE_SKS_ADMIN`), often comma-separated in token claims.
 - **Gateway routing + filters:** most secured routes explicitly attach `AuthenticationFilter` in gateway route config; keep new secured routes consistent with this pattern.
 - **Security layering:** gateway enforces auth on routed paths; services still keep local Spring Security/JWT checks for defense in depth.

@@ -6,6 +6,6 @@ CREATE DATABASE analytics_db;
 CREATE DATABASE facility_db;
 CREATE DATABASE food_db;
 CREATE DATABASE ride_db;
-CREATE DATABASE event_db;
+CREATE DATABASE club_db;
 CREATE DATABASE projectmatch_db;
 CREATE DATABASE microjob_db;

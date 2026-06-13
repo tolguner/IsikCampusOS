@@ -8,10 +8,19 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
-    allowedHosts: ['localhost', '127.0.0.1', 'frontend'],
+    // Uygulama tek giriş noktası olan API Gateway (8080) üzerinden sunulur.
+    // Gateway, isteği frontend:5173'e proxy'ler; bu yüzden tüm host başlıklarına izin verilir.
+    allowedHosts: true,
+    // HMR websocket'i de gateway (8080) üzerinden bağlanır.
+    hmr: {
+      clientPort: 8080,
+    },
+    watch: {
+      usePolling: true,
+    },
     proxy: {
       '/api': {
-        target: apiProxyTarget,
+        target: process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8080',
         changeOrigin: true,
       },
     },
