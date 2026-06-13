@@ -12,15 +12,21 @@ const inputClass =
 
 export const SaticilarSekmesi = () => {
   const {
-    saticilar, vendorAdminler, isLoading,
+    saticilar, vendorAdminler, isLoading, talepler,
     saticilariGetir, vendorAdminleriGetir, saticiVeSahipOlustur, saticiGuncelle, saticiSil, yoneticiDegistir,
+    talepleriGetir, talepOnayla, talepRevize,
   } = useAdminSaticiDeposu();
 
   const [olusturModal, setOlusturModal] = useState(false);
   const [duzenle, setDuzenle] = useState<Satici | null>(null);
   const [yoneticiModal, setYoneticiModal] = useState<Satici | null>(null);
 
-  useEffect(() => { saticilariGetir(); vendorAdminleriGetir(); }, [saticilariGetir, vendorAdminleriGetir]);
+  useEffect(() => { saticilariGetir(); vendorAdminleriGetir(); talepleriGetir(); }, [saticilariGetir, vendorAdminleriGetir, talepleriGetir]);
+
+  const ALAN_ETIKET: Record<string, string> = {
+    ad: 'İşletme Adı', aciklama: 'Açıklama', konumMetni: 'Konum', logoUrl: 'Logo', kapakGorselUrl: 'Kapak Görseli', mutfakTuru: 'Mutfak Türü',
+  };
+  const gorselAlan = (a: string) => a === 'logoUrl' || a === 'kapakGorselUrl';
 
   const yoneticiHaritasi = useMemo(() => {
     const m = new Map<string, string>();
@@ -36,6 +42,34 @@ export const SaticilarSekmesi = () => {
           <Plus className="h-4 w-4" /> Yeni İşletme
         </button>
       </div>
+
+      {talepler.length > 0 && (
+        <div className="rounded-3xl border border-amber-400/25 bg-amber-500/[0.06] p-4 space-y-3">
+          <p className="text-sm font-black text-amber-100">Bekleyen Bilgi Değişikliği Talepleri ({talepler.length})</p>
+          {talepler.map(t => (
+            <div key={t.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 flex flex-wrap items-center gap-3 justify-between">
+              <div className="min-w-0 text-sm">
+                <span className="font-bold text-white">{t.saticiAdi}</span>
+                <span className="text-white/50"> · {ALAN_ETIKET[t.alanAdi] || t.alanAdi}</span>
+                <div className="text-xs text-white/45 mt-1">
+                  {gorselAlan(t.alanAdi) ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span>Mevcut:</span>{t.mevcutDeger ? <img src={t.mevcutDeger} className="h-8 w-8 rounded object-cover border border-white/10" /> : '—'}
+                      <span>→ Yeni:</span><img src={t.talepEdilenDeger} className="h-8 w-8 rounded object-cover border border-emerald-400/30" />
+                    </span>
+                  ) : (
+                    <span><span className="text-white/35 line-through">{t.mevcutDeger || '—'}</span> → <span className="text-emerald-200">{t.talepEdilenDeger}</span></span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button onClick={() => talepOnayla(t.id)} className="px-3 py-2 rounded-xl text-xs font-black text-white bg-emerald-500/80 hover:bg-emerald-500 cursor-pointer">Onayla</button>
+                <button onClick={() => { const g = window.prompt('Revize gerekçesi (işletmeye iletilecek):'); if (g != null) talepRevize(t.id, g); }} className="px-3 py-2 rounded-xl text-xs font-black text-amber-100 bg-amber-500/15 border border-amber-400/25 hover:bg-amber-500/25 cursor-pointer">Revize İste</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.025]">
         <table className="w-full min-w-[900px] text-left border-collapse">

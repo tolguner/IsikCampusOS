@@ -10,6 +10,19 @@ export interface VendorAdminKullanici {
   soyad?: string;
 }
 
+/** İşletme genel bilgi değişikliği talebi (admin inceleme). */
+export interface SaticiDegisiklikTalebi {
+  id: string;
+  saticiId: string;
+  saticiAdi: string;
+  alanAdi: string;
+  mevcutDeger?: string;
+  talepEdilenDeger: string;
+  durum: string;
+  geriBildirim?: string;
+  olusturulmaTarihi?: string;
+}
+
 export interface SaticiOlusturmaFormu {
   ad: string;
   yoneticiKullaniciId: string;
@@ -53,6 +66,10 @@ interface AdminSaticiState {
   saticiGuncelle: (id: string, form: SaticiGuncellemeFormu) => Promise<boolean>;
   saticiSil: (id: string) => Promise<boolean>;
   yoneticiDegistir: (id: string, sahip: { ad: string; soyad: string; eposta: string; tc: string }) => Promise<boolean>;
+  talepler: SaticiDegisiklikTalebi[];
+  talepleriGetir: () => Promise<void>;
+  talepOnayla: (id: string) => Promise<void>;
+  talepRevize: (id: string, geriBildirim: string) => Promise<void>;
 }
 
 const hataMesaji = (err: any, varsayilan: string) =>
@@ -61,6 +78,7 @@ const hataMesaji = (err: any, varsayilan: string) =>
 export const useAdminSaticiDeposu = create<AdminSaticiState>((set, get) => ({
   saticilar: [],
   vendorAdminler: [],
+  talepler: [],
   isLoading: false,
   hata: null,
   basariMesaji: null,
@@ -158,6 +176,36 @@ export const useAdminSaticiDeposu = create<AdminSaticiState>((set, get) => ({
     } catch (err: any) {
       set({ hata: hataMesaji(err, 'İşletme silinemedi.'), isLoading: false });
       return false;
+    }
+  },
+
+  talepleriGetir: async () => {
+    try {
+      const res = await api.get<SaticiDegisiklikTalebi[]>('/yonetim/saticilar/talepler');
+      set({ talepler: res.data });
+    } catch { /* sessiz */ }
+  },
+
+  talepOnayla: async (id) => {
+    set({ hata: null, basariMesaji: null });
+    try {
+      await api.post(`/yonetim/saticilar/talepler/${id}/onayla`);
+      set({ basariMesaji: 'Değişiklik onaylandı ve uygulandı.' });
+      await get().talepleriGetir();
+      await get().saticilariGetir();
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'Talep onaylanamadı.') });
+    }
+  },
+
+  talepRevize: async (id, geriBildirim) => {
+    set({ hata: null, basariMesaji: null });
+    try {
+      await api.post(`/yonetim/saticilar/talepler/${id}/revize`, { geriBildirim });
+      set({ basariMesaji: 'Revize talep edildi.' });
+      await get().talepleriGetir();
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'Revize talep edilemedi.') });
     }
   },
 
