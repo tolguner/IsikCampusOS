@@ -38,7 +38,7 @@ Sistem **microservices** mimarisini benimser:
 | `facility-service` | 8086 | Tesis rezervasyon ve check-in |
 | `food-service` | 8087 | Vendor, menu, siparis |
 | `ride-service` | 8088 | Paylasimli yolculuk eslestirme |
-| `event-service` | 8089 | Kulup, etkinlik, RSVP |
+| `club-service` | 8089 | Kulup, etkinlik, RSVP |
 | `projectmatch-service` | 8090 | Proje ilani, ekip eslestirme |
 | `microjob-service` | 8091 | Is ilani, teklif, kontrat |
 
@@ -69,7 +69,7 @@ isikcampusos/
     facility-service/
     food-service/
     ride-service/
-    event-service/
+    club-service/
     projectmatch-service/
     microjob-service/
   frontend/

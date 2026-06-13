@@ -1,0 +1,10 @@
+stateDiagram-v2
+    [*] --> Taslak
+    Taslak --> OnayBekliyor : SKS'ye gönder
+    OnayBekliyor --> Yayinda : SKS onayla
+    OnayBekliyor --> Reddedildi : SKS reddet
+    Reddedildi --> Taslak : Düzelt
+    Yayinda --> Tamamlandi : Etkinlik bitti
+    Yayinda --> Iptal : İptal et
+    Tamamlandi --> [*]
+    Iptal --> [*]

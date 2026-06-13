@@ -1,0 +1,7 @@
+flowchart TD
+    Start([Rezervasyon talebi]) --> Kural{Uygunluk kuralı sağlanıyor mu?}
+    Kural -- Hayır --> Ret1[Hata: uygun olmayan zaman]
+    Kural -- Evet --> Cakisma{Aynı kaynak ve zamanda aktif rezervasyon var mı?}
+    Cakisma -- Evet --> Ret2[Hata: çakışma]
+    Cakisma -- Hayır --> Olustur[Rezervasyonu oluştur]
+    Olustur --> Bitti([Onaylandı])
