@@ -21,12 +21,16 @@ import java.util.Locale;
 public class YolculukServisi {
 
     private static final double DURAK_ESIK_KM = 3.0;
+    /** Yolcunun rotaya kattığı azami ek süre (dakika) — bunun üstü "yol üstünde değil". */
+    private static final int MAKS_SAPMA_DK = 15;
 
     private final YolculukIlaniDeposu ilanDeposu;
     private final YolculukTalebiDeposu talepDeposu;
     private final SurucuDogrulamaDeposu dogrulamaDeposu;
     private final YolculukPuaniDeposu puanDeposu;
     private final YolculukSikayetiDeposu sikayetDeposu;
+    private final RotaIstemcisi rotaIstemcisi;
+    private final PopulerNoktaServisi populerNoktaServisi;
 
     public List<YolculukIlani> ilanAra(YolculukAramaTalebi arama) {
         LocalDate tarih = arama.getTarih() != null ? arama.getTarih() : LocalDate.now();
@@ -115,8 +119,27 @@ public class YolculukServisi {
                 .enlem(talep.getVaris().getEnlem())
                 .boylam(talep.getVaris().getBoylam())
                 .sira(sira)
-                .tahminiDakika(talep.getTahminiToplamDakika() != null ? talep.getTahminiToplamDakika() : sira * 20)
+                .tahminiDakika(0)
                 .build());
+
+        // Gerçek yol-ağı rotasını (OSRM) hesapla: polyline + süre + mesafe + durak kümülatif dakikaları.
+        List<double[]> noktalar = ilan.getDuraklar().stream()
+                .sorted(Comparator.comparingInt(RotaDuragi::getSira))
+                .map(d -> new double[]{d.getEnlem(), d.getBoylam()})
+                .toList();
+        RotaIstemcisi.RotaSonucu rota = rotaIstemcisi.rotaHesapla(noktalar);
+        ilan.setRotaPolyline(rota.getPolyline());
+        ilan.setTahminiToplamDakika(rota.getToplamDakika());
+        ilan.setTahminiMesafeKm(rota.getMesafeKm());
+        List<RotaDuragi> sirali = ilan.getDuraklar().stream()
+                .sorted(Comparator.comparingInt(RotaDuragi::getSira)).toList();
+        for (int i = 0; i < sirali.size(); i++) {
+            int dk = i < rota.getKumulatifDakika().size() ? rota.getKumulatifDakika().get(i) : i * 15;
+            sirali.get(i).setTahminiDakika(dk);
+        }
+        // Başlangıç/varış noktalarını popüler-nokta sayacına işle.
+        populerNoktaServisi.kullanimArttir(talep.getBaslangic());
+        populerNoktaServisi.kullanimArttir(talep.getVaris());
         return ilanDeposu.save(ilan);
     }
 
@@ -152,10 +175,27 @@ public class YolculukServisi {
                 });
         zorunluNokta(talep.getBinis(), "Biniş noktası");
         zorunluNokta(talep.getInis(), "İniş noktası");
-        boolean birebirRota = YolculukEslesmeServisi.rotaKapsiyorMu(ilan.getDuraklar(), talep.getBinis().getAd(), talep.getInis().getAd());
-        if (!birebirRota && !ilan.isAraDurakKabulEdilir()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu ilan yalnızca tanımlı duraklardan başvuru kabul ediyor.");
+
+        // Coğrafi eşleşme (BlaBlaCar mantığı): yolcu biniş/iniş noktası sürücünün rotasına yakın
+        // ve sıralı olmalı. Sapma (sürücünün katlanacağı ek süre) eşiğin altındaysa uygun.
+        List<double[]> surucuNoktalari = ilan.getDuraklar().stream()
+                .sorted(Comparator.comparingInt(RotaDuragi::getSira))
+                .map(d -> new double[]{d.getEnlem(), d.getBoylam()}).toList();
+        double[] binisK = {talep.getBinis().getEnlem(), talep.getBinis().getBoylam()};
+        double[] inisK = {talep.getInis().getEnlem(), talep.getInis().getBoylam()};
+        if (ilan.isAraDurakKabulEdilir()) {
+            int sapma = rotaIstemcisi.sapmaDakika(surucuNoktalari, binisK, inisK);
+            if (sapma > MAKS_SAPMA_DK) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Biniş/iniş noktalarınız sürücünün rotasından çok sapıyor (~+" + sapma + " dk). Rotaya daha yakın noktalar seçin.");
+            }
+        } else if (!durakaYakin(ilan.getDuraklar(), binisK) || !durakaYakin(ilan.getDuraklar(), inisK)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Bu ilan yalnızca tanımlı duraklarından başvuru kabul ediyor; biniş/iniş noktalarınızı duraklara yakın seçin.");
         }
+        populerNoktaServisi.kullanimArttir(talep.getBinis());
+        populerNoktaServisi.kullanimArttir(talep.getInis());
+
         YolculukTalebi kayit = YolculukTalebi.builder()
                 .ilanId(ilanId)
                 .yolcuKullaniciId(yolcuId)
@@ -166,8 +206,8 @@ public class YolculukServisi {
                 .inisEnlem(talep.getInis().getEnlem())
                 .inisBoylam(talep.getInis().getBoylam())
                 .koltukSayisi(Math.max(1, talep.getKoltukSayisi()))
-                .tahminiBinisDakika(YolculukEslesmeServisi.durakDakikasi(ilan.getDuraklar(), talep.getBinis().getAd()).orElse(null))
-                .tahminiInisDakika(YolculukEslesmeServisi.durakDakikasi(ilan.getDuraklar(), talep.getInis().getAd()).orElse(null))
+                .tahminiBinisDakika(enYakinDurakDakika(ilan.getDuraklar(), binisK))
+                .tahminiInisDakika(enYakinDurakDakika(ilan.getDuraklar(), inisK))
                 .mesaj(talep.getMesaj())
                 .build();
         return talepDeposu.save(kayit);
@@ -280,9 +320,11 @@ public class YolculukServisi {
 
     private int skorla(YolculukIlani ilan, YolculukAramaTalebi arama) {
         int skor = 0;
-        if (arama.getBaslangic() != null && arama.getVaris() != null
-                && YolculukEslesmeServisi.rotaKapsiyorMu(ilan.getDuraklar(), arama.getBaslangic(), arama.getVaris())) {
-            skor += 60;
+        // Rota, aranan başlangıç VE varış noktalarının ikisine de yakın geçiyorsa güçlü eşleşme.
+        if (arama.getBaslangicEnlem() != null && arama.getVarisEnlem() != null
+                && rotayaYakinMi(ilan.getDuraklar(), arama.getBaslangicEnlem(), arama.getBaslangicBoylam())
+                && rotayaYakinMi(ilan.getDuraklar(), arama.getVarisEnlem(), arama.getVarisBoylam())) {
+            skor += 50;
         }
         if (arama.getBaslangicEnlem() != null && arama.getBaslangicBoylam() != null) {
             skor += yakinlikSkoru(ilan.getDuraklar(), arama.getBaslangicEnlem(), arama.getBaslangicBoylam());
@@ -301,6 +343,22 @@ public class YolculukServisi {
         if (min <= DURAK_ESIK_KM) return 12;
         if (min <= 8.0) return 4;
         return 0;
+    }
+
+    /** Nokta, ilanın duraklarından herhangi birine yakın mı (ara durak kabul etmeyen ilanlar için). */
+    private boolean durakaYakin(List<RotaDuragi> duraklar, double[] nokta) {
+        return duraklar.stream().anyMatch(d -> mesafeKm(nokta[0], nokta[1], d.getEnlem(), d.getBoylam()) <= 0.8);
+    }
+
+    /** Noktaya en yakın durağın başlangıçtan itibaren tahmini dakikası. */
+    private Integer enYakinDurakDakika(List<RotaDuragi> duraklar, double[] nokta) {
+        return duraklar.stream()
+                .min(Comparator.comparingDouble(d -> mesafeKm(nokta[0], nokta[1], d.getEnlem(), d.getBoylam())))
+                .map(RotaDuragi::getTahminiDakika).orElse(null);
+    }
+
+    private boolean rotayaYakinMi(List<RotaDuragi> duraklar, double enlem, double boylam) {
+        return duraklar.stream().anyMatch(d -> mesafeKm(enlem, boylam, d.getEnlem(), d.getBoylam()) <= DURAK_ESIK_KM);
     }
 
     private double mesafeKm(double lat1, double lon1, double lat2, double lon2) {

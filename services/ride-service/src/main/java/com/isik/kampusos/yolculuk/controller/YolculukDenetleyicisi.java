@@ -22,6 +22,14 @@ public class YolculukDenetleyicisi {
 
     private final YolculukServisi yolculukServisi;
     private final SurucuDogrulamaServisi dogrulamaServisi;
+    private final com.isik.kampusos.yolculuk.service.PopulerNoktaServisi populerNoktaServisi;
+
+    /** Haritada hızlı seçim için popüler noktalar (en çok tercih edilen sıralı). */
+    @GetMapping("/populer-noktalar")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<List<com.isik.kampusos.yolculuk.model.PopulerNokta>> populerNoktalar() {
+        return ResponseEntity.ok(populerNoktaServisi.populerler());
+    }
 
     @GetMapping("/ilanlar")
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")

@@ -32,3 +32,9 @@ eureka:
 security:
   jwt:
     secret: ${JWT_SECRET:3cfa76ef14937c1c0ea519f8fc29b945279b945279b945279b945279b945279b}
+
+# Gerçek yol-ağı rota motoru (OSRM). Varsayılan: herkese açık demo sunucu.
+# Üretimde kendi OSRM container'ına çevrilir; erişilemezse haversine fallback devreye girer.
+rota:
+  osrm:
+    url: ${ROTA_OSRM_URL:https://router.project-osrm.org}

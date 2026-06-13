@@ -236,6 +236,10 @@ services:
     depends_on:
       - eureka-server
       - postgres
+    # Harici OSRM rota motoruna (router.project-osrm.org) erişim için açık DNS.
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       - ./services/ride-service/target:/app
     command: sh -c "java -jar /app/*.jar"
@@ -243,6 +247,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ride_db
       - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
+      - ROTA_OSRM_URL=${ROTA_OSRM_URL:-https://router.project-osrm.org}
     networks:
       - campusos-net
 
