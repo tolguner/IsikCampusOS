@@ -19,4 +19,6 @@ export const YOLLAR = {
   yemek: '/yemek',
   yemekSiparislerim: '/yemek/siparislerim',
   isletmePaneli: '/isletme',
+  campusRide: '/campusride',
+  rideYonetimi: '/ride-yonetimi',
 } as const;

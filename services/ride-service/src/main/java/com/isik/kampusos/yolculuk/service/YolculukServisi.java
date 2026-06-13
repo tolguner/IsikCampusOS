@@ -1,0 +1,350 @@
+package com.isik.kampusos.yolculuk.service;
+
+import com.isik.kampusos.yolculuk.dto.*;
+import com.isik.kampusos.yolculuk.model.*;
+import com.isik.kampusos.yolculuk.repository.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+
+@Service
+@RequiredArgsConstructor
+public class YolculukServisi {
+
+    private static final double DURAK_ESIK_KM = 3.0;
+
+    private final YolculukIlaniDeposu ilanDeposu;
+    private final YolculukTalebiDeposu talepDeposu;
+    private final SurucuDogrulamaDeposu dogrulamaDeposu;
+    private final YolculukPuaniDeposu puanDeposu;
+    private final YolculukSikayetiDeposu sikayetDeposu;
+
+    public List<YolculukIlani> ilanAra(YolculukAramaTalebi arama) {
+        LocalDate tarih = arama.getTarih() != null ? arama.getTarih() : LocalDate.now();
+        List<YolculukIlani> ilanlar = ilanDeposu.findByKalkisZamaniBetweenAndDurumInOrderByKalkisZamaniAsc(
+                tarih.atStartOfDay(),
+                tarih.plusDays(1).atStartOfDay().minusNanos(1),
+                List.of(YolculukIlani.IlanDurumu.AKTIF, YolculukIlani.IlanDurumu.DOLU));
+
+        return ilanlar.stream()
+                .filter(i -> i.bosKoltukSayisi() > 0)
+                .filter(i -> arama.getSadeceUcretsiz() == null || !arama.getSadeceUcretsiz()
+                        || i.getUcretTipi() == YolculukIlani.UcretTipi.UCRETSIZ)
+                .filter(i -> arama.getMaksimumUcret() == null || i.getKisiBasiUcret() == null
+                        || i.getKisiBasiUcret().compareTo(arama.getMaksimumUcret()) <= 0)
+                .filter(i -> arama.getSadeceAraDurakKabulEdenler() == null || !arama.getSadeceAraDurakKabulEdenler()
+                        || i.isAraDurakKabulEdilir())
+                .peek(i -> i.setUygunlukSkoru(skorla(i, arama)))
+                .sorted(Comparator.comparingInt(YolculukIlani::getUygunlukSkoru).reversed()
+                        .thenComparing(YolculukIlani::getKalkisZamani))
+                .toList();
+    }
+
+    @Transactional
+    public YolculukIlani ilanOlustur(String surucuId, YolculukIlaniTalebi talep) {
+        if (!dogrulamaDeposu.existsByKullaniciIdAndDurum(surucuId, SurucuDogrulama.DogrulamaDurumu.ONAYLANDI)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "İlan açmak için sürücü/araç doğrulaması onaylanmalıdır.");
+        }
+        zorunluNokta(talep.getBaslangic(), "Başlangıç noktası");
+        zorunluNokta(talep.getVaris(), "Varış noktası");
+        if (talep.getKalkisZamani() == null || talep.getKalkisZamani().isBefore(LocalDateTime.now().minusMinutes(5))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kalkış zamanı gelecekte olmalıdır.");
+        }
+        if (talep.getKoltukSayisi() < 1 || talep.getKoltukSayisi() > 8) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Koltuk sayısı 1-8 arasında olmalıdır.");
+        }
+
+        YolculukIlani.UcretTipi ucretTipi = enumCoz(talep.getUcretTipi(), YolculukIlani.UcretTipi.class, YolculukIlani.UcretTipi.UCRETSIZ);
+        YolculukIlani.OdemeYontemi odeme = enumCoz(talep.getOdemeYontemi(), YolculukIlani.OdemeYontemi.class,
+                ucretTipi == YolculukIlani.UcretTipi.UCRETSIZ ? YolculukIlani.OdemeYontemi.YOK : YolculukIlani.OdemeYontemi.NAKIT);
+        if (ucretTipi == YolculukIlani.UcretTipi.UCRETLI
+                && (talep.getKisiBasiUcret() == null || talep.getKisiBasiUcret().compareTo(BigDecimal.ZERO) <= 0)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ücretli ilanda kişi başı ücret girilmelidir.");
+        }
+
+        YolculukIlani ilan = YolculukIlani.builder()
+                .surucuKullaniciId(surucuId)
+                .baslangicBasligi(talep.getBaslangic().getAd())
+                .baslangicEnlem(talep.getBaslangic().getEnlem())
+                .baslangicBoylam(talep.getBaslangic().getBoylam())
+                .varisBasligi(talep.getVaris().getAd())
+                .varisEnlem(talep.getVaris().getEnlem())
+                .varisBoylam(talep.getVaris().getBoylam())
+                .kalkisZamani(talep.getKalkisZamani())
+                .koltukSayisi(talep.getKoltukSayisi())
+                .ucretTipi(ucretTipi)
+                .odemeYontemi(odeme)
+                .kisiBasiUcret(ucretTipi == YolculukIlani.UcretTipi.UCRETSIZ ? BigDecimal.ZERO : talep.getKisiBasiUcret())
+                .iban(talep.getIban())
+                .aciklama(talep.getAciklama())
+                .araDurakKabulEdilir(talep.isAraDurakKabulEdilir())
+                .rotaPolyline(talep.getRotaPolyline())
+                .tahminiToplamDakika(talep.getTahminiToplamDakika())
+                .tahminiMesafeKm(talep.getTahminiMesafeKm())
+                .build();
+
+        ilan.getDuraklar().add(RotaDuragi.builder()
+                .ad(talep.getBaslangic().getAd())
+                .enlem(talep.getBaslangic().getEnlem())
+                .boylam(talep.getBaslangic().getBoylam())
+                .sira(0)
+                .tahminiDakika(0)
+                .build());
+        int sira = 1;
+        for (RotaDuragiTalebi d : talep.getDuraklar()) {
+            if (d.getAd() == null || d.getAd().isBlank()) continue;
+            ilan.getDuraklar().add(RotaDuragi.builder()
+                    .ad(d.getAd())
+                    .enlem(d.getEnlem())
+                    .boylam(d.getBoylam())
+                    .sira(sira++)
+                    .tahminiDakika(Math.max(0, d.getTahminiDakika()))
+                    .build());
+        }
+        ilan.getDuraklar().add(RotaDuragi.builder()
+                .ad(talep.getVaris().getAd())
+                .enlem(talep.getVaris().getEnlem())
+                .boylam(talep.getVaris().getBoylam())
+                .sira(sira)
+                .tahminiDakika(talep.getTahminiToplamDakika() != null ? talep.getTahminiToplamDakika() : sira * 20)
+                .build());
+        return ilanDeposu.save(ilan);
+    }
+
+    public List<YolculukIlani> benimIlanlarim(String surucuId) {
+        return ilanDeposu.findBySurucuKullaniciIdOrderByKalkisZamaniDesc(surucuId);
+    }
+
+    @Transactional
+    public YolculukIlani ilanIptal(String surucuId, String ilanId) {
+        YolculukIlani ilan = ilanSahiplikle(surucuId, ilanId);
+        if (ilan.getDurum() == YolculukIlani.IlanDurumu.TAMAMLANDI) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Tamamlanmış ilan iptal edilemez.");
+        }
+        ilan.setDurum(YolculukIlani.IlanDurumu.IPTAL);
+        ilan.setIptalTarihi(LocalDateTime.now());
+        return ilanDeposu.save(ilan);
+    }
+
+    @Transactional
+    public YolculukTalebi katil(String yolcuId, String ilanId, YolculukKatilimTalebi talep) {
+        YolculukIlani ilan = ilanDeposu.findById(ilanId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Yolculuk ilanı bulunamadı."));
+        if (ilan.getSurucuKullaniciId().equals(yolcuId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Kendi yolculuk ilanınıza katılım isteği gönderemezsiniz.");
+        }
+        if (!YolculukEslesmeServisi.kabulEdilebilirMi(ilan)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu ilanda boş koltuk yok.");
+        }
+        talepDeposu.findByIlanIdAndYolcuKullaniciIdAndDurumIn(ilanId, yolcuId,
+                List.of(YolculukTalebi.TalepDurumu.BEKLEMEDE, YolculukTalebi.TalepDurumu.KABUL_EDILDI))
+                .ifPresent(t -> {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu ilana zaten aktif bir başvurunuz var.");
+                });
+        zorunluNokta(talep.getBinis(), "Biniş noktası");
+        zorunluNokta(talep.getInis(), "İniş noktası");
+        boolean birebirRota = YolculukEslesmeServisi.rotaKapsiyorMu(ilan.getDuraklar(), talep.getBinis().getAd(), talep.getInis().getAd());
+        if (!birebirRota && !ilan.isAraDurakKabulEdilir()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu ilan yalnızca tanımlı duraklardan başvuru kabul ediyor.");
+        }
+        YolculukTalebi kayit = YolculukTalebi.builder()
+                .ilanId(ilanId)
+                .yolcuKullaniciId(yolcuId)
+                .binisBasligi(talep.getBinis().getAd())
+                .binisEnlem(talep.getBinis().getEnlem())
+                .binisBoylam(talep.getBinis().getBoylam())
+                .inisBasligi(talep.getInis().getAd())
+                .inisEnlem(talep.getInis().getEnlem())
+                .inisBoylam(talep.getInis().getBoylam())
+                .koltukSayisi(Math.max(1, talep.getKoltukSayisi()))
+                .tahminiBinisDakika(YolculukEslesmeServisi.durakDakikasi(ilan.getDuraklar(), talep.getBinis().getAd()).orElse(null))
+                .tahminiInisDakika(YolculukEslesmeServisi.durakDakikasi(ilan.getDuraklar(), talep.getInis().getAd()).orElse(null))
+                .mesaj(talep.getMesaj())
+                .build();
+        return talepDeposu.save(kayit);
+    }
+
+    public List<YolculukTalebi> taleplerim(String yolcuId) {
+        return talepDeposu.findByYolcuKullaniciIdOrderByOlusturulmaTarihiDesc(yolcuId);
+    }
+
+    public List<YolculukTalebi> surucuTalepleri(String surucuId) {
+        List<String> ilanIdleri = ilanDeposu.findBySurucuKullaniciIdOrderByKalkisZamaniDesc(surucuId).stream()
+                .map(YolculukIlani::getId)
+                .toList();
+        if (ilanIdleri.isEmpty()) return List.of();
+        return talepDeposu.findByIlanIdInOrderByOlusturulmaTarihiDesc(ilanIdleri);
+    }
+
+    @Transactional
+    public YolculukTalebi talepKabul(String surucuId, String talepId) {
+        YolculukTalebi talep = talepBul(talepId);
+        YolculukIlani ilan = ilanSahiplikle(surucuId, talep.getIlanId());
+        YolculukEslesmeServisi.talebiKabulEt(ilan, talep);
+        talep.setCevapTarihi(LocalDateTime.now());
+        ilanDeposu.save(ilan);
+        return talepDeposu.save(talep);
+    }
+
+    @Transactional
+    public YolculukTalebi talepReddet(String surucuId, String talepId, String neden) {
+        YolculukTalebi talep = talepBul(talepId);
+        ilanSahiplikle(surucuId, talep.getIlanId());
+        if (talep.getDurum() != YolculukTalebi.TalepDurumu.BEKLEMEDE) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Yalnızca bekleyen talepler reddedilebilir.");
+        }
+        talep.setDurum(YolculukTalebi.TalepDurumu.REDDEDILDI);
+        talep.setRedNedeni(neden);
+        talep.setCevapTarihi(LocalDateTime.now());
+        return talepDeposu.save(talep);
+    }
+
+    @Transactional
+    public YolculukTalebi talepIptal(String yolcuId, String talepId) {
+        YolculukTalebi talep = talepBul(talepId);
+        if (!talep.getYolcuKullaniciId().equals(yolcuId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu talep size ait değil.");
+        }
+        if (talep.getDurum() == YolculukTalebi.TalepDurumu.KABUL_EDILDI) {
+            YolculukIlani ilan = ilanDeposu.findById(talep.getIlanId()).orElseThrow();
+            ilan.setKabulEdilenKoltukSayisi(Math.max(0, ilan.getKabulEdilenKoltukSayisi() - talep.getKoltukSayisi()));
+            if (ilan.getDurum() == YolculukIlani.IlanDurumu.DOLU) ilan.setDurum(YolculukIlani.IlanDurumu.AKTIF);
+            ilanDeposu.save(ilan);
+        }
+        talep.setDurum(YolculukTalebi.TalepDurumu.IPTAL);
+        talep.setIptalTarihi(LocalDateTime.now());
+        return talepDeposu.save(talep);
+    }
+
+    @Transactional
+    public YolculukTalebi talepTamamla(String kullaniciId, String talepId) {
+        YolculukTalebi talep = talepBul(talepId);
+        YolculukIlani ilan = ilanDeposu.findById(talep.getIlanId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Yolculuk ilanı bulunamadı."));
+        if (!talep.getYolcuKullaniciId().equals(kullaniciId) && !ilan.getSurucuKullaniciId().equals(kullaniciId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu yolculuğu tamamlama yetkiniz yok.");
+        }
+        if (talep.getDurum() != YolculukTalebi.TalepDurumu.KABUL_EDILDI) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Yalnızca kabul edilmiş yolculuk tamamlanabilir.");
+        }
+        talep.setDurum(YolculukTalebi.TalepDurumu.TAMAMLANDI);
+        talep.setTamamlanmaTarihi(LocalDateTime.now());
+        return talepDeposu.save(talep);
+    }
+
+    @Transactional
+    public YolculukPuani puanla(String verenId, String talepId, PuanlamaTalebi talep) {
+        YolculukTalebi yolculukTalebi = talepBul(talepId);
+        YolculukIlani ilan = ilanDeposu.findById(yolculukTalebi.getIlanId()).orElseThrow();
+        if (yolculukTalebi.getDurum() != YolculukTalebi.TalepDurumu.TAMAMLANDI) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Puanlama için yolculuk tamamlanmış olmalıdır.");
+        }
+        String alanId = karsiTaraf(verenId, yolculukTalebi, ilan);
+        if (puanDeposu.existsByTalepIdAndVerenKullaniciId(talepId, verenId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu yolculuğu zaten puanladınız.");
+        }
+        if (talep.getPuan() < 1 || talep.getPuan() > 5) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Puan 1-5 arasında olmalıdır.");
+        }
+        return puanDeposu.save(YolculukPuani.builder()
+                .talepId(talepId)
+                .verenKullaniciId(verenId)
+                .alanKullaniciId(alanId)
+                .puan(talep.getPuan())
+                .yorum(talep.getYorum())
+                .build());
+    }
+
+    @Transactional
+    public YolculukSikayeti sikayetEt(String sikayetciId, String talepId, SikayetTalebi talep) {
+        YolculukTalebi yolculukTalebi = talepBul(talepId);
+        YolculukIlani ilan = ilanDeposu.findById(yolculukTalebi.getIlanId()).orElseThrow();
+        String hedefId = karsiTaraf(sikayetciId, yolculukTalebi, ilan);
+        return sikayetDeposu.save(YolculukSikayeti.builder()
+                .talepId(talepId)
+                .sikayetciKullaniciId(sikayetciId)
+                .hedefKullaniciId(hedefId)
+                .neden(enumCoz(talep.getNeden(), YolculukSikayeti.SikayetNedeni.class, YolculukSikayeti.SikayetNedeni.DIGER))
+                .aciklama(talep.getAciklama())
+                .build());
+    }
+
+    private int skorla(YolculukIlani ilan, YolculukAramaTalebi arama) {
+        int skor = 0;
+        if (arama.getBaslangic() != null && arama.getVaris() != null
+                && YolculukEslesmeServisi.rotaKapsiyorMu(ilan.getDuraklar(), arama.getBaslangic(), arama.getVaris())) {
+            skor += 60;
+        }
+        if (arama.getBaslangicEnlem() != null && arama.getBaslangicBoylam() != null) {
+            skor += yakinlikSkoru(ilan.getDuraklar(), arama.getBaslangicEnlem(), arama.getBaslangicBoylam());
+        }
+        if (arama.getVarisEnlem() != null && arama.getVarisBoylam() != null) {
+            skor += yakinlikSkoru(ilan.getDuraklar(), arama.getVarisEnlem(), arama.getVarisBoylam());
+        }
+        if (ilan.getUcretTipi() == YolculukIlani.UcretTipi.UCRETSIZ) skor += 10;
+        if (dogrulamaDeposu.existsByKullaniciIdAndDurum(ilan.getSurucuKullaniciId(), SurucuDogrulama.DogrulamaDurumu.ONAYLANDI)) skor += 15;
+        return skor;
+    }
+
+    private int yakinlikSkoru(List<RotaDuragi> duraklar, double enlem, double boylam) {
+        double min = duraklar.stream().mapToDouble(d -> mesafeKm(enlem, boylam, d.getEnlem(), d.getBoylam())).min().orElse(999);
+        if (min <= 1.0) return 20;
+        if (min <= DURAK_ESIK_KM) return 12;
+        if (min <= 8.0) return 4;
+        return 0;
+    }
+
+    private double mesafeKm(double lat1, double lon1, double lat2, double lon2) {
+        double r = 6371.0;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return r * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    private YolculukIlani ilanSahiplikle(String surucuId, String ilanId) {
+        YolculukIlani ilan = ilanDeposu.findById(ilanId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Yolculuk ilanı bulunamadı."));
+        if (!ilan.getSurucuKullaniciId().equals(surucuId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu ilan size ait değil.");
+        }
+        return ilan;
+    }
+
+    private YolculukTalebi talepBul(String talepId) {
+        return talepDeposu.findById(talepId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Yolculuk talebi bulunamadı."));
+    }
+
+    private String karsiTaraf(String kullaniciId, YolculukTalebi talep, YolculukIlani ilan) {
+        if (talep.getYolcuKullaniciId().equals(kullaniciId)) return ilan.getSurucuKullaniciId();
+        if (ilan.getSurucuKullaniciId().equals(kullaniciId)) return talep.getYolcuKullaniciId();
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu yolculuğun tarafı değilsiniz.");
+    }
+
+    private void zorunluNokta(NoktaTalebi nokta, String alan) {
+        if (nokta == null || nokta.getAd() == null || nokta.getAd().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, alan + " zorunludur.");
+        }
+    }
+
+    private <E extends Enum<E>> E enumCoz(String deger, Class<E> enumTipi, E varsayilan) {
+        if (deger == null || deger.isBlank()) return varsayilan;
+        try {
+            return Enum.valueOf(enumTipi, deger.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz değer: " + deger);
+        }
+    }
+}

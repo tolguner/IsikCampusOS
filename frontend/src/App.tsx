@@ -23,6 +23,8 @@ import { DuyuruSayfasi } from './pages/DuyuruSayfasi';
 import { YemekSayfasi } from './pages/YemekSayfasi';
 import { YemekSiparislerimSayfasi } from './pages/YemekSiparislerimSayfasi';
 import { IsletmePaneli } from './pages/IsletmePaneli';
+import { CampusRideSayfasi } from './pages/CampusRideSayfasi';
+import { RideYonetimPaneli } from './pages/RideYonetimPaneli';
 import { useKimlikDeposu } from './depolar/kimlikDeposu';
 import { useBildirimDeposu } from './depolar/bildirimDeposu';
 import { useKulupDeposu } from './depolar/kulupDeposu';
@@ -86,6 +88,10 @@ const DashboardRoute = () => {
 
   if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.isletmePaneli)) {
     return <IsletmePaneli />;
+  }
+
+  if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.rideYonetimi)) {
+    return <RideYonetimPaneli />;
   }
 
   if (isStudent) {
@@ -305,6 +311,22 @@ function App() {
           <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.ogrenci}>
             <UygulamaDuzeni>
               <YemekSiparislerimSayfasi />
+            </UygulamaDuzeni>
+          </ProtectedRoute>
+        } />
+
+        <Route path={YOLLAR.campusRide} element={
+          <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.ogrenci}>
+            <UygulamaDuzeni>
+              <CampusRideSayfasi />
+            </UygulamaDuzeni>
+          </ProtectedRoute>
+        } />
+
+        <Route path={YOLLAR.rideYonetimi} element={
+          <ProtectedRoute izinliYetkiler={YETKI_GRUPLARI.rideYonetimi}>
+            <UygulamaDuzeni>
+              <RideYonetimPaneli />
             </UygulamaDuzeni>
           </ProtectedRoute>
         } />

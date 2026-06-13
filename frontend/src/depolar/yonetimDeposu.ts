@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { api } from '../lib/api';
 
 export type KullaniciRol =
-  | 'ROLE_ADMIN' | 'ROLE_SKS_ADMIN' | 'ROLE_FACILITY_ADMIN' | 'ROLE_REGISTRAR' | 'ROLE_VENDOR_ADMIN';
+  | 'ROLE_ADMIN' | 'ROLE_SKS_ADMIN' | 'ROLE_FACILITY_ADMIN' | 'ROLE_REGISTRAR' | 'ROLE_VENDOR_ADMIN' | 'ROLE_RIDE_ADMIN';
 
 /** Backend (auth-service /yonetim) yanıtları ile birebir. */
 export interface YonetimKullanicisi {
