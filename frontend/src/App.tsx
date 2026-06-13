@@ -100,7 +100,7 @@ function App() {
             <AppLayout>
               {user?.roles.includes('ROLE_REGISTRAR') ? (
                 <RegistrarDashboard />
-              ) : user?.roles.includes('ROLE_SKS_ADMIN') ? (
+              ) : (user?.roles.includes('ROLE_SKS_ADMIN') || user?.roles.includes('ROLE_ADMIN')) ? (
                 <SksDashboard />
               ) : (
                 <StudentDashboard />
