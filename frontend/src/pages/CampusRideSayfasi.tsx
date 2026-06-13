@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { MapContainer, Marker, Polyline, TileLayer } from 'react-leaflet';
@@ -17,36 +17,30 @@ import {
   type UcretTipi,
   type YolculukIlani,
 } from '../depolar/yolculukDeposu';
+import { KonumSecici } from '../components/kulup-paneli/KonumSecici';
 
-const NOKTALAR: Nokta[] = [
-  { ad: 'Şile Kampüs', enlem: 41.1762, boylam: 29.6128 },
-  { ad: 'Çekmeköy Metro', enlem: 41.0331, boylam: 29.1767 },
-  { ad: 'Üsküdar', enlem: 41.0275, boylam: 29.0153 },
-  { ad: 'Kadıköy', enlem: 40.9909, boylam: 29.0254 },
-  { ad: 'Ataşehir', enlem: 40.9929, boylam: 29.1244 },
-  { ad: 'Maslak', enlem: 41.1122, boylam: 29.0219 },
-];
+const KAMPUS: Nokta = { ad: 'İşık Üniversitesi Şile Kampüsü', enlem: 41.1762, boylam: 29.6128 };
+const VARSAYILAN_VARIS: Nokta = { ad: 'Kadıköy', enlem: 40.9909, boylam: 29.0254 };
 
 const bugun = () => new Date().toISOString().slice(0, 10);
 const tarihSaatVarsayilan = () => `${bugun()}T08:30`;
 const para = (tutar?: number) => !tutar ? 'Ücretsiz' : new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(tutar);
-const noktaBul = (ad: string) => NOKTALAR.find(n => n.ad === ad) ?? NOKTALAR[0];
 
 export const CampusRideSayfasi = () => {
   const {
-    ilanlar, benimIlanlarim, taleplerim, surucuTalepleri, dogrulama,
+    ilanlar, benimIlanlarim, taleplerim, surucuTalepleri, dogrulama, populerNoktalar,
     isLoading, hata, basariMesaji,
-    ilanAra, ilanOlustur, benimVerilerimiGetir, dogrulamaBasvur,
+    ilanAra, ilanOlustur, benimVerilerimiGetir, dogrulamaBasvur, populerNoktalariGetir,
     ilanaKatil, talepKabul, talepRed, talepIptal, talepTamamla, puanla, sikayetEt, temizleMesajlar,
   } = useYolculukDeposu();
 
   const [tarih, setTarih] = useState(bugun());
-  const [baslangic, setBaslangic] = useState('Şile Kampüs');
-  const [varis, setVaris] = useState('Kadıköy');
+  const [baslangic, setBaslangic] = useState<Nokta>(KAMPUS);
+  const [varis, setVaris] = useState<Nokta>(VARSAYILAN_VARIS);
   const [aktifSekme, setAktifSekme] = useState<'ara' | 'surucu' | 'benim'>('ara');
+  const [ilanBaslangic, setIlanBaslangic] = useState<Nokta>(KAMPUS);
+  const [ilanVaris, setIlanVaris] = useState<Nokta>(VARSAYILAN_VARIS);
   const [form, setForm] = useState({
-    baslangic: 'Şile Kampüs',
-    varis: 'Kadıköy',
     kalkisZamani: tarihSaatVarsayilan(),
     koltukSayisi: 3,
     ucretTipi: 'UCRETLI' as UcretTipi,
@@ -55,13 +49,9 @@ export const CampusRideSayfasi = () => {
     iban: '',
     aciklama: '',
     araDurakKabulEdilir: true,
-    tahminiToplamDakika: 85,
-    tahminiMesafeKm: 72,
   });
-  const [araDuraklar, setAraDuraklar] = useState<RotaDuragi[]>([
-    { ad: 'Çekmeköy Metro', enlem: 41.0331, boylam: 29.1767, tahminiDakika: 35 },
-    { ad: 'Üsküdar', enlem: 41.0275, boylam: 29.0153, tahminiDakika: 65 },
-  ]);
+  const [araDuraklar, setAraDuraklar] = useState<RotaDuragi[]>([]);
+  const [yeniDurak, setYeniDurak] = useState<Nokta | null>(null);
   const [dogrulamaForm, setDogrulamaForm] = useState({
     ehliyetSinifi: 'B',
     aracMarkaModel: '',
@@ -73,19 +63,18 @@ export const CampusRideSayfasi = () => {
 
   useEffect(() => {
     benimVerilerimiGetir();
-  }, [benimVerilerimiGetir]);
+    populerNoktalariGetir();
+  }, [benimVerilerimiGetir, populerNoktalariGetir]);
 
   useEffect(() => {
-    const b = noktaBul(baslangic);
-    const v = noktaBul(varis);
     ilanAra({
       tarih,
-      baslangic,
-      baslangicEnlem: b.enlem,
-      baslangicBoylam: b.boylam,
-      varis,
-      varisEnlem: v.enlem,
-      varisBoylam: v.boylam,
+      baslangic: baslangic.ad,
+      baslangicEnlem: baslangic.enlem,
+      baslangicBoylam: baslangic.boylam,
+      varis: varis.ad,
+      varisEnlem: varis.enlem,
+      varisBoylam: varis.boylam,
     });
   }, [baslangic, ilanAra, tarih, varis]);
 
@@ -93,15 +82,15 @@ export const CampusRideSayfasi = () => {
 
   const dogrulandi = dogrulama?.durum === 'ONAYLANDI';
   const rotaNoktalari = useMemo(() => [
-    noktaBul(form.baslangic),
+    ilanBaslangic,
     ...araDuraklar,
-    noktaBul(form.varis),
-  ], [araDuraklar, form.baslangic, form.varis]);
+    ilanVaris,
+  ], [araDuraklar, ilanBaslangic, ilanVaris]);
 
   const ilanKaydet = async () => {
     await ilanOlustur({
-      baslangic: noktaBul(form.baslangic),
-      varis: noktaBul(form.varis),
+      baslangic: ilanBaslangic,
+      varis: ilanVaris,
       kalkisZamani: form.kalkisZamani,
       koltukSayisi: form.koltukSayisi,
       ucretTipi: form.ucretTipi,
@@ -110,16 +99,16 @@ export const CampusRideSayfasi = () => {
       iban: form.iban,
       aciklama: form.aciklama,
       araDurakKabulEdilir: form.araDurakKabulEdilir,
-      tahminiToplamDakika: form.tahminiToplamDakika,
-      tahminiMesafeKm: form.tahminiMesafeKm,
+      // Rota/süre/mesafe artık backend'de OSRM ile hesaplanıyor.
+      tahminiToplamDakika: undefined,
+      tahminiMesafeKm: undefined,
       duraklar: araDuraklar,
     });
   };
 
+  // Yolcu varsayılan biniş/iniş = arama noktaları (haritadan değiştirilebilir).
   const basvur = async (ilan: YolculukIlani) => {
-    const binis = noktaBul(baslangic);
-    const inis = noktaBul(varis);
-    await ilanaKatil(ilan.id, binis, inis, `${binis.ad} - ${inis.ad} arası katılmak istiyorum.`);
+    await ilanaKatil(ilan.id, baslangic, varis, `${baslangic.ad} → ${varis.ad} arası katılmak istiyorum.`);
   };
 
   return (
@@ -162,14 +151,14 @@ export const CampusRideSayfasi = () => {
 
       {aktifSekme === 'ara' && (
         <section className="space-y-5">
-          <div className="grid gap-3 rounded-3xl border border-white/10 bg-white/[0.03] p-4 md:grid-cols-[1fr_1fr_180px_auto]">
-            <Secim label="Nereden?" value={baslangic} onChange={setBaslangic} />
-            <Secim label="Nereye?" value={varis} onChange={setVaris} />
+          <div className="grid gap-3 rounded-3xl border border-white/10 bg-white/[0.03] p-4 md:grid-cols-2">
+            <NoktaSecici label="Nereden?" value={baslangic} onChange={setBaslangic} populer={populerNoktalar} />
+            <NoktaSecici label="Nereye?" value={varis} onChange={setVaris} populer={populerNoktalar} />
             <div>
               <label className="mb-1 block text-xs font-bold text-white/45">Tarih</label>
-              <input value={tarih} onChange={e => setTarih(e.target.value)} type="date" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none" />
+              <input value={tarih} onChange={e => setTarih(e.target.value)} type="date" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none [color-scheme:dark]" />
             </div>
-            <button onClick={() => ilanAra({ tarih, baslangic, varis })} className="inline-flex items-end justify-center gap-2 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-black text-white">
+            <button onClick={() => ilanAra({ tarih, baslangic: baslangic.ad, baslangicEnlem: baslangic.enlem, baslangicBoylam: baslangic.boylam, varis: varis.ad, varisEnlem: varis.enlem, varisBoylam: varis.boylam })} className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-black text-white self-end">
               <Search className="h-4 w-4" /> Ara
             </button>
           </div>
@@ -216,8 +205,8 @@ export const CampusRideSayfasi = () => {
             <PanelBaslik ikon={<Plus className="h-5 w-5" />} baslik="Yolculuk İlanı Oluştur" />
             <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
               <div className="grid gap-4 lg:grid-cols-2">
-                <Secim label="Başlangıç" value={form.baslangic} onChange={v => setForm(f => ({ ...f, baslangic: v }))} />
-                <Secim label="Varış" value={form.varis} onChange={v => setForm(f => ({ ...f, varis: v }))} />
+                <NoktaSecici label="Başlangıç" value={ilanBaslangic} onChange={setIlanBaslangic} populer={populerNoktalar} />
+                <NoktaSecici label="Varış" value={ilanVaris} onChange={setIlanVaris} populer={populerNoktalar} />
                 <input className="ride-input" type="datetime-local" value={form.kalkisZamani} onChange={e => setForm(f => ({ ...f, kalkisZamani: e.target.value }))} />
                 <input className="ride-input" type="number" min={1} max={8} value={form.koltukSayisi} onChange={e => setForm(f => ({ ...f, koltukSayisi: Number(e.target.value) }))} />
                 <select className="ride-input" value={form.ucretTipi} onChange={e => setForm(f => ({ ...f, ucretTipi: e.target.value as UcretTipi }))}>
@@ -239,18 +228,21 @@ export const CampusRideSayfasi = () => {
                   <p className="text-xs font-black uppercase tracking-wide text-white/35">Ara duraklar</p>
                   {araDuraklar.map((d, idx) => (
                     <div key={`${d.ad}-${idx}`} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-2">
-                      <span className="min-w-0 flex-1 text-sm font-semibold text-white/75">{d.ad}</span>
-                      <span className="text-xs text-white/35">+{d.tahminiDakika} dk</span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-white/75">{d.ad}</span>
                       <button onClick={() => setAraDuraklar(a => a.filter((_, i) => i !== idx))} className="text-red-300"><X className="h-4 w-4" /></button>
                     </div>
                   ))}
-                  <select className="ride-input" onChange={e => {
-                    const n = noktaBul(e.target.value);
-                    if (!araDuraklar.some(d => d.ad === n.ad)) setAraDuraklar(a => [...a, { ...n, tahminiDakika: 45 + a.length * 15 }]);
-                  }} value="">
-                    <option value="">Ara durak ekle</option>
-                    {NOKTALAR.filter(n => n.ad !== form.baslangic && n.ad !== form.varis).map(n => <option key={n.ad} value={n.ad}>{n.ad}</option>)}
-                  </select>
+                  {araDuraklar.length === 0 && <p className="text-[11px] text-white/30">Henüz ara durak yok — yolcuların binebileceği rota üstü noktalar ekleyebilirsiniz.</p>}
+                  <div className="rounded-xl border border-white/10 bg-white/[0.02] p-2 space-y-2">
+                    <NoktaSecici label="Ara durak (haritadan)" value={yeniDurak ?? KAMPUS} onChange={setYeniDurak} populer={populerNoktalar} />
+                    <button
+                      disabled={!yeniDurak}
+                      onClick={() => { if (yeniDurak) { setAraDuraklar(a => [...a, { ...yeniDurak, tahminiDakika: 0 }]); setYeniDurak(null); } }}
+                      className="w-full rounded-lg bg-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/15 disabled:opacity-40"
+                    >
+                      Durağı Ekle
+                    </button>
+                  </div>
                 </div>
               </div>
               <label className="mt-4 flex items-center gap-2 text-sm font-semibold text-white/60">
@@ -286,14 +278,69 @@ export const CampusRideSayfasi = () => {
   );
 };
 
-const Secim = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
-  <div>
-    <label className="mb-1 block text-xs font-bold text-white/45">{label}</label>
-    <select value={value} onChange={e => onChange(e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#111123] px-3 py-2.5 text-sm text-white outline-none">
-      {NOKTALAR.map(n => <option key={n.ad} value={n.ad}>{n.ad}</option>)}
-    </select>
-  </div>
-);
+// Haritadan serbest nokta seçimi + popüler kısa-yol önerileri.
+// Sabit konum listesi YOK: kullanıcı haritaya tıklayarak ya da adres arayarak
+// herhangi bir noktayı seçer; popüler noktalar yalnızca hızlı erişim kısayoludur.
+const NoktaSecici = ({ label, value, onChange, populer }: {
+  label: string;
+  value: Nokta;
+  onChange: (n: Nokta) => void;
+  populer: Nokta[];
+}) => {
+  const [acik, setAcik] = useState(false);
+  const sonKonum = useRef({ enlem: value.enlem, boylam: value.boylam });
+
+  const haritadanSec = (lat: number, lng: number) => {
+    sonKonum.current = { enlem: lat, boylam: lng };
+    onChange({ ad: `Harita konumu (${lat.toFixed(4)}, ${lng.toFixed(4)})`, enlem: lat, boylam: lng });
+  };
+  const adlandir = (ad: string) => onChange({ ad, enlem: sonKonum.current.enlem, boylam: sonKonum.current.boylam });
+  const populerSec = (n: Nokta) => {
+    sonKonum.current = { enlem: n.enlem, boylam: n.boylam };
+    onChange(n);
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-xs font-bold text-white/45">{label}</label>
+      <button
+        type="button"
+        onClick={() => setAcik(a => !a)}
+        className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-[#111123] px-3 py-2.5 text-left text-sm text-white outline-none hover:border-cyan-300/30"
+      >
+        <MapPin className="h-4 w-4 shrink-0 text-cyan-200" />
+        <span className="min-w-0 flex-1 truncate font-semibold">{value.ad}</span>
+        <span className="text-xs text-cyan-200/70">{acik ? 'Kapat' : 'Haritadan seç'}</span>
+      </button>
+
+      {populer.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {populer.slice(0, 6).map(n => (
+            <button
+              key={n.ad}
+              type="button"
+              onClick={() => populerSec(n)}
+              className={`rounded-lg border px-2 py-1 text-[11px] font-bold transition ${value.ad === n.ad ? 'border-cyan-300/40 bg-cyan-500/15 text-cyan-100' : 'border-white/10 bg-white/5 text-white/55 hover:bg-white/10'}`}
+            >
+              {n.ad}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {acik && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-2">
+          <KonumSecici
+            latitude={value.enlem}
+            longitude={value.boylam}
+            onChange={haritadanSec}
+            onLocationSelect={adlandir}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
 
 const PanelBaslik = ({ ikon, baslik }: { ikon: ReactNode; baslik: string }) => (
   <div className="flex items-center gap-2 text-white">

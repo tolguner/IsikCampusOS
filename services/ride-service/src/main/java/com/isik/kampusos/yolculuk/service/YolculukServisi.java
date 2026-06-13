@@ -23,6 +23,8 @@ public class YolculukServisi {
     private static final double DURAK_ESIK_KM = 3.0;
     /** Yolcunun rotaya kattığı azami ek süre (dakika) — bunun üstü "yol üstünde değil". */
     private static final int MAKS_SAPMA_DK = 15;
+    /** Aramada ilanın listelenmesi için: aranan biniş VE iniş, sürücü koridoruna bu km içinde olmalı. */
+    private static final double ARAMA_KAPSAM_KM = 6.0;
 
     private final YolculukIlaniDeposu ilanDeposu;
     private final YolculukTalebiDeposu talepDeposu;
@@ -47,6 +49,9 @@ public class YolculukServisi {
                         || i.getKisiBasiUcret().compareTo(arama.getMaksimumUcret()) <= 0)
                 .filter(i -> arama.getSadeceAraDurakKabulEdenler() == null || !arama.getSadeceAraDurakKabulEdenler()
                         || i.isAraDurakKabulEdilir())
+                // BlaBlaCar mantığı: aranan biniş+iniş verildiyse, sürücünün rotası bu yolculuğu
+                // makul mesafede kapsamıyorsa ilan listelenmez (alakasız şehir/bölge elenir).
+                .filter(i -> aramaKapsiyorMu(i, arama))
                 .peek(i -> i.setUygunlukSkoru(skorla(i, arama)))
                 .sorted(Comparator.comparingInt(YolculukIlani::getUygunlukSkoru).reversed()
                         .thenComparing(YolculukIlani::getKalkisZamani))
@@ -320,25 +325,56 @@ public class YolculukServisi {
 
     private int skorla(YolculukIlani ilan, YolculukAramaTalebi arama) {
         int skor = 0;
+        List<double[]> koridor = rotaKoridoru(ilan);
         // Rota, aranan başlangıç VE varış noktalarının ikisine de yakın geçiyorsa güçlü eşleşme.
         if (arama.getBaslangicEnlem() != null && arama.getVarisEnlem() != null
-                && rotayaYakinMi(ilan.getDuraklar(), arama.getBaslangicEnlem(), arama.getBaslangicBoylam())
-                && rotayaYakinMi(ilan.getDuraklar(), arama.getVarisEnlem(), arama.getVarisBoylam())) {
+                && koridoraYakinMi(koridor, arama.getBaslangicEnlem(), arama.getBaslangicBoylam())
+                && koridoraYakinMi(koridor, arama.getVarisEnlem(), arama.getVarisBoylam())) {
             skor += 50;
         }
         if (arama.getBaslangicEnlem() != null && arama.getBaslangicBoylam() != null) {
-            skor += yakinlikSkoru(ilan.getDuraklar(), arama.getBaslangicEnlem(), arama.getBaslangicBoylam());
+            skor += yakinlikSkoru(koridor, arama.getBaslangicEnlem(), arama.getBaslangicBoylam());
         }
         if (arama.getVarisEnlem() != null && arama.getVarisBoylam() != null) {
-            skor += yakinlikSkoru(ilan.getDuraklar(), arama.getVarisEnlem(), arama.getVarisBoylam());
+            skor += yakinlikSkoru(koridor, arama.getVarisEnlem(), arama.getVarisBoylam());
         }
         if (ilan.getUcretTipi() == YolculukIlani.UcretTipi.UCRETSIZ) skor += 10;
         if (dogrulamaDeposu.existsByKullaniciIdAndDurum(ilan.getSurucuKullaniciId(), SurucuDogrulama.DogrulamaDurumu.ONAYLANDI)) skor += 15;
         return skor;
     }
 
-    private int yakinlikSkoru(List<RotaDuragi> duraklar, double enlem, double boylam) {
-        double min = duraklar.stream().mapToDouble(d -> mesafeKm(enlem, boylam, d.getEnlem(), d.getBoylam())).min().orElse(999);
+    /**
+     * İlan, aranan biniş→iniş yolculuğunu kapsıyor mu? Her iki uç da sürücü koridoruna
+     * {@link #ARAMA_KAPSAM_KM} içinde olmalı. Arama koordinatı verilmemişse (serbest gezinme) kapsar.
+     */
+    private boolean aramaKapsiyorMu(YolculukIlani ilan, YolculukAramaTalebi arama) {
+        if (arama.getBaslangicEnlem() == null || arama.getBaslangicBoylam() == null
+                || arama.getVarisEnlem() == null || arama.getVarisBoylam() == null) {
+            return true;
+        }
+        List<double[]> koridor = rotaKoridoru(ilan);
+        return koridoraUzaklikKm(koridor, arama.getBaslangicEnlem(), arama.getBaslangicBoylam()) <= ARAMA_KAPSAM_KM
+                && koridoraUzaklikKm(koridor, arama.getVarisEnlem(), arama.getVarisBoylam()) <= ARAMA_KAPSAM_KM;
+    }
+
+    /** İlanın yol-ağı koridoru: OSRM polyline çözülür; yoksa durak koordinatlarına düşer. */
+    private List<double[]> rotaKoridoru(YolculukIlani ilan) {
+        List<double[]> cizgi = RotaIstemcisi.polylineCoz(ilan.getRotaPolyline());
+        if (!cizgi.isEmpty()) return cizgi;
+        return ilan.getDuraklar().stream().map(d -> new double[]{d.getEnlem(), d.getBoylam()}).toList();
+    }
+
+    private double koridoraUzaklikKm(List<double[]> koridor, double enlem, double boylam) {
+        double[] p = {enlem, boylam};
+        return koridor.stream().mapToDouble(k -> RotaIstemcisi.haversineKm(p, k)).min().orElse(999);
+    }
+
+    private boolean koridoraYakinMi(List<double[]> koridor, double enlem, double boylam) {
+        return koridoraUzaklikKm(koridor, enlem, boylam) <= DURAK_ESIK_KM;
+    }
+
+    private int yakinlikSkoru(List<double[]> koridor, double enlem, double boylam) {
+        double min = koridoraUzaklikKm(koridor, enlem, boylam);
         if (min <= 1.0) return 20;
         if (min <= DURAK_ESIK_KM) return 12;
         if (min <= 8.0) return 4;
@@ -355,10 +391,6 @@ public class YolculukServisi {
         return duraklar.stream()
                 .min(Comparator.comparingDouble(d -> mesafeKm(nokta[0], nokta[1], d.getEnlem(), d.getBoylam())))
                 .map(RotaDuragi::getTahminiDakika).orElse(null);
-    }
-
-    private boolean rotayaYakinMi(List<RotaDuragi> duraklar, double enlem, double boylam) {
-        return duraklar.stream().anyMatch(d -> mesafeKm(enlem, boylam, d.getEnlem(), d.getBoylam()) <= DURAK_ESIK_KM);
     }
 
     private double mesafeKm(double lat1, double lon1, double lat2, double lon2) {
