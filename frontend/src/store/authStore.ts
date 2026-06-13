@@ -74,43 +74,44 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const normalizedEmail = email.trim();
       const normalizedPassword = password.trim();
 
-      const res = await authApi.post('/auth/login', {
-        email: normalizedEmail,
-        password: normalizedPassword,
+      const res = await authApi.post('/kimlik/giris', {
+        eposta: normalizedEmail,
+        sifre: normalizedPassword,
       });
 
       const {
         token,
-        userId,
-        roles,
-        fullName,
-        firstName,
-        lastName,
-        faculty,
-        department,
-        enrollmentYear,
-        studentNumber,
-        nationalIdMasked,
-        mustChangePassword,
-        emailVerified,
-        status,
+        kullaniciId,
+        eposta,
+        roller,
+        tamAd,
+        ad,
+        soyad,
+        fakulte,
+        bolum,
+        kayitYili,
+        ogrenciNumarasi,
+        tcKimlikMaskeli,
+        sifreDegistirmeli,
+        epostaDogrulandi,
+        durum,
       } = res.data;
 
       const user: User = {
-        id: userId,
-        email: normalizedEmail,
-        roles,
-        fullName,
-        firstName,
-        lastName,
-        faculty,
-        department,
-        enrollmentYear,
-        studentNumber,
-        nationalIdMasked,
-        mustChangePassword,
-        emailVerified,
-        status,
+        id: kullaniciId,
+        email: eposta || normalizedEmail,
+        roles: roller,
+        fullName: tamAd,
+        firstName: ad,
+        lastName: soyad,
+        faculty: fakulte,
+        department: bolum,
+        enrollmentYear: kayitYili,
+        studentNumber: ogrenciNumarasi,
+        nationalIdMasked: tcKimlikMaskeli,
+        mustChangePassword: sifreDegistirmeli,
+        emailVerified: epostaDogrulandi,
+        status: durum,
       };
 
       set({ user, token, isAuthenticated: true, isLoading: false, error: null });
@@ -129,7 +130,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   changePassword: async (oldPassword, newPassword) => {
     set({ isLoading: true, error: null });
     try {
-      await api.post('/auth/change-password', { oldPassword, newPassword });
+      await api.post('/kimlik/sifre-degistir', { eskiSifre: oldPassword, yeniSifre: newPassword });
       const user = get().user;
       if (user) {
         const updated = { ...user, mustChangePassword: false };
@@ -146,7 +147,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   forgotPassword: async (email) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      await authApi.post('/auth/forgot-password', { email: email.trim() });
+      await authApi.post('/kimlik/sifremi-unuttum', { eposta: email.trim() });
       set({ isLoading: false, successMessage: 'Sifre sifirlama kodu e-posta adresinize gonderildi.' });
       return true;
     } catch (err: any) {
@@ -158,10 +159,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   resetPassword: async (email, code, newPassword) => {
     set({ isLoading: true, error: null });
     try {
-      await authApi.post('/auth/reset-password', {
-        email: email.trim(),
-        code: code.trim(),
-        newPassword: newPassword.trim(),
+      await authApi.post('/kimlik/sifre-sifirla', {
+        eposta: email.trim(),
+        kod: code.trim(),
+        yeniSifre: newPassword.trim(),
       });
       set({ isLoading: false, successMessage: 'Sifreniz basariyla sifirlandi. Giris yapabilirsiniz.' });
       return true;
@@ -174,9 +175,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   verifyEmail: async (email, code) => {
     set({ isLoading: true, error: null });
     try {
-      await authApi.post('/auth/verify-email', {
-        email: email.trim(),
-        code: code.trim(),
+      await authApi.post('/kimlik/eposta-dogrula', {
+        eposta: email.trim(),
+        kod: code.trim(),
       });
       const user = get().user;
       if (user) {
@@ -194,7 +195,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   resendVerification: async () => {
     set({ isLoading: true, error: null });
     try {
-      await api.post('/auth/resend-verification');
+      await api.post('/kimlik/dogrulama-kodu-gonder');
       set({ isLoading: false, successMessage: 'Dogrulama kodu tekrar gonderildi.' });
       return true;
     } catch (err: any) {
