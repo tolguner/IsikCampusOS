@@ -22,6 +22,10 @@ public class KullaniciYonetimYaniti {
     private String fakulte;
     private String bolum;
     private Integer kayitYili;
+    private String birim;
+    private String telefon;
+    private String ikametAdresi;
+    private String kanGrubu;
     private String tcKimlikMaskeli;
     private String durum;
     private boolean epostaDogrulandi;

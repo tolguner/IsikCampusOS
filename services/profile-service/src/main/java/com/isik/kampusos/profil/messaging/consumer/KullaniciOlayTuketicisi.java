@@ -57,6 +57,9 @@ public class KullaniciOlayTuketicisi {
                 if (olay.getSoyad() != null) profil.setSoyad(olay.getSoyad());
                 if (olay.getEposta() != null) profil.setEposta(olay.getEposta());
                 if (olay.getBolum() != null) profil.setBolum(olay.getBolum());
+                if (olay.getTelefonNumarasi() != null) profil.setTelefonNumarasi(olay.getTelefonNumarasi());
+                if (olay.getIkametAdresi() != null) profil.setIkametAdresi(olay.getIkametAdresi());
+                if (olay.getKanGrubu() != null) profil.setKanGrubu(olay.getKanGrubu());
                 profilDeposu.save(profil);
                 log.info("Kullanıcı profili güncellendi. Kullanıcı ID: {} ({} {})",
                         olay.getKullaniciId(), olay.getAd(), olay.getSoyad());

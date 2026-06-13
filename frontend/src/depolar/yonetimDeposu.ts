@@ -15,6 +15,10 @@ export interface YonetimKullanicisi {
   fakulte?: string;
   bolum?: string;
   kayitYili?: number;
+  birim?: string;
+  telefon?: string;
+  ikametAdresi?: string;
+  kanGrubu?: string;
   durum: string;
   epostaDogrulandi: boolean;
   sifreDegistirmeli: boolean;
@@ -40,17 +44,22 @@ export interface KullaniciOlusturmaFormu {
   roller: string;
   ad?: string;
   soyad?: string;
-  fakulte?: string;
-  bolum?: string;
+  birim?: string;
+  telefon?: string;
+  ikametAdresi?: string;
+  kanGrubu?: string;
   tcKimlikNo: string;   // zorunlu — varsayılan şifre = TC
 }
 
+/** Düzenleme: TC ve ROL değiştirilemez. */
 export interface KullaniciGuncellemeFormu {
   ad?: string;
   soyad?: string;
-  roller?: string;
-  fakulte?: string;
-  bolum?: string;
+  eposta?: string;
+  birim?: string;
+  telefon?: string;
+  ikametAdresi?: string;
+  kanGrubu?: string;
   durum?: string;
 }
 
