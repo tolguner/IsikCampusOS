@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Clock, Store as StoreIcon, Save } from 'lucide-react';
-import { useIsletmeDeposu, type SaticiAyarFormu, type CalismaSaatiGun } from '../../depolar/isletmeDeposu';
+import { Clock, Store as StoreIcon, Save, ShieldCheck, Send } from 'lucide-react';
+import { useIsletmeDeposu, type SaticiAyarFormu, type CalismaSaatiGun, type SaticiDegisiklikTalebim } from '../../depolar/isletmeDeposu';
 import { GorselYukleyici } from '../ortak/GorselYukleyici';
 
 export const MUTFAK_TURLERI = [
@@ -17,8 +17,9 @@ const girisSinifi = 'w-full rounded-xl px-3.5 py-2.5 text-sm text-white bg-white
 
 export const AyarlarSekmesi = () => {
   const {
-    satici, calismaSaatleri, isLoading,
+    satici, calismaSaatleri, isLoading, degisiklikTalepleri,
     saticimiGetir, saticiGuncelle, calismaSaatleriGetir, calismaSaatleriKaydet,
+    taleplerimGetir, degisiklikTalepEt,
   } = useIsletmeDeposu();
 
   const [profil, setProfil] = useState<SaticiAyarFormu>({});
@@ -26,7 +27,7 @@ export const AyarlarSekmesi = () => {
     Array.from({ length: 7 }, (_, i) => ({ gun: i + 1, acilis: '09:00', kapanis: '22:00', kapali: false }))
   );
 
-  useEffect(() => { saticimiGetir(); calismaSaatleriGetir(); }, [saticimiGetir, calismaSaatleriGetir]);
+  useEffect(() => { saticimiGetir(); calismaSaatleriGetir(); taleplerimGetir(); }, [saticimiGetir, calismaSaatleriGetir, taleplerimGetir]);
 
   // Satıcı yüklenince profil formunu doldur
   useEffect(() => {
@@ -59,28 +60,13 @@ export const AyarlarSekmesi = () => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Profil */}
+      {/* Operasyonel ayarlar (doğrudan düzenlenir) */}
       <div className="rounded-2xl p-5 border border-white/10 bg-white/[0.03]">
         <div className="flex items-center gap-2 mb-4">
           <StoreIcon className="w-5 h-5 text-orange-200" />
-          <h3 className="text-base font-extrabold text-white">İşletme Bilgileri</h3>
+          <h3 className="text-base font-extrabold text-white">Operasyonel Ayarlar</h3>
         </div>
         <div className="space-y-3">
-          <Alan etiket="İşletme Adı">
-            <input className={girisSinifi} value={profil.ad ?? ''} onChange={e => setProfil(p => ({ ...p, ad: e.target.value }))} />
-          </Alan>
-          <Alan etiket="Mutfak Türü">
-            <select className={girisSinifi} value={profil.mutfakTuru ?? ''} onChange={e => setProfil(p => ({ ...p, mutfakTuru: e.target.value }))}>
-              <option value="">Seçiniz</option>
-              {MUTFAK_TURLERI.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-          </Alan>
-          <Alan etiket="Açıklama">
-            <input className={girisSinifi} value={profil.aciklama ?? ''} onChange={e => setProfil(p => ({ ...p, aciklama: e.target.value }))} />
-          </Alan>
-          <Alan etiket="Konum">
-            <input className={girisSinifi} value={profil.konumMetni ?? ''} onChange={e => setProfil(p => ({ ...p, konumMetni: e.target.value }))} />
-          </Alan>
           <div className="grid grid-cols-2 gap-3">
             <Alan etiket="Teslimat Ücreti (₺)">
               <input type="number" min={0} step="0.5" className={girisSinifi} value={profil.teslimatUcreti ?? 0} onChange={e => setProfil(p => ({ ...p, teslimatUcreti: parseFloat(e.target.value) || 0 }))} />
@@ -92,19 +78,28 @@ export const AyarlarSekmesi = () => {
           <Alan etiket="Tahmini Teslimat (dakika)">
             <input type="number" min={0} className={girisSinifi} value={profil.tahminiTeslimatDakika ?? ''} onChange={e => setProfil(p => ({ ...p, tahminiTeslimatDakika: e.target.value ? parseInt(e.target.value) : undefined }))} placeholder="örn. 30" />
           </Alan>
-          <Alan etiket="Logo">
-            <GorselYukleyici value={profil.logoUrl} onChange={url => setProfil(p => ({ ...p, logoUrl: url }))} oranSinifi="aspect-square" maksKenar={400} />
-          </Alan>
-          <Alan etiket="Kapak Görseli">
-            <GorselYukleyici value={profil.kapakGorselUrl} onChange={url => setProfil(p => ({ ...p, kapakGorselUrl: url }))} oranSinifi="aspect-[3/1]" maksKenar={1200} />
-          </Alan>
           <button
             disabled={isLoading}
             onClick={() => saticiGuncelle(profil)}
             className="w-full mt-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-extrabold text-white gradient-btn shadow-lg shadow-orange-500/15 disabled:opacity-40"
           >
-            <Save className="w-4 h-4" /> Bilgileri Kaydet
+            <Save className="w-4 h-4" /> Kaydet
           </button>
+        </div>
+
+        {/* Genel/kimlik bilgileri — değişiklik talebi (admin onayına gider) */}
+        <div className="flex items-center gap-2 mt-6 mb-3 pt-4 border-t border-white/8">
+          <ShieldCheck className="w-5 h-5 text-amber-200" />
+          <h3 className="text-base font-extrabold text-white">Genel Bilgiler <span className="text-[11px] font-bold text-amber-200/80">(onaya tabi)</span></h3>
+        </div>
+        <p className="text-[11px] text-white/40 mb-3">Bu bilgilerin değişikliği sistem yöneticisi onayından geçer. Yeni değeri girip "Değişiklik Talep Et" deyin.</p>
+        <div className="space-y-4">
+          <GenelBilgiAlani etiket="İşletme Adı" alanAdi="ad" mevcut={satici?.ad} tip="text" talepler={degisiklikTalepleri} onTalep={degisiklikTalepEt} isLoading={isLoading} />
+          <GenelBilgiAlani etiket="Mutfak Türü" alanAdi="mutfakTuru" mevcut={satici?.mutfakTuru} tip="select" secenekler={MUTFAK_TURLERI} talepler={degisiklikTalepleri} onTalep={degisiklikTalepEt} isLoading={isLoading} />
+          <GenelBilgiAlani etiket="Açıklama" alanAdi="aciklama" mevcut={satici?.aciklama} tip="text" talepler={degisiklikTalepleri} onTalep={degisiklikTalepEt} isLoading={isLoading} />
+          <GenelBilgiAlani etiket="Konum" alanAdi="konumMetni" mevcut={satici?.konumMetni} tip="text" talepler={degisiklikTalepleri} onTalep={degisiklikTalepEt} isLoading={isLoading} />
+          <GenelBilgiAlani etiket="Logo" alanAdi="logoUrl" mevcut={satici?.logoUrl} tip="logo" talepler={degisiklikTalepleri} onTalep={degisiklikTalepEt} isLoading={isLoading} />
+          <GenelBilgiAlani etiket="Kapak Görseli" alanAdi="kapakGorselUrl" mevcut={satici?.kapakGorselUrl} tip="kapak" talepler={degisiklikTalepleri} onTalep={degisiklikTalepEt} isLoading={isLoading} />
         </div>
       </div>
 
@@ -156,3 +151,52 @@ const Alan = ({ etiket, children }: { etiket: string; children: React.ReactNode 
     {children}
   </div>
 );
+
+const GenelBilgiAlani = ({ etiket, alanAdi, mevcut, tip, secenekler, talepler, onTalep, isLoading }: {
+  etiket: string;
+  alanAdi: string;
+  mevcut?: string | null;
+  tip: 'text' | 'select' | 'logo' | 'kapak';
+  secenekler?: string[];
+  talepler: SaticiDegisiklikTalebim[];
+  onTalep: (alanAdi: string, deger: string) => Promise<boolean>;
+  isLoading: boolean;
+}) => {
+  const [deger, setDeger] = useState(mevcut ?? '');
+  useEffect(() => { setDeger(mevcut ?? ''); }, [mevcut]);
+  const talep = talepler.find(t => t.alanAdi === alanAdi);
+  const bekleyen = talep?.durum === 'BEKLEMEDE';
+  const degisti = (deger ?? '') !== (mevcut ?? '');
+
+  return (
+    <Alan etiket={etiket}>
+      {tip === 'select' ? (
+        <select className={girisSinifi} value={deger} onChange={e => setDeger(e.target.value)} disabled={bekleyen}>
+          <option value="">Seçiniz</option>
+          {(secenekler ?? []).map(m => <option key={m} value={m}>{m}</option>)}
+        </select>
+      ) : tip === 'logo' ? (
+        <GorselYukleyici value={deger} onChange={setDeger} oranSinifi="aspect-square" maksKenar={400} />
+      ) : tip === 'kapak' ? (
+        <GorselYukleyici value={deger} onChange={setDeger} oranSinifi="aspect-[3/1]" maksKenar={1200} />
+      ) : (
+        <input className={girisSinifi} value={deger} onChange={e => setDeger(e.target.value)} disabled={bekleyen} />
+      )}
+      <div className="flex items-center justify-between gap-2 mt-1.5">
+        <div className="text-[11px] min-w-0">
+          {talep?.durum === 'BEKLEMEDE' && <span className="text-amber-200">⏳ Onay bekliyor</span>}
+          {talep?.durum === 'ONAYLANDI' && <span className="text-emerald-300/70">✓ Onaylandı</span>}
+          {talep?.durum === 'REVIZE_TALEP' && <span className="text-red-300/80">↩ Revize istendi{talep.geriBildirim ? `: ${talep.geriBildirim}` : ''}</span>}
+        </div>
+        <button
+          type="button"
+          disabled={!degisti || bekleyen || isLoading}
+          onClick={() => onTalep(alanAdi, deger)}
+          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-amber-100 bg-amber-500/15 border border-amber-400/25 hover:bg-amber-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <Send className="w-3 h-3" /> Değişiklik Talep Et
+        </button>
+      </div>
+    </Alan>
+  );
+};
