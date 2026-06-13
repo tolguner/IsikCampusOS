@@ -11,8 +11,9 @@ export const YETKILER = {
 export const YETKI_GRUPLARI = {
   ogrenci: [YETKILER.OGRENCI],
   ogrenciIsleri: [YETKILER.OGRENCI_ISLERI],
-  sksYonetimi: [YETKILER.SKS_YONETICISI, YETKILER.SISTEM_YONETICISI],
-  tesisYonetimi: [YETKILER.TESIS_YONETICISI, YETKILER.SISTEM_YONETICISI],
+  // Sistem yöneticisi YALNIZ kendi paneline erişir; SKS/Tesis panellerine girmez.
+  sksYonetimi: [YETKILER.SKS_YONETICISI],
+  tesisYonetimi: [YETKILER.TESIS_YONETICISI],
   sistemYonetimi: [YETKILER.SISTEM_YONETICISI],
   // İşletme paneline giriş: sahip + personel (panel içi sekmeler role göre filtrelenir)
   isletmePaneli: [YETKILER.ISLETME_YONETICISI, YETKILER.ISLETME_PERSONELI],
@@ -26,6 +27,24 @@ export const YETKI_GRUPLARI = {
     YETKILER.SKS_YONETICISI,
   ],
 } as const;
+
+/** Rol kodu → Türkçe etiket (tüm panellerde ortak kullanılır). */
+export const ROL_ETIKETLERI: Record<string, string> = {
+  ROLE_ADMIN: 'Sistem Yöneticisi',
+  ROLE_SKS_ADMIN: 'SKS Yöneticisi',
+  ROLE_FACILITY_ADMIN: 'Tesis Yöneticisi',
+  ROLE_REGISTRAR: 'Öğrenci İşleri',
+  ROLE_VENDOR_ADMIN: 'İşletme Yöneticisi',
+  ROLE_VENDOR_STAFF: 'İşletme Personeli',
+  ROLE_STUDENT: 'Öğrenci',
+};
+
+export const rolEtiketle = (roller?: string | null) =>
+  (roller ?? '')
+    .split(',')
+    .map(r => ROL_ETIKETLERI[r.trim()] || r.trim())
+    .filter(Boolean)
+    .join(', ');
 
 export const rolleriAyir = (roller?: string | null) =>
   (roller ?? '')

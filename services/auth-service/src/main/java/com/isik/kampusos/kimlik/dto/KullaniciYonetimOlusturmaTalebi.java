@@ -2,14 +2,16 @@ package com.isik.kampusos.kimlik.dto;
 
 import lombok.Data;
 
-/** Sistem yöneticisi: herhangi bir rolde yeni kullanıcı oluşturma talebi. */
+/** Sistem yöneticisi: idari personel kullanıcısı oluşturma talebi (öğrenci/işletme personeli hariç). */
 @Data
 public class KullaniciYonetimOlusturmaTalebi {
     private String eposta;
-    private String roller;          // ROLE_SKS_ADMIN, ROLE_FACILITY_ADMIN, ROLE_REGISTRAR, ROLE_ADMIN (öğrenci hariç)
+    private String roller;          // ROLE_SKS_ADMIN, ROLE_FACILITY_ADMIN, ROLE_REGISTRAR, ROLE_ADMIN, ROLE_VENDOR_ADMIN
     private String ad;
     private String soyad;
-    private String fakulte;
-    private String bolum;
-    private String tcKimlikNo;      // ZORUNLU: 11 hane. Varsayılan şifre = TC; şifre sıfırlama TC ile çalışır.
+    private String birim;           // Çalıştığı birim (fakülte/bölüm yerine)
+    private String telefon;
+    private String ikametAdresi;
+    private String kanGrubu;
+    private String tcKimlikNo;      // ZORUNLU: 11 hane. Varsayılan şifre = TC.
 }

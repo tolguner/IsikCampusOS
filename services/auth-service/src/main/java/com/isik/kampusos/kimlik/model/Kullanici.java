@@ -31,11 +31,17 @@ public class Kullanici {
     @Column(unique = true)
     private String ogrenciNumarasi; // e.g., 32yobi1053 (nullable — personel için null)
  
-    private String fakulte;       // Fakülte
-    private String bolum;          // Bölüm
+    private String fakulte;       // Fakülte (öğrenci)
+    private String bolum;          // Bölüm (öğrenci)
     private String bolumKodu;      // 4 harfli kısaltma: yobi
     private Integer kayitYili;     // Kayıt yılı: 2023
     private String tcKimlikMaskeli; // TC/Pasaport tam değer saklanmaz, sadece maskeli görünüm tutulur
+
+    // İdari personel iletişim/birim bilgileri (öğrencide fakülte/bölüm yerine):
+    private String birim;          // Çalıştığı birim (örn. "Spor Müdürlüğü")
+    private String telefon;
+    private String ikametAdresi;
+    private String kanGrubu;
  
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

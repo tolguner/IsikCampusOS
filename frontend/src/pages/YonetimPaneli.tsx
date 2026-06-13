@@ -7,18 +7,16 @@ import {
 } from '../depolar/yonetimDeposu';
 import { DuyuruButonu } from '../components/DuyuruButonu';
 import { SaticilarSekmesi } from '../components/yonetim/SaticilarSekmesi';
+import { ROL_ETIKETLERI, rolEtiketle } from '../yardimcilar/yetkiler';
 
 type Sekme = 'kullanicilar' | 'loglar' | 'saticilar';
 
-// Sistem yöneticisi yalnızca PERSONEL rollerini yönetir — öğrenci hariç (Öğrenci İşleri'ne ait).
-const ROL_ETIKETLERI: Record<string, string> = {
-  ROLE_ADMIN: 'Sistem Yöneticisi',
-  ROLE_SKS_ADMIN: 'SKS Yöneticisi',
-  ROLE_FACILITY_ADMIN: 'Tesis Yöneticisi',
-  ROLE_REGISTRAR: 'Öğrenci İşleri',
-  ROLE_VENDOR_ADMIN: 'İşletme Yöneticisi',
-};
-const ROLLER = Object.keys(ROL_ETIKETLERI);
+// Buradan oluşturulabilir roller (R12): öğrenci→Öğrenci İşleri, işletme personeli→İşletme Yöneticisi,
+// işletme yöneticisi→İşletme Yönetimi sekmesi. Bu yüzden create listesinde yer almazlar.
+const OLUSTURULABILIR_ROLLER = ['ROLE_ADMIN', 'ROLE_SKS_ADMIN', 'ROLE_FACILITY_ADMIN', 'ROLE_REGISTRAR'];
+// Filtrede mevcut işletme yöneticileri de görünür (listede yer alırlar).
+const FILTRE_ROLLERI = [...OLUSTURULABILIR_ROLLER, 'ROLE_VENDOR_ADMIN'];
+const KAN_GRUPLARI = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', '0+', '0-'];
 
 // Personel durumu yalnızca AKTIF/PASIF; MEZUN/ILISIGI_KESILMIS öğrencilere özgüdür.
 const PERSONEL_DURUMLARI: Record<string, string> = {
@@ -33,9 +31,6 @@ const DURUM_ETIKETLERI: Record<string, string> = {
 
 const inputClass =
   'w-full rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-purple-400/60';
-
-const rolEtiketi = (roller: string) =>
-  roller.split(',').map(r => ROL_ETIKETLERI[r.trim()] || r.trim()).join(', ');
 
 export const YonetimPaneli = () => {
   const {
@@ -106,7 +101,7 @@ export const YonetimPaneli = () => {
         </button>
         <button onClick={() => setSekme('saticilar')}
           className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'saticilar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
-          <Store className="h-4 w-4" /> Satıcı Yönetimi
+          <Store className="h-4 w-4" /> İşletme Yönetimi
         </button>
         <button onClick={() => setSekme('loglar')}
           className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'loglar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
@@ -132,7 +127,7 @@ export const YonetimPaneli = () => {
             </div>
             <select value={rolFiltre} onChange={e => setRolFiltre(e.target.value)} className="rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none focus:border-purple-400/60">
               <option value="">Tüm roller</option>
-              {ROLLER.map(r => <option key={r} value={r}>{ROL_ETIKETLERI[r]}</option>)}
+              {FILTRE_ROLLERI.map(r => <option key={r} value={r}>{ROL_ETIKETLERI[r]}</option>)}
             </select>
             <button onClick={() => setOlusturModal(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-500 hover:bg-purple-400 px-5 py-3 text-sm font-black text-white transition cursor-pointer">
               <Plus className="h-4 w-4" /> Yeni Kullanıcı
@@ -157,7 +152,7 @@ export const YonetimPaneli = () => {
                       <div className="text-xs text-white/40">{k.eposta}</div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="rounded-full px-3 py-1 text-xs font-bold text-purple-100 bg-purple-500/15 border border-purple-400/20">{rolEtiketi(k.roller)}</span>
+                      <span className="rounded-full px-3 py-1 text-xs font-bold text-purple-100 bg-purple-500/15 border border-purple-400/20">{rolEtiketle(k.roller)}</span>
                     </td>
                     <td className="px-5 py-4">
                       <span className={`rounded-lg px-2.5 py-1 text-xs font-semibold border ${k.durum === 'AKTIF' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-white/5 text-white/50 border-white/10'}`}>
@@ -256,26 +251,32 @@ const ModalKabuk = ({ baslik, onKapat, children }: { baslik: string; onKapat: ()
 );
 
 const KullaniciOlusturModal = ({ onKapat, onKaydet }: { onKapat: () => void; onKaydet: (f: KullaniciOlusturmaFormu) => void }) => {
-  const [form, setForm] = useState<KullaniciOlusturmaFormu>({ eposta: '', roller: 'ROLE_SKS_ADMIN', ad: '', soyad: '', fakulte: '', bolum: '', tcKimlikNo: '' });
+  const [form, setForm] = useState<KullaniciOlusturmaFormu>({ eposta: '', roller: 'ROLE_SKS_ADMIN', ad: '', soyad: '', birim: '', telefon: '', ikametAdresi: '', kanGrubu: '', tcKimlikNo: '' });
+  const upd = (k: keyof KullaniciOlusturmaFormu, v: string) => setForm(p => ({ ...p, [k]: v }));
   const tcGecerli = /^\d{11}$/.test(form.tcKimlikNo);
-  const gecerli = form.eposta.includes('@') && !!form.roller && tcGecerli;
+  const gecerli = form.eposta.includes('@') && !!form.ad?.trim() && !!form.roller && tcGecerli;
   return (
     <ModalKabuk baslik="Yeni Personel Kullanıcısı" onKapat={onKapat}>
-      <div className="space-y-3">
-        <input className={inputClass} placeholder="E-posta" value={form.eposta} onChange={e => setForm(p => ({ ...p, eposta: e.target.value }))} />
+      <div className="space-y-3 max-h-[72vh] overflow-y-auto pr-1">
         <div className="grid grid-cols-2 gap-3">
-          <input className={inputClass} placeholder="Ad" value={form.ad} onChange={e => setForm(p => ({ ...p, ad: e.target.value }))} />
-          <input className={inputClass} placeholder="Soyad" value={form.soyad} onChange={e => setForm(p => ({ ...p, soyad: e.target.value }))} />
+          <input className={inputClass} placeholder="Ad" value={form.ad} onChange={e => upd('ad', e.target.value)} />
+          <input className={inputClass} placeholder="Soyad" value={form.soyad} onChange={e => upd('soyad', e.target.value)} />
         </div>
-        <input className={inputClass} inputMode="numeric" maxLength={11} placeholder="TC Kimlik No (11 hane) — zorunlu" value={form.tcKimlikNo} onChange={e => setForm(p => ({ ...p, tcKimlikNo: e.target.value.replace(/\D/g, '').slice(0, 11) }))} />
-        {!tcGecerli && form.tcKimlikNo.length > 0 && <p className="-mt-1 text-xs text-red-300">TC Kimlik No 11 haneli olmalıdır.</p>}
-        <select className={inputClass} value={form.roller} onChange={e => setForm(p => ({ ...p, roller: e.target.value }))}>
-          {ROLLER.map(r => <option key={r} value={r}>{ROL_ETIKETLERI[r]}</option>)}
+        <input className={inputClass} placeholder="E-posta" value={form.eposta} onChange={e => upd('eposta', e.target.value)} />
+        <select className={inputClass} value={form.roller} onChange={e => upd('roller', e.target.value)}>
+          {OLUSTURULABILIR_ROLLER.map(r => <option key={r} value={r}>{ROL_ETIKETLERI[r]}</option>)}
         </select>
+        <input className={inputClass} placeholder="Birim (örn. Spor Müdürlüğü)" value={form.birim} onChange={e => upd('birim', e.target.value)} />
+        <input className={inputClass} inputMode="numeric" maxLength={11} placeholder="TC Kimlik No (11 hane) — zorunlu" value={form.tcKimlikNo} onChange={e => upd('tcKimlikNo', e.target.value.replace(/\D/g, '').slice(0, 11))} />
+        {!tcGecerli && form.tcKimlikNo.length > 0 && <p className="-mt-1 text-xs text-red-300">TC Kimlik No 11 haneli olmalıdır.</p>}
         <div className="grid grid-cols-2 gap-3">
-          <input className={inputClass} placeholder="Fakülte (ops.)" value={form.fakulte} onChange={e => setForm(p => ({ ...p, fakulte: e.target.value }))} />
-          <input className={inputClass} placeholder="Bölüm (ops.)" value={form.bolum} onChange={e => setForm(p => ({ ...p, bolum: e.target.value }))} />
+          <input className={inputClass} placeholder="Telefon" value={form.telefon} onChange={e => upd('telefon', e.target.value)} />
+          <select className={inputClass} value={form.kanGrubu} onChange={e => upd('kanGrubu', e.target.value)}>
+            <option value="">Kan grubu</option>
+            {KAN_GRUPLARI.map(k => <option key={k} value={k}>{k}</option>)}
+          </select>
         </div>
+        <input className={inputClass} placeholder="İkametgah adresi" value={form.ikametAdresi} onChange={e => upd('ikametAdresi', e.target.value)} />
         <p className="text-xs text-white/35">Başlangıç şifresi TC Kimlik numarasıdır; kullanıcı ilk girişte değiştirir.</p>
         <button disabled={!gecerli} onClick={() => onKaydet(form)} className="w-full rounded-2xl bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed px-5 py-3 text-sm font-black text-white cursor-pointer">Oluştur</button>
       </div>
@@ -285,25 +286,34 @@ const KullaniciOlusturModal = ({ onKapat, onKaydet }: { onKapat: () => void; onK
 
 const KullaniciDuzenleModal = ({ kullanici, onKapat, onKaydet }: { kullanici: YonetimKullanicisi; onKapat: () => void; onKaydet: (f: any) => void }) => {
   const [form, setForm] = useState({
-    ad: kullanici.ad || '', soyad: kullanici.soyad || '',
-    roller: kullanici.roller, durum: kullanici.durum,
-    fakulte: kullanici.fakulte || '', bolum: kullanici.bolum || '',
+    ad: kullanici.ad || '', soyad: kullanici.soyad || '', eposta: kullanici.eposta || '',
+    birim: kullanici.birim || '', telefon: kullanici.telefon || '',
+    ikametAdresi: kullanici.ikametAdresi || '', kanGrubu: kullanici.kanGrubu || '',
+    durum: kullanici.durum,
   });
+  const upd = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
   return (
-    <ModalKabuk baslik={`Düzenle — ${kullanici.eposta}`} onKapat={onKapat}>
-      <div className="space-y-3">
+    <ModalKabuk baslik={`Düzenle — ${rolEtiketle(kullanici.roller)}`} onKapat={onKapat}>
+      <div className="space-y-3 max-h-[72vh] overflow-y-auto pr-1">
         <div className="grid grid-cols-2 gap-3">
-          <input className={inputClass} placeholder="Ad" value={form.ad} onChange={e => setForm(p => ({ ...p, ad: e.target.value }))} />
-          <input className={inputClass} placeholder="Soyad" value={form.soyad} onChange={e => setForm(p => ({ ...p, soyad: e.target.value }))} />
+          <input className={inputClass} placeholder="Ad" value={form.ad} onChange={e => upd('ad', e.target.value)} />
+          <input className={inputClass} placeholder="Soyad" value={form.soyad} onChange={e => upd('soyad', e.target.value)} />
         </div>
-        <label className="block text-xs font-bold uppercase tracking-wider text-white/35">Rol</label>
-        <select className={inputClass} value={form.roller} onChange={e => setForm(p => ({ ...p, roller: e.target.value }))}>
-          {ROLLER.map(r => <option key={r} value={r}>{ROL_ETIKETLERI[r]}</option>)}
-        </select>
+        <input className={inputClass} placeholder="E-posta" value={form.eposta} onChange={e => upd('eposta', e.target.value)} />
+        <input className={inputClass} placeholder="Birim" value={form.birim} onChange={e => upd('birim', e.target.value)} />
+        <div className="grid grid-cols-2 gap-3">
+          <input className={inputClass} placeholder="Telefon" value={form.telefon} onChange={e => upd('telefon', e.target.value)} />
+          <select className={inputClass} value={form.kanGrubu} onChange={e => upd('kanGrubu', e.target.value)}>
+            <option value="">Kan grubu</option>
+            {KAN_GRUPLARI.map(k => <option key={k} value={k}>{k}</option>)}
+          </select>
+        </div>
+        <input className={inputClass} placeholder="İkametgah adresi" value={form.ikametAdresi} onChange={e => upd('ikametAdresi', e.target.value)} />
         <label className="block text-xs font-bold uppercase tracking-wider text-white/35">Durum</label>
-        <select className={inputClass} value={form.durum} onChange={e => setForm(p => ({ ...p, durum: e.target.value }))}>
+        <select className={inputClass} value={form.durum} onChange={e => upd('durum', e.target.value)}>
           {Object.keys(PERSONEL_DURUMLARI).map(d => <option key={d} value={d}>{PERSONEL_DURUMLARI[d]}</option>)}
         </select>
+        <p className="text-[11px] text-white/30">TC Kimlik No ve rol değiştirilemez.</p>
         <button onClick={() => onKaydet(form)} className="w-full rounded-2xl bg-purple-500 hover:bg-purple-400 px-5 py-3 text-sm font-black text-white cursor-pointer">Kaydet</button>
       </div>
     </ModalKabuk>

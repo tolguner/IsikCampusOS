@@ -2,13 +2,18 @@ package com.isik.kampusos.kimlik.dto;
 
 import lombok.Data;
 
-/** Sistem yöneticisi: kullanıcı bilgilerini ve rolünü güncelleme talebi. */
+/**
+ * Sistem yöneticisi: kullanıcı bilgilerini güncelleme talebi.
+ * TC ve ROL değiştirilemez (rol oluşturma yetkisi rol-sahibi panellere aittir).
+ */
 @Data
 public class KullaniciYonetimGuncellemeTalebi {
     private String ad;
     private String soyad;
-    private String roller;
-    private String fakulte;
-    private String bolum;
-    private String durum;   // AKTIF, PASIF, MEZUN, ILISIGI_KESILMIS
+    private String eposta;
+    private String birim;
+    private String telefon;
+    private String ikametAdresi;
+    private String kanGrubu;
+    private String durum;   // AKTIF, PASIF (personel); MEZUN/ILISIGI_KESILMIS öğrenciye özgü
 }

@@ -56,8 +56,10 @@ public class KullaniciYonetimServisi {
         KullaniciDurumu durumEnum = durumCozumle(durum);
 
         Specification<Kullanici> spec = (root, query, cb) -> {
-            // Öğrenciler hariç (personel paneli)
-            var predicate = cb.notLike(root.get("roller"), "%ROLE_STUDENT%");
+            // Öğrenciler ve işletme personeli hariç (bunları registrar/işletme yöneticisi yönetir)
+            var predicate = cb.and(
+                    cb.notLike(root.get("roller"), "%ROLE_STUDENT%"),
+                    cb.notLike(root.get("roller"), "%ROLE_VENDOR_STAFF%"));
             if (aramaNorm != null) {
                 String desen = "%" + aramaNorm + "%";
                 predicate = cb.and(predicate, cb.or(
@@ -100,8 +102,10 @@ public class KullaniciYonetimServisi {
                 .roller(talep.getRoller().trim())
                 .ad(talep.getAd())
                 .soyad(talep.getSoyad())
-                .fakulte(talep.getFakulte())
-                .bolum(talep.getBolum())
+                .birim(talep.getBirim())
+                .telefon(talep.getTelefon())
+                .ikametAdresi(talep.getIkametAdresi())
+                .kanGrubu(talep.getKanGrubu())
                 .tcKimlikMaskeli(tcKimlikMaskele(talep.getTcKimlikNo()))
                 .durum(KullaniciDurumu.AKTIF)
                 .epostaDogrulandi(true)
@@ -121,21 +125,20 @@ public class KullaniciYonetimServisi {
         Kullanici kullanici = personelBul(id);
         StringBuilder degisiklik = new StringBuilder();
 
-        if (talep.getRoller() != null && !talep.getRoller().isBlank()) {
-            rolDogrula(talep.getRoller());
-            if (kullanici.getRoller() != null && kullanici.getRoller().contains("ROLE_ADMIN")
-                    && !talep.getRoller().contains("ROLE_ADMIN")) {
-                sonAktifAdminKorumasi(kullanici);
-            }
-            if (!talep.getRoller().trim().equals(kullanici.getRoller())) {
-                degisiklik.append("rol: ").append(kullanici.getRoller()).append("→").append(talep.getRoller().trim()).append("; ");
-            }
-            kullanici.setRoller(talep.getRoller().trim());
-        }
+        // Rol ve TC değiştirilemez — yalnız bilgi alanları güncellenir.
         if (talep.getAd() != null) kullanici.setAd(talep.getAd());
         if (talep.getSoyad() != null) kullanici.setSoyad(talep.getSoyad());
-        if (talep.getFakulte() != null) kullanici.setFakulte(talep.getFakulte());
-        if (talep.getBolum() != null) kullanici.setBolum(talep.getBolum());
+        if (talep.getEposta() != null && !talep.getEposta().isBlank()) {
+            String yeniEposta = talep.getEposta().trim().toLowerCase();
+            if (!yeniEposta.equals(kullanici.getEposta()) && kullaniciDeposu.existsByEposta(yeniEposta)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu e-posta ile başka bir hesap mevcut.");
+            }
+            kullanici.setEposta(yeniEposta);
+        }
+        if (talep.getBirim() != null) kullanici.setBirim(talep.getBirim());
+        if (talep.getTelefon() != null) kullanici.setTelefon(talep.getTelefon());
+        if (talep.getIkametAdresi() != null) kullanici.setIkametAdresi(talep.getIkametAdresi());
+        if (talep.getKanGrubu() != null) kullanici.setKanGrubu(talep.getKanGrubu());
         if (talep.getDurum() != null && !talep.getDurum().isBlank()) {
             KullaniciDurumu yeniDurum = durumCozumle(talep.getDurum());
             if (!IZINLI_DURUMLAR.contains(yeniDurum)) {
@@ -152,6 +155,7 @@ public class KullaniciYonetimServisi {
         }
 
         Kullanici kaydedilen = kullaniciDeposu.save(kullanici);
+        profilGuncellemeOlayiYayinla(kaydedilen);
         denetimKaydet(kaydedilen.getId(), "KULLANICI_GUNCELLENDI", yapanId,
                 kaydedilen.getEposta() + " güncellendi" + (degisiklik.length() > 0 ? " [" + degisiklik.toString().trim() + "]" : ""));
         return yanitOlustur(kaydedilen);
@@ -264,9 +268,9 @@ public class KullaniciYonetimServisi {
     private Kullanici personelBul(String id) {
         Kullanici k = kullaniciDeposu.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kullanıcı bulunamadı."));
-        if (k.getRoller() != null && k.getRoller().contains("ROLE_STUDENT")) {
+        if (k.getRoller() != null && (k.getRoller().contains("ROLE_STUDENT") || k.getRoller().contains("ROLE_VENDOR_STAFF"))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Öğrenci hesapları sistem yöneticisi panelinden yönetilemez (Öğrenci İşleri'ne aittir).");
+                    "Öğrenci ve işletme personeli hesapları buradan yönetilemez (Öğrenci İşleri / İşletme Yöneticisi'ne aittir).");
         }
         return k;
     }
@@ -319,10 +323,32 @@ public class KullaniciYonetimServisi {
             payload.put("eposta", kullanici.getEposta());
             payload.put("ad", kullanici.getAd());
             payload.put("soyad", kullanici.getSoyad());
+            payload.put("bolum", kullanici.getBirim());          // personel birimi profil.bolum'a aynalanır
+            payload.put("telefonNumarasi", kullanici.getTelefon());
+            payload.put("ikametAdresi", kullanici.getIkametAdresi());
+            payload.put("kanGrubu", kullanici.getKanGrubu());
             payload.put("tcKimlikMaskeli", kullanici.getTcKimlikMaskeli());
             kafkaTemplate.send("kullanici.kaydedildi", kullanici.getId(), objectMapper.writeValueAsString(payload));
         } catch (Exception e) {
             log.warn("Kafka event gönderilemedi (kullanici.kaydedildi): {}", e.getMessage());
+        }
+    }
+
+    /** Bilgi güncellemesini profil servisine aynalar (kullanici.guncellendi). */
+    private void profilGuncellemeOlayiYayinla(Kullanici kullanici) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("kullaniciId", kullanici.getId());
+            payload.put("ad", kullanici.getAd());
+            payload.put("soyad", kullanici.getSoyad());
+            payload.put("eposta", kullanici.getEposta());
+            payload.put("bolum", kullanici.getBirim());
+            payload.put("telefonNumarasi", kullanici.getTelefon());
+            payload.put("ikametAdresi", kullanici.getIkametAdresi());
+            payload.put("kanGrubu", kullanici.getKanGrubu());
+            kafkaTemplate.send("kullanici.guncellendi", kullanici.getId(), objectMapper.writeValueAsString(payload));
+        } catch (Exception e) {
+            log.warn("Kafka event gönderilemedi (kullanici.guncellendi): {}", e.getMessage());
         }
     }
 
@@ -337,6 +363,10 @@ public class KullaniciYonetimServisi {
                 .fakulte(k.getFakulte())
                 .bolum(k.getBolum())
                 .kayitYili(k.getKayitYili())
+                .birim(k.getBirim())
+                .telefon(k.getTelefon())
+                .ikametAdresi(k.getIkametAdresi())
+                .kanGrubu(k.getKanGrubu())
                 .tcKimlikMaskeli(k.getTcKimlikMaskeli())
                 .durum(k.getDurum() != null ? k.getDurum().name() : null)
                 .epostaDogrulandi(k.isEpostaDogrulandi())
