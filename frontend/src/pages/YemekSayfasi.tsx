@@ -46,7 +46,7 @@ export const YemekSayfasi = () => {
     isLoading, error, successMessage,
     saticilariGetir, mutfakTurleriGetir, favorileriGetir, favoriToggle, menuGetir, seciliSaticiyiTemizle,
     sepeteEkle, adetDegistir, sepettenCikar, sepetiTemizle, sepetToplami,
-    siparisVer, siparisOnizle, clearMessages,
+    siparisVer, clearMessages,
   } = useYemekDeposu();
 
   const [odemeAcik, setOdemeAcik] = useState(false);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useKimlikDeposu } from '../../depolar/kimlikDeposu';
-import { Bell, Building2, LayoutDashboard, Link as LinkIcon, ShieldCheck, UsersRound, Calendar, UserCog, UtensilsCrossed } from 'lucide-react';
+import { Bell, Building2, CarFront, LayoutDashboard, Link as LinkIcon, ShieldCheck, UsersRound, Calendar, UserCog, UtensilsCrossed } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useBildirimDeposu } from '../../depolar/bildirimDeposu';
@@ -18,6 +18,7 @@ export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
   const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);
   const isFacilityAdmin = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.tesisYonetimi);
   const isSystemAdmin = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.sistemYonetimi);
+  const isRideAdmin = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.rideYonetimi);
   const isClubPresident = isStudent && managedClubs.length > 0;
   const userInitials = `${user?.ad?.[0] ?? ''}${user?.soyad?.[0] ?? ''}` ||
     user?.tamAd?.split(' ').map(part => part[0]).slice(0, 2).join('') ||
@@ -85,6 +86,9 @@ export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
                 <Link to={YOLLAR.yemek} className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="UniEats — Yemek Siparişi">
                   <UtensilsCrossed className="w-5 h-5 text-white/40 hover:text-white/70" />
                 </Link>
+                <Link to={YOLLAR.campusRide} className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="CampusRide">
+                  <CarFront className="w-5 h-5 text-white/40 hover:text-white/70" />
+                </Link>
               </>
             )}
             {isClubPresident && (
@@ -100,6 +104,11 @@ export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
             {isSystemAdmin && (
               <Link to={YOLLAR.yonetim} className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Sistem Yönetim Paneli">
                 <UserCog className="w-5 h-5 text-white/40 hover:text-white/70" />
+              </Link>
+            )}
+            {isRideAdmin && (
+              <Link to={YOLLAR.rideYonetimi} className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="RideKampüs Yönetimi">
+                <CarFront className="w-5 h-5 text-white/40 hover:text-white/70" />
               </Link>
             )}
             <div className="relative">

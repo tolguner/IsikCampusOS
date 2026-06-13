@@ -88,6 +88,21 @@ spring:
           filters:
             - KimlikDogrulama
 
+        # RideKampüs paylaşımlı yolculuk modülü
+        - id: ride-service
+          uri: lb://RIDE-SERVICE
+          predicates:
+            - Path=/api/v1/yolculuklar/**
+          filters:
+            - KimlikDogrulama
+
+        - id: ride-admin-service
+          uri: lb://RIDE-SERVICE
+          predicates:
+            - Path=/api/v1/yolculuk-yonetim/**
+          filters:
+            - KimlikDogrulama
+
         # Sistem yöneticisi — kullanıcı/rol yönetimi (ROLE_ADMIN, Kimlik Servisi içinde korumalı)
         - id: admin-user-management-service
           uri: lb://AUTH-SERVICE

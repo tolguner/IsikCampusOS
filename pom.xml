@@ -32,6 +32,7 @@
         <module>services/notification-service</module>
         <module>services/facility-service</module>
         <module>services/food-service</module>
+        <module>services/ride-service</module>
     </modules>
 
     <dependencyManagement>
