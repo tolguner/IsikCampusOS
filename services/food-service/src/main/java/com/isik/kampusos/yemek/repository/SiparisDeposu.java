@@ -29,4 +29,7 @@ public interface SiparisDeposu extends JpaRepository<Siparis, String> {
 
     /** Yoğunluk göstergesi: satıcının o anki aktif (hazırlık sürecindeki) sipariş sayısı. */
     long countBySaticiIdAndDurumIn(String saticiId, java.util.Collection<Siparis.SiparisDurumu> durumlar);
+
+    /** İşletme silme (cascade): satıcının tüm siparişleri (kalemleri orphanRemoval ile düşer). */
+    List<Siparis> findBySaticiId(String saticiId);
 }

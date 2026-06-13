@@ -13,7 +13,9 @@ import com.isik.kampusos.yemek.model.MenuSecenekGrubu;
 import com.isik.kampusos.yemek.model.MenuSecenegi;
 import com.isik.kampusos.yemek.model.Satici;
 import com.isik.kampusos.yemek.model.Siparis;
+import com.isik.kampusos.yemek.messaging.AuthKimlikIstemcisi;
 import com.isik.kampusos.yemek.repository.CalismaSaatiDeposu;
+import com.isik.kampusos.yemek.repository.FavoriSaticiDeposu;
 import com.isik.kampusos.yemek.repository.IsletmePersonelDeposu;
 import com.isik.kampusos.yemek.repository.KampanyaDeposu;
 import com.isik.kampusos.yemek.repository.MenuOgesiDeposu;
@@ -44,6 +46,8 @@ public class SaticiServisi {
     private final KampanyaDeposu kampanyaDeposu;
     private final IsletmePersonelDeposu personelDeposu;
     private final SiparisDeposu siparisDeposu;
+    private final FavoriSaticiDeposu favoriDeposu;
+    private final AuthKimlikIstemcisi authIstemci;
 
     /** Yoğunluk hesabında "aktif" sayılan durumlar (hazırlık hattını meşgul edenler). */
     private static final List<Siparis.SiparisDurumu> AKTIF_SIPARIS_DURUMLARI =
@@ -407,6 +411,55 @@ public class SaticiServisi {
             }
         }
         return saticiDeposu.save(s);
+    }
+
+    /**
+     * İşletmeyi ve tüm bağlı food kayıtlarını siler (sipariş+kalem, menü, personel bağı,
+     * çalışma saati, kampanya, favori). Personel auth hesapları da silinir. İşletme sahibinin
+     * id'si döner (frontend onu PASIF'e alır). Sahip hesabı denetim için korunur.
+     */
+    @Transactional
+    public Satici adminSil(String id, String adminId) {
+        Satici s = saticiDeposu.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "İşletme bulunamadı."));
+
+        // Personel auth hesaplarını sil + bağlarını kaldır
+        personelDeposu.findBySaticiIdOrderByOlusturulmaTarihiDesc(id).forEach(p -> {
+            try { authIstemci.personelSil(adminId, p.getKullaniciId()); } catch (Exception ignored) { }
+            personelDeposu.delete(p);
+        });
+        // Siparişler (kalemler orphanRemoval ile düşer)
+        siparisDeposu.deleteAll(siparisDeposu.findBySaticiId(id));
+        // Menü, çalışma saati, kampanya, favori
+        menuOgesiDeposu.deleteAll(menuOgesiDeposu.findBySaticiId(id));
+        calismaSaatiDeposu.deleteBySaticiId(id);
+        kampanyaDeposu.deleteBySaticiId(id);
+        favoriDeposu.deleteBySaticiId(id);
+
+        saticiDeposu.delete(s);
+        return s;   // yoneticiKullaniciId frontend tarafından PASIF'e alınır
+    }
+
+    /**
+     * İşletmenin yöneticisini değiştirir: yeni yönetici atanır, eski yönetici id'si döner
+     * (frontend eski yöneticiyi PASIF'e alır — denetim için silinmez).
+     */
+    @Transactional
+    public String yoneticiDegistir(String id, String yeniYoneticiId) {
+        if (yeniYoneticiId == null || yeniYoneticiId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Yeni yönetici zorunludur.");
+        }
+        Satici s = saticiDeposu.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "İşletme bulunamadı."));
+        saticiDeposu.findByYoneticiKullaniciId(yeniYoneticiId).ifPresent(diger -> {
+            if (!diger.getId().equals(id)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu yönetici zaten başka bir işletmeye atanmış.");
+            }
+        });
+        String eski = s.getYoneticiKullaniciId();
+        s.setYoneticiKullaniciId(yeniYoneticiId);
+        saticiDeposu.save(s);
+        return eski;
     }
 
     // --- yardımcılar: açık/kapalı hesaplama + yanıt üretimi ---
