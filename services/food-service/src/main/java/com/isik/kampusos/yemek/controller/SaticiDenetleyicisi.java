@@ -76,6 +76,21 @@ public class SaticiDenetleyicisi {
         return ResponseEntity.ok(saticiServisi.saticiGuncelle(auth.getName(), talep));
     }
 
+    // --- İşletme genel bilgi değişikliği talebi (admin onayına gider) ---
+
+    @PostMapping("/api/v1/satici/degisiklik-talebi")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<com.isik.kampusos.yemek.dto.SaticiDegisiklikIstegiYaniti> talepOlustur(
+            Authentication auth, @RequestBody com.isik.kampusos.yemek.dto.SaticiDegisiklikTalebi talep) {
+        return ResponseEntity.ok(saticiServisi.talepOlustur(auth.getName(), talep));
+    }
+
+    @GetMapping("/api/v1/satici/degisiklik-taleplerim")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<List<com.isik.kampusos.yemek.dto.SaticiDegisiklikIstegiYaniti>> taleplerim(Authentication auth) {
+        return ResponseEntity.ok(saticiServisi.taleplerim(auth.getName()));
+    }
+
     // --- İşletme yöneticisi: çalışma saatleri ---
 
     @GetMapping("/api/v1/satici/calisma-saatleri")

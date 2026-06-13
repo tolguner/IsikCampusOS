@@ -4,8 +4,11 @@ import com.isik.kampusos.yemek.dto.CalismaSaatiTalebi;
 import com.isik.kampusos.yemek.dto.KampanyaTalebi;
 import com.isik.kampusos.yemek.dto.MenuOgesiTalebi;
 import com.isik.kampusos.yemek.dto.SaticiGuncellemeTalebi;
+import com.isik.kampusos.yemek.dto.SaticiDegisiklikIstegiYaniti;
+import com.isik.kampusos.yemek.dto.SaticiDegisiklikTalebi;
 import com.isik.kampusos.yemek.dto.SaticiOlusturmaTalebi;
 import com.isik.kampusos.yemek.dto.SaticiYaniti;
+import com.isik.kampusos.yemek.model.SaticiDegisiklikIstegi;
 import com.isik.kampusos.yemek.model.CalismaSaati;
 import com.isik.kampusos.yemek.model.Kampanya;
 import com.isik.kampusos.yemek.model.MenuOgesi;
@@ -48,6 +51,11 @@ public class SaticiServisi {
     private final SiparisDeposu siparisDeposu;
     private final FavoriSaticiDeposu favoriDeposu;
     private final AuthKimlikIstemcisi authIstemci;
+    private final com.isik.kampusos.yemek.repository.SaticiDegisiklikIstegiDeposu talepDeposu;
+
+    /** Onaya tabi genel/kimlik alanları (sahip doğrudan değiştiremez, talep açar). */
+    private static final java.util.Set<String> ONAYA_TABI_ALANLAR =
+            java.util.Set.of("ad", "aciklama", "konumMetni", "logoUrl", "kapakGorselUrl", "mutfakTuru");
 
     /** Yoğunluk hesabında "aktif" sayılan durumlar (hazırlık hattını meşgul edenler). */
     private static final List<Siparis.SiparisDurumu> AKTIF_SIPARIS_DURUMLARI =
@@ -135,13 +143,9 @@ public class SaticiServisi {
     @Transactional
     public Satici saticiGuncelle(String yoneticiId, SaticiGuncellemeTalebi talep) {
         Satici s = saticiBul(yoneticiId);
-        if (talep.getAd() != null) s.setAd(talep.getAd());
-        if (talep.getAciklama() != null) s.setAciklama(talep.getAciklama());
-        if (talep.getKonumMetni() != null) s.setKonumMetni(talep.getKonumMetni());
-        if (talep.getLogoUrl() != null) s.setLogoUrl(talep.getLogoUrl());
+        // Genel/kimlik alanları (ad, açıklama, konum, logo, kapak, mutfak türü) doğrudan değiştirilemez;
+        // bunlar değişiklik talebi + admin onayı ile güncellenir. Burada yalnız operasyonel alanlar.
         if (talep.getAcik() != null) s.setAcik(talep.getAcik());
-        if (talep.getMutfakTuru() != null) s.setMutfakTuru(talep.getMutfakTuru());
-        if (talep.getKapakGorselUrl() != null) s.setKapakGorselUrl(talep.getKapakGorselUrl());
         if (talep.getTeslimatUcreti() != null) {
             if (talep.getTeslimatUcreti().signum() < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Teslimat ücreti negatif olamaz.");
             s.setTeslimatUcreti(talep.getTeslimatUcreti());
@@ -460,6 +464,102 @@ public class SaticiServisi {
         s.setYoneticiKullaniciId(yeniYoneticiId);
         saticiDeposu.save(s);
         return eski;
+    }
+
+    // --- İşletme bilgi-değişikliği onay akışı (R7) ---
+
+    /** Sahip: genel bilgi değişikliği talebi açar (BEKLEMEDE). */
+    @Transactional
+    public SaticiDegisiklikIstegiYaniti talepOlustur(String yoneticiId, SaticiDegisiklikTalebi talep) {
+        Satici s = saticiBul(yoneticiId);
+        String alan = talep.getAlanAdi() == null ? "" : talep.getAlanAdi().trim();
+        if (!ONAYA_TABI_ALANLAR.contains(alan)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bu alan için değişiklik talebi açılamaz: " + alan);
+        }
+        if (talep.getTalepEdilenDeger() == null || talep.getTalepEdilenDeger().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Talep edilen değer boş olamaz.");
+        }
+        SaticiDegisiklikIstegi istek = SaticiDegisiklikIstegi.builder()
+                .saticiId(s.getId())
+                .alanAdi(alan)
+                .mevcutDeger(mevcutDeger(s, alan))
+                .talepEdilenDeger(talep.getTalepEdilenDeger())
+                .durum(SaticiDegisiklikIstegi.Durum.BEKLEMEDE)
+                .build();
+        return SaticiDegisiklikIstegiYaniti.of(talepDeposu.save(istek), s.getAd());
+    }
+
+    /** Sahip: kendi taleplerim. */
+    public List<SaticiDegisiklikIstegiYaniti> taleplerim(String yoneticiId) {
+        Satici s = saticiBul(yoneticiId);
+        return talepDeposu.findBySaticiIdOrderByOlusturulmaTarihiDesc(s.getId()).stream()
+                .map(i -> SaticiDegisiklikIstegiYaniti.of(i, s.getAd())).toList();
+    }
+
+    /** Admin: bekleyen talepler. */
+    public List<SaticiDegisiklikIstegiYaniti> bekleyenTalepler() {
+        return talepDeposu.findByDurumOrderByOlusturulmaTarihiDesc(SaticiDegisiklikIstegi.Durum.BEKLEMEDE).stream()
+                .map(i -> SaticiDegisiklikIstegiYaniti.of(i,
+                        saticiDeposu.findById(i.getSaticiId()).map(Satici::getAd).orElse("—")))
+                .toList();
+    }
+
+    /** Admin: talebi onayla — değeri satıcıya uygula. */
+    @Transactional
+    public void talepOnayla(String istekId, String adminId) {
+        SaticiDegisiklikIstegi istek = bekleyenTalep(istekId);
+        Satici s = saticiDeposu.findById(istek.getSaticiId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "İşletme bulunamadı."));
+        alaniUygula(s, istek.getAlanAdi(), istek.getTalepEdilenDeger());
+        saticiDeposu.save(s);
+        istek.setDurum(SaticiDegisiklikIstegi.Durum.ONAYLANDI);
+        istek.setInceleyen(adminId);
+        istek.setIncelemeTarihi(LocalDateTime.now());
+        talepDeposu.save(istek);
+    }
+
+    /** Admin: revize iste (geri bildirimle) — değer uygulanmaz. */
+    @Transactional
+    public void talepRevize(String istekId, String adminId, String geriBildirim) {
+        SaticiDegisiklikIstegi istek = bekleyenTalep(istekId);
+        istek.setDurum(SaticiDegisiklikIstegi.Durum.REVIZE_TALEP);
+        istek.setInceleyen(adminId);
+        istek.setGeriBildirim(geriBildirim);
+        istek.setIncelemeTarihi(LocalDateTime.now());
+        talepDeposu.save(istek);
+    }
+
+    private SaticiDegisiklikIstegi bekleyenTalep(String istekId) {
+        SaticiDegisiklikIstegi istek = talepDeposu.findById(istekId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Talep bulunamadı."));
+        if (istek.getDurum() != SaticiDegisiklikIstegi.Durum.BEKLEMEDE) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu talep zaten incelenmiş.");
+        }
+        return istek;
+    }
+
+    private String mevcutDeger(Satici s, String alan) {
+        return switch (alan) {
+            case "ad" -> s.getAd();
+            case "aciklama" -> s.getAciklama();
+            case "konumMetni" -> s.getKonumMetni();
+            case "logoUrl" -> s.getLogoUrl();
+            case "kapakGorselUrl" -> s.getKapakGorselUrl();
+            case "mutfakTuru" -> s.getMutfakTuru();
+            default -> null;
+        };
+    }
+
+    private void alaniUygula(Satici s, String alan, String deger) {
+        switch (alan) {
+            case "ad" -> s.setAd(deger);
+            case "aciklama" -> s.setAciklama(deger);
+            case "konumMetni" -> s.setKonumMetni(deger);
+            case "logoUrl" -> s.setLogoUrl(deger);
+            case "kapakGorselUrl" -> s.setKapakGorselUrl(deger);
+            case "mutfakTuru" -> s.setMutfakTuru(deger);
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz alan: " + alan);
+        }
     }
 
     // --- yardımcılar: açık/kapalı hesaplama + yanıt üretimi ---
