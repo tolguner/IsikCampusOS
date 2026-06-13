@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus, Pencil, X, Store, MapPin } from 'lucide-react';
 import {
   useAdminSaticiDeposu,
-  type SaticiOlusturmaFormu,
+  type SaticiVeSahipFormu,
   type SaticiGuncellemeFormu,
 } from '../../depolar/adminSaticiDeposu';
 import type { Satici } from '../../depolar/yemekDeposu';
@@ -13,7 +13,7 @@ const inputClass =
 export const SaticilarSekmesi = () => {
   const {
     saticilar, vendorAdminler, isLoading,
-    saticilariGetir, vendorAdminleriGetir, saticiOlustur, saticiGuncelle,
+    saticilariGetir, vendorAdminleriGetir, saticiVeSahipOlustur, saticiGuncelle,
   } = useAdminSaticiDeposu();
 
   const [olusturModal, setOlusturModal] = useState(false);
@@ -86,10 +86,9 @@ export const SaticilarSekmesi = () => {
 
       {olusturModal && (
         <SaticiOlusturModal
-          vendorAdminler={vendorAdminler}
           isLoading={isLoading}
           onKapat={() => setOlusturModal(false)}
-          onKaydet={async (form) => { const ok = await saticiOlustur(form); if (ok) setOlusturModal(false); }}
+          onKaydet={async (form) => { const ok = await saticiVeSahipOlustur(form); if (ok) setOlusturModal(false); }}
         />
       )}
 
@@ -115,37 +114,37 @@ const ModalKabuk = ({ baslik, onKapat, children }: { baslik: string; onKapat: ()
   </div>
 );
 
-const SaticiOlusturModal = ({ vendorAdminler, isLoading, onKapat, onKaydet }: {
-  vendorAdminler: { id: string; eposta: string }[];
+const SaticiOlusturModal = ({ isLoading, onKapat, onKaydet }: {
   isLoading: boolean;
   onKapat: () => void;
-  onKaydet: (f: SaticiOlusturmaFormu) => void;
+  onKaydet: (f: SaticiVeSahipFormu) => void;
 }) => {
-  const [form, setForm] = useState<SaticiOlusturmaFormu>({ ad: '', yoneticiKullaniciId: '', konumMetni: '', aciklama: '', logoUrl: '' });
-  const gecerli = form.ad.trim().length >= 2 && !!form.yoneticiKullaniciId;
+  const [form, setForm] = useState<SaticiVeSahipFormu>({
+    ad: '', konumMetni: '', aciklama: '', logoUrl: '',
+    sahipAd: '', sahipSoyad: '', sahipEposta: '', sahipTc: '',
+  });
+  const set = (k: keyof SaticiVeSahipFormu, v: string) => setForm(p => ({ ...p, [k]: v }));
+  const gecerli = form.ad.trim().length >= 2 && form.sahipAd.trim() && form.sahipEposta.trim() && /^\d{11}$/.test(form.sahipTc);
 
   return (
-    <ModalKabuk baslik="Yeni Satıcı" onKapat={onKapat}>
-      <div className="space-y-3">
-        <input className={inputClass} placeholder="Satıcı adı (örn. Kampüs Kantini)" value={form.ad} onChange={e => setForm(p => ({ ...p, ad: e.target.value }))} />
-        <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-white/35 mb-1.5">İşletme Yöneticisi</label>
-          {vendorAdminler.length === 0 ? (
-            <p className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-100">
-              Önce "Kullanıcı & Rol Yönetimi" sekmesinden <b>İşletme Yöneticisi</b> (ROLE_VENDOR_ADMIN) rolünde bir kullanıcı oluşturun.
-            </p>
-          ) : (
-            <select className={inputClass} value={form.yoneticiKullaniciId} onChange={e => setForm(p => ({ ...p, yoneticiKullaniciId: e.target.value }))}>
-              <option value="">Yönetici seçin</option>
-              {vendorAdminler.map(v => <option key={v.id} value={v.id}>{v.eposta}</option>)}
-            </select>
-          )}
+    <ModalKabuk baslik="Yeni İşletme" onKapat={onKapat}>
+      <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+        <p className="text-xs font-bold uppercase tracking-wider text-white/35">İşletme</p>
+        <input className={inputClass} placeholder="İşletme adı (örn. Kampüs Kantini)" value={form.ad} onChange={e => set('ad', e.target.value)} />
+        <input className={inputClass} placeholder="Konum (örn. A Blok zemin kat)" value={form.konumMetni} onChange={e => set('konumMetni', e.target.value)} />
+        <input className={inputClass} placeholder="Açıklama (ops.)" value={form.aciklama} onChange={e => set('aciklama', e.target.value)} />
+
+        <p className="text-xs font-bold uppercase tracking-wider text-white/35 pt-1">İşletme Sahibi</p>
+        <div className="grid grid-cols-2 gap-3">
+          <input className={inputClass} placeholder="Ad" value={form.sahipAd} onChange={e => set('sahipAd', e.target.value)} />
+          <input className={inputClass} placeholder="Soyad" value={form.sahipSoyad} onChange={e => set('sahipSoyad', e.target.value)} />
         </div>
-        <input className={inputClass} placeholder="Konum (örn. A Blok zemin kat)" value={form.konumMetni} onChange={e => setForm(p => ({ ...p, konumMetni: e.target.value }))} />
-        <input className={inputClass} placeholder="Açıklama (ops.)" value={form.aciklama} onChange={e => setForm(p => ({ ...p, aciklama: e.target.value }))} />
-        <input className={inputClass} placeholder="Logo URL (ops.)" value={form.logoUrl} onChange={e => setForm(p => ({ ...p, logoUrl: e.target.value }))} />
-        <button disabled={!gecerli || isLoading} onClick={() => onKaydet({ ...form, ad: form.ad.trim() })} className="w-full rounded-2xl bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed px-5 py-3 text-sm font-black text-white cursor-pointer">
-          {isLoading ? 'Oluşturuluyor...' : 'Oluştur'}
+        <input className={inputClass} type="email" placeholder="E-posta (giriş için)" value={form.sahipEposta} onChange={e => set('sahipEposta', e.target.value)} />
+        <input className={inputClass} placeholder="TC Kimlik No (11 hane)" inputMode="numeric" maxLength={11} value={form.sahipTc} onChange={e => set('sahipTc', e.target.value.replace(/\D/g, ''))} />
+        <p className="text-[11px] text-white/35">Sahip e-posta + TC ile giriş yapar; varsayılan şifre TC'dir, ilk girişte değiştirmesi istenir.</p>
+
+        <button disabled={!gecerli || isLoading} onClick={() => onKaydet({ ...form, ad: form.ad.trim(), sahipEposta: form.sahipEposta.trim() })} className="w-full rounded-2xl bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed px-5 py-3 text-sm font-black text-white cursor-pointer">
+          {isLoading ? 'Oluşturuluyor...' : 'İşletme + Sahip Oluştur'}
         </button>
       </div>
     </ModalKabuk>

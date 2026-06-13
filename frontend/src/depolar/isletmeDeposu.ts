@@ -29,6 +29,7 @@ export interface MenuOgesiFormu {
   kategori?: string;
   fiyat: number;
   gorselUrl?: string;
+  etiketler?: string;    // allerjen/içerik CSV (örn. "VEGAN,ACILI")
   mevcut?: boolean;
   oneCikan?: boolean;
   secenekGruplari?: SecenekGrubuFormu[];
@@ -79,8 +80,12 @@ export interface CiroRaporu {
   kayitlar: CiroKaydi[];
 }
 
+/** Çağıranın işletmedeki rolü — panel butonları buna göre çizilir. */
+export type IsletmeRolu = 'SAHIP' | 'PERSONEL' | 'KURYE';
+
 interface IsletmeState {
   satici: Satici | null;
+  benimRol: IsletmeRolu | null;
   menu: MenuOgesi[];
   siparisler: Siparis[];
   ciro: CiroRaporu | null;
@@ -106,7 +111,7 @@ interface IsletmeState {
   menuSil: (id: string) => Promise<boolean>;
 
   siparisleriGetir: () => Promise<void>;
-  siparisGecis: (id: string, eylem: 'kabul' | 'hazirla' | 'hazir' | 'yolda') => Promise<boolean>;
+  siparisGecis: (id: string, eylem: 'kabul' | 'hazirla' | 'hazir' | 'yolda', govde?: Record<string, unknown>) => Promise<boolean>;
   siparisReddet: (id: string, neden: string) => Promise<boolean>;
   siparisTeslim: (id: string, tahsilEdilenOdeme: OdemeYontemi) => Promise<boolean>;
 
@@ -118,6 +123,7 @@ const getErrorMessage = (err: any, fallback: string) =>
 
 export const useIsletmeDeposu = create<IsletmeState>((set, get) => ({
   satici: null,
+  benimRol: null,
   menu: [],
   siparisler: [],
   ciro: null,
@@ -206,6 +212,11 @@ export const useIsletmeDeposu = create<IsletmeState>((set, get) => ({
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Satıcı bilgisi yüklenemedi.'), isLoading: false });
     }
+    // Rol (SAHIP/PERSONEL/KURYE) — buton görünürlüğü için; hata olursa null kalır.
+    try {
+      const rolRes = await api.get<{ rol: IsletmeRolu }>('/satici/personel/benim-rol');
+      set({ benimRol: rolRes.data.rol });
+    } catch { /* sessiz */ }
   },
 
   saticiGuncelle: async (form) => {
@@ -279,10 +290,10 @@ export const useIsletmeDeposu = create<IsletmeState>((set, get) => ({
     }
   },
 
-  siparisGecis: async (id, eylem) => {
+  siparisGecis: async (id, eylem, govde) => {
     set({ error: null, successMessage: null });
     try {
-      await api.post(`/satici/siparisler/${id}/${eylem}`);
+      await api.post(`/satici/siparisler/${id}/${eylem}`, govde);
       await get().siparisleriGetir();
       return true;
     } catch (err: any) {

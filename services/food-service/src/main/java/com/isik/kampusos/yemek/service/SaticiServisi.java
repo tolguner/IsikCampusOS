@@ -12,11 +12,13 @@ import com.isik.kampusos.yemek.model.MenuOgesi;
 import com.isik.kampusos.yemek.model.MenuSecenekGrubu;
 import com.isik.kampusos.yemek.model.MenuSecenegi;
 import com.isik.kampusos.yemek.model.Satici;
+import com.isik.kampusos.yemek.model.Siparis;
 import com.isik.kampusos.yemek.repository.CalismaSaatiDeposu;
 import com.isik.kampusos.yemek.repository.IsletmePersonelDeposu;
 import com.isik.kampusos.yemek.repository.KampanyaDeposu;
 import com.isik.kampusos.yemek.repository.MenuOgesiDeposu;
 import com.isik.kampusos.yemek.repository.SaticiDeposu;
+import com.isik.kampusos.yemek.repository.SiparisDeposu;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,11 @@ public class SaticiServisi {
     private final CalismaSaatiDeposu calismaSaatiDeposu;
     private final KampanyaDeposu kampanyaDeposu;
     private final IsletmePersonelDeposu personelDeposu;
+    private final SiparisDeposu siparisDeposu;
+
+    /** Yoğunluk hesabında "aktif" sayılan durumlar (hazırlık hattını meşgul edenler). */
+    private static final List<Siparis.SiparisDurumu> AKTIF_SIPARIS_DURUMLARI =
+            List.of(Siparis.SiparisDurumu.BEKLEMEDE, Siparis.SiparisDurumu.KABUL_EDILDI, Siparis.SiparisDurumu.HAZIRLANIYOR);
 
     // --- Öğrenci / herkese görünür ---
 
@@ -114,6 +121,8 @@ public class SaticiServisi {
     public Satici saticiCozumle(String kullaniciId) {
         return saticiDeposu.findByYoneticiKullaniciId(kullaniciId)
                 .or(() -> personelDeposu.findByKullaniciId(kullaniciId)
+                        // Askıya alınan (PASIF) personel işletme işlemlerine erişemez.
+                        .filter(p -> p.getDurum() == com.isik.kampusos.yemek.model.IsletmePersoneli.PersonelDurumu.AKTIF)
                         .flatMap(p -> saticiDeposu.findById(p.getSaticiId())))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Hesabınıza bağlı bir işletme bulunamadı."));
@@ -282,6 +291,7 @@ public class SaticiServisi {
                 .kategori(talep.getKategori())
                 .fiyat(talep.getFiyat())
                 .gorselUrl(talep.getGorselUrl())
+                .etiketler(talep.getEtiketler())
                 .mevcut(talep.getMevcut() == null || talep.getMevcut())
                 .oneCikan(talep.getOneCikan() != null && talep.getOneCikan())
                 .durum(MenuOgesi.MenuDurumu.AKTIF)
@@ -302,6 +312,7 @@ public class SaticiServisi {
             oge.setFiyat(talep.getFiyat());
         }
         if (talep.getGorselUrl() != null) oge.setGorselUrl(talep.getGorselUrl());
+        if (talep.getEtiketler() != null) oge.setEtiketler(talep.getEtiketler());
         if (talep.getMevcut() != null) oge.setMevcut(talep.getMevcut());
         if (talep.getOneCikan() != null) oge.setOneCikan(talep.getOneCikan());
         if (talep.getSecenekGruplari() != null) {
@@ -400,25 +411,46 @@ public class SaticiServisi {
 
     // --- yardımcılar: açık/kapalı hesaplama + yanıt üretimi ---
 
-    /** Satıcıyı çalışma saatleriyle birlikte zenginleştirilmiş yanıta dönüştürür. */
+    /** Satıcıyı çalışma saatleri + yoğunluk ekiyle zenginleştirilmiş yanıta dönüştürür. */
     private SaticiYaniti yanitYap(Satici s) {
         List<CalismaSaati> saatler = calismaSaatiDeposu.findBySaticiIdOrderByGunAsc(s.getId());
         LocalDateTime now = LocalDateTime.now();
         boolean suAnAcik = suAnAcikMi(s, saatler, now);
         String sonraki = suAnAcik ? null : sonrakiAcilisMetni(saatler, now);
-        return SaticiYaniti.of(s, suAnAcik, sonraki, saatler);
+        return SaticiYaniti.of(s, suAnAcik, sonraki, saatler, yogunlukEkDakika(s.getId()));
     }
 
-    /** durum AKTIF + manuel açık + bugünkü çalışma saati aralığında mı? */
+    /** Yoğunluğa duyarlı süre: her aktif sipariş +5 dk, en fazla +30 dk. */
+    private int yogunlukEkDakika(String saticiId) {
+        long aktif = siparisDeposu.countBySaticiIdAndDurumIn(saticiId, AKTIF_SIPARIS_DURUMLARI);
+        return (int) Math.min(30, aktif * 5);
+    }
+
+    /**
+     * durum AKTIF + manuel açık + çalışma saati aralığında mı?
+     * Gece yarısını aşan aralıklar (örn. 22:00–02:00, kapanış &lt; açılış) desteklenir:
+     * bugünün kaydı açılıştan gece yarısına, dünün kaydı gece yarısından kapanışa bakılır.
+     */
     private boolean suAnAcikMi(Satici s, List<CalismaSaati> saatler, LocalDateTime now) {
         if (s.getDurum() != Satici.SaticiDurumu.AKTIF || !s.isAcik()) return false;
-        short bugun = (short) now.getDayOfWeek().getValue(); // 1=Pzt … 7=Paz
-        Optional<CalismaSaati> bugunkuOpt = saatler.stream().filter(c -> c.getGun() == bugun).findFirst();
-        if (bugunkuOpt.isEmpty()) return false; // saat tanımlı değilse kapalı kabul
-        CalismaSaati c = bugunkuOpt.get();
-        if (c.isKapali() || c.getAcilis() == null || c.getKapanis() == null) return false;
         LocalTime t = now.toLocalTime();
-        return !t.isBefore(c.getAcilis()) && t.isBefore(c.getKapanis());
+        short bugun = (short) now.getDayOfWeek().getValue();           // 1=Pzt … 7=Paz
+        short dun = (short) now.minusDays(1).getDayOfWeek().getValue();
+        return aralikIcindeMi(saatler, bugun, t, true) || aralikIcindeMi(saatler, dun, t, false);
+    }
+
+    /** bugunMu=true: günün kendi aralığı; false: önceki günün gece yarısını aşan (sabaha taşan) kısmı. */
+    private boolean aralikIcindeMi(List<CalismaSaati> saatler, short gun, LocalTime t, boolean bugunMu) {
+        Optional<CalismaSaati> opt = saatler.stream().filter(c -> c.getGun() == gun).findFirst();
+        if (opt.isEmpty()) return false; // saat tanımlı değilse kapalı kabul
+        CalismaSaati c = opt.get();
+        if (c.isKapali() || c.getAcilis() == null || c.getKapanis() == null) return false;
+        boolean geceyiAsar = !c.getKapanis().isAfter(c.getAcilis()); // kapanış <= açılış → ertesi güne sarkar
+        if (bugunMu) {
+            if (!geceyiAsar) return !t.isBefore(c.getAcilis()) && t.isBefore(c.getKapanis());
+            return !t.isBefore(c.getAcilis()); // açılıştan gece yarısına kadar açık
+        }
+        return geceyiAsar && t.isBefore(c.getKapanis()); // dünden sarkan kısım: 00:00–kapanış
     }
 
     /** Kapalıyken bir sonraki açılışı insan-okur metne çevirir (örn. "Bugün 18:00", "Yarın 09:00", "Pazartesi 09:00"). */

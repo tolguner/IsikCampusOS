@@ -12,6 +12,7 @@ public class PersonelYaniti {
     private String ad;
     private String eposta;
     private String durum;
+    private String rol;
 
     public static PersonelYaniti of(IsletmePersoneli p) {
         return PersonelYaniti.builder()
@@ -19,6 +20,7 @@ public class PersonelYaniti {
                 .ad(p.getAd())
                 .eposta(p.getEposta())
                 .durum(p.getDurum() != null ? p.getDurum().name() : null)
+                .rol(p.getRol() != null ? p.getRol().name() : "PERSONEL")
                 .build();
     }
 }

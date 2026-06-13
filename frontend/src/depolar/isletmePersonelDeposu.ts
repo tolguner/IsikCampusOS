@@ -1,11 +1,14 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
 
+export type PersonelRolu = 'PERSONEL' | 'KURYE';
+
 export interface Personel {
   kullaniciId: string;
   ad: string;
   eposta: string;
   durum: string;
+  rol?: PersonelRolu;
 }
 
 export interface PersonelFormu {
@@ -13,6 +16,7 @@ export interface PersonelFormu {
   soyad: string;
   eposta: string;
   tcKimlikNo: string;
+  rol: PersonelRolu;
 }
 
 interface PersonelState {
@@ -22,6 +26,7 @@ interface PersonelState {
   successMessage: string | null;
   personelleriGetir: () => Promise<void>;
   personelEkle: (form: PersonelFormu) => Promise<boolean>;
+  personelDurum: (kullaniciId: string, durum: 'AKTIF' | 'PASIF') => Promise<void>;
   personelCikar: (kullaniciId: string) => Promise<void>;
   clearMessages: () => void;
 }
@@ -55,6 +60,17 @@ export const useIsletmePersonelDeposu = create<PersonelState>((set, get) => ({
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Personel eklenemedi.'), isLoading: false });
       return false;
+    }
+  },
+
+  personelDurum: async (kullaniciId, durum) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      await api.put(`/satici/personel/${kullaniciId}/durum`, { durum });
+      set({ successMessage: durum === 'PASIF' ? 'Personel askıya alındı.' : 'Personel aktifleştirildi.', isLoading: false });
+      await get().personelleriGetir();
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Personel durumu değiştirilemedi.'), isLoading: false });
     }
   },
 

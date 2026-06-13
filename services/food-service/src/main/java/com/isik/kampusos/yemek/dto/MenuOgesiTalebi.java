@@ -12,6 +12,7 @@ public class MenuOgesiTalebi {
     private String kategori;
     private BigDecimal fiyat;
     private String gorselUrl;
+    private String etiketler;      // allerjen/içerik CSV (örn. "VEGAN,ACILI")
     private Boolean mevcut;
     private Boolean oneCikan;
     private List<SecenekGrubu> secenekGruplari;

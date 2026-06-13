@@ -35,6 +35,20 @@ public class BildirimYayinlayici {
                 .build());
     }
 
+    /** İşletme tarafındaki bir kullanıcıya (sahip/personel) sipariş olayı bildirir. */
+    public void isletmeyeBildir(String aliciKullaniciId, String baslik, String mesaj, String olusturanAdi) {
+        yayinla(BildirimOlayi.builder()
+                .baslik(baslik)
+                .mesaj(mesaj)
+                .tur("SIPARIS_DURUMU")
+                .hedefKitle("KULLANICI")
+                .aliciKullaniciId(aliciKullaniciId)
+                .baglantiUrl("/")
+                .baglantiEtiketi("İşletme paneli")
+                .olusturanAdi(olusturanAdi)
+                .build());
+    }
+
     private void yayinla(BildirimOlayi olay) {
         try {
             kafkaTemplate.send(TOPIC, objectMapper.writeValueAsString(olay));

@@ -9,4 +9,5 @@ public class PersonelOlusturmaTalebi {
     private String soyad;
     private String eposta;
     private String tcKimlikNo;   // 11 hane; auth tarafında varsayılan şifre olur.
+    private String rol;          // PERSONEL (varsayılan) | KURYE
 }

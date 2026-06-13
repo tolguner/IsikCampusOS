@@ -37,6 +37,9 @@ public class MenuOgesi {
     @Column(columnDefinition = "TEXT")
     private String gorselUrl;
 
+    /** Allerjen/içerik etiketleri, CSV (örn. "VEGAN,GLUTENSIZ,ACILI"). */
+    private String etiketler;
+
     @Builder.Default
     private boolean mevcut = true;
 

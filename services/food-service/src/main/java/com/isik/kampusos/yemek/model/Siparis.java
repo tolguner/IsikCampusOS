@@ -64,8 +64,24 @@ public class Siparis {
     private String redNedeni;
     private Integer tahminiHazirDakika;
 
-    /** Kabul/red kararını veren işletme kullanıcısı (sahip veya personel). */
+    /** Siparişi üstlenen (kabul/red eden) işletme kullanıcısı; teslime kadar süreci o yürütür. */
     private String isleyenKullaniciId;
+
+    /** Teslimat türü: adrese teslimat (kurye) veya gel-al (öğrenci işletmeden alır, YOLDA atlanır). */
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private TeslimatTuru teslimatTuru = TeslimatTuru.ADRESE_TESLIMAT;
+
+    /** Adrese teslimatta siparişi taşıyan kurye (yolda aşamasında atanır; denetim için). */
+    private String kuryeKullaniciId;
+
+    /** İyimser kilit — eşzamanlı durum geçişlerinde ikinci yazan çakışma alır. */
+    @Version
+    private Long surum;
+
+    /** Kalıcı değil — yanıtta üstlenen kişinin adını taşımak için (auth'tan çözülür). */
+    @Transient
+    private String isleyenAdi;
 
     private LocalDateTime olusturulmaTarihi;
     private LocalDateTime kabulTarihi;
@@ -89,4 +105,6 @@ public class Siparis {
     }
 
     public enum OdemeYontemi { NAKIT, KREDI_KARTI }
+
+    public enum TeslimatTuru { ADRESE_TESLIMAT, GEL_AL }
 }

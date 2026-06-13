@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Wallet, CreditCard, Clock, RefreshCw, Check, Ban } from 'lucide-react';
+import { MapPin, Phone, Wallet, CreditCard, Clock, RefreshCw, Check, Ban, UserCheck, Lock } from 'lucide-react';
 import { useIsletmeDeposu } from '../../depolar/isletmeDeposu';
+import { useKimlikDeposu } from '../../depolar/kimlikDeposu';
+import { rolleriAyir, YETKILER } from '../../yardimcilar/yetkiler';
 import { SIPARIS_DURUM_BILGISI, type Siparis, type SiparisDurumu } from '../../depolar/yemekDeposu';
 
 const paraBicimle = (t: number) =>
@@ -26,9 +28,10 @@ const asamaZamani = (s: Siparis, durum: SiparisDurumu): string | undefined => ({
   IPTAL_EDILDI: undefined,
 }[durum]);
 
-/** Siparişin hangi aşamada olduğunu adım adım gösteren süreç çizelgesi. */
+/** Siparişin hangi aşamada olduğunu adım adım gösteren süreç çizelgesi (gel-al'da YOLDA atlanır). */
 const SurecCizelgesi = ({ siparis }: { siparis: Siparis }) => {
   const sonlandi = siparis.durum === 'REDDEDILDI' || siparis.durum === 'IPTAL_EDILDI';
+  const akis = siparis.teslimatTuru === 'GEL_AL' ? AKIS.filter(d => d !== 'YOLDA') : AKIS;
 
   if (sonlandi) {
     const bilgi = SIPARIS_DURUM_BILGISI[siparis.durum];
@@ -41,11 +44,11 @@ const SurecCizelgesi = ({ siparis }: { siparis: Siparis }) => {
     );
   }
 
-  const aktifIndex = AKIS.indexOf(siparis.durum);
+  const aktifIndex = akis.indexOf(siparis.durum);
   return (
     <div className="mt-4">
       <div className="flex items-start">
-        {AKIS.map((adim, i) => {
+        {akis.map((adim, i) => {
           const tamamlandi = i < aktifIndex;
           const suanki = i === aktifIndex;
           const zaman = asamaZamani(siparis, adim);
@@ -77,7 +80,12 @@ export const SiparislerSekmesi = () => {
   const { siparisler, isLoading, siparisleriGetir } = useIsletmeDeposu();
   const [sekme, setSekme] = useState<'aktif' | 'gecmis'>('aktif');
 
-  useEffect(() => { siparisleriGetir(); }, [siparisleriGetir]);
+  // İlk yükleme + 20 sn'de bir otomatik yenileme (yeni sipariş beklemede kalmasın)
+  useEffect(() => {
+    siparisleriGetir();
+    const zamanlayici = setInterval(() => siparisleriGetir(), 20_000);
+    return () => clearInterval(zamanlayici);
+  }, [siparisleriGetir]);
 
   const aktif = siparisler.filter(s => AKTIF_DURUMLAR.includes(s.durum));
   const gecmis = siparisler.filter(s => !AKTIF_DURUMLAR.includes(s.durum));
@@ -124,9 +132,19 @@ export const SiparislerSekmesi = () => {
 const SiparisKarti = ({ siparis }: { siparis: Siparis }) => {
   const { siparisGecis, siparisReddet, siparisTeslim } = useIsletmeDeposu();
   const durumBilgi = SIPARIS_DURUM_BILGISI[siparis.durum];
+  const user = useKimlikDeposu(s => s.user);
+  const benimRol = useIsletmeDeposu(s => s.benimRol);
+  const sahipMi = rolleriAyir(user?.roller).includes(YETKILER.ISLETME_YONETICISI);
+  const kurye = benimRol === 'KURYE';
+  const gelAl = siparis.teslimatTuru === 'GEL_AL';
+  // Üstlenme kuralı: personelde sipariş, kuryede teslimat üzerinden kilitlenir; sahip her zaman serbest.
+  const islemYapabilir = sahipMi || (kurye
+    ? (!siparis.kuryeKullaniciId || siparis.kuryeKullaniciId === user?.id)
+    : (!siparis.isleyenKullaniciId || siparis.isleyenKullaniciId === user?.id));
   const [redAcik, setRedAcik] = useState(false);
   const [redNedeni, setRedNedeni] = useState('');
   const [teslimAcik, setTeslimAcik] = useState(false);
+  const [kabulAcik, setKabulAcik] = useState(false);
   const [mesgul, setMesgul] = useState(false);
 
   const eylem = async (fn: () => Promise<boolean>) => {
@@ -140,11 +158,19 @@ const SiparisKarti = ({ siparis }: { siparis: Siparis }) => {
       className="rounded-2xl p-5 border border-white/10 bg-white/[0.03]">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <span className={`px-2.5 py-1 rounded-lg text-[11px] font-black border ${durumBilgi.renk}`}>{durumBilgi.etiket}</span>
+            {gelAl && (
+              <span className="px-2 py-0.5 rounded-lg text-[11px] font-bold text-purple-200 bg-purple-500/15 border border-purple-400/20">🏃 Gel-Al</span>
+            )}
             <span className="inline-flex items-center gap-1 text-[11px] text-white/35"><Clock className="w-3 h-3" /> {tarihBicimle(siparis.olusturulmaTarihi)}</span>
           </div>
           <p className="text-[11px] text-white/30 mt-1.5">Sipariş #{siparis.id.slice(0, 8)}</p>
+          {siparis.isleyenAdi && (
+            <p className="text-[11px] text-cyan-200/70 inline-flex items-center gap-1 mt-0.5">
+              <UserCheck className="w-3 h-3" /> Üstlenen: {siparis.isleyenAdi}
+            </p>
+          )}
         </div>
         <p className="text-lg font-extrabold text-orange-200">{paraBicimle(siparis.toplamTutar)}</p>
       </div>
@@ -179,33 +205,60 @@ const SiparisKarti = ({ siparis }: { siparis: Siparis }) => {
         <p className="text-xs text-red-300/80 mt-2">Red nedeni: {siparis.redNedeni}</p>
       )}
 
-      {/* Eylemler (durum makinesi) */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        {siparis.durum === 'BEKLEMEDE' && (
+      {/* Eylemler — yalnız üstlenen personel veya işletme sahibi */}
+      {!islemYapabilir && (
+        <div className="mt-4 inline-flex items-center gap-1.5 text-[11px] text-white/40">
+          <Lock className="w-3 h-3" /> Bu siparişi <span className="text-white/60 font-semibold">{siparis.isleyenAdi ?? 'başka bir personel'}</span> üstlendi.
+        </div>
+      )}
+      <div className={`mt-4 flex-wrap gap-2 ${islemYapabilir ? 'flex' : 'hidden'}`}>
+        {/* Kurye yalnız teslimat aşamalarını görür (yola çıkar / teslim et) */}
+        {!kurye && siparis.durum === 'BEKLEMEDE' && (
           <>
-            <Buton renk="onay" mesgul={mesgul} onClick={() => eylem(() => siparisGecis(siparis.id, 'kabul'))}>Onayla</Buton>
+            <Buton renk="onay" mesgul={mesgul} onClick={() => setKabulAcik(v => !v)}>Onayla</Buton>
             <Buton renk="red" mesgul={mesgul} onClick={() => setRedAcik(v => !v)}>Reddet</Buton>
           </>
         )}
-        {siparis.durum === 'KABUL_EDILDI' && (
+        {!kurye && siparis.durum === 'KABUL_EDILDI' && (
           <>
             <Buton renk="onay" mesgul={mesgul} onClick={() => eylem(() => siparisGecis(siparis.id, 'hazirla'))}>Hazırlamaya Başla</Buton>
             <Buton renk="red" mesgul={mesgul} onClick={() => setRedAcik(v => !v)}>Reddet</Buton>
           </>
         )}
-        {siparis.durum === 'HAZIRLANIYOR' && (
+        {!kurye && siparis.durum === 'HAZIRLANIYOR' && (
           <Buton renk="onay" mesgul={mesgul} onClick={() => eylem(() => siparisGecis(siparis.id, 'hazir'))}>Hazır</Buton>
         )}
         {siparis.durum === 'HAZIR' && (
-          <Buton renk="onay" mesgul={mesgul} onClick={() => eylem(() => siparisGecis(siparis.id, 'yolda'))}>Yola Çıkar</Buton>
+          gelAl
+            ? (!teslimAcik && <Buton renk="onay" mesgul={mesgul} onClick={() => setTeslimAcik(true)}>Teslim Et (Gel-Al)</Buton>)
+            : <Buton renk="onay" mesgul={mesgul} onClick={() => eylem(() => siparisGecis(siparis.id, 'yolda'))}>Yola Çıkar</Buton>
         )}
         {siparis.durum === 'YOLDA' && !teslimAcik && (
           <Buton renk="onay" mesgul={mesgul} onClick={() => setTeslimAcik(true)}>Teslim Et</Buton>
         )}
       </div>
 
-      {/* Teslim: tahsil edilen ödeme seçimi */}
-      {teslimAcik && siparis.durum === 'YOLDA' && (
+      {/* Kabul: tahmini hazırlık süresi seçimi (öğrenciye "~X dk" olarak bildirilir) */}
+      {kabulAcik && siparis.durum === 'BEKLEMEDE' && (
+        <div className="mt-3 rounded-xl p-3 border border-white/10 bg-white/[0.02]">
+          <p className="text-xs font-bold text-white/60 mb-2">Tahmini hazırlık süresi?</p>
+          <div className="flex flex-wrap gap-2">
+            {[10, 20, 30, 45].map(dk => (
+              <Buton key={dk} renk="onay" mesgul={mesgul}
+                onClick={() => eylem(async () => { const ok = await siparisGecis(siparis.id, 'kabul', { tahminiHazirDakika: dk }); if (ok) setKabulAcik(false); return ok; })}>
+                ~{dk} dk
+              </Buton>
+            ))}
+            <Buton renk="notr" mesgul={mesgul}
+              onClick={() => eylem(async () => { const ok = await siparisGecis(siparis.id, 'kabul'); if (ok) setKabulAcik(false); return ok; })}>
+              Süre belirtmeden onayla
+            </Buton>
+          </div>
+        </div>
+      )}
+
+      {/* Teslim: tahsil edilen ödeme seçimi (gel-al'da HAZIR'dan doğrudan teslim) */}
+      {teslimAcik && (siparis.durum === 'YOLDA' || (gelAl && siparis.durum === 'HAZIR')) && (
         <div className="mt-3 rounded-xl p-3 border border-white/10 bg-white/[0.02]">
           <p className="text-xs font-bold text-white/60 mb-2">Ödeme nasıl tahsil edildi?</p>
           <div className="flex gap-2">

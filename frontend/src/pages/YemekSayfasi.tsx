@@ -5,7 +5,8 @@ import {
   UtensilsCrossed, MapPin, ShoppingBag, Plus, Minus, Trash2,
   ArrowLeft, Store, ClipboardList, X, Wallet, CreditCard, Clock, Truck, Timer, Search, Star, Heart,
 } from 'lucide-react';
-import { useYemekDeposu, type MenuOgesi, type OdemeYontemi, type Satici } from '../depolar/yemekDeposu';
+import { useYemekDeposu, type MenuOgesi, type OdemeYontemi, type Satici, type SiparisOnizleme, type TeslimatTuru } from '../depolar/yemekDeposu';
+import { etiketleriAyir, etiketEtiketi } from '../yardimcilar/menuEtiketleri';
 import { useProfilDeposu } from '../depolar/profilDeposu';
 import { YOLLAR } from '../yardimcilar/yollar';
 
@@ -31,6 +32,8 @@ const AcikKapaliRozet = ({ satici, buyuk }: { satici: Satici; buyuk?: boolean })
 const TeslimatOzet = ({ satici }: { satici: Satici }) => {
   const parcalar: React.ReactNode[] = [];
   if (satici.tahminiTeslimatDakika) parcalar.push(<span key="s" className="inline-flex items-center gap-1"><Timer className="w-3 h-3" /> ~{satici.tahminiTeslimatDakika} dk</span>);
+  // Yoğunlukta tahmini süre dinamik artar; öğrenciye şeffaf gösterilir.
+  if ((satici.yogunlukEkDakika ?? 0) > 0) parcalar.push(<span key="y" className="inline-flex items-center gap-1 text-amber-300/90 font-bold">🔥 Yoğun (+{satici.yogunlukEkDakika} dk)</span>);
   if (satici.teslimatUcreti != null) parcalar.push(<span key="u" className="inline-flex items-center gap-1"><Truck className="w-3 h-3" /> {satici.teslimatUcreti > 0 ? paraBicimle(satici.teslimatUcreti) : 'Ücretsiz'}</span>);
   if (satici.minimumSepetTutari && satici.minimumSepetTutari > 0) parcalar.push(<span key="m">Min. {paraBicimle(satici.minimumSepetTutari)}</span>);
   if (parcalar.length === 0) return null;
@@ -43,7 +46,7 @@ export const YemekSayfasi = () => {
     isLoading, error, successMessage,
     saticilariGetir, mutfakTurleriGetir, favorileriGetir, favoriToggle, menuGetir, seciliSaticiyiTemizle,
     sepeteEkle, adetDegistir, sepettenCikar, sepetiTemizle, sepetToplami,
-    siparisVer, clearMessages,
+    siparisVer, siparisOnizle, clearMessages,
   } = useYemekDeposu();
 
   const [odemeAcik, setOdemeAcik] = useState(false);
@@ -73,16 +76,25 @@ export const YemekSayfasi = () => {
   const toplam = sepetToplami();
   const sepetAdet = useMemo(() => sepet.reduce((t, k) => t + k.adet, 0), [sepet]);
 
+  // Etiket filtresi (allerjen/içerik): seçiliyse yalnız o etiketi taşıyan ürünler
+  const [etiketFiltre, setEtiketFiltre] = useState('');
+  const menudekiEtiketler = useMemo(
+    () => Array.from(new Set(menu.flatMap(o => etiketleriAyir(o.etiketler)))),
+    [menu],
+  );
+
   // Menüyü kategoriye göre grupla
   const kategoriler = useMemo(() => {
     const harita = new Map<string, MenuOgesi[]>();
-    menu.filter(o => o.mevcut).forEach(o => {
+    menu.filter(o => o.mevcut)
+        .filter(o => !etiketFiltre || etiketleriAyir(o.etiketler).includes(etiketFiltre))
+        .forEach(o => {
       const k = o.kategori || 'Diğer';
       if (!harita.has(k)) harita.set(k, []);
       harita.get(k)!.push(o);
     });
     return Array.from(harita.entries());
-  }, [menu]);
+  }, [menu, etiketFiltre]);
 
   return (
     <div className="space-y-6">
@@ -221,6 +233,16 @@ export const YemekSayfasi = () => {
               <p className="text-sm text-white/40">Bu satıcının şu anda sunulan ürünü yok.</p>
             )}
 
+            {menudekiEtiketler.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {menudekiEtiketler.map(kod => (
+                  <button key={kod} onClick={() => setEtiketFiltre(etiketFiltre === kod ? '' : kod)}
+                    className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-colors ${etiketFiltre === kod ? 'text-orange-100 bg-orange-500/20 border-orange-400/40' : 'text-white/50 bg-white/5 border-white/10 hover:bg-white/10'}`}>
+                    {etiketEtiketi(kod)}
+                  </button>
+                ))}
+              </div>
+            )}
             {kategoriler.map(([kategori, ogeler]) => (
               <div key={kategori} className="space-y-2">
                 <h3 className="text-xs font-black uppercase tracking-wider text-white/35 px-1">{kategori}</h3>
@@ -236,6 +258,13 @@ export const YemekSayfasi = () => {
                           {oge.oneCikan && <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-200 bg-amber-500/15 border border-amber-400/20 px-1.5 py-0.5 rounded"><Star className="w-2.5 h-2.5 fill-amber-300 text-amber-300" /> Öne çıkan</span>}
                         </div>
                         {oge.aciklama && <p className="text-xs text-white/40 mt-0.5 line-clamp-2">{oge.aciklama}</p>}
+                        {etiketleriAyir(oge.etiketler).length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {etiketleriAyir(oge.etiketler).map(kod => (
+                              <span key={kod} className="text-[10px] font-bold text-white/50 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded">{etiketEtiketi(kod)}</span>
+                            ))}
+                          </div>
+                        )}
                         <p className="text-sm font-extrabold text-orange-200 mt-1">{paraBicimle(oge.fiyat)}{oge.secenekGruplari && oge.secenekGruplari.length > 0 && <span className="text-[11px] text-white/35 font-normal"> + seçenekler</span>}</p>
                       </div>
                       <button
@@ -499,14 +528,23 @@ const OdemeModali = ({
   toplam: number;
   isLoading: boolean;
   onKapat: () => void;
-  onOnayla: (talep: { teslimAdresi: string; odemeYontemi: OdemeYontemi; telefon?: string; musteriNotu?: string }) => void;
+  onOnayla: (talep: { teslimAdresi: string; odemeYontemi: OdemeYontemi; teslimatTuru: TeslimatTuru; telefon?: string; musteriNotu?: string }) => void;
 }) => {
   const [teslimAdresi, setTeslimAdresi] = useState('');
   const [telefon, setTelefon] = useState('');
   const [musteriNotu, setMusteriNotu] = useState('');
   const [odemeYontemi, setOdemeYontemi] = useState<OdemeYontemi>('NAKIT');
+  const [teslimatTuru, setTeslimatTuru] = useState<TeslimatTuru>('ADRESE_TESLIMAT');
+  const [onizleme, setOnizleme] = useState<SiparisOnizleme | null>(null);
+  const siparisOnizle = useYemekDeposu(s => s.siparisOnizle);
   const iletisimIzni = useProfilDeposu(s => !!s.profile?.iletisimPaylasimIzni);
-  const gecerli = teslimAdresi.trim().length >= 3;
+  // Gel-al'da adres gerekmez (işletmeden teslim alınır).
+  const gecerli = teslimatTuru === 'GEL_AL' || teslimAdresi.trim().length >= 3;
+
+  // Gerçek tutar dökümü (kampanya dahil) — teslimat türü değişince yenilenir.
+  useEffect(() => {
+    siparisOnizle(satici.id, teslimatTuru).then(setOnizleme);
+  }, [satici.id, teslimatTuru, siparisOnizle]);
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onKapat}>
@@ -526,15 +564,34 @@ const OdemeModali = ({
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-white/60 mb-1.5">Teslim Adresi *</label>
-            <textarea
-              value={teslimAdresi}
-              onChange={e => setTeslimAdresi(e.target.value)}
-              placeholder="Örn. Erkek Yurdu B Blok, Oda 204"
-              rows={2}
-              className="w-full rounded-xl px-3.5 py-2.5 text-sm text-white bg-white/5 border border-white/10 focus:border-orange-400/40 focus:outline-none resize-none"
-            />
+            <label className="block text-xs font-bold text-white/60 mb-1.5">Teslimat Türü</label>
+            <div className="grid grid-cols-2 gap-2">
+              {([['ADRESE_TESLIMAT', '🛵 Adrese Teslimat'], ['GEL_AL', '🏃 Gel-Al (ücretsiz)']] as const).map(([deger, etiket]) => (
+                <button key={deger} onClick={() => setTeslimatTuru(deger)}
+                  className={`px-3 py-2.5 rounded-xl text-sm font-bold border transition-colors ${teslimatTuru === deger ? 'text-orange-100 bg-orange-500/20 border-orange-400/40' : 'text-white/55 bg-white/5 border-white/10 hover:bg-white/10'}`}>
+                  {etiket}
+                </button>
+              ))}
+            </div>
+            {teslimatTuru === 'GEL_AL' && (
+              <p className="text-[11px] text-white/35 mt-1.5">
+                Siparişini hazır olduğunda işletmeden kendin alırsın{satici.konumMetni ? ` (${satici.konumMetni})` : ''}; teslimat ücreti alınmaz.
+              </p>
+            )}
           </div>
+
+          {teslimatTuru === 'ADRESE_TESLIMAT' && (
+            <div>
+              <label className="block text-xs font-bold text-white/60 mb-1.5">Teslim Adresi *</label>
+              <textarea
+                value={teslimAdresi}
+                onChange={e => setTeslimAdresi(e.target.value)}
+                placeholder="Örn. Erkek Yurdu B Blok, Oda 204"
+                rows={2}
+                className="w-full rounded-xl px-3.5 py-2.5 text-sm text-white bg-white/5 border border-white/10 focus:border-orange-400/40 focus:outline-none resize-none"
+              />
+            </div>
+          )}
 
           {iletisimIzni ? (
             <div>
@@ -584,22 +641,36 @@ const OdemeModali = ({
         <div className="border-t border-white/10 pt-4 mt-5 space-y-1.5">
           <div className="flex items-center justify-between text-sm">
             <span className="text-white/50">Ara toplam</span>
-            <span className="text-white/70">{paraBicimle(toplam)}</span>
+            <span className="text-white/70">{paraBicimle(onizleme?.araToplam ?? toplam)}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-white/50">Teslimat</span>
-            <span className="text-white/70">{(satici.teslimatUcreti ?? 0) > 0 ? paraBicimle(satici.teslimatUcreti!) : 'Ücretsiz'}</span>
+            <span className="text-white/50">Teslimat{teslimatTuru === 'GEL_AL' ? ' (Gel-Al)' : ''}</span>
+            <span className="text-white/70">
+              {teslimatTuru === 'GEL_AL' ? 'Ücretsiz'
+                : (onizleme?.teslimatUcreti ?? satici.teslimatUcreti ?? 0) > 0
+                  ? paraBicimle(onizleme?.teslimatUcreti ?? satici.teslimatUcreti!) : 'Ücretsiz'}
+            </span>
           </div>
+          {onizleme && onizleme.indirimTutari > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-emerald-300/80">{onizleme.kampanyaAd ?? 'Kampanya indirimi'}</span>
+              <span className="text-emerald-300/80">−{paraBicimle(onizleme.indirimTutari)}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between border-t border-white/8 pt-1.5">
             <span className="text-sm font-bold text-white/60">Toplam</span>
-            <span className="text-xl font-extrabold text-orange-200">{paraBicimle(toplam + (satici.teslimatUcreti ?? 0))}</span>
+            <span className="text-xl font-extrabold text-orange-200">
+              {paraBicimle(onizleme?.toplamTutar ?? (toplam + (teslimatTuru === 'GEL_AL' ? 0 : satici.teslimatUcreti ?? 0)))}
+            </span>
           </div>
-          <p className="text-[11px] text-white/30">Uygun kampanya indirimi sipariş sonrası toplamdan düşülür.</p>
+          {!onizleme && (
+            <p className="text-[11px] text-white/30">Uygun kampanya indirimi sipariş sonrası toplamdan düşülür.</p>
+          )}
         </div>
 
         <button
           disabled={!gecerli || isLoading}
-          onClick={() => onOnayla({ teslimAdresi: teslimAdresi.trim(), odemeYontemi, telefon: iletisimIzni ? (telefon.trim() || undefined) : undefined, musteriNotu: musteriNotu.trim() || undefined })}
+          onClick={() => onOnayla({ teslimAdresi: teslimAdresi.trim(), odemeYontemi, teslimatTuru, telefon: iletisimIzni ? (telefon.trim() || undefined) : undefined, musteriNotu: musteriNotu.trim() || undefined })}
           className="w-full mt-4 px-4 py-3 rounded-xl text-sm font-extrabold text-white gradient-btn shadow-lg shadow-orange-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isLoading ? 'Gönderiliyor...' : 'Siparişi Onayla'}

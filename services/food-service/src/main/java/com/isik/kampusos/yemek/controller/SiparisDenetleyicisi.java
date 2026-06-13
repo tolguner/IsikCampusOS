@@ -1,6 +1,7 @@
 package com.isik.kampusos.yemek.controller;
 
 import com.isik.kampusos.yemek.dto.SiparisOlusturmaTalebi;
+import com.isik.kampusos.yemek.dto.SiparisOnizlemeYaniti;
 import com.isik.kampusos.yemek.model.Siparis;
 import com.isik.kampusos.yemek.service.SiparisServisi;
 import lombok.RequiredArgsConstructor;
@@ -26,10 +27,18 @@ public class SiparisDenetleyicisi {
         return ResponseEntity.ok(siparisServisi.siparisVer(auth.getName(), talep));
     }
 
+    /** Sipariş öncesi gerçek tutar dökümü (kampanya indirimi dahil) — kayıt oluşturmaz. */
+    @PostMapping("/onizleme")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<SiparisOnizlemeYaniti> onizleme(@RequestBody SiparisOlusturmaTalebi talep) {
+        return ResponseEntity.ok(siparisServisi.onizleme(talep));
+    }
+
     @GetMapping("/benim")
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
-    public ResponseEntity<List<Siparis>> benimSiparislerim(Authentication auth) {
-        return ResponseEntity.ok(siparisServisi.benimSiparislerim(auth.getName()));
+    public ResponseEntity<List<Siparis>> benimSiparislerim(Authentication auth,
+                                                           @RequestParam(defaultValue = "100") int limit) {
+        return ResponseEntity.ok(siparisServisi.benimSiparislerim(auth.getName(), limit));
     }
 
     @PostMapping("/{id}/iptal")

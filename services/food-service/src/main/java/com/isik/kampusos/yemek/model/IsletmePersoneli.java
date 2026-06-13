@@ -36,6 +36,11 @@ public class IsletmePersoneli {
     @Builder.Default
     private PersonelDurumu durum = PersonelDurumu.AKTIF;
 
+    /** PERSONEL: sipariş kabul/hazırlık; KURYE: yalnız teslimat aşamaları (yolda/teslim). */
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private PersonelRolu rol = PersonelRolu.PERSONEL;
+
     private LocalDateTime olusturulmaTarihi;
 
     @PrePersist
@@ -44,4 +49,6 @@ public class IsletmePersoneli {
     }
 
     public enum PersonelDurumu { AKTIF, PASIF }
+
+    public enum PersonelRolu { PERSONEL, KURYE }
 }

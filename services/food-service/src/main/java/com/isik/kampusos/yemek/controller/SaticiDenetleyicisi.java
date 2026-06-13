@@ -153,14 +153,22 @@ public class SaticiDenetleyicisi {
 
     @GetMapping("/api/v1/satici/siparisler")
     @PreAuthorize("hasAnyAuthority('ROLE_VENDOR_ADMIN','ROLE_VENDOR_STAFF')")
-    public ResponseEntity<List<Siparis>> saticiSiparisleri(Authentication auth) {
-        return ResponseEntity.ok(siparisServisi.saticiSiparisleri(auth.getName()));
+    public ResponseEntity<List<Siparis>> saticiSiparisleri(Authentication auth,
+                                                           @RequestParam(defaultValue = "100") int limit) {
+        return ResponseEntity.ok(siparisServisi.saticiSiparisleri(auth.getName(), limit));
     }
 
     @PostMapping("/api/v1/satici/siparisler/{id}/kabul")
     @PreAuthorize("hasAnyAuthority('ROLE_VENDOR_ADMIN','ROLE_VENDOR_STAFF')")
-    public ResponseEntity<Siparis> kabul(Authentication auth, @PathVariable String id) {
-        return ResponseEntity.ok(siparisServisi.kabul(auth.getName(), id));
+    public ResponseEntity<Siparis> kabul(Authentication auth, @PathVariable String id,
+                                         @RequestBody(required = false) Map<String, Object> govde) {
+        Integer tahminiDakika = null;
+        if (govde != null && govde.get("tahminiHazirDakika") != null) {
+            try {
+                tahminiDakika = Integer.valueOf(govde.get("tahminiHazirDakika").toString());
+            } catch (NumberFormatException ignored) { /* geçersiz değer = süre belirtilmedi */ }
+        }
+        return ResponseEntity.ok(siparisServisi.kabul(auth.getName(), id, tahminiDakika));
     }
 
     @PostMapping("/api/v1/satici/siparisler/{id}/reddet")
