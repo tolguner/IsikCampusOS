@@ -30,6 +30,7 @@ public class PersonelServisi {
     private final SaticiDeposu saticiDeposu;
     private final IsletmePersonelDeposu personelDeposu;
     private final AuthKimlikIstemcisi authIstemci;
+    private final DenetimServisi denetim;
 
     public List<PersonelYaniti> personellerim(String sahipId) {
         Satici s = sahibinSaticisi(sahipId);
@@ -60,7 +61,10 @@ public class PersonelServisi {
                     .durum(IsletmePersoneli.PersonelDurumu.AKTIF)
                     .rol(rolCoz(talep.getRol()))
                     .build();
-            return PersonelYaniti.of(personelDeposu.save(p));
+            IsletmePersoneli kayit = personelDeposu.save(p);
+            denetim.kaydet("PERSONEL", kayit.getKullaniciId(), "PERSONEL_EKLENDI", sahipId, "ROLE_VENDOR_ADMIN",
+                    s.getAd() + " personel ekledi: " + kayit.getEposta() + " (" + kayit.getRol() + ")");
+            return PersonelYaniti.of(kayit);
         } catch (Exception e) {
             log.warn("Personel bağlama başarısız, auth hesabı geri alınıyor (kullaniciId={}): {}",
                     hesap.id(), e.getMessage());
@@ -92,7 +96,10 @@ public class PersonelServisi {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Durum AKTIF veya PASIF olmalıdır.");
         }
         p.setDurum(yeni);
-        return PersonelYaniti.of(personelDeposu.save(p));
+        PersonelYaniti yanit = PersonelYaniti.of(personelDeposu.save(p));
+        denetim.kaydet("PERSONEL", kullaniciId, "PERSONEL_DURUM", sahipId, "ROLE_VENDOR_ADMIN",
+                p.getEposta() + " durumu: " + yeni);
+        return yanit;
     }
 
     /**
@@ -108,6 +115,8 @@ public class PersonelServisi {
         personelDeposu.delete(p);
         // Tenant izolasyonu food tarafında doğrulandı; auth hesabını kalıcı sil.
         authIstemci.personelSil(sahipId, kullaniciId);
+        denetim.kaydet("PERSONEL", kullaniciId, "PERSONEL_CIKARILDI", sahipId, "ROLE_VENDOR_ADMIN",
+                s.getAd() + " personel çıkardı: " + p.getEposta());
     }
 
     /** Panel için: çağıran kullanıcının işletmedeki rolü (SAHIP / PERSONEL / KURYE). */
