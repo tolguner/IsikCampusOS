@@ -96,8 +96,10 @@ public class YolculukIlani {
     private int uygunlukSkoru = 0;
 
     @Builder.Default
+    // nullable = false: Hibernate, FK'yı çocuk INSERT'üne dahil eder (ayrı bir UPDATE
+    // yerine) — böylece NOT NULL "ilan_id" kısıtı tek-yönlü @OneToMany'de ihlal edilmez.
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "ilan_id")
+    @JoinColumn(name = "ilan_id", nullable = false)
     @OrderBy("sira ASC")
     private List<RotaDuragi> duraklar = new ArrayList<>();
 

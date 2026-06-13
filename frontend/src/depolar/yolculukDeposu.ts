@@ -109,11 +109,13 @@ interface YolculukState {
   dogrulama: SurucuDogrulama | null;
   adminDogrulamalar: SurucuDogrulama[];
   sikayetler: Sikayet[];
+  populerNoktalar: Nokta[];
   isLoading: boolean;
   hata: string | null;
   basariMesaji: string | null;
 
   temizleMesajlar: () => void;
+  populerNoktalariGetir: () => Promise<void>;
   ilanAra: (params: Record<string, string | number | boolean | undefined>) => Promise<void>;
   ilanOlustur: (form: YolculukIlaniFormu) => Promise<boolean>;
   benimVerilerimiGetir: () => Promise<void>;
@@ -141,11 +143,19 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
   dogrulama: null,
   adminDogrulamalar: [],
   sikayetler: [],
+  populerNoktalar: [],
   isLoading: false,
   hata: null,
   basariMesaji: null,
 
   temizleMesajlar: () => set({ hata: null, basariMesaji: null }),
+
+  populerNoktalariGetir: async () => {
+    try {
+      const res = await api.get<{ ad: string; enlem: number; boylam: number }[]>('/yolculuklar/populer-noktalar');
+      set({ populerNoktalar: res.data.map(p => ({ ad: p.ad, enlem: p.enlem, boylam: p.boylam })) });
+    } catch { /* sessiz */ }
+  },
 
   ilanAra: async (params) => {
     set({ isLoading: true, hata: null });

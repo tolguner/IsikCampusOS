@@ -134,6 +134,37 @@ public class RotaIstemcisi {
                 .build();
     }
 
+    /**
+     * Google "encoded polyline" (precision 5) çözer → [enlem,boylam] nokta listesi.
+     * OSRM {@code geometries=polyline} bu formatı döndürür. Koridor-yakınlık eşleşmesinde kullanılır.
+     */
+    public static List<double[]> polylineCoz(String encoded) {
+        List<double[]> noktalar = new ArrayList<>();
+        if (encoded == null || encoded.isEmpty()) return noktalar;
+        int index = 0, len = encoded.length();
+        int lat = 0, lng = 0;
+        while (index < len) {
+            int sonuc = 1, shift = 0, b;
+            do {
+                b = encoded.charAt(index++) - 63 - 1;
+                sonuc += b << shift;
+                shift += 5;
+            } while (b >= 0x1f && index < len);
+            lat += (sonuc & 1) != 0 ? ~(sonuc >> 1) : (sonuc >> 1);
+
+            sonuc = 1; shift = 0;
+            do {
+                b = encoded.charAt(index++) - 63 - 1;
+                sonuc += b << shift;
+                shift += 5;
+            } while (b >= 0x1f && index < len);
+            lng += (sonuc & 1) != 0 ? ~(sonuc >> 1) : (sonuc >> 1);
+
+            noktalar.add(new double[]{lat * 1e-5, lng * 1e-5});
+        }
+        return noktalar;
+    }
+
     public static double haversineKm(double[] a, double[] b) {
         double r = 6371.0;
         double dLat = Math.toRadians(b[0] - a[0]);
