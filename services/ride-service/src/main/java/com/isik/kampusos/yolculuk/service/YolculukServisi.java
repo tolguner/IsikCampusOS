@@ -138,15 +138,20 @@ public class YolculukServisi {
                 .tahminiDakika(0)
                 .build());
 
-        // Gerçek yol-ağı rotasını (OSRM) hesapla: polyline + süre + mesafe + durak kümülatif dakikaları.
+        // Durak kümülatif dakikaları için OSRM'in en iyi rotasını hesapla.
         List<double[]> noktalar = ilan.getDuraklar().stream()
                 .sorted(Comparator.comparingInt(RotaDuragi::getSira))
                 .map(d -> new double[]{d.getEnlem(), d.getBoylam()})
                 .toList();
         RotaIstemcisi.RotaSonucu rota = rotaIstemcisi.rotaHesapla(noktalar);
-        ilan.setRotaPolyline(rota.getPolyline());
-        ilan.setTahminiToplamDakika(rota.getToplamDakika());
-        ilan.setTahminiMesafeKm(rota.getMesafeKm());
+        // Sürücü haritadan bir rota seçtiyse (alternatiflerden biri) ANA rota odur; aksi halde
+        // OSRM'in en iyi rotası kullanılır. Koridor-eşleşmesi de saklanan polyline'a göre işler.
+        boolean secilenVar = talep.getRotaPolyline() != null && !talep.getRotaPolyline().isBlank()
+                && talep.getTahminiToplamDakika() != null;
+        ilan.setRotaPolyline(secilenVar ? talep.getRotaPolyline() : rota.getPolyline());
+        ilan.setTahminiToplamDakika(secilenVar ? talep.getTahminiToplamDakika() : rota.getToplamDakika());
+        ilan.setTahminiMesafeKm(secilenVar && talep.getTahminiMesafeKm() != null
+                ? talep.getTahminiMesafeKm() : rota.getMesafeKm());
         List<RotaDuragi> sirali = ilan.getDuraklar().stream()
                 .sorted(Comparator.comparingInt(RotaDuragi::getSira)).toList();
         for (int i = 0; i < sirali.size(); i++) {
@@ -159,14 +164,17 @@ public class YolculukServisi {
         return ilanDeposu.save(ilan);
     }
 
-    /** Form haritası için: sıralı noktalardan gerçek yol-ağı rotası (polyline + süre + mesafe). */
-    public RotaIstemcisi.RotaSonucu rotaOnizle(RotaOnizlemeTalebi talep) {
+    /**
+     * Form haritası için: sıralı noktalardan gerçek yol-ağı rotaları. İlk sıradaki en iyi (ana)
+     * rota; varsa alternatifler sürücüye öneri olarak sunulur (en çok 3).
+     */
+    public List<RotaIstemcisi.RotaSonucu> rotaOnizle(RotaOnizlemeTalebi talep) {
         if (talep.getNoktalar() == null || talep.getNoktalar().size() < 2) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "En az başlangıç ve varış noktası gerekli.");
         }
         List<double[]> noktalar = talep.getNoktalar().stream()
                 .map(n -> new double[]{n.getEnlem(), n.getBoylam()}).toList();
-        return rotaIstemcisi.rotaHesapla(noktalar);
+        return rotaIstemcisi.rotaAlternatifleri(noktalar, 3);
     }
 
     public List<YolculukIlani> benimIlanlarim(String surucuId) {

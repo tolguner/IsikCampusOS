@@ -181,7 +181,7 @@ public class YolculukDenetleyicisi {
 
     @PostMapping("/rota-onizleme")
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
-    public ResponseEntity<com.isik.kampusos.yolculuk.service.RotaIstemcisi.RotaSonucu> rotaOnizle(
+    public ResponseEntity<List<com.isik.kampusos.yolculuk.service.RotaIstemcisi.RotaSonucu>> rotaOnizle(
             @RequestBody RotaOnizlemeTalebi talep) {
         return ResponseEntity.ok(yolculukServisi.rotaOnizle(talep));
     }
