@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Store, X, ScrollText, ClipboardCheck } from 'lucide-react';
+import { Store, ScrollText, ClipboardCheck } from 'lucide-react';
 import { SaticilarSekmesi } from '../components/yonetim/SaticilarSekmesi';
 import { DegisiklikTalepleriSekmesi } from '../components/yonetim/DegisiklikTalepleriSekmesi';
 import { useAdminSaticiDeposu } from '../depolar/adminSaticiDeposu';
 import { ModulSekmeleri } from '../components/yonetim/ModulSekmeleri';
+import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
 
 type Sekme = 'isletmeler' | 'talepler' | 'loglar';
 
@@ -54,12 +55,7 @@ export const DestekHizmetleriPaneli = () => {
         ]}
       />
 
-      {(hata || basariMesaji) && (
-        <div className={`rounded-2xl px-4 py-3 text-sm font-semibold flex items-center justify-between ${hata ? 'border border-red-400/25 bg-red-500/12 text-red-100' : 'border border-emerald-300/25 bg-emerald-500/12 text-emerald-100'}`}>
-          <span>{hata || basariMesaji}</span>
-          <button onClick={temizleMesajlar} className="text-white/50 hover:text-white"><X className="h-4 w-4" /></button>
-        </div>
-      )}
+      <MesajBildirimi hata={hata} basari={basariMesaji} onKapat={temizleMesajlar} />
 
       {sekme === 'isletmeler' && <SaticilarSekmesi />}
 

@@ -6,6 +6,7 @@ import {
   ArrowLeft, Store, ClipboardList, X, Wallet, CreditCard, Clock, Truck, Timer, Search, Star, Heart,
 } from 'lucide-react';
 import { useYemekDeposu, type MenuOgesi, type OdemeYontemi, type Satici, type SiparisOnizleme, type TeslimatTuru } from '../depolar/yemekDeposu';
+import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
 import { etiketleriAyir, etiketEtiketi } from '../yardimcilar/menuEtiketleri';
 import { useProfilDeposu } from '../depolar/profilDeposu';
 import { YOLLAR } from '../yardimcilar/yollar';
@@ -117,11 +118,7 @@ export const YemekSayfasi = () => {
         </Link>
       </div>
 
-      {(error || successMessage) && (
-        <div className={`rounded-xl px-4 py-3 text-sm font-semibold border ${error ? 'text-red-200 bg-red-500/10 border-red-400/20' : 'text-emerald-200 bg-emerald-500/10 border-emerald-400/20'}`}>
-          {error || successMessage}
-        </div>
-      )}
+      <MesajBildirimi hata={error} basari={successMessage} onKapat={clearMessages} />
 
       {!seciliSatici ? (
         /* ---------- SATICI LİSTESİ ---------- */

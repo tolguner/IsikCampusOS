@@ -8,14 +8,13 @@ import {
   Clock,
   Users,
   FileText,
-  AlertCircle,
-  CheckCircle,
   HelpCircle,
   ChevronLeft,
   ChevronRight,
   Lock,
   CalendarDays,
 } from 'lucide-react';
+import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
 
 const panelStyle = {
   background: 'rgba(255,255,255,0.045)',
@@ -304,20 +303,7 @@ export const TesisRezervasyonSayfasi = () => {
         </p>
       </div>
 
-      {(error || successMessage) && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-3 ${
-            error
-              ? 'border border-red-500/20 bg-red-500/10 text-red-200'
-              : 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-200'
-          }`}
-        >
-          {error ? <AlertCircle className="h-5 w-5 shrink-0 text-red-400" /> : <CheckCircle className="h-5 w-5 shrink-0 text-emerald-400" />}
-          <span>{error || successMessage}</span>
-        </motion.div>
-      )}
+      <MesajBildirimi hata={error} basari={successMessage} onKapat={clearMessages} />
 
       {isFacilitiesLoading ? (
         <div className="text-white/40 text-sm font-semibold py-12 text-center">Tesisler yükleniyor...</div>

@@ -9,6 +9,7 @@ import { CiroSekmesi } from '../components/isletme-paneli/CiroSekmesi';
 import { AyarlarSekmesi } from '../components/isletme-paneli/AyarlarSekmesi';
 import { KampanyalarSekmesi } from '../components/isletme-paneli/KampanyalarSekmesi';
 import { PersonelSekmesi } from '../components/isletme-paneli/PersonelSekmesi';
+import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
 
 type Sekme = 'siparisler' | 'menu' | 'kampanyalar' | 'ciro' | 'ayarlar' | 'personel';
 
@@ -65,11 +66,7 @@ export const IsletmePaneli = () => {
         )}
       </div>
 
-      {(error || successMessage) && (
-        <div className={`rounded-xl px-4 py-3 text-sm font-semibold border ${error ? 'text-red-200 bg-red-500/10 border-red-400/20' : 'text-emerald-200 bg-emerald-500/10 border-emerald-400/20'}`}>
-          {error || successMessage}
-        </div>
-      )}
+      <MesajBildirimi hata={error} basari={successMessage} onKapat={clearMessages} />
 
       {/* Sekmeler */}
       <div className="flex gap-2 border-b border-white/8 pb-px">

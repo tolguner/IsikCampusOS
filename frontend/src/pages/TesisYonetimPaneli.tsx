@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshCw, Settings2, ClipboardList, CalendarDays } from 'lucide-react';
 import { ModulSekmeleri } from '../components/yonetim/ModulSekmeleri';
+import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
 import { useTesisDeposu, type TamTesisFormu } from '../depolar/tesisDeposu';
 import { useRezervasyonDeposu, type Rezervasyon } from '../depolar/rezervasyonDeposu';
 
@@ -28,6 +29,7 @@ export const TesisYonetimPaneli = () => {
     tesisTamOlustur,
     tesisTamGuncelle,
     deleteFacility,
+    clearMessages: clearFacilityMessages,
   } = useTesisDeposu();
 
   const {
@@ -40,6 +42,7 @@ export const TesisYonetimPaneli = () => {
     isLoading: isBookingLoading,
     error: bookingError,
     successMessage: bookingSuccess,
+    clearMessages: clearBookingMessages,
   } = useRezervasyonDeposu();
 
   const [activeView, setActiveView] = useState<'config' | 'bookings' | 'calendar'>('config');
@@ -504,11 +507,7 @@ export const TesisYonetimPaneli = () => {
         ]}
       />
 
-      {(error || successMessage) && (
-        <div className={`rounded-2xl px-4 py-3 text-sm font-semibold ${error ? 'border border-red-400/25 bg-red-500/12 text-red-100' : 'border border-emerald-300/25 bg-emerald-500/12 text-emerald-100'}`}>
-          {error || successMessage}
-        </div>
-      )}
+      <MesajBildirimi hata={error} basari={successMessage} onKapat={() => { clearFacilityMessages(); clearBookingMessages(); }} />
 
       {activeView === 'config' ? (
         <YapilandirmaGorunumu

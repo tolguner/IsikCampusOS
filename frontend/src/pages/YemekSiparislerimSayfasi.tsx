@@ -9,6 +9,7 @@ import {
   type Siparis, type SiparisDurumu,
 } from '../depolar/yemekDeposu';
 import { YOLLAR } from '../yardimcilar/yollar';
+import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
 
 const paraBicimle = (tutar: number) =>
   new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(tutar);
@@ -44,11 +45,7 @@ export const YemekSiparislerimSayfasi = () => {
         </Link>
       </div>
 
-      {(error || successMessage) && (
-        <div className={`rounded-xl px-4 py-3 text-sm font-semibold border ${error ? 'text-red-200 bg-red-500/10 border-red-400/20' : 'text-emerald-200 bg-emerald-500/10 border-emerald-400/20'}`}>
-          {error || successMessage}
-        </div>
-      )}
+      <MesajBildirimi hata={error} basari={successMessage} onKapat={clearMessages} />
 
       {isLoading && siparisler.length === 0 && <p className="text-sm text-white/40">Siparişler yükleniyor...</p>}
       {!isLoading && siparisler.length === 0 && (

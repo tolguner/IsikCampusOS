@@ -7,6 +7,7 @@ import {
 } from '../depolar/yonetimDeposu';
 import { DuyuruButonu } from '../components/DuyuruButonu';
 import { ModulSekmeleri } from '../components/yonetim/ModulSekmeleri';
+import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
 import { ROL_ETIKETLERI, rolEtiketle } from '../yardimcilar/yetkiler';
 
 type Sekme = 'kullanicilar' | 'loglar';
@@ -103,12 +104,7 @@ export const YonetimPaneli = () => {
         ]}
       />
 
-      {(hata || basariMesaji) && (
-        <div className={`rounded-2xl px-4 py-3 text-sm font-semibold flex items-center justify-between ${hata ? 'border border-red-400/25 bg-red-500/12 text-red-100' : 'border border-emerald-300/25 bg-emerald-500/12 text-emerald-100'}`}>
-          <span>{hata || basariMesaji}</span>
-          <button onClick={temizleMesajlar} className="text-white/50 hover:text-white"><X className="h-4 w-4" /></button>
-        </div>
-      )}
+      <MesajBildirimi hata={hata} basari={basariMesaji} onKapat={temizleMesajlar} />
 
 
       {sekme === 'kullanicilar' && (

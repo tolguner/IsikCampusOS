@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, X, UserRound, Mail, PauseCircle, PlayCircle } from 'lucide-react';
 import { useIsletmePersonelDeposu, type PersonelFormu } from '../../depolar/isletmePersonelDeposu';
+import { MesajBildirimi } from '../ortak/MesajBildirimi';
 
 const girisSinifi = 'w-full rounded-xl px-3.5 py-2.5 text-sm text-white bg-white/5 border border-white/10 focus:border-orange-400/40 focus:outline-none';
 
@@ -38,11 +39,7 @@ export const PersonelSekmesi = () => {
         </button>
       </div>
 
-      {(error || successMessage) && (
-        <div className={`rounded-xl px-4 py-3 text-sm font-semibold border ${error ? 'text-red-200 bg-red-500/10 border-red-400/20' : 'text-emerald-200 bg-emerald-500/10 border-emerald-400/20'}`}>
-          {error || successMessage}
-        </div>
-      )}
+      <MesajBildirimi hata={error} basari={successMessage} onKapat={clearMessages} />
 
       {formAcik && (
         <motion.form initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} onSubmit={kaydet}

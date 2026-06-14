@@ -11,6 +11,7 @@ import { useOgrenciDeposu, type Student } from '../depolar/ogrenciDeposu';
 import { useAkademikKadroDeposu, type AcademicAdvisor } from '../depolar/akademikKadroDeposu';
 import { DuyuruButonu } from '../components/DuyuruButonu';
 import { ModulSekmeleri } from '../components/yonetim/ModulSekmeleri';
+import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
 
 import {
   type SksModule,
@@ -688,11 +689,15 @@ export const SksPaneli = () => {
         </div>
       </div>
 
-      {(clubError || eventError || notificationError || advisorError || successMessage || eventSuccess) && (
-        <div className={`rounded-2xl px-5 py-4 text-sm font-semibold ${successMessage || eventSuccess ? 'text-emerald-200 bg-emerald-500/10 border border-emerald-400/20' : 'text-red-200 bg-red-500/10 border border-red-400/20'}`}>
-          {successMessage || eventSuccess || clubError || eventError || notificationError || advisorError}
-        </div>
-      )}
+      <MesajBildirimi
+        hata={clubError || eventError || notificationError || advisorError}
+        basari={successMessage || eventSuccess}
+        onKapat={() => {
+          useKulupDeposu.getState().clearMessages();
+          useEtkinlikDeposu.getState().clearMessages();
+          useAkademikKadroDeposu.getState().clearError();
+        }}
+      />
 
 
       <ModulSekmeleri

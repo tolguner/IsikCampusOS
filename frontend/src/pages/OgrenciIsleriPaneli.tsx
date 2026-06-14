@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useOgrenciDeposu } from '../depolar/ogrenciDeposu';
 import { DuyuruButonu } from '../components/DuyuruButonu';
 import { useProfilDeposu, type ProfilDegisiklikIstegi } from '../depolar/profilDeposu';
-import { Search, Plus, MoreVertical, X, CheckCircle2, AlertCircle, Loader2, KeyRound, UserX, UserCheck, GraduationCap, Edit2, ChevronLeft, ChevronRight, ClipboardCheck, Trash2 } from 'lucide-react';
+import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
+import { Search, Plus, MoreVertical, X, AlertCircle, Loader2, KeyRound, UserX, UserCheck, GraduationCap, Edit2, ChevronLeft, ChevronRight, ClipboardCheck, Trash2 } from 'lucide-react';
 
 export const OgrenciIsleriPaneli = () => {
   const facultiesAndDepartments: Record<string, string[]> = {
@@ -255,20 +256,11 @@ export const OgrenciIsleriPaneli = () => {
       </div>
 
       {/* Messages */}
-      <AnimatePresence>
-        {(error || profileRequestError) && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="p-4 rounded-2xl flex items-center justify-between" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
-            <div className="flex items-center gap-3"><AlertCircle className="w-5 h-5 text-red-400" /><p className="text-sm text-red-400 font-medium">{error || profileRequestError}</p></div>
-            <button onClick={() => { clearMessages(); clearProfileRequestMessages(); }} className="text-red-400 hover:text-red-300"><X className="w-4 h-4"/></button>
-          </motion.div>
-        )}
-        {(successMessage || profileRequestSuccess) && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="p-4 rounded-2xl flex items-center justify-between" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-            <div className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-400" /><p className="text-sm text-emerald-400 font-medium">{successMessage || profileRequestSuccess}</p></div>
-            <button onClick={() => { clearMessages(); clearProfileRequestMessages(); }} className="text-emerald-400 hover:text-emerald-300"><X className="w-4 h-4"/></button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <MesajBildirimi
+        hata={error || profileRequestError}
+        basari={successMessage || profileRequestSuccess}
+        onKapat={() => { clearMessages(); clearProfileRequestMessages(); }}
+      />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 p-4 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>

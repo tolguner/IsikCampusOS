@@ -18,6 +18,7 @@ import {
   type UcretTipi,
   type YolculukIlani,
 } from '../depolar/yolculukDeposu';
+import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
 import { KonumSecici } from '../components/kulup-paneli/KonumSecici';
 import { polylineCoz } from '../lib/rota';
 
@@ -163,12 +164,7 @@ export const CampusRideSayfasi = () => {
         </div>
       </div>
 
-      {(hata || basariMesaji) && (
-        <div className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-sm font-semibold ${hata ? 'border-red-400/25 bg-red-500/10 text-red-100' : 'border-emerald-300/25 bg-emerald-500/10 text-emerald-100'}`}>
-          <span>{hata || basariMesaji}</span>
-          <button onClick={temizleMesajlar} className="text-white/50 hover:text-white"><X className="h-4 w-4" /></button>
-        </div>
-      )}
+      <MesajBildirimi hata={hata} basari={basariMesaji} onKapat={temizleMesajlar} />
 
       {aktifSekme === 'ara' && (
         <section className="space-y-5">

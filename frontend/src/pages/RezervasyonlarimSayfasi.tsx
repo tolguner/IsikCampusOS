@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRezervasyonDeposu, type Rezervasyon } from '../depolar/rezervasyonDeposu';
+import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CalendarClock,
@@ -66,17 +67,7 @@ export const RezervasyonlarimSayfasi = () => {
         </div>
       </div>
 
-      {(error || successMessage) && (
-        <div
-          className={`rounded-2xl px-4 py-3 text-sm font-semibold ${
-            error
-              ? 'border border-red-500/20 bg-red-500/10 text-red-200'
-              : 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-200'
-          }`}
-        >
-          {error || successMessage}
-        </div>
-      )}
+      <MesajBildirimi hata={error} basari={successMessage} onKapat={clearMessages} />
 
       {/* Tabs Layout */}
       <div className="flex gap-2 border-b border-white/5 pb-px">
