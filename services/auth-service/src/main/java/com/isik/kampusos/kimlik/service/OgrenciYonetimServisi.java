@@ -64,7 +64,8 @@ public class OgrenciYonetimServisi {
                 .fakulte(request.getFakulte())
                 .bolum(request.getBolum())
                 .bolumKodu(request.getBolumKodu() != null ? request.getBolumKodu().toLowerCase(Locale.ROOT) : null)
-                .kayitYili(request.getKayitYili())
+                // Kayıt yılı öğrenci numarasının ilk 2 hanesinden otomatik türetilir (örn. 23yobi1053 → 2023).
+                .kayitYili(kayitYiliCikar(request.getOgrenciNumarasi(), request.getKayitYili()))
                 .tcKimlikMaskeli(tcKimlikMaskele(request.getTcKimlikNo()))
                 .durum(KullaniciDurumu.AKTIF)
                 .epostaDogrulandi(false)
@@ -276,6 +277,20 @@ public class OgrenciYonetimServisi {
                     .replace("\u00E7", "c").replace("\u00C7", "C"); // ç, Ç
     }
  
+    /**
+     * Kayıt yılını öğrenci numarasının ilk 2 hanesinden türetir (örn. "23yobi1053" → 2023).
+     * İlk 2 karakter rakam değilse yedek (form) değerine düşer.
+     */
+    private Integer kayitYiliCikar(String ogrenciNumarasi, Integer yedek) {
+        if (ogrenciNumarasi != null) {
+            String t = ogrenciNumarasi.trim();
+            if (t.length() >= 2 && Character.isDigit(t.charAt(0)) && Character.isDigit(t.charAt(1))) {
+                return 2000 + Integer.parseInt(t.substring(0, 2));
+            }
+        }
+        return yedek;
+    }
+
     private String epostaIcinOgrenciNumarasiNormalizeEt(String ogrenciNumarasi) {
         String normalized = turkceKarakterleriTemizle(ogrenciNumarasi)
                 .trim()
