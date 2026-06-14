@@ -345,7 +345,7 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
 
   sikayetEt: async (talepId, neden, aciklama) => {
     await api.post(`/yolculuklar/talepler/${talepId}/sikayet`, { neden, aciklama });
-    set({ basariMesaji: 'Şikayet RideKampüs adminine iletildi.' });
+    set({ basariMesaji: 'Şikayet ilgili müdürlüğe iletildi.' });
   },
 
   adminVerileriniGetir: async () => {
@@ -358,7 +358,7 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
       ]);
       set({ adminDogrulamalar: dogrulamalar.data, bekleyenAraclar: araclar.data, sikayetler: sikayetler.data, isLoading: false });
     } catch (err: any) {
-      set({ hata: hataMesaji(err, 'RideKampüs yönetim verileri yüklenemedi.'), isLoading: false });
+      set({ hata: hataMesaji(err, 'Yönetim verileri yüklenemedi.'), isLoading: false });
     }
   },
 

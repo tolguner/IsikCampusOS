@@ -19,7 +19,7 @@ export const RideYonetimPaneli = () => {
           <ShieldCheck className="h-6 w-6" />
         </div>
         <div>
-          <h1 className="text-3xl font-black">RideKampüs Yönetimi</h1>
+          <h1 className="text-3xl font-black">Yapı, Destek ve Ulaşım Hizmetleri Müdürlüğü</h1>
           <p className="mt-1 max-w-3xl text-sm leading-relaxed text-white/45">
             Ehliyet doğrulamalarını, araç onaylarını ve yolculuk şikayetlerini inceleyin.
           </p>
