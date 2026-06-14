@@ -33,6 +33,7 @@ public class YolculukServisi {
     private final YolculukSikayetiDeposu sikayetDeposu;
     private final RotaIstemcisi rotaIstemcisi;
     private final PopulerNoktaServisi populerNoktaServisi;
+    private final AracDeposu aracDeposu;
 
     public List<YolculukIlani> ilanAra(YolculukAramaTalebi arama) {
         LocalDate tarih = arama.getTarih() != null ? arama.getTarih() : LocalDate.now();
@@ -61,14 +62,23 @@ public class YolculukServisi {
     @Transactional
     public YolculukIlani ilanOlustur(String surucuId, YolculukIlaniTalebi talep) {
         if (!dogrulamaDeposu.existsByKullaniciIdAndDurum(surucuId, SurucuDogrulama.DogrulamaDurumu.ONAYLANDI)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "İlan açmak için sürücü/araç doğrulaması onaylanmalıdır.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "İlan açmak için ehliyet doğrulamanız onaylanmalıdır.");
         }
+        // İlan yalnızca sürücüye ait ve ONAYLANDI bir araçla açılabilir.
+        Arac arac = (talep.getAracId() == null ? java.util.Optional.<Arac>empty()
+                : aracDeposu.findByIdAndKullaniciId(talep.getAracId(), surucuId))
+                .filter(a -> a.getDurum() == Arac.AracDurumu.ONAYLANDI)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "İlan açmak için onaylanmış bir araç seçmelisiniz. Araçlarınızı Ayarlar'dan ekleyip onaylatın."));
         zorunluNokta(talep.getBaslangic(), "Başlangıç noktası");
         zorunluNokta(talep.getVaris(), "Varış noktası");
         if (talep.getKalkisZamani() == null || talep.getKalkisZamani().isBefore(LocalDateTime.now().minusMinutes(5))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kalkış zamanı gelecekte olmalıdır.");
         }
-        if (talep.getKoltukSayisi() < 1 || talep.getKoltukSayisi() > 8) {
+        // Koltuk sayısı verilmemişse aracın kapasitesinden varsayılır.
+        int koltukSayisi = talep.getKoltukSayisi();
+        if (koltukSayisi < 1 && arac.getKoltukKapasitesi() != null) koltukSayisi = arac.getKoltukKapasitesi();
+        if (koltukSayisi < 1 || koltukSayisi > 8) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Koltuk sayısı 1-8 arasında olmalıdır.");
         }
 
@@ -82,6 +92,7 @@ public class YolculukServisi {
 
         YolculukIlani ilan = YolculukIlani.builder()
                 .surucuKullaniciId(surucuId)
+                .aracId(arac.getId())
                 .baslangicBasligi(talep.getBaslangic().getAd())
                 .baslangicEnlem(talep.getBaslangic().getEnlem())
                 .baslangicBoylam(talep.getBaslangic().getBoylam())
@@ -89,7 +100,7 @@ public class YolculukServisi {
                 .varisEnlem(talep.getVaris().getEnlem())
                 .varisBoylam(talep.getVaris().getBoylam())
                 .kalkisZamani(talep.getKalkisZamani())
-                .koltukSayisi(talep.getKoltukSayisi())
+                .koltukSayisi(koltukSayisi)
                 .ucretTipi(ucretTipi)
                 .odemeYontemi(odeme)
                 .kisiBasiUcret(ucretTipi == YolculukIlani.UcretTipi.UCRETSIZ ? BigDecimal.ZERO : talep.getKisiBasiUcret())
@@ -146,6 +157,16 @@ public class YolculukServisi {
         populerNoktaServisi.kullanimArttir(talep.getBaslangic());
         populerNoktaServisi.kullanimArttir(talep.getVaris());
         return ilanDeposu.save(ilan);
+    }
+
+    /** Form haritası için: sıralı noktalardan gerçek yol-ağı rotası (polyline + süre + mesafe). */
+    public RotaIstemcisi.RotaSonucu rotaOnizle(RotaOnizlemeTalebi talep) {
+        if (talep.getNoktalar() == null || talep.getNoktalar().size() < 2) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "En az başlangıç ve varış noktası gerekli.");
+        }
+        List<double[]> noktalar = talep.getNoktalar().stream()
+                .map(n -> new double[]{n.getEnlem(), n.getBoylam()}).toList();
+        return rotaIstemcisi.rotaHesapla(noktalar);
     }
 
     public List<YolculukIlani> benimIlanlarim(String surucuId) {

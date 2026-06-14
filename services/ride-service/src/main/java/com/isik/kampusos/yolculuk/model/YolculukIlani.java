@@ -27,6 +27,9 @@ public class YolculukIlani {
     @Column(nullable = false)
     private String surucuKullaniciId;
 
+    /** İlanın bağlı olduğu onaylı araç (araclar.id). Eski ilanlarda null olabilir. */
+    private String aracId;
+
     @Column(nullable = false)
     private String baslangicBasligi;
 

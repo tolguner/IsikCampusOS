@@ -23,6 +23,7 @@ public class YolculukDenetleyicisi {
     private final YolculukServisi yolculukServisi;
     private final SurucuDogrulamaServisi dogrulamaServisi;
     private final com.isik.kampusos.yolculuk.service.PopulerNoktaServisi populerNoktaServisi;
+    private final com.isik.kampusos.yolculuk.service.AracServisi aracServisi;
 
     /** Haritada hızlı seçim için popüler noktalar (en çok tercih edilen sıralı). */
     @GetMapping("/populer-noktalar")
@@ -146,5 +147,42 @@ public class YolculukDenetleyicisi {
     public ResponseEntity<SurucuDogrulama> dogrulamaBasvur(Authentication auth,
                                                            @RequestBody SurucuDogrulamaTalebi talep) {
         return ResponseEntity.ok(dogrulamaServisi.basvur(auth.getName(), talep));
+    }
+
+    // --- Araç garajı (çoklu araç, her biri ayrı onaylı) ---
+
+    @GetMapping("/araclar")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<List<Arac>> araclarim(Authentication auth) {
+        return ResponseEntity.ok(aracServisi.benimAraclarim(auth.getName()));
+    }
+
+    @PostMapping("/araclar")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<Arac> aracEkle(Authentication auth, @RequestBody AracTalebi talep) {
+        return ResponseEntity.ok(aracServisi.ekle(auth.getName(), talep));
+    }
+
+    @PutMapping("/araclar/{id}")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<Arac> aracGuncelle(Authentication auth, @PathVariable String id,
+                                             @RequestBody AracTalebi talep) {
+        return ResponseEntity.ok(aracServisi.guncelle(auth.getName(), id, talep));
+    }
+
+    @DeleteMapping("/araclar/{id}")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<java.util.Map<String, String>> aracSil(Authentication auth, @PathVariable String id) {
+        aracServisi.sil(auth.getName(), id);
+        return ResponseEntity.ok(java.util.Map.of("mesaj", "Araç silindi."));
+    }
+
+    // --- Form haritası için gerçek yol-ağı rota önizlemesi ---
+
+    @PostMapping("/rota-onizleme")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<com.isik.kampusos.yolculuk.service.RotaIstemcisi.RotaSonucu> rotaOnizle(
+            @RequestBody RotaOnizlemeTalebi talep) {
+        return ResponseEntity.ok(yolculukServisi.rotaOnizle(talep));
     }
 }
