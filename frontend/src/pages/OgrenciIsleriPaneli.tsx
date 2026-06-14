@@ -483,7 +483,6 @@ export const OgrenciIsleriPaneli = () => {
                         ))}
                       </select>
                     </div>
-                    <div className="space-y-1.5 sm:col-span-2"><label className="text-xs font-semibold text-white/60 ml-1">Kayıt Yılı <span className="text-white/35">(öğrenci numarasından otomatik)</span></label><input disabled type="text" value={/^\d{2}/.test(formData.studentNumber) ? String(2000 + parseInt(formData.studentNumber.slice(0, 2), 10)) : 'Öğrenci numarasının ilk 2 hanesinden belirlenir'} className="w-full px-4 py-3 rounded-xl text-sm text-white/50 bg-white/5 outline-none cursor-not-allowed" style={inputStyle} /></div>
 
                     <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Telefon Numarası</label><input type="text" value={formData.phoneNumber} onChange={e=>setFormData({...formData, phoneNumber: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: 5XXXXXXXXX" /></div>
                     <div className="space-y-1.5">
