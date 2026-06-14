@@ -263,7 +263,6 @@ const KullaniciOlusturModal = ({ onKapat, onKaydet }: { onKapat: () => void; onK
         <select className={inputClass} value={form.roller} onChange={e => upd('roller', e.target.value)}>
           {OLUSTURULABILIR_ROLLER.map(r => <option key={r} value={r}>{ROL_ETIKETLERI[r]}</option>)}
         </select>
-        <input className={inputClass} placeholder="Birim (örn. Spor Müdürlüğü)" value={form.birim} onChange={e => upd('birim', e.target.value)} />
         <input className={inputClass} inputMode="numeric" maxLength={11} placeholder="TC Kimlik No (11 hane) — zorunlu" value={form.tcKimlikNo} onChange={e => upd('tcKimlikNo', e.target.value.replace(/\D/g, '').slice(0, 11))} />
         {!tcGecerli && form.tcKimlikNo.length > 0 && <p className="-mt-1 text-xs text-red-300">TC Kimlik No 11 haneli olmalıdır.</p>}
         <div className="grid grid-cols-2 gap-3">
@@ -297,7 +296,6 @@ const KullaniciDuzenleModal = ({ kullanici, onKapat, onKaydet }: { kullanici: Yo
           <input className={inputClass} placeholder="Soyad" value={form.soyad} onChange={e => upd('soyad', e.target.value)} />
         </div>
         <input className={inputClass} placeholder="E-posta" value={form.eposta} onChange={e => upd('eposta', e.target.value)} />
-        <input className={inputClass} placeholder="Birim" value={form.birim} onChange={e => upd('birim', e.target.value)} />
         <div className="grid grid-cols-2 gap-3">
           <input className={inputClass} placeholder="Telefon" value={form.telefon} onChange={e => upd('telefon', e.target.value)} />
           <select className={inputClass} value={form.kanGrubu} onChange={e => upd('kanGrubu', e.target.value)}>

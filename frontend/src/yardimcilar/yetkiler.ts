@@ -20,8 +20,9 @@ export const YETKI_GRUPLARI = {
   sistemYonetimi: [YETKILER.SISTEM_YONETICISI],
   // İşletme paneline giriş: sahip + personel (panel içi sekmeler role göre filtrelenir)
   isletmePaneli: [YETKILER.ISLETME_YONETICISI, YETKILER.ISLETME_PERSONELI],
-  // CampusRide onayları: RideKampüs Yöneticisi + Yapı, Lojistik ve Ulaşım Hizmetleri Müdürlüğü + sistem
-  rideYonetimi: [YETKILER.RIDE_YONETICISI, YETKILER.YAPI_LOJISTIK_ULASIM, YETKILER.SISTEM_YONETICISI],
+  // CampusRide onayları: RideKampüs Yöneticisi + Yapı, Lojistik ve Ulaşım Hizmetleri Müdürlüğü
+  // (Sistem yöneticisi DAHİL DEĞİL — admin yalnız kendi sistem paneline erişir.)
+  rideYonetimi: [YETKILER.RIDE_YONETICISI, YETKILER.YAPI_LOJISTIK_ULASIM],
   // UniEats işletme yönetimi paneli (işletme/sahip/personel CRUD): Destek Hizmetleri Müdürlüğü
   isletmeYonetimiPaneli: [YETKILER.DESTEK_HIZMETLERI],
   // Sahip-özel işlemler (menü/ayar/kampanya/ciro/personel yönetimi)
