@@ -242,7 +242,7 @@ export const OgrenciIsleriPaneli = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white mb-1">Öğrenci Yönetimi</h1>
+          <h1 className="text-3xl font-extrabold text-white mb-1">Öğrenci İşleri Daire Başkanlığı</h1>
           <p className="text-sm text-white/40">Sistemde kayıtlı toplam <span className="text-indigo-400 font-bold">{totalElements}</span> öğrenci bulunuyor.</p>
         </div>
         <div className="flex items-center gap-3">
