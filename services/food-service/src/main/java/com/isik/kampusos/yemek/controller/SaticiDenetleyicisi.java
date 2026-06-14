@@ -164,6 +164,35 @@ public class SaticiDenetleyicisi {
         return ResponseEntity.ok(Map.of("mesaj", "Ürün menüden kaldırıldı."));
     }
 
+    // --- İşletme yöneticisi: menü kategorileri ---
+
+    @GetMapping("/api/v1/satici/kategoriler")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<List<com.isik.kampusos.yemek.model.MenuKategorisi>> kategorilerim(Authentication auth) {
+        return ResponseEntity.ok(saticiServisi.benimKategorilerim(auth.getName()));
+    }
+
+    @PostMapping("/api/v1/satici/kategoriler")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<com.isik.kampusos.yemek.model.MenuKategorisi> kategoriEkle(
+            Authentication auth, @RequestBody com.isik.kampusos.yemek.dto.KategoriTalebi talep) {
+        return ResponseEntity.ok(saticiServisi.kategoriEkle(auth.getName(), talep.getAd()));
+    }
+
+    @PutMapping("/api/v1/satici/kategoriler/{id}")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<com.isik.kampusos.yemek.model.MenuKategorisi> kategoriYenidenAdlandir(
+            Authentication auth, @PathVariable String id, @RequestBody com.isik.kampusos.yemek.dto.KategoriTalebi talep) {
+        return ResponseEntity.ok(saticiServisi.kategoriYenidenAdlandir(auth.getName(), id, talep.getAd()));
+    }
+
+    @DeleteMapping("/api/v1/satici/kategoriler/{id}")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<Map<String, String>> kategoriSil(Authentication auth, @PathVariable String id) {
+        saticiServisi.kategoriSil(auth.getName(), id);
+        return ResponseEntity.ok(Map.of("mesaj", "Kategori silindi."));
+    }
+
     // --- İşletme yöneticisi: siparişler ---
 
     @GetMapping("/api/v1/satici/siparisler")

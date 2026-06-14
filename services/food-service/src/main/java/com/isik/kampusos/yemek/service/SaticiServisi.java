@@ -52,6 +52,7 @@ public class SaticiServisi {
     private final FavoriSaticiDeposu favoriDeposu;
     private final AuthKimlikIstemcisi authIstemci;
     private final com.isik.kampusos.yemek.repository.SaticiDegisiklikIstegiDeposu talepDeposu;
+    private final com.isik.kampusos.yemek.repository.MenuKategorisiDeposu kategoriDeposu;
     private final DenetimServisi denetim;
 
     /** Onaya tabi genel/kimlik alanları (sahip doğrudan değiştiremez, talep açar). */
@@ -282,6 +283,63 @@ public class SaticiServisi {
         if (k.getTur() == Kampanya.KampanyaTuru.TUTAR && k.getDeger().signum() <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tutar indirimi pozitif olmalıdır.");
         }
+    }
+
+    // --- Menü kategorileri (işletme yöneticisi yönetir) ---
+
+    public List<com.isik.kampusos.yemek.model.MenuKategorisi> benimKategorilerim(String yoneticiId) {
+        Satici s = saticiBul(yoneticiId);
+        return kategoriDeposu.findBySaticiIdOrderBySiralamaAscAdAsc(s.getId());
+    }
+
+    @Transactional
+    public com.isik.kampusos.yemek.model.MenuKategorisi kategoriEkle(String yoneticiId, String ad) {
+        Satici s = saticiBul(yoneticiId);
+        String temiz = kategoriAdDogrula(ad);
+        if (kategoriDeposu.existsBySaticiIdAndAdIgnoreCase(s.getId(), temiz)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu kategori zaten mevcut.");
+        }
+        return kategoriDeposu.save(com.isik.kampusos.yemek.model.MenuKategorisi.builder()
+                .saticiId(s.getId()).ad(temiz).build());
+    }
+
+    /** Kategori adını değiştirir ve ilgili tüm ürünlerin kategori adını birlikte günceller. */
+    @Transactional
+    public com.isik.kampusos.yemek.model.MenuKategorisi kategoriYenidenAdlandir(String yoneticiId, String id, String yeniAd) {
+        Satici s = saticiBul(yoneticiId);
+        com.isik.kampusos.yemek.model.MenuKategorisi k = kategoriDeposu.findByIdAndSaticiId(id, s.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kategori bulunamadı."));
+        String temiz = kategoriAdDogrula(yeniAd);
+        if (!temiz.equalsIgnoreCase(k.getAd()) && kategoriDeposu.existsBySaticiIdAndAdIgnoreCase(s.getId(), temiz)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu kategori zaten mevcut.");
+        }
+        String eski = k.getAd();
+        menuOgesiDeposu.kategoriYenidenAdlandir(s.getId(), eski, temiz);
+        k.setAd(temiz);
+        return kategoriDeposu.save(k);
+    }
+
+    @Transactional
+    public void kategoriSil(String yoneticiId, String id) {
+        Satici s = saticiBul(yoneticiId);
+        com.isik.kampusos.yemek.model.MenuKategorisi k = kategoriDeposu.findByIdAndSaticiId(id, s.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kategori bulunamadı."));
+        if (menuOgesiDeposu.existsBySaticiIdAndKategoriAndDurum(s.getId(), k.getAd(), MenuOgesi.MenuDurumu.AKTIF)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Bu kategoride ürün var. Önce ürünleri başka kategoriye taşıyın ya da silin.");
+        }
+        kategoriDeposu.delete(k);
+    }
+
+    private String kategoriAdDogrula(String ad) {
+        if (ad == null || ad.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kategori adı zorunludur.");
+        }
+        String t = ad.trim();
+        if (t.length() > 120) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kategori adı en fazla 120 karakter olabilir.");
+        }
+        return t;
     }
 
     public List<MenuOgesi> benimMenum(String yoneticiId) {

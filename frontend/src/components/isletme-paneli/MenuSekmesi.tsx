@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Pencil, Trash2, X, EyeOff, Eye, Star } from 'lucide-react';
-import { useIsletmeDeposu, type MenuOgesiFormu } from '../../depolar/isletmeDeposu';
+import { Plus, Pencil, Trash2, X, EyeOff, Eye, Star, Tag, Check } from 'lucide-react';
+import { useIsletmeDeposu, type MenuOgesiFormu, type Kategori } from '../../depolar/isletmeDeposu';
 import type { MenuOgesi } from '../../depolar/yemekDeposu';
 import { GorselYukleyici } from '../ortak/GorselYukleyici';
 import { MENU_ETIKETLERI, etiketleriAyir, etiketEtiketi } from '../../yardimcilar/menuEtiketleri';
@@ -12,25 +12,46 @@ const paraBicimle = (t: number) =>
 const BOS_FORM: MenuOgesiFormu = { ad: '', aciklama: '', kategori: '', fiyat: 0, gorselUrl: '', etiketler: '', mevcut: true };
 
 export const MenuSekmesi = () => {
-  const { menu, isLoading, menumGetir, menuEkle, menuGuncelle, menuSil } = useIsletmeDeposu();
+  const {
+    menu, kategoriler, isLoading, menumGetir, kategorilerimGetir,
+    kategoriEkle, kategoriYenidenAdlandir, kategoriSil, menuEkle, menuGuncelle, menuSil,
+  } = useIsletmeDeposu();
   const [formAcik, setFormAcik] = useState(false);
   const [duzenlenen, setDuzenlenen] = useState<MenuOgesi | null>(null);
+  const [kategoriAcik, setKategoriAcik] = useState(false);
 
-  useEffect(() => { menumGetir(); }, [menumGetir]);
+  useEffect(() => { menumGetir(); kategorilerimGetir(); }, [menumGetir, kategorilerimGetir]);
 
   const formuAc = (oge?: MenuOgesi) => { setDuzenlenen(oge ?? null); setFormAcik(true); };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-white/40">{menu.length} ürün</p>
-        <button
-          onClick={() => formuAc()}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white gradient-btn shadow-lg shadow-orange-500/15"
-        >
-          <Plus className="w-4 h-4" /> Yeni Ürün
-        </button>
+        <p className="text-sm text-white/40">{menu.length} ürün · {kategoriler.length} kategori</p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setKategoriAcik(a => !a)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white/70 bg-white/5 border border-white/10 hover:bg-white/10"
+          >
+            <Tag className="w-4 h-4" /> Kategoriler
+          </button>
+          <button
+            onClick={() => formuAc()}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white gradient-btn shadow-lg shadow-orange-500/15"
+          >
+            <Plus className="w-4 h-4" /> Yeni Ürün
+          </button>
+        </div>
       </div>
+
+      {kategoriAcik && (
+        <KategoriYonetimi
+          kategoriler={kategoriler}
+          onEkle={kategoriEkle}
+          onYenidenAdlandir={kategoriYenidenAdlandir}
+          onSil={kategoriSil}
+        />
+      )}
 
       {menu.length === 0 && !isLoading && (
         <p className="text-sm text-white/40 py-12 text-center">Henüz ürün eklemediniz.</p>
@@ -72,6 +93,8 @@ export const MenuSekmesi = () => {
         <MenuFormModali
           baslangic={duzenlenen}
           isLoading={isLoading}
+          kategoriler={kategoriler}
+          onKategoriEkle={kategoriEkle}
           onKapat={() => setFormAcik(false)}
           onKaydet={async (form) => {
             const ok = duzenlenen ? await menuGuncelle(duzenlenen.id, form) : await menuEkle(form);
@@ -83,12 +106,50 @@ export const MenuSekmesi = () => {
   );
 };
 
-const MenuFormModali = ({ baslangic, isLoading, onKapat, onKaydet }: {
+const KategoriYonetimi = ({ kategoriler, onEkle, onYenidenAdlandir, onSil }: {
+  kategoriler: Kategori[];
+  onEkle: (ad: string) => Promise<boolean>;
+  onYenidenAdlandir: (id: string, ad: string) => Promise<boolean>;
+  onSil: (id: string) => Promise<boolean>;
+}) => {
+  const [yeni, setYeni] = useState('');
+  const ekle = async () => { if (yeni.trim()) { const ok = await onEkle(yeni.trim()); if (ok) setYeni(''); } };
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
+      <p className="text-xs font-bold uppercase tracking-wide text-white/40">Menü Kategorileri</p>
+      <div className="flex flex-wrap gap-2">
+        {kategoriler.map(k => (
+          <span key={k.id} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 pl-3 pr-1.5 py-1.5 text-sm text-white/80">
+            {k.ad}
+            <button onClick={async () => { const ad = window.prompt('Yeni kategori adı:', k.ad); if (ad && ad.trim() && ad.trim() !== k.ad) await onYenidenAdlandir(k.id, ad.trim()); }}
+              className="p-1 rounded-lg text-white/40 hover:bg-white/10 hover:text-white" title="Yeniden adlandır"><Pencil className="w-3.5 h-3.5" /></button>
+            <button onClick={() => onSil(k.id)} className="p-1 rounded-lg text-red-300/60 hover:bg-red-500/15 hover:text-red-300" title="Sil"><X className="w-3.5 h-3.5" /></button>
+          </span>
+        ))}
+        {kategoriler.length === 0 && <p className="text-xs text-white/35">Henüz kategori yok. Aşağıdan ekleyin.</p>}
+      </div>
+      <div className="flex items-center gap-2">
+        <input value={yeni} onChange={e => setYeni(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') ekle(); }}
+          placeholder="Yeni kategori (örn. Sandviç)" className={`${girisSinifi} flex-1`} />
+        <button onClick={ekle} disabled={!yeni.trim()} className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold text-white gradient-btn disabled:opacity-40">
+          <Plus className="w-4 h-4" /> Ekle
+        </button>
+      </div>
+      <p className="text-[11px] text-white/30">Kategori silmek için önce o kategorideki ürünleri başka kategoriye taşıyın. Yeniden adlandırma ürünlere de yansır.</p>
+    </div>
+  );
+};
+
+const MenuFormModali = ({ baslangic, isLoading, kategoriler, onKategoriEkle, onKapat, onKaydet }: {
   baslangic: MenuOgesi | null;
   isLoading: boolean;
+  kategoriler: Kategori[];
+  onKategoriEkle: (ad: string) => Promise<boolean>;
   onKapat: () => void;
   onKaydet: (form: MenuOgesiFormu) => void;
 }) => {
+  const [yeniKategori, setYeniKategori] = useState('');
+  const [yeniKategoriAcik, setYeniKategoriAcik] = useState(false);
   const [form, setForm] = useState<MenuOgesiFormu>(baslangic ? {
     ad: baslangic.ad, aciklama: baslangic.aciklama ?? '', kategori: baslangic.kategori ?? '',
     fiyat: baslangic.fiyat, gorselUrl: baslangic.gorselUrl ?? '', etiketler: baslangic.etiketler ?? '', mevcut: baslangic.mevcut,
@@ -127,7 +188,27 @@ const MenuFormModali = ({ baslangic, isLoading, onKapat, onKaydet }: {
           </Alan>
           <div className="grid grid-cols-2 gap-3">
             <Alan etiket="Kategori">
-              <input value={form.kategori} onChange={e => guncelle({ kategori: e.target.value })} className={girisSinifi} placeholder="Sandviç" />
+              {yeniKategoriAcik ? (
+                <div className="flex items-center gap-1.5">
+                  <input value={yeniKategori} onChange={e => setYeniKategori(e.target.value)} autoFocus
+                    onKeyDown={async e => { if (e.key === 'Enter') { e.preventDefault(); const ad = yeniKategori.trim(); if (ad && await onKategoriEkle(ad)) { guncelle({ kategori: ad }); setYeniKategori(''); setYeniKategoriAcik(false); } } }}
+                    className={`${girisSinifi} flex-1`} placeholder="Yeni kategori" />
+                  <button type="button" title="Ekle" onClick={async () => { const ad = yeniKategori.trim(); if (ad && await onKategoriEkle(ad)) { guncelle({ kategori: ad }); setYeniKategori(''); setYeniKategoriAcik(false); } }}
+                    className="p-2 rounded-lg bg-orange-500/20 text-orange-200 hover:bg-orange-500/30"><Check className="w-4 h-4" /></button>
+                  <button type="button" title="Vazgeç" onClick={() => { setYeniKategoriAcik(false); setYeniKategori(''); }}
+                    className="p-2 rounded-lg bg-white/5 text-white/50 hover:bg-white/10"><X className="w-4 h-4" /></button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <select value={form.kategori} onChange={e => guncelle({ kategori: e.target.value })} className={`${girisSinifi} flex-1`}>
+                    <option value="">Kategorisiz</option>
+                    {kategoriler.map(k => <option key={k.id} value={k.ad}>{k.ad}</option>)}
+                    {form.kategori && !kategoriler.some(k => k.ad === form.kategori) && <option value={form.kategori}>{form.kategori}</option>}
+                  </select>
+                  <button type="button" title="Yeni kategori ekle" onClick={() => setYeniKategoriAcik(true)}
+                    className="p-2 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 shrink-0"><Plus className="w-4 h-4" /></button>
+                </div>
+              )}
             </Alan>
             <Alan etiket="Fiyat (₺) *">
               <input type="number" min={0} step="0.01" value={form.fiyat || ''} onChange={e => guncelle({ fiyat: parseFloat(e.target.value) || 0 })} className={girisSinifi} placeholder="65.00" />

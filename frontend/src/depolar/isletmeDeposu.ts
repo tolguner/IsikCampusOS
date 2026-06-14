@@ -23,6 +23,13 @@ export interface SecenekGrubuFormu {
   secenekler: SecenekFormu[];
 }
 
+/** İşletmenin yönettiği menü kategorisi. */
+export interface Kategori {
+  id: string;
+  ad: string;
+  siralama?: number;
+}
+
 export interface MenuOgesiFormu {
   ad: string;
   aciklama?: string;
@@ -124,6 +131,12 @@ interface IsletmeState {
   menuGuncelle: (id: string, form: MenuOgesiFormu) => Promise<boolean>;
   menuSil: (id: string) => Promise<boolean>;
 
+  kategoriler: Kategori[];
+  kategorilerimGetir: () => Promise<void>;
+  kategoriEkle: (ad: string) => Promise<boolean>;
+  kategoriYenidenAdlandir: (id: string, ad: string) => Promise<boolean>;
+  kategoriSil: (id: string) => Promise<boolean>;
+
   siparisleriGetir: () => Promise<void>;
   siparisGecis: (id: string, eylem: 'kabul' | 'hazirla' | 'hazir' | 'yolda', govde?: Record<string, unknown>) => Promise<boolean>;
   siparisReddet: (id: string, neden: string) => Promise<boolean>;
@@ -140,6 +153,7 @@ export const useIsletmeDeposu = create<IsletmeState>((set, get) => ({
   benimRol: null,
   degisiklikTalepleri: [],
   menu: [],
+  kategoriler: [],
   siparisler: [],
   ciro: null,
   calismaSaatleri: [],
@@ -311,6 +325,53 @@ export const useIsletmeDeposu = create<IsletmeState>((set, get) => ({
       return true;
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Ürün kaldırılamadı.'), isLoading: false });
+      return false;
+    }
+  },
+
+  kategorilerimGetir: async () => {
+    try {
+      const res = await api.get<Kategori[]>('/satici/kategoriler');
+      set({ kategoriler: res.data });
+    } catch { /* sessiz */ }
+  },
+
+  kategoriEkle: async (ad) => {
+    set({ error: null, successMessage: null });
+    try {
+      await api.post('/satici/kategoriler', { ad });
+      set({ successMessage: 'Kategori eklendi.' });
+      await get().kategorilerimGetir();
+      return true;
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Kategori eklenemedi.') });
+      return false;
+    }
+  },
+
+  kategoriYenidenAdlandir: async (id, ad) => {
+    set({ error: null, successMessage: null });
+    try {
+      await api.put(`/satici/kategoriler/${id}`, { ad });
+      set({ successMessage: 'Kategori güncellendi.' });
+      await get().kategorilerimGetir();
+      await get().menumGetir();
+      return true;
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Kategori güncellenemedi.') });
+      return false;
+    }
+  },
+
+  kategoriSil: async (id) => {
+    set({ error: null, successMessage: null });
+    try {
+      await api.delete(`/satici/kategoriler/${id}`);
+      set({ successMessage: 'Kategori silindi.' });
+      await get().kategorilerimGetir();
+      return true;
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Kategori silinemedi.') });
       return false;
     }
   },
