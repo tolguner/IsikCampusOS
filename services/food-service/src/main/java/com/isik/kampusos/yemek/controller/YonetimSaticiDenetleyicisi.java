@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-/** Sistem yöneticisinin (ROLE_ADMIN) satıcıları oluşturması ve yönetmesi. */
+/** Destek Hizmetleri Müdürlüğü'nün (ROLE_SUPPORT_SERVICES_ADMIN) işletmeleri oluşturup yönetmesi. */
 @RestController
 @RequestMapping("/api/v1/yonetim/saticilar")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@PreAuthorize("hasAuthority('ROLE_SUPPORT_SERVICES_ADMIN')")
 public class YonetimSaticiDenetleyicisi {
 
     private final SaticiServisi saticiServisi;

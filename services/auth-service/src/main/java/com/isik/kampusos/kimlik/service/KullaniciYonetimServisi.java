@@ -41,7 +41,40 @@ public class KullaniciYonetimServisi {
     /** Sistem yöneticisinin yönetebildiği roller — öğrenci HARİÇ. */
     private static final Set<String> IZINLI_ROLLER = Set.of(
             "ROLE_ADMIN", "ROLE_SKS_ADMIN", "ROLE_FACILITY_ADMIN", "ROLE_REGISTRAR",
-            "ROLE_VENDOR_ADMIN", "ROLE_RIDE_ADMIN", "ROLE_BUILDING_SUPPORT_ADMIN");
+            "ROLE_VENDOR_ADMIN", "ROLE_RIDE_ADMIN", "ROLE_BUILDING_SUPPORT_ADMIN",
+            "ROLE_SUPPORT_SERVICES_ADMIN");
+    private static final String VENDOR_ADMIN = "ROLE_VENDOR_ADMIN";
+
+    /**
+     * Çağıran "Destek Hizmetleri Müdürlüğü" (ROLE_SUPPORT_SERVICES_ADMIN) olup sistem yöneticisi
+     * DEĞİLSE, kullanıcı yönetimi YALNIZ işletme yöneticisi (VENDOR_ADMIN) hesaplarıyla sınırlıdır.
+     * Bu, yetki yükseltmeyi (ör. SUPPORT'un admin/öğrenci işleri hesabı açması) önler.
+     */
+    private boolean vendorKapsamliMi(String yapanId) {
+        return kullaniciDeposu.findById(yapanId)
+                .map(k -> rolKumesi(k.getRoller()))
+                .map(r -> r.contains("ROLE_SUPPORT_SERVICES_ADMIN") && !r.contains("ROLE_ADMIN"))
+                .orElse(false);
+    }
+
+    private static Set<String> rolKumesi(String roller) {
+        Set<String> set = new java.util.HashSet<>();
+        if (roller != null) {
+            for (String r : roller.split(",")) {
+                String t = r.trim();
+                if (!t.isEmpty()) set.add(t);
+            }
+        }
+        return set;
+    }
+
+    /** SUPPORT kapsamındaki çağıran, hedef kullanıcı VENDOR_ADMIN değilse işlem yapamaz. */
+    private void vendorHedefDogrula(String yapanId, Kullanici hedef) {
+        if (vendorKapsamliMi(yapanId) && !rolKumesi(hedef.getRoller()).contains(VENDOR_ADMIN)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Yalnızca işletme yöneticisi hesapları üzerinde işlem yapabilirsiniz.");
+        }
+    }
     /** Personel için izinli durumlar — MEZUN/ILISIGI_KESILMIS yalnızca öğrencilere özgüdür. */
     private static final Set<KullaniciDurumu> IZINLI_DURUMLAR = Set.of(KullaniciDurumu.AKTIF, KullaniciDurumu.PASIF);
 
@@ -51,16 +84,21 @@ public class KullaniciYonetimServisi {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    public Page<KullaniciYonetimYaniti> listele(int sayfa, int boyut, String arama, String durum, String rol) {
+    public Page<KullaniciYonetimYaniti> listele(int sayfa, int boyut, String arama, String durum, String rol, String yapanId) {
         String aramaNorm = (arama != null && !arama.isBlank()) ? arama.trim().toLowerCase() : null;
         String rolNorm = (rol != null && !rol.isBlank()) ? rol.trim() : null;
         KullaniciDurumu durumEnum = durumCozumle(durum);
+        // Destek Hizmetleri Müdürlüğü yalnız işletme yöneticilerini görür.
+        boolean yalnizVendor = vendorKapsamliMi(yapanId);
 
         Specification<Kullanici> spec = (root, query, cb) -> {
             // Öğrenciler ve işletme personeli hariç (bunları registrar/işletme yöneticisi yönetir)
             var predicate = cb.and(
                     cb.notLike(root.get("roller"), "%ROLE_STUDENT%"),
                     cb.notLike(root.get("roller"), "%ROLE_VENDOR_STAFF%"));
+            if (yalnizVendor) {
+                predicate = cb.and(predicate, cb.like(root.get("roller"), "%" + VENDOR_ADMIN + "%"));
+            }
             if (aramaNorm != null) {
                 String desen = "%" + aramaNorm + "%";
                 predicate = cb.and(predicate, cb.or(
@@ -80,8 +118,10 @@ public class KullaniciYonetimServisi {
         return kullaniciDeposu.findAll(spec, PageRequest.of(sayfa, boyut)).map(this::yanitOlustur);
     }
 
-    public KullaniciYonetimYaniti getir(String id) {
-        return yanitOlustur(personelBul(id));
+    public KullaniciYonetimYaniti getir(String id, String yapanId) {
+        Kullanici kullanici = personelBul(id);
+        vendorHedefDogrula(yapanId, kullanici);
+        return yanitOlustur(kullanici);
     }
 
     @Transactional
@@ -90,6 +130,11 @@ public class KullaniciYonetimServisi {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-posta zorunludur.");
         }
         rolDogrula(talep.getRoller());
+        // Destek Hizmetleri Müdürlüğü yalnız işletme yöneticisi (VENDOR_ADMIN) hesabı açabilir.
+        if (vendorKapsamliMi(yapanId) && !VENDOR_ADMIN.equals(talep.getRoller().trim())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Destek Hizmetleri Müdürlüğü yalnızca işletme yöneticisi hesabı oluşturabilir.");
+        }
         tcDogrula(talep.getTcKimlikNo());
 
         String eposta = talep.getEposta().trim().toLowerCase();
@@ -124,6 +169,7 @@ public class KullaniciYonetimServisi {
     @Transactional
     public KullaniciYonetimYaniti guncelle(String id, KullaniciYonetimGuncellemeTalebi talep, String yapanId) {
         Kullanici kullanici = personelBul(id);
+        vendorHedefDogrula(yapanId, kullanici);
         StringBuilder degisiklik = new StringBuilder();
 
         // Rol ve TC değiştirilemez — yalnız bilgi alanları güncellenir.
@@ -165,6 +211,7 @@ public class KullaniciYonetimServisi {
     @Transactional
     public Map<String, String> sifreSifirla(String id, String tcKimlikNo, String yapanId) {
         Kullanici kullanici = personelBul(id);
+        vendorHedefDogrula(yapanId, kullanici);
         tcDogrula(tcKimlikNo);
         kullanici.setSifre(passwordEncoder.encode(tcKimlikNo));   // şifre = TC
         kullanici.setTcKimlikMaskeli(tcKimlikMaskele(tcKimlikNo));
@@ -178,6 +225,7 @@ public class KullaniciYonetimServisi {
     @Transactional
     public void sil(String id, String yapanId) {
         Kullanici kullanici = personelBul(id);
+        vendorHedefDogrula(yapanId, kullanici);
         sonAktifAdminKorumasi(kullanici);
         String eposta = kullanici.getEposta();
         String roller = kullanici.getRoller();

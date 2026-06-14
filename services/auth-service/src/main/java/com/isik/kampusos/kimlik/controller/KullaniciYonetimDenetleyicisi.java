@@ -33,13 +33,14 @@ public class KullaniciYonetimDenetleyicisi {
             @RequestParam(defaultValue = "20") int boyut,
             @RequestParam(required = false) String arama,
             @RequestParam(required = false) String durum,
-            @RequestParam(required = false) String rol) {
-        return ResponseEntity.ok(kullaniciYonetimServisi.listele(sayfa, boyut, arama, durum, rol));
+            @RequestParam(required = false) String rol,
+            Authentication auth) {
+        return ResponseEntity.ok(kullaniciYonetimServisi.listele(sayfa, boyut, arama, durum, rol, auth.getName()));
     }
 
     @GetMapping("/kullanicilar/{id}")
-    public ResponseEntity<KullaniciYonetimYaniti> getir(@PathVariable String id) {
-        return ResponseEntity.ok(kullaniciYonetimServisi.getir(id));
+    public ResponseEntity<KullaniciYonetimYaniti> getir(@PathVariable String id, Authentication auth) {
+        return ResponseEntity.ok(kullaniciYonetimServisi.getir(id, auth.getName()));
     }
 
     @PostMapping("/kullanicilar")

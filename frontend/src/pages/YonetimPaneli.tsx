@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ShieldCheck, Users, ScrollText, Plus, RefreshCw, KeyRound, Trash2, Pencil, X, Search, Store } from 'lucide-react';
+import { ShieldCheck, Users, ScrollText, Plus, RefreshCw, KeyRound, Trash2, Pencil, X, Search } from 'lucide-react';
 import {
   useYonetimDeposu,
   type YonetimKullanicisi,
   type KullaniciOlusturmaFormu,
 } from '../depolar/yonetimDeposu';
 import { DuyuruButonu } from '../components/DuyuruButonu';
-import { SaticilarSekmesi } from '../components/yonetim/SaticilarSekmesi';
 import { ROL_ETIKETLERI, rolEtiketle } from '../yardimcilar/yetkiler';
 
-type Sekme = 'kullanicilar' | 'loglar' | 'saticilar';
+type Sekme = 'kullanicilar' | 'loglar';
 
 // Buradan oluşturulabilir roller (R12): öğrenci→Öğrenci İşleri, işletme personeli→İşletme Yöneticisi,
 // işletme yöneticisi→İşletme Yönetimi sekmesi. Bu yüzden create listesinde yer almazlar.
-const OLUSTURULABILIR_ROLLER = ['ROLE_ADMIN', 'ROLE_SKS_ADMIN', 'ROLE_FACILITY_ADMIN', 'ROLE_REGISTRAR', 'ROLE_RIDE_ADMIN', 'ROLE_BUILDING_SUPPORT_ADMIN'];
+const OLUSTURULABILIR_ROLLER = ['ROLE_ADMIN', 'ROLE_SKS_ADMIN', 'ROLE_FACILITY_ADMIN', 'ROLE_REGISTRAR', 'ROLE_RIDE_ADMIN', 'ROLE_BUILDING_SUPPORT_ADMIN', 'ROLE_SUPPORT_SERVICES_ADMIN'];
 // Filtrede mevcut işletme yöneticileri de görünür (listede yer alırlar).
 const FILTRE_ROLLERI = [...OLUSTURULABILIR_ROLLER, 'ROLE_VENDOR_ADMIN'];
 const KAN_GRUPLARI = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', '0+', '0-'];
@@ -99,10 +98,6 @@ export const YonetimPaneli = () => {
           className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'kullanicilar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
           <Users className="h-4 w-4" /> Kullanıcı & Rol Yönetimi ({toplamKullanici})
         </button>
-        <button onClick={() => setSekme('saticilar')}
-          className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'saticilar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
-          <Store className="h-4 w-4" /> İşletme Yönetimi
-        </button>
         <button onClick={() => setSekme('loglar')}
           className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'loglar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
           <ScrollText className="h-4 w-4" /> Sistem Logları
@@ -116,7 +111,6 @@ export const YonetimPaneli = () => {
         </div>
       )}
 
-      {sekme === 'saticilar' && <SaticilarSekmesi />}
 
       {sekme === 'kullanicilar' && (
         <section className="space-y-5">
