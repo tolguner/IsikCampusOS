@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Store, X, ScrollText } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Store, X, ScrollText, ClipboardCheck } from 'lucide-react';
 import { SaticilarSekmesi } from '../components/yonetim/SaticilarSekmesi';
+import { DegisiklikTalepleriSekmesi } from '../components/yonetim/DegisiklikTalepleriSekmesi';
 import { useAdminSaticiDeposu } from '../depolar/adminSaticiDeposu';
 
-type Sekme = 'isletmeler' | 'loglar';
+type Sekme = 'isletmeler' | 'talepler' | 'loglar';
 
 const VARLIK_ETIKET: Record<string, string> = {
   ISLETME: 'İşletme', PERSONEL: 'Personel', SIPARIS: 'Sipariş', DEGISIKLIK_TALEBI: 'Değişiklik Talebi',
@@ -14,10 +15,18 @@ const VARLIK_ETIKET: Record<string, string> = {
  * oluşturma, silme, yönetici değiştirme, bilgi-değişikliği onayı) + işletme denetim logları.
  */
 export const DestekHizmetleriPaneli = () => {
-  const { hata, basariMesaji, temizleMesajlar, denetimKayitlari, denetimGetir } = useAdminSaticiDeposu();
+  const { hata, basariMesaji, temizleMesajlar, denetimKayitlari, denetimGetir, talepler, talepleriGetir } = useAdminSaticiDeposu();
   const [sekme, setSekme] = useState<Sekme>('isletmeler');
 
+  // Sekme rozetindeki bekleyen talep sayısı için mount'ta talepleri çek.
+  useEffect(() => { talepleriGetir(); }, [talepleriGetir]);
   useEffect(() => { if (sekme === 'loglar') denetimGetir(); }, [sekme, denetimGetir]);
+
+  // Bekleyen talep grubu sayısı (rozet).
+  const bekleyenGrupSayisi = useMemo(() => {
+    const gruplar = new Set(talepler.map(t => t.grupId || t.id));
+    return gruplar.size;
+  }, [talepler]);
 
   return (
     <div className="space-y-6 text-white">
@@ -39,6 +48,11 @@ export const DestekHizmetleriPaneli = () => {
           className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'isletmeler' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
           <Store className="h-4 w-4" /> İşletmeler
         </button>
+        <button onClick={() => setSekme('talepler')}
+          className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'talepler' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
+          <ClipboardCheck className="h-4 w-4" /> Bilgi Değişikliği Talepleri
+          {bekleyenGrupSayisi > 0 && <span className="rounded-full bg-amber-500/25 border border-amber-400/30 px-2 py-0.5 text-[10px] font-black text-amber-100">{bekleyenGrupSayisi}</span>}
+        </button>
         <button onClick={() => setSekme('loglar')}
           className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'loglar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
           <ScrollText className="h-4 w-4" /> İşletme Logları
@@ -53,6 +67,8 @@ export const DestekHizmetleriPaneli = () => {
       )}
 
       {sekme === 'isletmeler' && <SaticilarSekmesi />}
+
+      {sekme === 'talepler' && <DegisiklikTalepleriSekmesi />}
 
       {sekme === 'loglar' && (
         <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.025]">
