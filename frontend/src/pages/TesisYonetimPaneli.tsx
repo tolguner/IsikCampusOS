@@ -430,10 +430,11 @@ export const TesisYonetimPaneli = () => {
 
   // Flatten active resources list for block form
   const flatResources = useMemo(() => {
-    return facilities.flatMap((f) => 
+    // "Kaynak" UX'te yok; her tesisin tek (gizli) kaynağı için yalnız tesis adı gösterilir.
+    return facilities.flatMap((f) =>
       f.kaynaklar.filter(r => r.durum === 'AKTIF' && r.rezervasyonYapilabilir).map((r) => ({
         id: r.id,
-        ad: f.ad === r.ad ? f.ad : `${f.ad} - ${r.ad}`,
+        ad: f.ad,
       }))
     );
   }, [facilities]);
