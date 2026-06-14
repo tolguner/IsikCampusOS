@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2, X, EyeOff, Eye, Star, Tag, Check, UtensilsCrossed } from 'lucide-react';
 import { useIsletmeDeposu, type MenuOgesiFormu, type Kategori } from '../../depolar/isletmeDeposu';
@@ -23,6 +23,18 @@ export const MenuSekmesi = () => {
   useEffect(() => { menumGetir(); kategorilerimGetir(); }, [menumGetir, kategorilerimGetir]);
 
   const formuAc = (oge?: MenuOgesi) => { setDuzenlenen(oge ?? null); setFormAcik(true); };
+
+  // Ürünleri kategoriye göre grupla (yönetilen kategori sırası önce, kategorisizler en sonda).
+  const gruplanmis = useMemo(() => {
+    const harita = new Map<string, MenuOgesi[]>();
+    kategoriler.forEach(k => harita.set(k.ad, []));
+    menu.forEach(oge => {
+      const k = (oge.kategori && oge.kategori.trim()) || 'Kategorisiz';
+      if (!harita.has(k)) harita.set(k, []);
+      harita.get(k)!.push(oge);
+    });
+    return Array.from(harita.entries()).filter(([, liste]) => liste.length > 0);
+  }, [menu, kategoriler]);
 
   return (
     <div className="space-y-4">
@@ -57,47 +69,18 @@ export const MenuSekmesi = () => {
         <p className="text-sm text-white/40 py-12 text-center">Henüz ürün eklemediniz.</p>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        {menu.map(oge => (
-          <motion.div key={oge.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            className={`group relative aspect-square overflow-hidden rounded-2xl border border-white/10 ${!oge.mevcut ? 'opacity-70' : ''}`}>
-            {/* Kart arka planı = ürün görseli (kare). Görsel yoksa gradyan placeholder. */}
-            {oge.gorselUrl ? (
-              <img src={oge.gorselUrl} alt={oge.ad} className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
-            ) : (
-              <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-orange-500/20 to-purple-500/10">
-                <UtensilsCrossed className="w-10 h-10 text-white/20" />
-              </div>
-            )}
-            {/* Alt gradyan */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent" />
-
-            {/* Üst: durum rozetleri (sol) + düzenle/sil (sağ) */}
-            <div className="absolute top-2 inset-x-2 flex items-start justify-between gap-2">
-              <div className="flex flex-col gap-1">
-                {!oge.mevcut && <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-100 bg-amber-500/30 backdrop-blur-sm border border-amber-300/30 px-1.5 py-0.5 rounded-lg"><EyeOff className="w-3 h-3" /> Pasif</span>}
-                {oge.oneCikan && <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-100 bg-amber-500/30 backdrop-blur-sm border border-amber-300/30 px-1.5 py-0.5 rounded-lg"><Star className="w-2.5 h-2.5 fill-amber-300 text-amber-300" /> Öne çıkan</span>}
-              </div>
-              <div className="flex gap-1">
-                <button onClick={() => formuAc(oge)} title="Düzenle" className="p-1.5 rounded-lg bg-black/45 backdrop-blur-sm text-white/85 hover:bg-black/65"><Pencil className="w-4 h-4" /></button>
-                <button onClick={() => menuSil(oge.id)} title="Menüden kaldır" className="p-1.5 rounded-lg bg-black/45 backdrop-blur-sm text-red-300 hover:bg-red-500/45 hover:text-red-100"><Trash2 className="w-4 h-4" /></button>
-              </div>
+      <div className="space-y-5">
+        {gruplanmis.map(([kategori, ogeler]) => (
+          <div key={kategori} className="space-y-2">
+            <h3 className="px-1 text-xs font-black uppercase tracking-wider text-white/35">
+              {kategori} <span className="text-white/20">· {ogeler.length}</span>
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
+              {ogeler.map(oge => (
+                <UrunKarti key={oge.id} oge={oge} onDuzenle={() => formuAc(oge)} onSil={() => menuSil(oge.id)} />
+              ))}
             </div>
-
-            {/* Alt: yazılar gradyanın üzerinde */}
-            <div className="absolute inset-x-0 bottom-0 p-3">
-              {oge.kategori && <p className="text-[10px] font-bold uppercase tracking-wide text-orange-200/80 mb-0.5 truncate">{oge.kategori}</p>}
-              {etiketleriAyir(oge.etiketler).length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-1.5">
-                  {etiketleriAyir(oge.etiketler).slice(0, 3).map(kod => (
-                    <span key={kod} className="text-[10px] font-bold text-white/85 bg-white/15 backdrop-blur-sm border border-white/15 px-1.5 py-0.5 rounded">{etiketEtiketi(kod)}</span>
-                  ))}
-                </div>
-              )}
-              <p className="text-sm font-bold text-white drop-shadow-md line-clamp-2 leading-tight">{oge.ad}</p>
-              <p className="mt-1 text-sm font-extrabold text-orange-200 drop-shadow">{paraBicimle(oge.fiyat)}</p>
-            </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 
@@ -117,6 +100,43 @@ export const MenuSekmesi = () => {
     </div>
   );
 };
+
+const UrunKarti = ({ oge, onDuzenle, onSil }: { oge: MenuOgesi; onDuzenle: () => void; onSil: () => void }) => (
+  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+    className={`group relative aspect-square overflow-hidden rounded-xl border border-white/10 ${!oge.mevcut ? 'opacity-70' : ''}`}>
+    {oge.gorselUrl ? (
+      <img src={oge.gorselUrl} alt={oge.ad} className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+    ) : (
+      <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-orange-500/20 to-purple-500/10">
+        <UtensilsCrossed className="w-8 h-8 text-white/20" />
+      </div>
+    )}
+    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
+
+    <div className="absolute top-1.5 inset-x-1.5 flex items-start justify-between gap-1">
+      <div className="flex flex-col gap-1">
+        {!oge.mevcut && <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-100 bg-amber-500/30 backdrop-blur-sm border border-amber-300/30 px-1.5 py-0.5 rounded"><EyeOff className="w-2.5 h-2.5" /> Pasif</span>}
+        {oge.oneCikan && <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-100 bg-amber-500/30 backdrop-blur-sm border border-amber-300/30 px-1.5 py-0.5 rounded"><Star className="w-2.5 h-2.5 fill-amber-300 text-amber-300" /></span>}
+      </div>
+      <div className="flex gap-1 opacity-90">
+        <button onClick={onDuzenle} title="Düzenle" className="p-1.5 rounded-lg bg-black/45 backdrop-blur-sm text-white/85 hover:bg-black/65"><Pencil className="w-3.5 h-3.5" /></button>
+        <button onClick={onSil} title="Menüden kaldır" className="p-1.5 rounded-lg bg-black/45 backdrop-blur-sm text-red-300 hover:bg-red-500/45 hover:text-red-100"><Trash2 className="w-3.5 h-3.5" /></button>
+      </div>
+    </div>
+
+    <div className="absolute inset-x-0 bottom-0 p-2.5">
+      {etiketleriAyir(oge.etiketler).length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-1">
+          {etiketleriAyir(oge.etiketler).slice(0, 2).map(kod => (
+            <span key={kod} className="text-[9px] font-bold text-white/85 bg-white/15 backdrop-blur-sm border border-white/15 px-1.5 py-0.5 rounded">{etiketEtiketi(kod)}</span>
+          ))}
+        </div>
+      )}
+      <p className="text-xs font-bold text-white drop-shadow-md line-clamp-2 leading-tight">{oge.ad}</p>
+      <p className="mt-0.5 text-sm font-extrabold text-orange-200 drop-shadow">{paraBicimle(oge.fiyat)}</p>
+    </div>
+  </motion.div>
+);
 
 const KategoriYonetimi = ({ kategoriler, onEkle, onYenidenAdlandir, onSil }: {
   kategoriler: Kategori[];

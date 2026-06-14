@@ -246,9 +246,9 @@ export const YemekSayfasi = () => {
             {kategoriler.map(([kategori, ogeler]) => (
               <div key={kategori} className="space-y-2">
                 <h3 className="text-xs font-black uppercase tracking-wider text-white/35 px-1">{kategori}</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
                   {ogeler.map(oge => (
-                    <div key={oge.id} className="group relative aspect-square overflow-hidden rounded-2xl border border-white/10">
+                    <div key={oge.id} className="group relative aspect-square overflow-hidden rounded-xl border border-white/10">
                       {/* Kart arka planı = ürün görseli (kare). Görsel yoksa gradyan placeholder. */}
                       {oge.gorselUrl ? (
                         <img src={oge.gorselUrl} alt={oge.ad} className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
