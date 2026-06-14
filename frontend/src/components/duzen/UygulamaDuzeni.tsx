@@ -146,7 +146,7 @@ export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
                         )}
                         <p className="text-sm font-semibold text-white/90">{notification.baslik}</p>
                         <p className="text-[11px] font-semibold text-white/35 mt-1">
-                          Gönderen: <span className="text-white/55">{notification.olusturanAdi || (notification.tur === 'DUYURU' ? 'SKS Yönetimi' : 'Sistem')}</span>
+                          Gönderen: <span className="text-white/55">{notification.olusturanAdi || (notification.tur === 'DUYURU' ? 'Akademik, Sosyal ve Kültürel Gelişim Koordinatörlüğü' : 'Sistem')}</span>
                         </p>
                         <p className="text-xs text-white/45 mt-1 leading-relaxed">{notification.mesaj}</p>
                         {notification.baglantiUrl && (

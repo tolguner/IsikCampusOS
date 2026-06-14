@@ -103,6 +103,14 @@ spring:
           filters:
             - KimlikDogrulama
 
+        # Kulüp sağlık/denetim yönetimi club-service'tedir; generic /api/v1/yonetim/** (auth) rotasından ÖNCE gelmeli.
+        - id: club-admin-management-service
+          uri: lb://CLUB-SERVICE
+          predicates:
+            - Path=/api/v1/yonetim/kulupler/**
+          filters:
+            - KimlikDogrulama
+
         # Sistem yöneticisi — kullanıcı/rol yönetimi (ROLE_ADMIN, Kimlik Servisi içinde korumalı)
         - id: admin-user-management-service
           uri: lb://AUTH-SERVICE

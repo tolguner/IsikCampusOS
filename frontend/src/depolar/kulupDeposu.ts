@@ -152,7 +152,7 @@ interface ClubState {
 
 const getErrorMessage = (err: any, fallback: string) => {
   if (err?.response?.status === 403) {
-    return err?.response?.data?.message || 'Bu işlem için yetkiniz yok. SKS hesabıyla giriş yaptığınızdan emin olun.';
+    return err?.response?.data?.message || 'Bu işlem için yetkiniz yok. Akademik, Sosyal ve Kültürel Gelişim Koordinatörlüğü hesabıyla giriş yaptığınızdan emin olun.';
   }
 
   return err?.response?.data?.message || err?.message || fallback;

@@ -121,7 +121,7 @@ export const BildirimlerSayfasi = () => {
                 <div>
                   <h2 className="text-2xl font-black text-white leading-tight">{notification.baslik}</h2>
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-xs text-white/40">
-                    <span>Gönderen: <strong className="text-white/65">{notification.olusturanAdi || (notification.tur === 'DUYURU' ? 'SKS Yönetimi' : 'Sistem')}</strong></span>
+                    <span>Gönderen: <strong className="text-white/65">{notification.olusturanAdi || (notification.tur === 'DUYURU' ? 'Akademik, Sosyal ve Kültürel Gelişim Koordinatörlüğü' : 'Sistem')}</strong></span>
                     <span className="inline-flex items-center gap-1.5">
                       <CalendarDays className="w-3.5 h-3.5" />
                       {new Date(notification.olusturulmaTarihi).toLocaleString('tr-TR')}
