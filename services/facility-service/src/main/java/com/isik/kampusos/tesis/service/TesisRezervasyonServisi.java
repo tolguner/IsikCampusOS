@@ -257,6 +257,10 @@ public class TesisRezervasyonServisi {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Başlangıç zamanı bitiş zamanından önce olmalıdır.");
         }
 
+        if (start.isBefore(OffsetDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçmiş bir zaman dilimine antrenman/bloke tanımlanamaz.");
+        }
+
         // Overlap check
         List<TesisRezervasyon> activeBookings = tesisRezervasyonDeposu.findByKaynakIdAndDurumIn(
                 kaynak.getId(), List.of(TesisRezervasyon.RezervasyonDurumu.BEKLEMEDE, TesisRezervasyon.RezervasyonDurumu.ONAYLANDI, TesisRezervasyon.RezervasyonDurumu.BLOKE));

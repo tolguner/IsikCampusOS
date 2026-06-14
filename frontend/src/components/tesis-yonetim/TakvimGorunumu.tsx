@@ -410,6 +410,7 @@ export const TakvimGorunumu = ({
                   <input
                     type="date"
                     className={inputClass}
+                    min={new Date().toISOString().split('T')[0]}
                     value={quickBlockDate}
                     onChange={(e) => setQuickBlockDate(e.target.value)}
                     required

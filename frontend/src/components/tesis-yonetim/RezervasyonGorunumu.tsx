@@ -92,6 +92,7 @@ export const RezervasyonGorunumu = ({
               <input
                 type="date"
                 className={inputClass}
+                min={new Date().toISOString().split('T')[0]}
                 value={blockDate}
                 onChange={(e) => setBlockDate(e.target.value)}
                 required
