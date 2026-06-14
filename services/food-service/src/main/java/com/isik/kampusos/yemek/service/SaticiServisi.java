@@ -380,7 +380,7 @@ public class SaticiServisi {
     }
 
     @Transactional
-    public Satici adminOlustur(SaticiOlusturmaTalebi talep) {
+    public Satici adminOlustur(SaticiOlusturmaTalebi talep, String adminId) {
         if (talep.getAd() == null || talep.getAd().isBlank()
                 || talep.getYoneticiKullaniciId() == null || talep.getYoneticiKullaniciId().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Satıcı adı ve yönetici kullanıcı zorunludur.");
@@ -392,12 +392,17 @@ public class SaticiServisi {
                 .ad(talep.getAd())
                 .yoneticiKullaniciId(talep.getYoneticiKullaniciId())
                 .konumMetni(talep.getKonumMetni())
+                .enlem(talep.getEnlem())
+                .boylam(talep.getBoylam())
                 .aciklama(talep.getAciklama())
                 .logoUrl(talep.getLogoUrl())
                 .durum(Satici.SaticiDurumu.AKTIF)
                 .acik(true)
                 .build();
-        return saticiDeposu.save(s);
+        Satici kaydedilen = saticiDeposu.save(s);
+        denetim.kaydet("ISLETME", kaydedilen.getId(), "ISLETME_OLUSTURULDU", adminId, "ROLE_SUPPORT_SERVICES_ADMIN",
+                "İşletme oluşturuldu: " + kaydedilen.getAd());
+        return kaydedilen;
     }
 
     @Transactional
@@ -406,6 +411,8 @@ public class SaticiServisi {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Satıcı bulunamadı."));
         if (talep.getAd() != null) s.setAd(talep.getAd());
         if (talep.getKonumMetni() != null) s.setKonumMetni(talep.getKonumMetni());
+        if (talep.getEnlem() != null) s.setEnlem(talep.getEnlem());
+        if (talep.getBoylam() != null) s.setBoylam(talep.getBoylam());
         if (talep.getAciklama() != null) s.setAciklama(talep.getAciklama());
         if (talep.getLogoUrl() != null) s.setLogoUrl(talep.getLogoUrl());
         if (talep.getDurum() != null && !talep.getDurum().isBlank()) {
@@ -442,7 +449,7 @@ public class SaticiServisi {
         favoriDeposu.deleteBySaticiId(id);
 
         saticiDeposu.delete(s);
-        denetim.kaydet("ISLETME", id, "ISLETME_SILINDI", adminId, "ROLE_ADMIN",
+        denetim.kaydet("ISLETME", id, "ISLETME_SILINDI", adminId, "ROLE_SUPPORT_SERVICES_ADMIN",
                 "İşletme silindi: " + s.getAd());
         return s;   // yoneticiKullaniciId frontend tarafından PASIF'e alınır
     }
@@ -466,7 +473,7 @@ public class SaticiServisi {
         String eski = s.getYoneticiKullaniciId();
         s.setYoneticiKullaniciId(yeniYoneticiId);
         saticiDeposu.save(s);
-        denetim.kaydet("ISLETME", id, "YONETICI_DEGISTI", adminId, "ROLE_ADMIN",
+        denetim.kaydet("ISLETME", id, "YONETICI_DEGISTI", adminId, "ROLE_SUPPORT_SERVICES_ADMIN",
                 s.getAd() + " yöneticisi değişti (" + eski + " → " + yeniYoneticiId + ")");
         return eski;
     }
@@ -524,7 +531,7 @@ public class SaticiServisi {
         istek.setInceleyen(adminId);
         istek.setIncelemeTarihi(LocalDateTime.now());
         talepDeposu.save(istek);
-        denetim.kaydet("DEGISIKLIK_TALEBI", istek.getId(), "TALEP_ONAYLANDI", adminId, "ROLE_ADMIN",
+        denetim.kaydet("DEGISIKLIK_TALEBI", istek.getId(), "TALEP_ONAYLANDI", adminId, "ROLE_SUPPORT_SERVICES_ADMIN",
                 s.getAd() + " — '" + istek.getAlanAdi() + "' değişikliği onaylandı");
     }
 
@@ -537,7 +544,7 @@ public class SaticiServisi {
         istek.setGeriBildirim(geriBildirim);
         istek.setIncelemeTarihi(LocalDateTime.now());
         talepDeposu.save(istek);
-        denetim.kaydet("DEGISIKLIK_TALEBI", istek.getId(), "TALEP_REVIZE", adminId, "ROLE_ADMIN",
+        denetim.kaydet("DEGISIKLIK_TALEBI", istek.getId(), "TALEP_REVIZE", adminId, "ROLE_SUPPORT_SERVICES_ADMIN",
                 "'" + istek.getAlanAdi() + "' için revize istendi" + (geriBildirim != null ? ": " + geriBildirim : ""));
     }
 

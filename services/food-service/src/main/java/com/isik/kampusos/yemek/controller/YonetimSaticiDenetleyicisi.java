@@ -21,6 +21,7 @@ public class YonetimSaticiDenetleyicisi {
 
     private final SaticiServisi saticiServisi;
     private final com.isik.kampusos.yemek.service.DenetimServisi denetimServisi;
+    private final com.isik.kampusos.yemek.repository.IsletmePersonelDeposu personelDeposu;
 
     @GetMapping
     public ResponseEntity<List<Satici>> tumSaticilar() {
@@ -28,8 +29,8 @@ public class YonetimSaticiDenetleyicisi {
     }
 
     @PostMapping
-    public ResponseEntity<Satici> olustur(@RequestBody SaticiOlusturmaTalebi talep) {
-        return ResponseEntity.ok(saticiServisi.adminOlustur(talep));
+    public ResponseEntity<Satici> olustur(@RequestBody SaticiOlusturmaTalebi talep, Authentication auth) {
+        return ResponseEntity.ok(saticiServisi.adminOlustur(talep, auth.getName()));
     }
 
     @PutMapping("/{id}")
@@ -59,6 +60,12 @@ public class YonetimSaticiDenetleyicisi {
     @GetMapping("/denetim")
     public ResponseEntity<List<com.isik.kampusos.yemek.model.DenetimGunlugu>> denetim() {
         return ResponseEntity.ok(denetimServisi.sonKayitlar());
+    }
+
+    /** Bir işletmenin personel kayıtları (işletme > yönetici > personel hiyerarşisi için). */
+    @GetMapping("/{id}/personel")
+    public ResponseEntity<List<com.isik.kampusos.yemek.model.IsletmePersoneli>> personeller(@PathVariable String id) {
+        return ResponseEntity.ok(personelDeposu.findBySaticiIdOrderByOlusturulmaTarihiDesc(id));
     }
 
     // --- İşletme genel bilgi değişikliği talepleri (admin inceleme) ---

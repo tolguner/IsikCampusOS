@@ -1,38 +1,53 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Plus, Pencil, X, Store, MapPin, UserCog, Trash2 } from 'lucide-react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Plus, Pencil, X, Store, MapPin, UserCog, Trash2, ChevronRight, ChevronDown, UserCheck, Users, Bike } from 'lucide-react';
 import {
   useAdminSaticiDeposu,
   type SaticiVeSahipFormu,
   type SaticiGuncellemeFormu,
 } from '../../depolar/adminSaticiDeposu';
 import type { Satici } from '../../depolar/yemekDeposu';
+import { KonumSecici } from '../kulup-paneli/KonumSecici';
 
 const inputClass =
   'w-full rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-purple-400/60';
 
+// Harita varsayılan merkezi — İşık Üniversitesi Şile Kampüsü.
+const VARSAYILAN_KONUM = { enlem: 41.1762, boylam: 29.6128 };
+
 export const SaticilarSekmesi = () => {
   const {
-    saticilar, vendorAdminler, isLoading, talepler,
-    saticilariGetir, vendorAdminleriGetir, saticiVeSahipOlustur, saticiGuncelle, saticiSil, yoneticiDegistir,
+    saticilar, vendorAdminler, personelMap, isLoading, talepler,
+    saticilariGetir, vendorAdminleriGetir, personelGetir, saticiVeSahipOlustur, saticiGuncelle, saticiSil, yoneticiDegistir,
     talepleriGetir, talepOnayla, talepRevize,
   } = useAdminSaticiDeposu();
 
   const [olusturModal, setOlusturModal] = useState(false);
   const [duzenle, setDuzenle] = useState<Satici | null>(null);
   const [yoneticiModal, setYoneticiModal] = useState<Satici | null>(null);
+  const [genisleyen, setGenisleyen] = useState<Set<string>>(new Set());
 
   useEffect(() => { saticilariGetir(); vendorAdminleriGetir(); talepleriGetir(); }, [saticilariGetir, vendorAdminleriGetir, talepleriGetir]);
+
+  const yoneticiBilgi = useMemo(() => {
+    const m = new Map<string, { eposta: string; ad?: string }>();
+    vendorAdminler.forEach(v => m.set(v.id, { eposta: v.eposta, ad: [v.ad, v.soyad].filter(Boolean).join(' ') }));
+    return m;
+  }, [vendorAdminler]);
+
+  const genislet = (s: Satici) => {
+    setGenisleyen(prev => {
+      const next = new Set(prev);
+      if (next.has(s.id)) { next.delete(s.id); return next; }
+      next.add(s.id);
+      if (!personelMap[s.id]) personelGetir(s.id);
+      return next;
+    });
+  };
 
   const ALAN_ETIKET: Record<string, string> = {
     ad: 'İşletme Adı', aciklama: 'Açıklama', konumMetni: 'Konum', logoUrl: 'Logo', kapakGorselUrl: 'Kapak Görseli', mutfakTuru: 'Mutfak Türü',
   };
   const gorselAlan = (a: string) => a === 'logoUrl' || a === 'kapakGorselUrl';
-
-  const yoneticiHaritasi = useMemo(() => {
-    const m = new Map<string, string>();
-    vendorAdminler.forEach(v => m.set(v.id, v.eposta));
-    return m;
-  }, [vendorAdminler]);
 
   return (
     <section className="space-y-5">
@@ -83,10 +98,18 @@ export const SaticilarSekmesi = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {saticilar.map(s => (
-              <tr key={s.id} className="hover:bg-white/[0.02]">
+            {saticilar.map(s => {
+              const acik = genisleyen.has(s.id);
+              const yonetici = s.yoneticiKullaniciId ? yoneticiBilgi.get(s.yoneticiKullaniciId) : undefined;
+              const personeller = personelMap[s.id];
+              return (
+              <Fragment key={s.id}>
+              <tr className="hover:bg-white/[0.02]">
                 <td className="px-5 py-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => genislet(s)} title={acik ? 'Daralt' : 'Yönetici ve personelleri göster'} className="p-1 rounded-lg text-white/40 hover:bg-white/10 hover:text-white cursor-pointer">
+                      {acik ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </button>
                     <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-orange-500/15 border border-orange-400/20 text-orange-200 overflow-hidden">
                       {s.logoUrl ? <img src={s.logoUrl} alt={s.ad} className="h-full w-full object-cover" /> : <Store className="h-4 w-4" />}
                     </div>
@@ -96,7 +119,7 @@ export const SaticilarSekmesi = () => {
                     </div>
                   </div>
                 </td>
-                <td className="px-5 py-4 text-xs text-white/55">{(s.yoneticiKullaniciId && yoneticiHaritasi.get(s.yoneticiKullaniciId)) || (s.yoneticiKullaniciId ? s.yoneticiKullaniciId.slice(0, 8) : '—')}</td>
+                <td className="px-5 py-4 text-xs text-white/55">{yonetici?.ad || yonetici?.eposta || (s.yoneticiKullaniciId ? s.yoneticiKullaniciId.slice(0, 8) : '—')}</td>
                 <td className="px-5 py-4">
                   <span className={`rounded-lg px-2.5 py-1 text-xs font-semibold border ${s.durum === 'AKTIF' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-white/5 text-white/50 border-white/10'}`}>
                     {s.durum === 'AKTIF' ? 'Aktif' : 'Pasif'}
@@ -113,7 +136,46 @@ export const SaticilarSekmesi = () => {
                   </div>
                 </td>
               </tr>
-            ))}
+              {acik && (
+                <tr className="bg-white/[0.015]">
+                  <td colSpan={5} className="px-5 py-4">
+                    <div className="ml-7 space-y-3 border-l-2 border-white/10 pl-5">
+                      {/* Yönetici */}
+                      <div className="flex items-center gap-2 text-sm">
+                        <UserCheck className="h-4 w-4 text-amber-300 shrink-0" />
+                        <span className="font-bold text-white/80">Yönetici:</span>
+                        {yonetici ? (
+                          <span className="text-white/60">{yonetici.ad || '—'} <span className="text-white/35">· {yonetici.eposta}</span></span>
+                        ) : <span className="text-white/35">Atanmamış</span>}
+                      </div>
+                      {/* Personeller */}
+                      <div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Users className="h-4 w-4 text-cyan-300 shrink-0" />
+                          <span className="font-bold text-white/80">Personeller</span>
+                          <span className="text-white/35">({personeller?.length ?? 0})</span>
+                        </div>
+                        <div className="mt-2 ml-6 space-y-1.5">
+                          {personeller === undefined && <p className="text-xs text-white/35">Yükleniyor…</p>}
+                          {personeller && personeller.length === 0 && <p className="text-xs text-white/35">Bu işletmeye bağlı personel yok.</p>}
+                          {personeller?.map(p => (
+                            <div key={p.id} className="flex flex-wrap items-center gap-2 text-xs">
+                              {p.rol === 'KURYE' ? <Bike className="h-3.5 w-3.5 text-purple-300" /> : <Users className="h-3.5 w-3.5 text-white/40" />}
+                              <span className="font-semibold text-white/75">{p.ad || '—'}</span>
+                              <span className="text-white/35">{p.eposta}</span>
+                              <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-white/45">{p.rol === 'KURYE' ? 'Kurye' : 'Personel'}</span>
+                              <span className={`rounded px-1.5 py-0.5 text-[10px] ${p.durum === 'AKTIF' ? 'text-emerald-300' : 'text-white/40'}`}>{p.durum === 'AKTIF' ? 'Aktif' : 'Pasif'}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              </Fragment>
+              );
+            })}
             {saticilar.length === 0 && (
               <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-white/35">Henüz satıcı kaydı yok.</td></tr>
             )}
@@ -207,7 +269,17 @@ const SaticiOlusturModal = ({ isLoading, onKapat, onKaydet }: {
       <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
         <p className="text-xs font-bold uppercase tracking-wider text-white/35">İşletme</p>
         <input className={inputClass} placeholder="İşletme adı (örn. Kampüs Kantini)" value={form.ad} onChange={e => set('ad', e.target.value)} />
-        <input className={inputClass} placeholder="Konum (örn. A Blok zemin kat)" value={form.konumMetni} onChange={e => set('konumMetni', e.target.value)} />
+        <input className={inputClass} placeholder="Konum etiketi (örn. A Blok zemin kat)" value={form.konumMetni} onChange={e => set('konumMetni', e.target.value)} />
+        <div>
+          <p className="mb-1.5 text-[11px] font-bold text-white/40">İşletme konumunu haritadan seçin</p>
+          <KonumSecici
+            latitude={form.enlem ?? VARSAYILAN_KONUM.enlem}
+            longitude={form.boylam ?? VARSAYILAN_KONUM.boylam}
+            onChange={(lat, lng) => setForm(p => ({ ...p, enlem: lat, boylam: lng }))}
+            onLocationSelect={(ad) => setForm(p => ({ ...p, konumMetni: p.konumMetni || ad }))}
+          />
+          {form.enlem != null && <p className="mt-1 text-[10px] text-white/30">Seçilen: {form.enlem.toFixed(5)}, {form.boylam?.toFixed(5)}</p>}
+        </div>
         <input className={inputClass} placeholder="Açıklama (ops.)" value={form.aciklama} onChange={e => set('aciklama', e.target.value)} />
 
         <p className="text-xs font-bold uppercase tracking-wider text-white/35 pt-1">İşletme Sahibi</p>
@@ -235,14 +307,25 @@ const SaticiDuzenleModal = ({ satici, isLoading, onKapat, onKaydet }: {
 }) => {
   const [form, setForm] = useState<SaticiGuncellemeFormu>({
     ad: satici.ad, konumMetni: satici.konumMetni ?? '', aciklama: satici.aciklama ?? '',
+    enlem: satici.enlem ?? undefined, boylam: satici.boylam ?? undefined,
     logoUrl: satici.logoUrl ?? '', durum: satici.durum,
   });
 
   return (
     <ModalKabuk baslik={`Düzenle — ${satici.ad}`} onKapat={onKapat}>
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
         <input className={inputClass} placeholder="Satıcı adı" value={form.ad} onChange={e => setForm(p => ({ ...p, ad: e.target.value }))} />
-        <input className={inputClass} placeholder="Konum" value={form.konumMetni} onChange={e => setForm(p => ({ ...p, konumMetni: e.target.value }))} />
+        <input className={inputClass} placeholder="Konum etiketi" value={form.konumMetni} onChange={e => setForm(p => ({ ...p, konumMetni: e.target.value }))} />
+        <div>
+          <p className="mb-1.5 text-[11px] font-bold text-white/40">İşletme konumunu haritadan seçin</p>
+          <KonumSecici
+            latitude={form.enlem ?? VARSAYILAN_KONUM.enlem}
+            longitude={form.boylam ?? VARSAYILAN_KONUM.boylam}
+            onChange={(lat, lng) => setForm(p => ({ ...p, enlem: lat, boylam: lng }))}
+            onLocationSelect={(ad) => setForm(p => ({ ...p, konumMetni: p.konumMetni || ad }))}
+          />
+          {form.enlem != null && <p className="mt-1 text-[10px] text-white/30">Seçilen: {form.enlem.toFixed(5)}, {form.boylam?.toFixed(5)}</p>}
+        </div>
         <input className={inputClass} placeholder="Açıklama" value={form.aciklama} onChange={e => setForm(p => ({ ...p, aciklama: e.target.value }))} />
         <input className={inputClass} placeholder="Logo URL" value={form.logoUrl} onChange={e => setForm(p => ({ ...p, logoUrl: e.target.value }))} />
         <label className="block text-xs font-bold uppercase tracking-wider text-white/35">Durum</label>

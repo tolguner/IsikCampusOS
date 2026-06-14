@@ -26,6 +26,10 @@ public class Satici {
 
     private String konumMetni;
 
+    /** Harita konumu (opsiyonel) — işletme eklenirken haritadan seçilir. */
+    private Double enlem;
+    private Double boylam;
+
     @Column(columnDefinition = "TEXT")
     private String logoUrl;
 

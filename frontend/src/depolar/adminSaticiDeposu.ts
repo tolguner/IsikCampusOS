@@ -27,6 +27,8 @@ export interface SaticiOlusturmaFormu {
   ad: string;
   yoneticiKullaniciId: string;
   konumMetni?: string;
+  enlem?: number;
+  boylam?: number;
   aciklama?: string;
   logoUrl?: string;
 }
@@ -34,6 +36,8 @@ export interface SaticiOlusturmaFormu {
 export interface SaticiGuncellemeFormu {
   ad?: string;
   konumMetni?: string;
+  enlem?: number;
+  boylam?: number;
   aciklama?: string;
   logoUrl?: string;
   durum?: 'AKTIF' | 'PASIF';
@@ -43,6 +47,8 @@ export interface SaticiGuncellemeFormu {
 export interface SaticiVeSahipFormu {
   ad: string;            // işletme adı
   konumMetni?: string;
+  enlem?: number;
+  boylam?: number;
   aciklama?: string;
   logoUrl?: string;
   sahipAd: string;
@@ -51,9 +57,34 @@ export interface SaticiVeSahipFormu {
   sahipTc: string;       // 11 hane — varsayılan şifre
 }
 
+/** İşletme personeli (işletme > yönetici > personel hiyerarşisi). */
+export interface IsletmePersonel {
+  id: string;
+  saticiId: string;
+  kullaniciId: string;
+  ad?: string;
+  eposta?: string;
+  durum: 'AKTIF' | 'PASIF';
+  rol: 'PERSONEL' | 'KURYE';
+}
+
+/** Food denetim kaydı. */
+export interface DenetimKaydi {
+  id: string;
+  varlikTuru: string;   // ISLETME | PERSONEL | SIPARIS | DEGISIKLIK_TALEBI
+  varlikId?: string;
+  islem: string;
+  yapanId?: string;
+  yapanRol?: string;
+  mesaj?: string;
+  olusturulmaTarihi: string;
+}
+
 interface AdminSaticiState {
   saticilar: Satici[];
   vendorAdminler: VendorAdminKullanici[];
+  personelMap: Record<string, IsletmePersonel[]>;
+  denetimKayitlari: DenetimKaydi[];
   isLoading: boolean;
   hata: string | null;
   basariMesaji: string | null;
@@ -61,6 +92,8 @@ interface AdminSaticiState {
   temizleMesajlar: () => void;
   saticilariGetir: () => Promise<void>;
   vendorAdminleriGetir: () => Promise<void>;
+  personelGetir: (saticiId: string) => Promise<void>;
+  denetimGetir: () => Promise<void>;
   saticiOlustur: (form: SaticiOlusturmaFormu) => Promise<boolean>;
   saticiVeSahipOlustur: (form: SaticiVeSahipFormu) => Promise<boolean>;
   saticiGuncelle: (id: string, form: SaticiGuncellemeFormu) => Promise<boolean>;
@@ -78,12 +111,33 @@ const hataMesaji = (err: any, varsayilan: string) =>
 export const useAdminSaticiDeposu = create<AdminSaticiState>((set, get) => ({
   saticilar: [],
   vendorAdminler: [],
+  personelMap: {},
+  denetimKayitlari: [],
   talepler: [],
   isLoading: false,
   hata: null,
   basariMesaji: null,
 
   temizleMesajlar: () => set({ hata: null, basariMesaji: null }),
+
+  personelGetir: async (saticiId) => {
+    try {
+      const res = await api.get<IsletmePersonel[]>(`/yonetim/saticilar/${saticiId}/personel`);
+      set(s => ({ personelMap: { ...s.personelMap, [saticiId]: res.data } }));
+    } catch {
+      set(s => ({ personelMap: { ...s.personelMap, [saticiId]: [] } }));
+    }
+  },
+
+  denetimGetir: async () => {
+    set({ isLoading: true, hata: null });
+    try {
+      const res = await api.get<DenetimKaydi[]>('/yonetim/saticilar/denetim');
+      set({ denetimKayitlari: res.data, isLoading: false });
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'Denetim kayıtları yüklenemedi.'), isLoading: false });
+    }
+  },
 
   saticilariGetir: async () => {
     set({ isLoading: true, hata: null });
@@ -134,7 +188,8 @@ export const useAdminSaticiDeposu = create<AdminSaticiState>((set, get) => ({
       // 2) İşletme — yeni sahibe bağlı
       await api.post('/yonetim/saticilar', {
         ad: form.ad, yoneticiKullaniciId,
-        konumMetni: form.konumMetni, aciklama: form.aciklama, logoUrl: form.logoUrl,
+        konumMetni: form.konumMetni, enlem: form.enlem, boylam: form.boylam,
+        aciklama: form.aciklama, logoUrl: form.logoUrl,
       });
       set({ basariMesaji: 'İşletme ve sahibi oluşturuldu. Sahip e-posta + TC ile giriş yapar (ilk girişte şifre değiştirilir).', isLoading: false });
       await get().saticilariGetir();

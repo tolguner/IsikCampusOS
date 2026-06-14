@@ -24,6 +24,8 @@ export interface Satici {
   ad: string;
   aciklama?: string;
   konumMetni?: string;
+  enlem?: number | null;
+  boylam?: number | null;
   logoUrl?: string;
   yoneticiKullaniciId?: string;
   mutfakTuru?: string;
