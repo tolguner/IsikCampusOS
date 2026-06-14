@@ -428,7 +428,7 @@ export const TesisYonetimPaneli = () => {
     <div className="space-y-6 text-white pb-12">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-normal text-white">Spor Müdürlüğü Yönetim Paneli</h1>
+          <h1 className="text-3xl font-black tracking-normal text-white">Spor Müdürlüğü</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/45">
             Işık Üniversitesi Spor Tesislerini, kaynaklarını, kurallarını yönetin ve takım antrenman programlarını bloke slotlar olarak tanımlayın.
           </p>
