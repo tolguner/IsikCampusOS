@@ -694,7 +694,7 @@ export const SksPaneli = () => {
       )}
 
 
-      <nav className="grid grid-cols-[repeat(6,minmax(11rem,1fr))] gap-3 overflow-x-auto pb-1">
+      <nav className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pb-1">
         {(Object.keys(moduleMeta) as SksModule[]).map(moduleKey => {
           const meta = moduleMeta[moduleKey];
           const Icon = meta.icon;
@@ -704,7 +704,7 @@ export const SksPaneli = () => {
               key={moduleKey}
               type="button"
               onClick={() => setActiveModule(moduleKey)}
-              className={`relative h-20 rounded-3xl p-3.5 min-w-44 text-left border transition-colors overflow-hidden ${selected ? 'bg-purple-500/15 border-purple-400/35' : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06]'}`}
+              className={`relative h-20 rounded-3xl p-3.5 text-left border transition-colors overflow-hidden ${selected ? 'bg-purple-500/15 border-purple-400/35' : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06]'}`}
             >
               <div className="flex items-start gap-3">
                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border shrink-0 ${selected ? 'bg-purple-500/20 border-purple-300/30 text-purple-100' : 'bg-white/[0.04] border-white/10 text-white/55'}`}>
