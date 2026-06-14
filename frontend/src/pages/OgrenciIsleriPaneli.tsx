@@ -168,9 +168,9 @@ export const OgrenciIsleriPaneli = () => {
       faculty: student.fakulte,
       department: student.bolum,
       enrollmentYear: student.kayitYili,
-      phoneNumber: '',
-      residenceAddress: '',
-      bloodType: 'A Rh+'
+      phoneNumber: student.telefon || '',
+      residenceAddress: student.ikametAdresi || '',
+      bloodType: student.kanGrubu || 'A Rh+'
     });
     setEditingId(student.id);
     setIsEditModalOpen(true);
@@ -484,7 +484,7 @@ export const OgrenciIsleriPaneli = () => {
                       </select>
                     </div>
 
-                    <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Telefon Numarası</label><input type="text" value={formData.phoneNumber} onChange={e=>setFormData({...formData, phoneNumber: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: 5XXXXXXXXX" /></div>
+                    <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Telefon Numarası</label><input required type="tel" value={formData.phoneNumber} onChange={e=>setFormData({...formData, phoneNumber: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={inputStyle} placeholder="Örn: 5XXXXXXXXX" /></div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-white/60 ml-1">Kan Grubu</label>
                       <select value={formData.bloodType} onChange={e=>setFormData({...formData, bloodType: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors cursor-pointer" style={inputStyle}>
@@ -493,7 +493,7 @@ export const OgrenciIsleriPaneli = () => {
                         ))}
                       </select>
                     </div>
-                    <div className="space-y-1.5 sm:col-span-2"><label className="text-xs font-semibold text-white/60 ml-1">İkametgah Adresi</label><textarea value={formData.residenceAddress} onChange={e=>setFormData({...formData, residenceAddress: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} placeholder="Örn: Meşrutiyet Mh. Üniversite Sk. No: 2" /></div>
+                    <div className="space-y-1.5 sm:col-span-2"><label className="text-xs font-semibold text-white/60 ml-1">İkametgah Adresi</label><textarea required value={formData.residenceAddress} onChange={e=>setFormData({...formData, residenceAddress: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-indigo-500/50 transition-colors" style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} placeholder="Örn: Meşrutiyet Mh. Üniversite Sk. No: 2" /></div>
                   </div>
                   
                   <div className="pt-4 flex justify-end gap-3">
@@ -549,8 +549,18 @@ export const OgrenciIsleriPaneli = () => {
                         ))}
                       </select>
                     </div>
+                    <div className="space-y-1.5"><label className="text-xs font-semibold text-white/60 ml-1">Telefon Numarası</label><input required type="tel" value={formData.phoneNumber} onChange={e=>setFormData({...formData, phoneNumber: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-colors" style={inputStyle} placeholder="Örn: 5XXXXXXXXX" /></div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-white/60 ml-1">Kan Grubu</label>
+                      <select required value={formData.bloodType} onChange={e=>setFormData({...formData, bloodType: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-colors cursor-pointer" style={inputStyle}>
+                        {['A Rh+', 'A Rh-', 'B Rh+', 'B Rh-', 'AB Rh+', 'AB Rh-', '0 Rh+', '0 Rh-'].map(bt => (
+                          <option key={bt} value={bt} className="bg-[#0f1123]">{bt}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-2"><label className="text-xs font-semibold text-white/60 ml-1">İkametgah Adresi</label><textarea required value={formData.residenceAddress} onChange={e=>setFormData({...formData, residenceAddress: e.target.value})} className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-colors" style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} placeholder="Örn: Meşrutiyet Mh. Üniversite Sk. No: 2" /></div>
                   </div>
-                  
+
                   <div className="pt-4 flex justify-end gap-3">
                     <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-3 rounded-xl text-sm font-semibold text-white/70 hover:bg-white/5 transition-colors cursor-pointer">İptal</button>
                     <button type="submit" disabled={isLoading} className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white shadow-lg cursor-pointer disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}>

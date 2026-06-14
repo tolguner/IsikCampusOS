@@ -41,6 +41,15 @@ public class OgrenciYonetimServisi {
         if (request.getTcKimlikNo() == null || request.getTcKimlikNo().length() != 11) {
             throw new RuntimeException("TC Kimlik No 11 haneli olmalıdır.");
         }
+        if (request.getTelefonNumarasi() == null || request.getTelefonNumarasi().isBlank()) {
+            throw new RuntimeException("Telefon numarası zorunludur.");
+        }
+        if (request.getIkametAdresi() == null || request.getIkametAdresi().isBlank()) {
+            throw new RuntimeException("İkamet adresi zorunludur.");
+        }
+        if (request.getKanGrubu() == null || request.getKanGrubu().isBlank()) {
+            throw new RuntimeException("Kan grubu zorunludur.");
+        }
  
         // E-posta uretimi: ogrenci numarasi sadece ASCII local-part ile kullanilir.
         String normalizedStudentNumberForEmail = epostaIcinOgrenciNumarasiNormalizeEt(request.getOgrenciNumarasi());
@@ -67,6 +76,9 @@ public class OgrenciYonetimServisi {
                 // Kayıt yılı öğrenci numarasının ilk 2 hanesinden otomatik türetilir (örn. 23yobi1053 → 2023).
                 .kayitYili(kayitYiliCikar(request.getOgrenciNumarasi(), request.getKayitYili()))
                 .tcKimlikMaskeli(tcKimlikMaskele(request.getTcKimlikNo()))
+                .telefon(request.getTelefonNumarasi())
+                .ikametAdresi(request.getIkametAdresi())
+                .kanGrubu(request.getKanGrubu())
                 .durum(KullaniciDurumu.AKTIF)
                 .epostaDogrulandi(false)
                 .sifreDegistirmeli(true)
@@ -165,6 +177,20 @@ public class OgrenciYonetimServisi {
         if (request.getFakulte() != null) kullanici.setFakulte(request.getFakulte());
         if (request.getBolum() != null) kullanici.setBolum(request.getBolum());
 
+        // Telefon / adres / kan grubu — gönderildiyse zorunlu olarak dolu olmalı (boş geçilemez)
+        if (request.getTelefonNumarasi() != null) {
+            if (request.getTelefonNumarasi().isBlank()) throw new RuntimeException("Telefon numarası zorunludur.");
+            kullanici.setTelefon(request.getTelefonNumarasi());
+        }
+        if (request.getIkametAdresi() != null) {
+            if (request.getIkametAdresi().isBlank()) throw new RuntimeException("İkamet adresi zorunludur.");
+            kullanici.setIkametAdresi(request.getIkametAdresi());
+        }
+        if (request.getKanGrubu() != null) {
+            if (request.getKanGrubu().isBlank()) throw new RuntimeException("Kan grubu zorunludur.");
+            kullanici.setKanGrubu(request.getKanGrubu());
+        }
+
         Kullanici saved = kullaniciDeposu.save(kullanici);
 
         // Kafka event: profil servisi projeksiyonunu güncel tutsun (source-of-truth: kullanicilar)
@@ -175,6 +201,9 @@ public class OgrenciYonetimServisi {
             payloadMap.put("ad", saved.getAd());
             payloadMap.put("soyad", saved.getSoyad());
             payloadMap.put("bolum", saved.getBolum());
+            payloadMap.put("telefonNumarasi", saved.getTelefon());
+            payloadMap.put("ikametAdresi", saved.getIkametAdresi());
+            payloadMap.put("kanGrubu", saved.getKanGrubu());
             String payload = objectMapper.writeValueAsString(payloadMap);
             kafkaTemplate.send("kullanici.guncellendi", saved.getId(), payload);
         } catch (Exception e) {
@@ -256,6 +285,9 @@ public class OgrenciYonetimServisi {
                 .tamAd(kullanici.getTamAd())
                 .ogrenciNumarasi(kullanici.getOgrenciNumarasi())
                 .tcKimlikMaskeli(kullanici.getTcKimlikMaskeli())
+                .telefon(kullanici.getTelefon())
+                .ikametAdresi(kullanici.getIkametAdresi())
+                .kanGrubu(kullanici.getKanGrubu())
                 .fakulte(kullanici.getFakulte())
                 .bolum(kullanici.getBolum())
                 .bolumKodu(kullanici.getBolumKodu())

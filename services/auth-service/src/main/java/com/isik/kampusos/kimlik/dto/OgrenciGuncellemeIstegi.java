@@ -12,4 +12,7 @@ public class OgrenciGuncellemeIstegi {
     private String soyad;
     private String fakulte;
     private String bolum;
+    private String telefonNumarasi;
+    private String ikametAdresi;
+    private String kanGrubu;
 }

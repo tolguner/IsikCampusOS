@@ -250,7 +250,8 @@ const KullaniciOlusturModal = ({ onKapat, onKaydet }: { onKapat: () => void; onK
   const [form, setForm] = useState<KullaniciOlusturmaFormu>({ eposta: '', roller: 'ROLE_SKS_ADMIN', ad: '', soyad: '', birim: '', telefon: '', ikametAdresi: '', kanGrubu: '', tcKimlikNo: '' });
   const upd = (k: keyof KullaniciOlusturmaFormu, v: string) => setForm(p => ({ ...p, [k]: v }));
   const tcGecerli = /^\d{11}$/.test(form.tcKimlikNo);
-  const gecerli = form.eposta.includes('@') && !!form.ad?.trim() && !!form.roller && tcGecerli;
+  const gecerli = form.eposta.includes('@') && !!form.ad?.trim() && !!form.roller && tcGecerli
+    && !!form.telefon?.trim() && !!form.ikametAdresi?.trim() && !!form.kanGrubu?.trim();
   return (
     <ModalKabuk baslik="Yeni Personel Kullanıcısı" onKapat={onKapat}>
       <div className="space-y-3 max-h-[72vh] overflow-y-auto pr-1">
@@ -265,13 +266,13 @@ const KullaniciOlusturModal = ({ onKapat, onKaydet }: { onKapat: () => void; onK
         <input className={inputClass} inputMode="numeric" maxLength={11} placeholder="TC Kimlik No (11 hane) — zorunlu" value={form.tcKimlikNo} onChange={e => upd('tcKimlikNo', e.target.value.replace(/\D/g, '').slice(0, 11))} />
         {!tcGecerli && form.tcKimlikNo.length > 0 && <p className="-mt-1 text-xs text-red-300">TC Kimlik No 11 haneli olmalıdır.</p>}
         <div className="grid grid-cols-2 gap-3">
-          <input className={inputClass} placeholder="Telefon" value={form.telefon} onChange={e => upd('telefon', e.target.value)} />
+          <input className={inputClass} placeholder="Telefon — zorunlu" value={form.telefon} onChange={e => upd('telefon', e.target.value)} />
           <select className={inputClass} value={form.kanGrubu} onChange={e => upd('kanGrubu', e.target.value)}>
-            <option value="">Kan grubu</option>
+            <option value="">Kan grubu — zorunlu</option>
             {KAN_GRUPLARI.map(k => <option key={k} value={k}>{k}</option>)}
           </select>
         </div>
-        <input className={inputClass} placeholder="İkametgah adresi" value={form.ikametAdresi} onChange={e => upd('ikametAdresi', e.target.value)} />
+        <input className={inputClass} placeholder="İkametgah adresi — zorunlu" value={form.ikametAdresi} onChange={e => upd('ikametAdresi', e.target.value)} />
         <p className="text-xs text-white/35">Başlangıç şifresi TC Kimlik numarasıdır; kullanıcı ilk girişte değiştirir.</p>
         <button disabled={!gecerli} onClick={() => onKaydet(form)} className="w-full rounded-2xl bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed px-5 py-3 text-sm font-black text-white cursor-pointer">Oluştur</button>
       </div>

@@ -15,6 +15,9 @@ export interface Student {
   bolum: string;
   bolumKodu: string;
   kayitYili: number;
+  telefon: string | null;
+  ikametAdresi: string | null;
+  kanGrubu: string | null;
   durum: OgrenciDurumu;
   epostaDogrulandi: boolean;
   olusturulmaTarihi: string;
@@ -122,6 +125,9 @@ export const useOgrenciDeposu = create<StudentState>((set, get) => ({
         soyad: data.lastName,
         fakulte: data.faculty,
         bolum: data.department,
+        telefonNumarasi: data.phoneNumber,
+        ikametAdresi: data.residenceAddress,
+        kanGrubu: data.bloodType,
       };
       await api.put(`/ogrenciler/${id}`, payload);
       set({ successMessage: 'Öğrenci bilgileri güncellendi.', isLoading: false });

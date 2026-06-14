@@ -21,6 +21,9 @@ public class OgrenciYaniti {
     private String bolumKodu;
     private Integer kayitYili;
     private String tcKimlikMaskeli;
+    private String telefon;
+    private String ikametAdresi;
+    private String kanGrubu;
     private String durum;
     private boolean epostaDogrulandi;
     private String olusturulmaTarihi;
