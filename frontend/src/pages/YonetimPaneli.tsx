@@ -16,7 +16,7 @@ type Sekme = 'kullanicilar' | 'loglar';
 const OLUSTURULABILIR_ROLLER = ['ROLE_ADMIN', 'ROLE_SKS_ADMIN', 'ROLE_FACILITY_ADMIN', 'ROLE_REGISTRAR', 'ROLE_RIDE_ADMIN', 'ROLE_BUILDING_SUPPORT_ADMIN', 'ROLE_SUPPORT_SERVICES_ADMIN'];
 // Filtrede mevcut işletme yöneticileri de görünür (listede yer alırlar).
 const FILTRE_ROLLERI = [...OLUSTURULABILIR_ROLLER, 'ROLE_VENDOR_ADMIN'];
-const KAN_GRUPLARI = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', '0+', '0-'];
+const KAN_GRUPLARI = ['A Rh+', 'A Rh-', 'B Rh+', 'B Rh-', 'AB Rh+', 'AB Rh-', '0 Rh+', '0 Rh-'];
 
 // Personel durumu yalnızca AKTIF/PASIF; MEZUN/ILISIGI_KESILMIS öğrencilere özgüdür.
 const PERSONEL_DURUMLARI: Record<string, string> = {
