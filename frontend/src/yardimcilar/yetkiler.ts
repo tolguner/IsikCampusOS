@@ -7,6 +7,7 @@ export const YETKILER = {
   ISLETME_YONETICISI: 'ROLE_VENDOR_ADMIN',
   ISLETME_PERSONELI: 'ROLE_VENDOR_STAFF',
   RIDE_YONETICISI: 'ROLE_RIDE_ADMIN',
+  YAPI_DESTEK_HIZMETLER: 'ROLE_BUILDING_SUPPORT_ADMIN',
 } as const;
 
 export const YETKI_GRUPLARI = {
@@ -18,7 +19,8 @@ export const YETKI_GRUPLARI = {
   sistemYonetimi: [YETKILER.SISTEM_YONETICISI],
   // İşletme paneline giriş: sahip + personel (panel içi sekmeler role göre filtrelenir)
   isletmePaneli: [YETKILER.ISLETME_YONETICISI, YETKILER.ISLETME_PERSONELI],
-  rideYonetimi: [YETKILER.RIDE_YONETICISI, YETKILER.SISTEM_YONETICISI],
+  // CampusRide onayları: RideKampüs Yöneticisi + Yapı, Destek ve Hizmetler Daire Başkanlığı + sistem
+  rideYonetimi: [YETKILER.RIDE_YONETICISI, YETKILER.YAPI_DESTEK_HIZMETLER, YETKILER.SISTEM_YONETICISI],
   // Sahip-özel işlemler (menü/ayar/kampanya/ciro/personel yönetimi)
   isletmeYonetimi: [YETKILER.ISLETME_YONETICISI],
   // Öğrencilere/kullanıcılara toplu duyuru gönderebilen idari roller (öğrenci hariç).
@@ -39,6 +41,7 @@ export const ROL_ETIKETLERI: Record<string, string> = {
   ROLE_VENDOR_ADMIN: 'İşletme Yöneticisi',
   ROLE_VENDOR_STAFF: 'İşletme Personeli',
   ROLE_RIDE_ADMIN: 'RideKampüs Yöneticisi',
+  ROLE_BUILDING_SUPPORT_ADMIN: 'Yapı, Destek ve Hizmetler Daire Başkanlığı',
   ROLE_STUDENT: 'Öğrenci',
 };
 

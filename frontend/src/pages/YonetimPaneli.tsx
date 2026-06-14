@@ -13,7 +13,7 @@ type Sekme = 'kullanicilar' | 'loglar' | 'saticilar';
 
 // Buradan oluşturulabilir roller (R12): öğrenci→Öğrenci İşleri, işletme personeli→İşletme Yöneticisi,
 // işletme yöneticisi→İşletme Yönetimi sekmesi. Bu yüzden create listesinde yer almazlar.
-const OLUSTURULABILIR_ROLLER = ['ROLE_ADMIN', 'ROLE_SKS_ADMIN', 'ROLE_FACILITY_ADMIN', 'ROLE_REGISTRAR', 'ROLE_RIDE_ADMIN'];
+const OLUSTURULABILIR_ROLLER = ['ROLE_ADMIN', 'ROLE_SKS_ADMIN', 'ROLE_FACILITY_ADMIN', 'ROLE_REGISTRAR', 'ROLE_RIDE_ADMIN', 'ROLE_BUILDING_SUPPORT_ADMIN'];
 // Filtrede mevcut işletme yöneticileri de görünür (listede yer alırlar).
 const FILTRE_ROLLERI = [...OLUSTURULABILIR_ROLLER, 'ROLE_VENDOR_ADMIN'];
 const KAN_GRUPLARI = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', '0+', '0-'];
