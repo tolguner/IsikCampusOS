@@ -246,33 +246,50 @@ export const YemekSayfasi = () => {
             {kategoriler.map(([kategori, ogeler]) => (
               <div key={kategori} className="space-y-2">
                 <h3 className="text-xs font-black uppercase tracking-wider text-white/35 px-1">{kategori}</h3>
-                <div className="space-y-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {ogeler.map(oge => (
-                    <div key={oge.id} className="flex items-center gap-4 rounded-xl p-3 border border-white/8 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
-                      {oge.gorselUrl && (
-                        <img src={oge.gorselUrl} alt={oge.ad} className="w-16 h-16 shrink-0 rounded-lg object-cover border border-white/10" />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-bold text-white">{oge.ad}</p>
-                          {oge.oneCikan && <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-200 bg-amber-500/15 border border-amber-400/20 px-1.5 py-0.5 rounded"><Star className="w-2.5 h-2.5 fill-amber-300 text-amber-300" /> Öne çıkan</span>}
+                    <div key={oge.id} className="group relative aspect-square overflow-hidden rounded-2xl border border-white/10">
+                      {/* Kart arka planı = ürün görseli (kare). Görsel yoksa gradyan placeholder. */}
+                      {oge.gorselUrl ? (
+                        <img src={oge.gorselUrl} alt={oge.ad} className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                      ) : (
+                        <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-orange-500/20 to-purple-500/10">
+                          <UtensilsCrossed className="w-10 h-10 text-white/20" />
                         </div>
-                        {oge.aciklama && <p className="text-xs text-white/40 mt-0.5 line-clamp-2">{oge.aciklama}</p>}
+                      )}
+                      {/* Alt gradyan — yazıların okunması için */}
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent" />
+
+                      {oge.oneCikan && (
+                        <span className="absolute top-2 left-2 inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-100 bg-amber-500/30 backdrop-blur-sm border border-amber-300/30 px-1.5 py-0.5 rounded-lg">
+                          <Star className="w-2.5 h-2.5 fill-amber-300 text-amber-300" /> Öne çıkan
+                        </span>
+                      )}
+
+                      {/* Yazılar gradyanın üzerine yerleştirildi */}
+                      <div className="absolute inset-x-0 bottom-0 p-3">
                         {etiketleriAyir(oge.etiketler).length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {etiketleriAyir(oge.etiketler).map(kod => (
-                              <span key={kod} className="text-[10px] font-bold text-white/50 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded">{etiketEtiketi(kod)}</span>
+                          <div className="flex flex-wrap gap-1 mb-1.5">
+                            {etiketleriAyir(oge.etiketler).slice(0, 3).map(kod => (
+                              <span key={kod} className="text-[10px] font-bold text-white/85 bg-white/15 backdrop-blur-sm border border-white/15 px-1.5 py-0.5 rounded">{etiketEtiketi(kod)}</span>
                             ))}
                           </div>
                         )}
-                        <p className="text-sm font-extrabold text-orange-200 mt-1">{paraBicimle(oge.fiyat)}{oge.secenekGruplari && oge.secenekGruplari.length > 0 && <span className="text-[11px] text-white/35 font-normal"> + seçenekler</span>}</p>
+                        <p className="text-sm font-bold text-white drop-shadow-md line-clamp-2 leading-tight">{oge.ad}</p>
+                        <div className="mt-1.5 flex items-end justify-between gap-2">
+                          <p className="text-sm font-extrabold text-orange-200 drop-shadow">
+                            {paraBicimle(oge.fiyat)}
+                            {oge.secenekGruplari && oge.secenekGruplari.length > 0 && <span className="block text-[10px] text-white/65 font-normal">+ seçenekler</span>}
+                          </p>
+                          <button
+                            onClick={() => urunEkle(oge)}
+                            title="Sepete ekle"
+                            className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full text-white gradient-btn shadow-lg shadow-orange-500/25 hover:scale-105 transition-transform"
+                          >
+                            <Plus className="w-5 h-5" />
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => urunEkle(oge)}
-                        className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold text-white gradient-btn shadow-lg shadow-orange-500/10"
-                      >
-                        <Plus className="w-4 h-4" /> Ekle
-                      </button>
                     </div>
                   ))}
                 </div>
