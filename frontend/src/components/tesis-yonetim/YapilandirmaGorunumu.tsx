@@ -192,14 +192,14 @@ export const YapilandirmaGorunumu = ({
                     disabled={!day.isOpen}
                     value={day.baslangicSaati}
                     onChange={e => setWeeklyHours(prev => prev.map(w => w.haftaninGunu === day.haftaninGunu ? { ...w, baslangicSaati: e.target.value } : w))}
-                    className={`${compactInputClass} text-center font-mono font-bold tracking-wider ${!day.isOpen ? 'opacity-30 cursor-not-allowed bg-transparent border-white/5' : ''}`}
+                    className={`${compactInputClass} text-center font-mono font-bold tracking-wider ${!day.isOpen ? 'opacity-30 cursor-not-allowed bg-transparent border-white/5' : (day.baslangicSaati >= day.bitisSaati ? 'border-red-400/60' : '')}`}
                   />
                   <input
                     type="time"
                     disabled={!day.isOpen}
                     value={day.bitisSaati}
                     onChange={e => setWeeklyHours(prev => prev.map(w => w.haftaninGunu === day.haftaninGunu ? { ...w, bitisSaati: e.target.value } : w))}
-                    className={`${compactInputClass} text-center font-mono font-bold tracking-wider ${!day.isOpen ? 'opacity-30 cursor-not-allowed bg-transparent border-white/5' : ''}`}
+                    className={`${compactInputClass} text-center font-mono font-bold tracking-wider ${!day.isOpen ? 'opacity-30 cursor-not-allowed bg-transparent border-white/5' : (day.baslangicSaati >= day.bitisSaati ? 'border-red-400/60' : '')}`}
                   />
                 </div>
               ))}

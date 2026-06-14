@@ -244,6 +244,11 @@ export const TesisYonetimPaneli = () => {
       window.alert('En az bir gün için çalışma saati tanımlamalısınız.');
       return;
     }
+    const hataliGun = calismaSaatleri.find(s => s.baslangicSaati >= s.bitisSaati);
+    if (hataliGun) {
+      window.alert('Çalışma saatlerinde başlangıç saati bitiş saatinden önce olmalıdır.');
+      return;
+    }
     const payload: TamTesisFormu = {
       ad: facilityForm.ad,
       kapasite: facilityForm.kapasite,
@@ -280,6 +285,10 @@ export const TesisYonetimPaneli = () => {
   const handleAddBlockSlot = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!blockResourceId) return;
+    if (blockStart >= blockEnd) {
+      window.alert('Başlangıç saati bitiş saatinden önce olmalıdır.');
+      return;
+    }
 
     const localTimeZoneOffset = () => {
       const offset = new Date().getTimezoneOffset();
@@ -364,6 +373,10 @@ export const TesisYonetimPaneli = () => {
     const facility = facilities.find(f => f.id === calendarFacilityId);
     const resourceId = facility?.kaynaklar?.[0]?.id;
     if (!resourceId) return;
+    if (quickBlockStart >= quickBlockEnd) {
+      window.alert('Başlangıç saati bitiş saatinden önce olmalıdır.');
+      return;
+    }
 
     const localTimeZoneOffset = () => {
       const offset = new Date().getTimezoneOffset();
