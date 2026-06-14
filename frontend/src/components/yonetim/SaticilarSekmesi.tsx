@@ -7,6 +7,7 @@ import {
 } from '../../depolar/adminSaticiDeposu';
 import type { Satici } from '../../depolar/yemekDeposu';
 import { KonumSecici } from '../kulup-paneli/KonumSecici';
+import { GorselYukleyici } from '../ortak/GorselYukleyici';
 
 const inputClass =
   'w-full rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-purple-400/60';
@@ -281,6 +282,7 @@ const SaticiOlusturModal = ({ isLoading, onKapat, onKaydet }: {
           {form.enlem != null && <p className="mt-1 text-[10px] text-white/30">Seçilen: {form.enlem.toFixed(5)}, {form.boylam?.toFixed(5)}</p>}
         </div>
         <input className={inputClass} placeholder="Açıklama (ops.)" value={form.aciklama} onChange={e => set('aciklama', e.target.value)} />
+        <GorselYukleyici etiket="İşletme logosu (ops.)" value={form.logoUrl} onChange={u => set('logoUrl', u)} oranSinifi="aspect-square" maksKenar={400} />
 
         <p className="text-xs font-bold uppercase tracking-wider text-white/35 pt-1">İşletme Sahibi</p>
         <div className="grid grid-cols-2 gap-3">
@@ -327,7 +329,7 @@ const SaticiDuzenleModal = ({ satici, isLoading, onKapat, onKaydet }: {
           {form.enlem != null && <p className="mt-1 text-[10px] text-white/30">Seçilen: {form.enlem.toFixed(5)}, {form.boylam?.toFixed(5)}</p>}
         </div>
         <input className={inputClass} placeholder="Açıklama" value={form.aciklama} onChange={e => setForm(p => ({ ...p, aciklama: e.target.value }))} />
-        <input className={inputClass} placeholder="Logo URL" value={form.logoUrl} onChange={e => setForm(p => ({ ...p, logoUrl: e.target.value }))} />
+        <GorselYukleyici etiket="İşletme logosu" value={form.logoUrl} onChange={u => setForm(p => ({ ...p, logoUrl: u }))} oranSinifi="aspect-square" maksKenar={400} />
         <label className="block text-xs font-bold uppercase tracking-wider text-white/35">Durum</label>
         <select className={inputClass} value={form.durum} onChange={e => setForm(p => ({ ...p, durum: e.target.value as 'AKTIF' | 'PASIF' }))}>
           <option value="AKTIF">Aktif</option>
