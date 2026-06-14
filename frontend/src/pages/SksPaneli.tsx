@@ -10,6 +10,7 @@ import { useBildirimDeposu } from '../depolar/bildirimDeposu';
 import { useOgrenciDeposu, type Student } from '../depolar/ogrenciDeposu';
 import { useAkademikKadroDeposu, type AcademicAdvisor } from '../depolar/akademikKadroDeposu';
 import { DuyuruButonu } from '../components/DuyuruButonu';
+import { ModulSekmeleri } from '../components/yonetim/ModulSekmeleri';
 
 import {
   type SksModule,
@@ -694,53 +695,22 @@ export const SksPaneli = () => {
       )}
 
 
-      <nav className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pb-1">
-        {(Object.keys(moduleMeta) as SksModule[]).map(moduleKey => {
-          const meta = moduleMeta[moduleKey];
-          const Icon = meta.icon;
-          const selected = activeModule === moduleKey;
-          return (
-            <button
-              key={moduleKey}
-              type="button"
-              onClick={() => setActiveModule(moduleKey)}
-              className={`relative h-20 rounded-3xl p-3.5 text-left border transition-colors overflow-hidden ${selected ? 'bg-purple-500/15 border-purple-400/35' : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06]'}`}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border shrink-0 ${selected ? 'bg-purple-500/20 border-purple-300/30 text-purple-100' : 'bg-white/[0.04] border-white/10 text-white/55'}`}>
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-black text-white truncate">{meta.label}</div>
-                  <div className="text-xs text-white/40 mt-1 leading-snug line-clamp-2">{meta.description}</div>
-                </div>
-              </div>
-              
-              {moduleKey === 'events' && reviewQueue.length > 0 && (
-                <motion.span
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                  className="absolute top-2 right-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white border border-red-400/25 shadow-lg shadow-red-500/35"
-                >
-                  {reviewQueue.length}
-                </motion.span>
-              )}
-              
-              {moduleKey === 'profileRequests' && profileChangeRequests.length > 0 && (
-                <motion.span
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                  className="absolute top-2 right-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white border border-red-400/25 shadow-lg shadow-red-500/35"
-                >
-                  {profileChangeRequests.length}
-                </motion.span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+      <ModulSekmeleri
+        kolon={5}
+        aktif={activeModule}
+        onSecim={setActiveModule}
+        sekmeler={(Object.keys(moduleMeta) as SksModule[]).map(moduleKey => ({
+          anahtar: moduleKey,
+          baslik: moduleMeta[moduleKey].label,
+          aciklama: moduleMeta[moduleKey].description,
+          ikon: moduleMeta[moduleKey].icon,
+          rozet: moduleKey === 'events'
+            ? reviewQueue.length
+            : moduleKey === 'profileRequests'
+              ? profileChangeRequests.length
+              : undefined,
+        }))}
+      />
 
       <motion.div
         key={activeModule}

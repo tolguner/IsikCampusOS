@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Settings2, ClipboardList, CalendarDays } from 'lucide-react';
+import { ModulSekmeleri } from '../components/yonetim/ModulSekmeleri';
 import { useTesisDeposu, type KullanimKurali, type TesisPolitikasi } from '../depolar/tesisDeposu';
 import { useRezervasyonDeposu, type Rezervasyon } from '../depolar/rezervasyonDeposu';
 
@@ -460,39 +461,16 @@ export const TesisYonetimPaneli = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-white/5 pb-px">
-        <button
-          onClick={() => setActiveView('config')}
-          className={`px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${
-            activeView === 'config'
-              ? 'border-cyan-300 text-cyan-200'
-              : 'border-transparent text-white/40 hover:text-white/60'
-          }`}
-        >
-          Tesis & Kaynak Yapılandırması
-        </button>
-        <button
-          onClick={() => setActiveView('bookings')}
-          className={`px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${
-            activeView === 'bookings'
-              ? 'border-cyan-300 text-cyan-200'
-              : 'border-transparent text-white/40 hover:text-white/60'
-          }`}
-        >
-          Antrenman & Rezervasyon Yönetimi ({allBookings.length})
-        </button>
-        <button
-          onClick={() => setActiveView('calendar')}
-          className={`px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${
-            activeView === 'calendar'
-              ? 'border-cyan-300 text-cyan-200'
-              : 'border-transparent text-white/40 hover:text-white/60'
-          }`}
-        >
-          Genel Rezervasyon Takvimi
-        </button>
-      </div>
+      {/* Modül sekmeleri */}
+      <ModulSekmeleri
+        aktif={activeView}
+        onSecim={setActiveView}
+        sekmeler={[
+          { anahtar: 'config', baslik: 'Tesis & Kaynak Yapılandırması', aciklama: 'Tesisler, kaynaklar ve kullanım kuralları', ikon: Settings2 },
+          { anahtar: 'bookings', baslik: `Antrenman & Rezervasyon (${allBookings.length})`, aciklama: 'Antrenman ve rezervasyon talep yönetimi', ikon: ClipboardList },
+          { anahtar: 'calendar', baslik: 'Genel Rezervasyon Takvimi', aciklama: 'Tüm rezervasyonların takvim görünümü', ikon: CalendarDays },
+        ]}
+      />
 
       {(error || successMessage) && (
         <div className={`rounded-2xl px-4 py-3 text-sm font-semibold ${error ? 'border border-red-400/25 bg-red-500/12 text-red-100' : 'border border-emerald-300/25 bg-emerald-500/12 text-emerald-100'}`}>

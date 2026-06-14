@@ -6,6 +6,7 @@ import {
   type KullaniciOlusturmaFormu,
 } from '../depolar/yonetimDeposu';
 import { DuyuruButonu } from '../components/DuyuruButonu';
+import { ModulSekmeleri } from '../components/yonetim/ModulSekmeleri';
 import { ROL_ETIKETLERI, rolEtiketle } from '../yardimcilar/yetkiler';
 
 type Sekme = 'kullanicilar' | 'loglar';
@@ -93,16 +94,14 @@ export const YonetimPaneli = () => {
         </div>
       </div>
 
-      <div className="flex gap-2 border-b border-white/5 pb-px">
-        <button onClick={() => setSekme('kullanicilar')}
-          className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'kullanicilar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
-          <Users className="h-4 w-4" /> Kullanıcı & Rol Yönetimi ({toplamKullanici})
-        </button>
-        <button onClick={() => setSekme('loglar')}
-          className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'loglar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
-          <ScrollText className="h-4 w-4" /> Sistem Logları
-        </button>
-      </div>
+      <ModulSekmeleri
+        aktif={sekme}
+        onSecim={setSekme}
+        sekmeler={[
+          { anahtar: 'kullanicilar', baslik: `Kullanıcı & Rol Yönetimi (${toplamKullanici})`, aciklama: 'Personel hesapları, roller ve erişim', ikon: Users },
+          { anahtar: 'loglar', baslik: 'Sistem Logları', aciklama: 'Sistem geneli denetim kayıtları', ikon: ScrollText },
+        ]}
+      />
 
       {(hata || basariMesaji) && (
         <div className={`rounded-2xl px-4 py-3 text-sm font-semibold flex items-center justify-between ${hata ? 'border border-red-400/25 bg-red-500/12 text-red-100' : 'border border-emerald-300/25 bg-emerald-500/12 text-emerald-100'}`}>

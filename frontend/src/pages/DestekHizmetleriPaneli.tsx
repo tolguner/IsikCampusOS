@@ -3,6 +3,7 @@ import { Store, X, ScrollText, ClipboardCheck } from 'lucide-react';
 import { SaticilarSekmesi } from '../components/yonetim/SaticilarSekmesi';
 import { DegisiklikTalepleriSekmesi } from '../components/yonetim/DegisiklikTalepleriSekmesi';
 import { useAdminSaticiDeposu } from '../depolar/adminSaticiDeposu';
+import { ModulSekmeleri } from '../components/yonetim/ModulSekmeleri';
 
 type Sekme = 'isletmeler' | 'talepler' | 'loglar';
 
@@ -43,21 +44,15 @@ export const DestekHizmetleriPaneli = () => {
         </div>
       </div>
 
-      <div className="flex gap-2 border-b border-white/5 pb-px">
-        <button onClick={() => setSekme('isletmeler')}
-          className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'isletmeler' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
-          <Store className="h-4 w-4" /> İşletmeler
-        </button>
-        <button onClick={() => setSekme('talepler')}
-          className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'talepler' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
-          <ClipboardCheck className="h-4 w-4" /> Bilgi Değişikliği Talepleri
-          {bekleyenGrupSayisi > 0 && <span className="rounded-full bg-amber-500/25 border border-amber-400/30 px-2 py-0.5 text-[10px] font-black text-amber-100">{bekleyenGrupSayisi}</span>}
-        </button>
-        <button onClick={() => setSekme('loglar')}
-          className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold border-b-2 transition cursor-pointer ${sekme === 'loglar' ? 'border-purple-300 text-purple-200' : 'border-transparent text-white/40 hover:text-white/60'}`}>
-          <ScrollText className="h-4 w-4" /> İşletme Logları
-        </button>
-      </div>
+      <ModulSekmeleri
+        aktif={sekme}
+        onSecim={setSekme}
+        sekmeler={[
+          { anahtar: 'isletmeler', baslik: 'İşletmeler', aciklama: 'İşletme listesi, sahip ve personel yönetimi', ikon: Store },
+          { anahtar: 'talepler', baslik: 'Bilgi Değişikliği Talepleri', aciklama: 'Bekleyen bilgi-değişikliği onayları', ikon: ClipboardCheck, rozet: bekleyenGrupSayisi },
+          { anahtar: 'loglar', baslik: 'İşletme Logları', aciklama: 'İşletme işlem denetim kayıtları', ikon: ScrollText },
+        ]}
+      />
 
       {(hata || basariMesaji) && (
         <div className={`rounded-2xl px-4 py-3 text-sm font-semibold flex items-center justify-between ${hata ? 'border border-red-400/25 bg-red-500/12 text-red-100' : 'border border-emerald-300/25 bg-emerald-500/12 text-emerald-100'}`}>
