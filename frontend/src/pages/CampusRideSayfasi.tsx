@@ -3,12 +3,12 @@ import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { MapContainer, Marker, Polyline, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Link } from 'react-router-dom';
 import {
   AlertTriangle, CalendarClock, CarFront, Check, Clock, CreditCard, Flag,
-  MapPin, Plus, Search, ShieldCheck, Star, Users, X,
+  MapPin, Plus, Search, Settings, Star, Users, X,
 } from 'lucide-react';
 import {
-  DOGRULAMA_ETIKETLERI,
   TALEP_ETIKETLERI,
   useYolculukDeposu,
   type Nokta,
@@ -18,6 +18,7 @@ import {
   type YolculukIlani,
 } from '../depolar/yolculukDeposu';
 import { KonumSecici } from '../components/kulup-paneli/KonumSecici';
+import { polylineCoz } from '../lib/rota';
 
 const KAMPUS: Nokta = { ad: 'İşık Üniversitesi Şile Kampüsü', enlem: 41.1762, boylam: 29.6128 };
 const VARSAYILAN_VARIS: Nokta = { ad: 'Kadıköy', enlem: 40.9909, boylam: 29.0254 };
@@ -28,9 +29,9 @@ const para = (tutar?: number) => !tutar ? 'Ücretsiz' : new Intl.NumberFormat('t
 
 export const CampusRideSayfasi = () => {
   const {
-    ilanlar, benimIlanlarim, taleplerim, surucuTalepleri, dogrulama, populerNoktalar,
+    ilanlar, benimIlanlarim, taleplerim, surucuTalepleri, dogrulama, populerNoktalar, araclar,
     isLoading, hata, basariMesaji,
-    ilanAra, ilanOlustur, benimVerilerimiGetir, dogrulamaBasvur, populerNoktalariGetir,
+    ilanAra, ilanOlustur, benimVerilerimiGetir, populerNoktalariGetir, araclarimGetir, rotaOnizle,
     ilanaKatil, talepKabul, talepRed, talepIptal, talepTamamla, puanla, sikayetEt, temizleMesajlar,
   } = useYolculukDeposu();
 
@@ -52,19 +53,20 @@ export const CampusRideSayfasi = () => {
   });
   const [araDuraklar, setAraDuraklar] = useState<RotaDuragi[]>([]);
   const [yeniDurak, setYeniDurak] = useState<Nokta | null>(null);
-  const [dogrulamaForm, setDogrulamaForm] = useState({
-    ehliyetSinifi: 'B',
-    aracMarkaModel: '',
-    plaka: '',
-    aracRengi: '',
-    koltukKapasitesi: 4,
-    belgeUrl: '',
-  });
+  const [seciliAracId, setSeciliAracId] = useState('');
+
+  const onayliAraclar = useMemo(() => araclar.filter(a => a.durum === 'ONAYLANDI'), [araclar]);
 
   useEffect(() => {
     benimVerilerimiGetir();
     populerNoktalariGetir();
-  }, [benimVerilerimiGetir, populerNoktalariGetir]);
+    araclarimGetir();
+  }, [benimVerilerimiGetir, populerNoktalariGetir, araclarimGetir]);
+
+  // İlk onaylı aracı varsayılan seç.
+  useEffect(() => {
+    if (!seciliAracId && onayliAraclar.length > 0) setSeciliAracId(onayliAraclar[0].id);
+  }, [onayliAraclar, seciliAracId]);
 
   useEffect(() => {
     ilanAra({
@@ -81,14 +83,26 @@ export const CampusRideSayfasi = () => {
   useEffect(() => () => temizleMesajlar(), [temizleMesajlar]);
 
   const dogrulandi = dogrulama?.durum === 'ONAYLANDI';
+  const ilanAcabilir = dogrulandi && !!seciliAracId;
   const rotaNoktalari = useMemo(() => [
     ilanBaslangic,
     ...araDuraklar,
     ilanVaris,
   ], [araDuraklar, ilanBaslangic, ilanVaris]);
 
+  // Form haritası: noktalar değişince gerçek yol-ağı rotasını (OSRM polyline) çek.
+  const [rotaCizgisi, setRotaCizgisi] = useState<[number, number][]>([]);
+  useEffect(() => {
+    const zaman = setTimeout(async () => {
+      const polyline = await rotaOnizle(rotaNoktalari.map(n => ({ enlem: n.enlem, boylam: n.boylam })));
+      setRotaCizgisi(polyline ? polylineCoz(polyline) : []);
+    }, 500);
+    return () => clearTimeout(zaman);
+  }, [rotaNoktalari, rotaOnizle]);
+
   const ilanKaydet = async () => {
-    await ilanOlustur({
+    const ok = await ilanOlustur({
+      aracId: seciliAracId,
       baslangic: ilanBaslangic,
       varis: ilanVaris,
       kalkisZamani: form.kalkisZamani,
@@ -104,6 +118,7 @@ export const CampusRideSayfasi = () => {
       tahminiMesafeKm: undefined,
       duraklar: araDuraklar,
     });
+    if (ok) setAraDuraklar([]);
   };
 
   // Yolcu varsayılan biniş/iniş = arama noktaları (haritadan değiştirilebilir).
@@ -179,31 +194,50 @@ export const CampusRideSayfasi = () => {
       {aktifSekme === 'surucu' && (
         <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
           <div className="space-y-4">
-            <PanelBaslik ikon={<ShieldCheck className="h-5 w-5" />} baslik="Sürücü Doğrulama" />
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
-              {dogrulama && (
-                <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-sm">
-                  <p className="font-black text-white">{DOGRULAMA_ETIKETLERI[dogrulama.durum]}</p>
-                  <p className="mt-1 text-xs text-white/45">{dogrulama.aracMarkaModel} · {dogrulama.plaka}</p>
-                  {dogrulama.adminNotu && <p className="mt-2 text-xs text-amber-200/80">{dogrulama.adminNotu}</p>}
-                </div>
-              )}
-              {!dogrulandi && (
-                <div className="space-y-3">
-                  <input className="ride-input" value={dogrulamaForm.ehliyetSinifi} onChange={e => setDogrulamaForm(f => ({ ...f, ehliyetSinifi: e.target.value }))} placeholder="Ehliyet sınıfı" />
-                  <input className="ride-input" value={dogrulamaForm.aracMarkaModel} onChange={e => setDogrulamaForm(f => ({ ...f, aracMarkaModel: e.target.value }))} placeholder="Araç marka/model" />
-                  <input className="ride-input" value={dogrulamaForm.plaka} onChange={e => setDogrulamaForm(f => ({ ...f, plaka: e.target.value.toUpperCase() }))} placeholder="Plaka" />
-                  <input className="ride-input" value={dogrulamaForm.aracRengi} onChange={e => setDogrulamaForm(f => ({ ...f, aracRengi: e.target.value }))} placeholder="Araç rengi" />
-                  <button onClick={() => dogrulamaBasvur(dogrulamaForm)} className="w-full rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-black text-white">Doğrulamaya Gönder</button>
-                </div>
-              )}
-              {dogrulandi && <p className="text-sm text-emerald-200">Doğrulaman onaylı. İlan açabilirsin.</p>}
+            <PanelBaslik ikon={<CarFront className="h-5 w-5" />} baslik="Sürücü Durumu" />
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
+              <DurumSatiri
+                etiket="Ehliyet doğrulaması"
+                tamam={dogrulandi}
+                bekliyor={dogrulama?.durum === 'BEKLEMEDE'}
+                metin={dogrulandi ? `Onaylı (${dogrulama?.ehliyetSinifi} sınıfı)` : dogrulama?.durum === 'BEKLEMEDE' ? 'İnceleniyor' : 'Doğrulanmadı'}
+              />
+              <DurumSatiri
+                etiket="Onaylı araç"
+                tamam={onayliAraclar.length > 0}
+                bekliyor={araclar.length > 0 && onayliAraclar.length === 0}
+                metin={onayliAraclar.length > 0 ? `${onayliAraclar.length} onaylı araç` : araclar.length > 0 ? 'Araç(lar) onay bekliyor' : 'Araç eklenmedi'}
+              />
+              <Link
+                to="/ayarlar"
+                className="flex items-center justify-center gap-2 rounded-2xl border border-cyan-300/25 bg-cyan-500/10 px-4 py-3 text-sm font-black text-cyan-100 hover:bg-cyan-500/20"
+              >
+                <Settings className="h-4 w-4" /> Ehliyet & Araç Yönetimi (Ayarlar)
+              </Link>
+              <p className="text-[11px] leading-relaxed text-white/35">
+                Ehliyet belgenizi ve araçlarınızı Ayarlar &gt; Sürücü &amp; Araçlar bölümünden yönetin. İlan açmak için
+                ehliyetiniz onaylı ve en az bir aracınız onaylı olmalıdır.
+              </p>
             </div>
           </div>
 
           <div className="space-y-4">
             <PanelBaslik ikon={<Plus className="h-5 w-5" />} baslik="Yolculuk İlanı Oluştur" />
             <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+              <div className="mb-4">
+                <label className="mb-1 block text-xs font-bold text-white/45">Araç</label>
+                {onayliAraclar.length > 0 ? (
+                  <select className="ride-input" value={seciliAracId} onChange={e => setSeciliAracId(e.target.value)}>
+                    {onayliAraclar.map(a => (
+                      <option key={a.id} value={a.id}>{a.markaModel} · {a.plaka}{a.koltukKapasitesi ? ` · ${a.koltukKapasitesi} koltuk` : ''}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <Link to="/ayarlar" className="flex items-center gap-2 rounded-xl border border-amber-300/25 bg-amber-500/10 px-3 py-2.5 text-sm font-semibold text-amber-100">
+                    <AlertTriangle className="h-4 w-4" /> İlan açmak için Ayarlar'dan onaylı bir araç ekleyin.
+                  </Link>
+                )}
+              </div>
               <div className="grid gap-4 lg:grid-cols-2">
                 <NoktaSecici label="Başlangıç" value={ilanBaslangic} onChange={setIlanBaslangic} populer={populerNoktalar} />
                 <NoktaSecici label="Varış" value={ilanVaris} onChange={setIlanVaris} populer={populerNoktalar} />
@@ -223,7 +257,7 @@ export const CampusRideSayfasi = () => {
               </div>
               <textarea className="ride-input mt-4 min-h-20" value={form.aciklama} onChange={e => setForm(f => ({ ...f, aciklama: e.target.value }))} placeholder="Yolculuk notu" />
               <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]">
-                <RotaHaritasi noktalar={rotaNoktalari} />
+                <RotaHaritasi noktalar={rotaNoktalari} rotaCizgisi={rotaCizgisi} />
                 <div className="space-y-2">
                   <p className="text-xs font-black uppercase tracking-wide text-white/35">Ara duraklar</p>
                   {araDuraklar.map((d, idx) => (
@@ -249,9 +283,16 @@ export const CampusRideSayfasi = () => {
                 <input type="checkbox" checked={form.araDurakKabulEdilir} onChange={e => setForm(f => ({ ...f, araDurakKabulEdilir: e.target.checked }))} />
                 Yolcular rota üzerindeki ek biniş/iniş noktalarını önerebilir
               </label>
-              <button disabled={!dogrulandi} onClick={ilanKaydet} className="mt-5 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40">
+              <button disabled={!ilanAcabilir || isLoading} onClick={ilanKaydet} className="mt-5 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40">
                 İlanı Yayınla
               </button>
+              {!ilanAcabilir && (
+                <p className="mt-2 text-[11px] text-white/35">
+                  {!dogrulandi ? 'Ehliyetiniz onaylanmadan ilan açamazsınız. ' : ''}
+                  {onayliAraclar.length === 0 ? 'Onaylı bir aracınız olmalı. ' : ''}
+                  Ayarlar &gt; Sürücü &amp; Araçlar bölümünü kullanın.
+                </p>
+              )}
             </div>
           </div>
         </section>
@@ -349,18 +390,39 @@ const PanelBaslik = ({ ikon, baslik }: { ikon: ReactNode; baslik: string }) => (
   </div>
 );
 
-const RotaHaritasi = ({ noktalar }: { noktalar: Nokta[] }) => {
-  const positions = noktalar.map(n => [n.enlem, n.boylam] as [number, number]);
+// rotaCizgisi: OSRM'den çözülmüş gerçek yol-ağı noktaları (varsa). Yoksa düz çizgiye düşer.
+const RotaHaritasi = ({ noktalar, rotaCizgisi }: { noktalar: Nokta[]; rotaCizgisi?: [number, number][] }) => {
+  const duraklar = noktalar.map(n => [n.enlem, n.boylam] as [number, number]);
+  const yol = rotaCizgisi && rotaCizgisi.length > 1 ? rotaCizgisi : duraklar;
+  const yolUstunde = !!(rotaCizgisi && rotaCizgisi.length > 1);
   return (
-    <div className="h-72 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
-      <MapContainer center={positions[0]} zoom={10} scrollWheelZoom={false} className="h-full w-full">
+    <div className="relative h-72 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+      <MapContainer key={duraklar.map(p => p.join(',')).join(';')} center={duraklar[0]} zoom={10} scrollWheelZoom={false} className="h-full w-full">
         <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <Polyline positions={positions} pathOptions={{ color: '#06b6d4', weight: 5 }} />
-        {positions.map((p, i) => <Marker key={i} position={p} />)}
+        <Polyline positions={yol} pathOptions={{ color: '#06b6d4', weight: 5, dashArray: yolUstunde ? undefined : '6 8' }} />
+        {duraklar.map((p, i) => <Marker key={i} position={p} />)}
       </MapContainer>
+      {!yolUstunde && (
+        <span className="absolute bottom-2 left-2 z-[400] rounded-lg bg-black/60 px-2 py-1 text-[10px] font-bold text-white/70">
+          Rota hesaplanıyor… (geçici düz çizgi)
+        </span>
+      )}
     </div>
   );
 };
+
+const DurumSatiri = ({ etiket, tamam, bekliyor, metin }: { etiket: string; tamam: boolean; bekliyor?: boolean; metin: string }) => (
+  <div className="flex items-center justify-between gap-3">
+    <span className="text-sm font-semibold text-white/70">{etiket}</span>
+    <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold ${
+      tamam ? 'border-emerald-300/30 bg-emerald-500/10 text-emerald-200'
+        : bekliyor ? 'border-amber-300/30 bg-amber-500/10 text-amber-200'
+        : 'border-white/15 bg-white/5 text-white/50'}`}>
+      {tamam ? <Check className="h-3.5 w-3.5" /> : bekliyor ? <Clock className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
+      {metin}
+    </span>
+  </div>
+);
 
 const IlanKarti = ({ ilan, onBasvur, kompakt }: { ilan: YolculukIlani; onBasvur?: () => void; kompakt?: boolean }) => {
   const duraklar = ilan.duraklar ?? [];

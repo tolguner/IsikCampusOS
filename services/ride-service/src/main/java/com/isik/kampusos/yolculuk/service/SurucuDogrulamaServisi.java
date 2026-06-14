@@ -28,11 +28,8 @@ public class SurucuDogrulamaServisi {
         SurucuDogrulama kayit = depo.findByKullaniciId(kullaniciId).orElseGet(SurucuDogrulama::new);
         kayit.setKullaniciId(kullaniciId);
         kayit.setEhliyetSinifi(zorunlu(talep.getEhliyetSinifi(), "Ehliyet sınıfı"));
-        kayit.setAracMarkaModel(zorunlu(talep.getAracMarkaModel(), "Araç marka/model"));
-        kayit.setPlaka(zorunlu(talep.getPlaka(), "Plaka"));
-        kayit.setAracRengi(talep.getAracRengi());
-        kayit.setKoltukKapasitesi(talep.getKoltukKapasitesi());
-        kayit.setBelgeUrl(talep.getBelgeUrl());
+        // Ehliyet artık araçtan bağımsız; belge fotoğrafı zorunlu (yalnız metin yeterli değil).
+        kayit.setBelgeUrl(zorunlu(talep.getBelgeUrl(), "Ehliyet belgesi fotoğrafı"));
         kayit.setDurum(SurucuDogrulama.DogrulamaDurumu.BEKLEMEDE);
         kayit.setAdminNotu(null);
         kayit.setInceleyenKullaniciId(null);

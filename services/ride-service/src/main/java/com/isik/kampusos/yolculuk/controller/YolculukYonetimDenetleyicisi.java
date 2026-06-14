@@ -21,6 +21,22 @@ public class YolculukYonetimDenetleyicisi {
     private final SurucuDogrulamaServisi dogrulamaServisi;
     private final YolculukAdminServisi adminServisi;
     private final com.isik.kampusos.yolculuk.service.PopulerNoktaServisi populerNoktaServisi;
+    private final com.isik.kampusos.yolculuk.service.AracServisi aracServisi;
+
+    // --- Araç onayları (admin) ---
+
+    @GetMapping("/araclar/bekleyen")
+    @PreAuthorize("hasAnyAuthority('ROLE_RIDE_ADMIN', 'ROLE_ADMIN')")
+    public ResponseEntity<List<com.isik.kampusos.yolculuk.model.Arac>> bekleyenAraclar() {
+        return ResponseEntity.ok(aracServisi.bekleyenler());
+    }
+
+    @PostMapping("/araclar/{id}/incele")
+    @PreAuthorize("hasAnyAuthority('ROLE_RIDE_ADMIN', 'ROLE_ADMIN')")
+    public ResponseEntity<com.isik.kampusos.yolculuk.model.Arac> aracIncele(
+            Authentication auth, @PathVariable String id, @RequestBody AdminIncelemeTalebi talep) {
+        return ResponseEntity.ok(aracServisi.incele(auth.getName(), id, talep));
+    }
 
     // --- Popüler nokta yönetimi (admin) ---
 
