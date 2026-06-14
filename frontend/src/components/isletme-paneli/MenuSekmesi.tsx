@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Pencil, Trash2, X, EyeOff, Eye, Star, Tag, Check } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, EyeOff, Eye, Star, Tag, Check, UtensilsCrossed } from 'lucide-react';
 import { useIsletmeDeposu, type MenuOgesiFormu, type Kategori } from '../../depolar/isletmeDeposu';
 import type { MenuOgesi } from '../../depolar/yemekDeposu';
 import { GorselYukleyici } from '../ortak/GorselYukleyici';
@@ -57,33 +57,45 @@ export const MenuSekmesi = () => {
         <p className="text-sm text-white/40 py-12 text-center">Henüz ürün eklemediniz.</p>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         {menu.map(oge => (
           <motion.div key={oge.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl p-4 border border-white/10 bg-white/[0.03] flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-bold text-white truncate">{oge.ad}</p>
-                {!oge.mevcut && <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-200 bg-amber-500/15 border border-amber-400/20 px-1.5 py-0.5 rounded"><EyeOff className="w-3 h-3" /> Pasif</span>}
+            className={`group relative aspect-square overflow-hidden rounded-2xl border border-white/10 ${!oge.mevcut ? 'opacity-70' : ''}`}>
+            {/* Kart arka planı = ürün görseli (kare). Görsel yoksa gradyan placeholder. */}
+            {oge.gorselUrl ? (
+              <img src={oge.gorselUrl} alt={oge.ad} className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            ) : (
+              <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-orange-500/20 to-purple-500/10">
+                <UtensilsCrossed className="w-10 h-10 text-white/20" />
               </div>
-              {oge.kategori && <p className="text-[11px] text-white/35 mt-0.5">{oge.kategori}</p>}
-              {oge.aciklama && <p className="text-xs text-white/40 mt-1 line-clamp-2">{oge.aciklama}</p>}
+            )}
+            {/* Alt gradyan */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent" />
+
+            {/* Üst: durum rozetleri (sol) + düzenle/sil (sağ) */}
+            <div className="absolute top-2 inset-x-2 flex items-start justify-between gap-2">
+              <div className="flex flex-col gap-1">
+                {!oge.mevcut && <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-100 bg-amber-500/30 backdrop-blur-sm border border-amber-300/30 px-1.5 py-0.5 rounded-lg"><EyeOff className="w-3 h-3" /> Pasif</span>}
+                {oge.oneCikan && <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-100 bg-amber-500/30 backdrop-blur-sm border border-amber-300/30 px-1.5 py-0.5 rounded-lg"><Star className="w-2.5 h-2.5 fill-amber-300 text-amber-300" /> Öne çıkan</span>}
+              </div>
+              <div className="flex gap-1">
+                <button onClick={() => formuAc(oge)} title="Düzenle" className="p-1.5 rounded-lg bg-black/45 backdrop-blur-sm text-white/85 hover:bg-black/65"><Pencil className="w-4 h-4" /></button>
+                <button onClick={() => menuSil(oge.id)} title="Menüden kaldır" className="p-1.5 rounded-lg bg-black/45 backdrop-blur-sm text-red-300 hover:bg-red-500/45 hover:text-red-100"><Trash2 className="w-4 h-4" /></button>
+              </div>
+            </div>
+
+            {/* Alt: yazılar gradyanın üzerinde */}
+            <div className="absolute inset-x-0 bottom-0 p-3">
+              {oge.kategori && <p className="text-[10px] font-bold uppercase tracking-wide text-orange-200/80 mb-0.5 truncate">{oge.kategori}</p>}
               {etiketleriAyir(oge.etiketler).length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {etiketleriAyir(oge.etiketler).map(kod => (
-                    <span key={kod} className="text-[10px] font-bold text-white/55 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded">{etiketEtiketi(kod)}</span>
+                <div className="flex flex-wrap gap-1 mb-1.5">
+                  {etiketleriAyir(oge.etiketler).slice(0, 3).map(kod => (
+                    <span key={kod} className="text-[10px] font-bold text-white/85 bg-white/15 backdrop-blur-sm border border-white/15 px-1.5 py-0.5 rounded">{etiketEtiketi(kod)}</span>
                   ))}
                 </div>
               )}
-              <p className="text-sm font-extrabold text-orange-200 mt-1.5">{paraBicimle(oge.fiyat)}</p>
-            </div>
-            <div className="flex flex-col gap-1.5 shrink-0">
-              <button onClick={() => formuAc(oge)} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" title="Düzenle">
-                <Pencil className="w-4 h-4" />
-              </button>
-              <button onClick={() => menuSil(oge.id)} className="p-2 rounded-lg hover:bg-red-500/20 text-red-300/70 hover:text-red-300" title="Menüden kaldır">
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <p className="text-sm font-bold text-white drop-shadow-md line-clamp-2 leading-tight">{oge.ad}</p>
+              <p className="mt-1 text-sm font-extrabold text-orange-200 drop-shadow">{paraBicimle(oge.fiyat)}</p>
             </div>
           </motion.div>
         ))}
