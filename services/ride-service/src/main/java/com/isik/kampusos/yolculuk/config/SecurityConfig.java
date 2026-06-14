@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/yolculuk-yonetim/**").hasAnyAuthority("ROLE_RIDE_ADMIN", "ROLE_ADMIN")
+                        .requestMatchers("/api/v1/yolculuk-yonetim/**").hasAnyAuthority("ROLE_RIDE_ADMIN", "ROLE_BUILDING_SUPPORT_ADMIN", "ROLE_ADMIN")
                         .requestMatchers("/api/v1/yolculuklar/**").hasAuthority("ROLE_STUDENT")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtKimlikFiltresi, UsernamePasswordAuthenticationFilter.class);

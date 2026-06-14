@@ -41,7 +41,7 @@ public class KullaniciYonetimServisi {
     /** Sistem yöneticisinin yönetebildiği roller — öğrenci HARİÇ. */
     private static final Set<String> IZINLI_ROLLER = Set.of(
             "ROLE_ADMIN", "ROLE_SKS_ADMIN", "ROLE_FACILITY_ADMIN", "ROLE_REGISTRAR",
-            "ROLE_VENDOR_ADMIN", "ROLE_RIDE_ADMIN");
+            "ROLE_VENDOR_ADMIN", "ROLE_RIDE_ADMIN", "ROLE_BUILDING_SUPPORT_ADMIN");
     /** Personel için izinli durumlar — MEZUN/ILISIGI_KESILMIS yalnızca öğrencilere özgüdür. */
     private static final Set<KullaniciDurumu> IZINLI_DURUMLAR = Set.of(KullaniciDurumu.AKTIF, KullaniciDurumu.PASIF);
 
