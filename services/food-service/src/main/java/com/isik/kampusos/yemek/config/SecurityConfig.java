@@ -43,8 +43,8 @@ public class SecurityConfig {
                             .hasAnyAuthority("ROLE_VENDOR_ADMIN", "ROLE_VENDOR_STAFF")
                         // İşletme yönetimi (menü/ayar/kampanya/çalışma saati/personel/ciro): yalnız sahip
                         .requestMatchers("/api/v1/satici/**").hasAuthority("ROLE_VENDOR_ADMIN")
-                        // Sistem yöneticisi: satıcı kayıt yönetimi
-                        .requestMatchers("/api/v1/yonetim/saticilar/**").hasAuthority("ROLE_ADMIN")
+                        // Destek Hizmetleri Müdürlüğü: işletme kayıt yönetimi
+                        .requestMatchers("/api/v1/yonetim/saticilar/**").hasAuthority("ROLE_SUPPORT_SERVICES_ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtKimlikFiltresi, UsernamePasswordAuthenticationFilter.class);
         return http.build();

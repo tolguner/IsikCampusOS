@@ -20,6 +20,14 @@ export interface RotaDuragi extends Nokta {
   tahminiDakika: number;
 }
 
+/** Haritada gösterilen bir rota seçeneği (OSRM alternatifi). İlk sıradaki en iyi/ana rotadır. */
+export interface RotaSecenek {
+  polyline: string;
+  toplamDakika: number;
+  mesafeKm: number;
+  osrmKullanildi: boolean;
+}
+
 export interface YolculukIlani {
   id: string;
   surucuKullaniciId: string;
@@ -42,6 +50,7 @@ export interface YolculukIlani {
   tahminiToplamDakika?: number;
   tahminiMesafeKm?: number;
   uygunlukSkoru?: number;
+  aracId?: string;
   duraklar?: RotaDuragi[];
 }
 
@@ -64,13 +73,32 @@ export interface SurucuDogrulama {
   id: string;
   kullaniciId: string;
   ehliyetSinifi: string;
-  aracMarkaModel: string;
-  plaka: string;
-  aracRengi?: string;
-  koltukKapasitesi?: number;
   belgeUrl?: string;
   durum: DogrulamaDurumu;
   adminNotu?: string;
+}
+
+export type AracDurumu = 'BEKLEMEDE' | 'ONAYLANDI' | 'REDDEDILDI' | 'PASIF';
+
+export interface Arac {
+  id: string;
+  kullaniciId: string;
+  markaModel: string;
+  plaka: string;
+  renk?: string;
+  koltukKapasitesi?: number;
+  gorselUrl: string;
+  durum: AracDurumu;
+  adminNotu?: string;
+  olusturulmaTarihi?: string;
+}
+
+export interface AracFormu {
+  markaModel: string;
+  plaka: string;
+  renk?: string;
+  koltukKapasitesi?: number;
+  gorselUrl: string;
 }
 
 export interface Sikayet {
@@ -86,6 +114,7 @@ export interface Sikayet {
 }
 
 export interface YolculukIlaniFormu {
+  aracId: string;
   baslangic: Nokta;
   varis: Nokta;
   kalkisZamani: string;
@@ -96,6 +125,7 @@ export interface YolculukIlaniFormu {
   iban?: string;
   aciklama?: string;
   araDurakKabulEdilir: boolean;
+  rotaPolyline?: string;
   tahminiToplamDakika?: number;
   tahminiMesafeKm?: number;
   duraklar: RotaDuragi[];
@@ -109,15 +139,24 @@ interface YolculukState {
   dogrulama: SurucuDogrulama | null;
   adminDogrulamalar: SurucuDogrulama[];
   sikayetler: Sikayet[];
+  populerNoktalar: Nokta[];
+  araclar: Arac[];
+  bekleyenAraclar: Arac[];
   isLoading: boolean;
   hata: string | null;
   basariMesaji: string | null;
 
   temizleMesajlar: () => void;
+  populerNoktalariGetir: () => Promise<void>;
   ilanAra: (params: Record<string, string | number | boolean | undefined>) => Promise<void>;
   ilanOlustur: (form: YolculukIlaniFormu) => Promise<boolean>;
   benimVerilerimiGetir: () => Promise<void>;
-  dogrulamaBasvur: (form: Partial<SurucuDogrulama>) => Promise<boolean>;
+  dogrulamaBasvur: (form: { ehliyetSinifi: string; belgeUrl: string }) => Promise<boolean>;
+  araclarimGetir: () => Promise<void>;
+  aracEkle: (form: AracFormu) => Promise<boolean>;
+  aracGuncelle: (id: string, form: AracFormu) => Promise<boolean>;
+  aracSil: (id: string) => Promise<void>;
+  rotaOnizle: (noktalar: { enlem: number; boylam: number }[]) => Promise<RotaSecenek[]>;
   ilanaKatil: (ilanId: string, binis: Nokta, inis: Nokta, mesaj?: string) => Promise<boolean>;
   talepKabul: (talepId: string) => Promise<void>;
   talepRed: (talepId: string, neden?: string) => Promise<void>;
@@ -127,6 +166,7 @@ interface YolculukState {
   sikayetEt: (talepId: string, neden: string, aciklama: string) => Promise<void>;
   adminVerileriniGetir: () => Promise<void>;
   dogrulamaIncele: (id: string, durum: DogrulamaDurumu, not?: string) => Promise<void>;
+  aracIncele: (id: string, durum: AracDurumu, not?: string) => Promise<void>;
   sikayetIncele: (id: string, durum: SikayetDurumu, not?: string) => Promise<void>;
 }
 
@@ -141,11 +181,21 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
   dogrulama: null,
   adminDogrulamalar: [],
   sikayetler: [],
+  populerNoktalar: [],
+  araclar: [],
+  bekleyenAraclar: [],
   isLoading: false,
   hata: null,
   basariMesaji: null,
 
   temizleMesajlar: () => set({ hata: null, basariMesaji: null }),
+
+  populerNoktalariGetir: async () => {
+    try {
+      const res = await api.get<{ ad: string; enlem: number; boylam: number }[]>('/yolculuklar/populer-noktalar');
+      set({ populerNoktalar: res.data.map(p => ({ ad: p.ad, enlem: p.enlem, boylam: p.boylam })) });
+    } catch { /* sessiz */ }
+  },
 
   ilanAra: async (params) => {
     set({ isLoading: true, hata: null });
@@ -203,6 +253,58 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
     }
   },
 
+  araclarimGetir: async () => {
+    try {
+      const res = await api.get<Arac[]>('/yolculuklar/araclar');
+      set({ araclar: res.data });
+    } catch { /* sessiz */ }
+  },
+
+  aracEkle: async (form) => {
+    set({ isLoading: true, hata: null, basariMesaji: null });
+    try {
+      await api.post('/yolculuklar/araclar', form);
+      set({ isLoading: false, basariMesaji: 'Araç eklendi; yönetici onayına gönderildi.' });
+      await get().araclarimGetir();
+      return true;
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'Araç eklenemedi.'), isLoading: false });
+      return false;
+    }
+  },
+
+  aracGuncelle: async (id, form) => {
+    set({ isLoading: true, hata: null, basariMesaji: null });
+    try {
+      await api.put(`/yolculuklar/araclar/${id}`, form);
+      set({ isLoading: false, basariMesaji: 'Araç güncellendi; yeniden onaya gönderildi.' });
+      await get().araclarimGetir();
+      return true;
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'Araç güncellenemedi.'), isLoading: false });
+      return false;
+    }
+  },
+
+  aracSil: async (id) => {
+    try {
+      await api.delete(`/yolculuklar/araclar/${id}`);
+      set({ basariMesaji: 'Araç silindi.' });
+      await get().araclarimGetir();
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'Araç silinemedi.') });
+    }
+  },
+
+  rotaOnizle: async (noktalar) => {
+    try {
+      const res = await api.post<RotaSecenek[]>('/yolculuklar/rota-onizleme', { noktalar });
+      return (res.data ?? []).filter(r => !!r.polyline);
+    } catch {
+      return [];
+    }
+  },
+
   ilanaKatil: async (ilanId, binis, inis, mesaj) => {
     set({ isLoading: true, hata: null, basariMesaji: null });
     try {
@@ -249,11 +351,12 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
   adminVerileriniGetir: async () => {
     set({ isLoading: true, hata: null });
     try {
-      const [dogrulamalar, sikayetler] = await Promise.all([
+      const [dogrulamalar, araclar, sikayetler] = await Promise.all([
         api.get<SurucuDogrulama[]>('/yolculuk-yonetim/surucu-dogrulamalari/bekleyen'),
+        api.get<Arac[]>('/yolculuk-yonetim/araclar/bekleyen'),
         api.get<Sikayet[]>('/yolculuk-yonetim/sikayetler'),
       ]);
-      set({ adminDogrulamalar: dogrulamalar.data, sikayetler: sikayetler.data, isLoading: false });
+      set({ adminDogrulamalar: dogrulamalar.data, bekleyenAraclar: araclar.data, sikayetler: sikayetler.data, isLoading: false });
     } catch (err: any) {
       set({ hata: hataMesaji(err, 'RideKampüs yönetim verileri yüklenemedi.'), isLoading: false });
     }
@@ -261,6 +364,11 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
 
   dogrulamaIncele: async (id, durum, not) => {
     await api.post(`/yolculuk-yonetim/surucu-dogrulamalari/${id}/incele`, { durum, not });
+    await get().adminVerileriniGetir();
+  },
+
+  aracIncele: async (id, durum, not) => {
+    await api.post(`/yolculuk-yonetim/araclar/${id}/incele`, { durum, not });
     await get().adminVerileriniGetir();
   },
 
@@ -283,4 +391,11 @@ export const TALEP_ETIKETLERI: Record<TalepDurumu, string> = {
   REDDEDILDI: 'Reddedildi',
   IPTAL: 'İptal',
   TAMAMLANDI: 'Tamamlandı',
+};
+
+export const ARAC_ETIKETLERI: Record<AracDurumu, string> = {
+  BEKLEMEDE: 'Onay bekliyor',
+  ONAYLANDI: 'Onaylı',
+  REDDEDILDI: 'Reddedildi',
+  PASIF: 'Pasif',
 };

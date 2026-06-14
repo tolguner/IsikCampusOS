@@ -25,6 +25,7 @@ import { YemekSiparislerimSayfasi } from './pages/YemekSiparislerimSayfasi';
 import { IsletmePaneli } from './pages/IsletmePaneli';
 import { CampusRideSayfasi } from './pages/CampusRideSayfasi';
 import { RideYonetimPaneli } from './pages/RideYonetimPaneli';
+import { DestekHizmetleriPaneli } from './pages/DestekHizmetleriPaneli';
 import { useKimlikDeposu } from './depolar/kimlikDeposu';
 import { useBildirimDeposu } from './depolar/bildirimDeposu';
 import { useKulupDeposu } from './depolar/kulupDeposu';
@@ -88,6 +89,10 @@ const DashboardRoute = () => {
 
   if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.isletmePaneli)) {
     return <IsletmePaneli />;
+  }
+
+  if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.isletmeYonetimiPaneli)) {
+    return <DestekHizmetleriPaneli />;
   }
 
   if (yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.rideYonetimi)) {

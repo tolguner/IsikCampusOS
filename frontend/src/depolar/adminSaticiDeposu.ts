@@ -10,6 +10,19 @@ export interface VendorAdminKullanici {
   soyad?: string;
 }
 
+/** İşletme genel bilgi değişikliği talebi (admin inceleme). */
+export interface SaticiDegisiklikTalebi {
+  id: string;
+  saticiId: string;
+  saticiAdi: string;
+  alanAdi: string;
+  mevcutDeger?: string;
+  talepEdilenDeger: string;
+  durum: string;
+  geriBildirim?: string;
+  olusturulmaTarihi?: string;
+}
+
 export interface SaticiOlusturmaFormu {
   ad: string;
   yoneticiKullaniciId: string;
@@ -51,6 +64,12 @@ interface AdminSaticiState {
   saticiOlustur: (form: SaticiOlusturmaFormu) => Promise<boolean>;
   saticiVeSahipOlustur: (form: SaticiVeSahipFormu) => Promise<boolean>;
   saticiGuncelle: (id: string, form: SaticiGuncellemeFormu) => Promise<boolean>;
+  saticiSil: (id: string) => Promise<boolean>;
+  yoneticiDegistir: (id: string, sahip: { ad: string; soyad: string; eposta: string; tc: string }) => Promise<boolean>;
+  talepler: SaticiDegisiklikTalebi[];
+  talepleriGetir: () => Promise<void>;
+  talepOnayla: (id: string) => Promise<void>;
+  talepRevize: (id: string, geriBildirim: string) => Promise<void>;
 }
 
 const hataMesaji = (err: any, varsayilan: string) =>
@@ -59,6 +78,7 @@ const hataMesaji = (err: any, varsayilan: string) =>
 export const useAdminSaticiDeposu = create<AdminSaticiState>((set, get) => ({
   saticilar: [],
   vendorAdminler: [],
+  talepler: [],
   isLoading: false,
   hata: null,
   basariMesaji: null,
@@ -130,11 +150,86 @@ export const useAdminSaticiDeposu = create<AdminSaticiState>((set, get) => ({
     set({ isLoading: true, hata: null, basariMesaji: null });
     try {
       await api.put(`/yonetim/saticilar/${id}`, form);
-      set({ basariMesaji: 'Satıcı güncellendi.', isLoading: false });
+      set({ basariMesaji: 'İşletme güncellendi.', isLoading: false });
       await get().saticilariGetir();
       return true;
     } catch (err: any) {
-      set({ hata: hataMesaji(err, 'Satıcı güncellenemedi.'), isLoading: false });
+      set({ hata: hataMesaji(err, 'İşletme güncellenemedi.'), isLoading: false });
+      return false;
+    }
+  },
+
+  saticiSil: async (id) => {
+    set({ isLoading: true, hata: null, basariMesaji: null });
+    try {
+      // 1) İşletme + bağlı food kayıtları + personel hesapları silinir; sahip id'si döner.
+      const res = await api.delete<{ yoneticiKullaniciId: string }>(`/yonetim/saticilar/${id}`);
+      // 2) Sahip hesabı denetim için silinmez, PASIF'e alınır.
+      const sahipId = res.data?.yoneticiKullaniciId;
+      if (sahipId) {
+        try { await api.put(`/yonetim/kullanicilar/${sahipId}`, { durum: 'PASIF' }); } catch { /* sahip zaten yoksa yok say */ }
+      }
+      set({ basariMesaji: 'İşletme silindi; eski yönetici hesabı askıya alındı (PASIF).', isLoading: false });
+      await get().saticilariGetir();
+      await get().vendorAdminleriGetir();
+      return true;
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'İşletme silinemedi.'), isLoading: false });
+      return false;
+    }
+  },
+
+  talepleriGetir: async () => {
+    try {
+      const res = await api.get<SaticiDegisiklikTalebi[]>('/yonetim/saticilar/talepler');
+      set({ talepler: res.data });
+    } catch { /* sessiz */ }
+  },
+
+  talepOnayla: async (id) => {
+    set({ hata: null, basariMesaji: null });
+    try {
+      await api.post(`/yonetim/saticilar/talepler/${id}/onayla`);
+      set({ basariMesaji: 'Değişiklik onaylandı ve uygulandı.' });
+      await get().talepleriGetir();
+      await get().saticilariGetir();
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'Talep onaylanamadı.') });
+    }
+  },
+
+  talepRevize: async (id, geriBildirim) => {
+    set({ hata: null, basariMesaji: null });
+    try {
+      await api.post(`/yonetim/saticilar/talepler/${id}/revize`, { geriBildirim });
+      set({ basariMesaji: 'Revize talep edildi.' });
+      await get().talepleriGetir();
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'Revize talep edilemedi.') });
+    }
+  },
+
+  yoneticiDegistir: async (id, sahip) => {
+    set({ isLoading: true, hata: null, basariMesaji: null });
+    try {
+      // 1) Yeni işletme yöneticisi hesabı
+      const userRes = await api.post<{ id: string }>('/yonetim/kullanicilar', {
+        ad: sahip.ad, soyad: sahip.soyad, roller: 'ROLE_VENDOR_ADMIN', eposta: sahip.eposta, tcKimlikNo: sahip.tc,
+      });
+      const yeniYoneticiId = userRes.data.id;
+      // 2) İşletmeye ata; eski yönetici id'si döner
+      const res = await api.put<{ eskiYoneticiId: string }>(`/yonetim/saticilar/${id}/yonetici`, { yeniYoneticiId });
+      // 3) Eski yönetici PASIF (denetim için silinmez)
+      const eskiId = res.data?.eskiYoneticiId;
+      if (eskiId) {
+        try { await api.put(`/yonetim/kullanicilar/${eskiId}`, { durum: 'PASIF' }); } catch { /* yok say */ }
+      }
+      set({ basariMesaji: 'Yönetici değiştirildi; eski yönetici askıya alındı (PASIF).', isLoading: false });
+      await get().saticilariGetir();
+      await get().vendorAdminleriGetir();
+      return true;
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'Yönetici değiştirilemedi.'), isLoading: false });
       return false;
     }
   },

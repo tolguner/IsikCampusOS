@@ -83,6 +83,17 @@ export interface CiroRaporu {
 /** Çağıranın işletmedeki rolü — panel butonları buna göre çizilir. */
 export type IsletmeRolu = 'SAHIP' | 'PERSONEL' | 'KURYE';
 
+/** Sahibin açtığı işletme bilgi değişikliği talebi. */
+export interface SaticiDegisiklikTalebim {
+  id: string;
+  alanAdi: string;
+  mevcutDeger?: string;
+  talepEdilenDeger: string;
+  durum: string;
+  geriBildirim?: string;
+  olusturulmaTarihi?: string;
+}
+
 interface IsletmeState {
   satici: Satici | null;
   benimRol: IsletmeRolu | null;
@@ -91,6 +102,7 @@ interface IsletmeState {
   ciro: CiroRaporu | null;
   calismaSaatleri: CalismaSaati[];
   kampanyalar: Kampanya[];
+  degisiklikTalepleri: SaticiDegisiklikTalebim[];
   isLoading: boolean;
   error: string | null;
   successMessage: string | null;
@@ -98,6 +110,8 @@ interface IsletmeState {
   clearMessages: () => void;
   saticimiGetir: () => Promise<void>;
   saticiGuncelle: (form: SaticiAyarFormu) => Promise<boolean>;
+  taleplerimGetir: () => Promise<void>;
+  degisiklikTalepEt: (alanAdi: string, talepEdilenDeger: string) => Promise<boolean>;
   calismaSaatleriGetir: () => Promise<void>;
   calismaSaatleriKaydet: (gunler: CalismaSaatiGun[]) => Promise<boolean>;
   kampanyalariGetir: () => Promise<void>;
@@ -124,6 +138,7 @@ const getErrorMessage = (err: any, fallback: string) =>
 export const useIsletmeDeposu = create<IsletmeState>((set, get) => ({
   satici: null,
   benimRol: null,
+  degisiklikTalepleri: [],
   menu: [],
   siparisler: [],
   ciro: null,
@@ -217,6 +232,26 @@ export const useIsletmeDeposu = create<IsletmeState>((set, get) => ({
       const rolRes = await api.get<{ rol: IsletmeRolu }>('/satici/personel/benim-rol');
       set({ benimRol: rolRes.data.rol });
     } catch { /* sessiz */ }
+  },
+
+  taleplerimGetir: async () => {
+    try {
+      const res = await api.get<SaticiDegisiklikTalebim[]>('/satici/degisiklik-taleplerim');
+      set({ degisiklikTalepleri: res.data });
+    } catch { /* sessiz */ }
+  },
+
+  degisiklikTalepEt: async (alanAdi, talepEdilenDeger) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      await api.post('/satici/degisiklik-talebi', { alanAdi, talepEdilenDeger });
+      set({ successMessage: 'Değişiklik talebi gönderildi; sistem yöneticisi onayına sunuldu.', isLoading: false });
+      await get().taleplerimGetir();
+      return true;
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Talep gönderilemedi.'), isLoading: false });
+      return false;
+    }
   },
 
   saticiGuncelle: async (form) => {

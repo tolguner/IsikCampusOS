@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Shield, Monitor, Moon, Sun, MonitorSmartphone, Globe, Palette, Phone } from 'lucide-react';
+import { Bell, Shield, Monitor, Moon, Sun, MonitorSmartphone, Globe, Palette, Phone, Car } from 'lucide-react';
 import { useProfilDeposu } from '../depolar/profilDeposu';
+import { SurucuAyarlari } from '../components/ayarlar/SurucuAyarlari';
 
 export const AyarlarSayfasi = () => {
   const { profile, fetchMyProfile, updateMyProfile, isLoading } = useProfilDeposu();
@@ -52,6 +53,9 @@ export const AyarlarSayfasi = () => {
               </button>
               <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:bg-white/5 hover:text-white font-medium text-sm text-left transition-colors cursor-pointer">
                 <Shield className="w-4 h-4" /> Gizlilik
+              </button>
+              <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:bg-white/5 hover:text-white font-medium text-sm text-left transition-colors cursor-pointer">
+                <Car className="w-4 h-4" /> Sürücü & Araçlar
               </button>
             </nav>
           </div>
@@ -170,6 +174,9 @@ export const AyarlarSayfasi = () => {
               </button>
             </div>
           </motion.div>
+
+          {/* Sürücü & Araç Doğrulama (CampusRide) */}
+          <SurucuAyarlari />
 
         </div>
       </div>

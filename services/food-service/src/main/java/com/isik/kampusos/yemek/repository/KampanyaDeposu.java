@@ -8,4 +8,5 @@ import java.util.List;
 public interface KampanyaDeposu extends JpaRepository<Kampanya, String> {
     List<Kampanya> findBySaticiIdOrderByOlusturulmaTarihiDesc(String saticiId);
     List<Kampanya> findBySaticiIdAndAktifTrue(String saticiId);
+    void deleteBySaticiId(String saticiId);
 }

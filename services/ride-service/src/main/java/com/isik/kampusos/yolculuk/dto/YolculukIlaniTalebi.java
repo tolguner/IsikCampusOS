@@ -9,6 +9,8 @@ import java.util.List;
 
 @Data
 public class YolculukIlaniTalebi {
+    /** İlanın açılacağı onaylı araç (araclar.id) — zorunlu. */
+    private String aracId;
     private NoktaTalebi baslangic;
     private NoktaTalebi varis;
     private LocalDateTime kalkisZamani;

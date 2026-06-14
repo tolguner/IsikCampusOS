@@ -5,39 +5,41 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/** Sürücünün garajındaki bir araç. Her araç ayrı yönetici onayından geçer; görsel zorunlu. */
 @Entity
-@Table(name = "surucu_dogrulamalari")
+@Table(name = "araclar")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SurucuDogrulama {
+public class Arac {
 
-    public enum DogrulamaDurumu { BEKLEMEDE, ONAYLANDI, REDDEDILDI, ASKIYA_ALINDI }
+    public enum AracDurumu { BEKLEMEDE, ONAYLANDI, REDDEDILDI, PASIF }
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String kullaniciId;
 
     @Column(nullable = false)
-    private String ehliyetSinifi;
+    private String markaModel;
 
-    // Geriye-uyum (legacy): araç bilgisi artık ayrı `araclar` tablosunda tutulur.
-    private String aracMarkaModel;
+    @Column(nullable = false)
     private String plaka;
-    private String aracRengi;
+
+    private String renk;
     private Integer koltukKapasitesi;
 
-    @Column(length = 1000)
-    private String belgeUrl;
+    /** Araç fotoğrafı (base64 data-URL); zorunlu. */
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String gorselUrl;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private DogrulamaDurumu durum = DogrulamaDurumu.BEKLEMEDE;
+    private AracDurumu durum = AracDurumu.BEKLEMEDE;
 
     @Column(length = 700)
     private String adminNotu;
@@ -47,7 +49,7 @@ public class SurucuDogrulama {
     private LocalDateTime incelenmeTarihi;
 
     @PrePersist
-    protected void onCreate() {
-        this.olusturulmaTarihi = LocalDateTime.now();
+    void onCreate() {
+        if (olusturulmaTarihi == null) olusturulmaTarihi = LocalDateTime.now();
     }
 }

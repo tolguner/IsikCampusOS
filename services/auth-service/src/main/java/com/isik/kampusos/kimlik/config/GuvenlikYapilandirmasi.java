@@ -56,7 +56,12 @@ public class GuvenlikYapilandirmasi {
                 .requestMatchers("/api/v1/ogrenciler/**").hasAuthority("ROLE_REGISTRAR")
                 // İşletme sahibi: personel (ROLE_VENDOR_STAFF) hesap oluşturma/silme (food köprüsü)
                 .requestMatchers("/api/v1/kimlik/isletme-personeli/**").hasAuthority("ROLE_VENDOR_ADMIN")
-                // Sistem yöneticisi: tüm kullanıcı/rol yönetimi
+                // Destek Hizmetleri Müdürlüğü işletme yönetimi için sahip (VENDOR_ADMIN) hesabı yönetir.
+                // Servis tarafında YALNIZ VENDOR_ADMIN ile sınırlanır (rolDogrula/vendor kapsam kontrolü).
+                // Bu matcher jenerik /yonetim/** kuralından ÖNCE gelmeli.
+                .requestMatchers("/api/v1/yonetim/kullanicilar/**")
+                    .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPPORT_SERVICES_ADMIN")
+                // Sistem yöneticisi: tüm kullanıcı/rol yönetimi (denetim günlükleri vb.)
                 .requestMatchers("/api/v1/yonetim/**").hasAuthority("ROLE_ADMIN")
                 // Diğer tüm istekler authenticated olmalı
                 .anyRequest().authenticated()

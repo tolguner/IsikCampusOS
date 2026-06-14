@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Pencil, X, Store, MapPin } from 'lucide-react';
+import { Plus, Pencil, X, Store, MapPin, UserCog, Trash2 } from 'lucide-react';
 import {
   useAdminSaticiDeposu,
   type SaticiVeSahipFormu,
@@ -12,14 +12,21 @@ const inputClass =
 
 export const SaticilarSekmesi = () => {
   const {
-    saticilar, vendorAdminler, isLoading,
-    saticilariGetir, vendorAdminleriGetir, saticiVeSahipOlustur, saticiGuncelle,
+    saticilar, vendorAdminler, isLoading, talepler,
+    saticilariGetir, vendorAdminleriGetir, saticiVeSahipOlustur, saticiGuncelle, saticiSil, yoneticiDegistir,
+    talepleriGetir, talepOnayla, talepRevize,
   } = useAdminSaticiDeposu();
 
   const [olusturModal, setOlusturModal] = useState(false);
   const [duzenle, setDuzenle] = useState<Satici | null>(null);
+  const [yoneticiModal, setYoneticiModal] = useState<Satici | null>(null);
 
-  useEffect(() => { saticilariGetir(); vendorAdminleriGetir(); }, [saticilariGetir, vendorAdminleriGetir]);
+  useEffect(() => { saticilariGetir(); vendorAdminleriGetir(); talepleriGetir(); }, [saticilariGetir, vendorAdminleriGetir, talepleriGetir]);
+
+  const ALAN_ETIKET: Record<string, string> = {
+    ad: 'İşletme Adı', aciklama: 'Açıklama', konumMetni: 'Konum', logoUrl: 'Logo', kapakGorselUrl: 'Kapak Görseli', mutfakTuru: 'Mutfak Türü',
+  };
+  const gorselAlan = (a: string) => a === 'logoUrl' || a === 'kapakGorselUrl';
 
   const yoneticiHaritasi = useMemo(() => {
     const m = new Map<string, string>();
@@ -30,11 +37,39 @@ export const SaticilarSekmesi = () => {
   return (
     <section className="space-y-5">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-white/45">{saticilar.length} satıcı kayıtlı</p>
+        <p className="text-sm text-white/45">{saticilar.length} işletme kayıtlı</p>
         <button onClick={() => setOlusturModal(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-purple-500 hover:bg-purple-400 px-5 py-3 text-sm font-black text-white transition cursor-pointer">
-          <Plus className="h-4 w-4" /> Yeni Satıcı
+          <Plus className="h-4 w-4" /> Yeni İşletme
         </button>
       </div>
+
+      {talepler.length > 0 && (
+        <div className="rounded-3xl border border-amber-400/25 bg-amber-500/[0.06] p-4 space-y-3">
+          <p className="text-sm font-black text-amber-100">Bekleyen Bilgi Değişikliği Talepleri ({talepler.length})</p>
+          {talepler.map(t => (
+            <div key={t.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 flex flex-wrap items-center gap-3 justify-between">
+              <div className="min-w-0 text-sm">
+                <span className="font-bold text-white">{t.saticiAdi}</span>
+                <span className="text-white/50"> · {ALAN_ETIKET[t.alanAdi] || t.alanAdi}</span>
+                <div className="text-xs text-white/45 mt-1">
+                  {gorselAlan(t.alanAdi) ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span>Mevcut:</span>{t.mevcutDeger ? <img src={t.mevcutDeger} className="h-8 w-8 rounded object-cover border border-white/10" /> : '—'}
+                      <span>→ Yeni:</span><img src={t.talepEdilenDeger} className="h-8 w-8 rounded object-cover border border-emerald-400/30" />
+                    </span>
+                  ) : (
+                    <span><span className="text-white/35 line-through">{t.mevcutDeger || '—'}</span> → <span className="text-emerald-200">{t.talepEdilenDeger}</span></span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button onClick={() => talepOnayla(t.id)} className="px-3 py-2 rounded-xl text-xs font-black text-white bg-emerald-500/80 hover:bg-emerald-500 cursor-pointer">Onayla</button>
+                <button onClick={() => { const g = window.prompt('Revize gerekçesi (işletmeye iletilecek):'); if (g != null) talepRevize(t.id, g); }} className="px-3 py-2 rounded-xl text-xs font-black text-amber-100 bg-amber-500/15 border border-amber-400/25 hover:bg-amber-500/25 cursor-pointer">Revize İste</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.025]">
         <table className="w-full min-w-[900px] text-left border-collapse">
@@ -71,8 +106,10 @@ export const SaticilarSekmesi = () => {
                   <span className={`text-xs font-bold ${s.acik ? 'text-emerald-300' : 'text-white/40'}`}>{s.acik ? '● Açık' : '○ Kapalı'}</span>
                 </td>
                 <td className="px-5 py-4">
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-end gap-1">
                     <button onClick={() => setDuzenle(s)} title="Düzenle" className="p-2 rounded-xl text-blue-300 hover:bg-white/5 cursor-pointer"><Pencil className="h-4 w-4" /></button>
+                    <button onClick={() => setYoneticiModal(s)} title="Yöneticiyi Değiştir" className="p-2 rounded-xl text-amber-300 hover:bg-white/5 cursor-pointer"><UserCog className="h-4 w-4" /></button>
+                    <button onClick={() => { if (window.confirm(`"${s.ad}" işletmesi ve tüm menü/sipariş/personel kayıtları kalıcı silinecek; mevcut yönetici PASIF'e alınacak. Emin misiniz?`)) saticiSil(s.id); }} title="Sil" className="p-2 rounded-xl text-red-400 hover:bg-red-500/10 cursor-pointer"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </td>
               </tr>
@@ -100,7 +137,46 @@ export const SaticilarSekmesi = () => {
           onKaydet={async (form) => { const ok = await saticiGuncelle(duzenle.id, form); if (ok) setDuzenle(null); }}
         />
       )}
+
+      {yoneticiModal && (
+        <YoneticiDegistirModal
+          satici={yoneticiModal}
+          isLoading={isLoading}
+          onKapat={() => setYoneticiModal(null)}
+          onKaydet={async (sahip) => { const ok = await yoneticiDegistir(yoneticiModal.id, sahip); if (ok) setYoneticiModal(null); }}
+        />
+      )}
     </section>
+  );
+};
+
+const YoneticiDegistirModal = ({ satici, isLoading, onKapat, onKaydet }: {
+  satici: Satici;
+  isLoading: boolean;
+  onKapat: () => void;
+  onKaydet: (sahip: { ad: string; soyad: string; eposta: string; tc: string }) => void;
+}) => {
+  const [form, setForm] = useState({ ad: '', soyad: '', eposta: '', tc: '' });
+  const set = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
+  const gecerli = form.ad.trim() && form.eposta.includes('@') && /^\d{11}$/.test(form.tc);
+  return (
+    <ModalKabuk baslik={`Yönetici Değiştir — ${satici.ad}`} onKapat={onKapat}>
+      <div className="space-y-3">
+        <p className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-100">
+          Yeni yönetici oluşturulup işletmeye atanır. <b>Mevcut yönetici PASIF'e alınır</b> (denetim için silinmez).
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <input className={inputClass} placeholder="Ad" value={form.ad} onChange={e => set('ad', e.target.value)} />
+          <input className={inputClass} placeholder="Soyad" value={form.soyad} onChange={e => set('soyad', e.target.value)} />
+        </div>
+        <input className={inputClass} type="email" placeholder="E-posta (giriş için)" value={form.eposta} onChange={e => set('eposta', e.target.value)} />
+        <input className={inputClass} inputMode="numeric" maxLength={11} placeholder="TC Kimlik No (11 hane)" value={form.tc} onChange={e => set('tc', e.target.value.replace(/\D/g, '').slice(0, 11))} />
+        <p className="text-[11px] text-white/35">Yeni yönetici e-posta + TC ile giriş yapar; varsayılan şifre TC'dir.</p>
+        <button disabled={!gecerli || isLoading} onClick={() => onKaydet({ ...form, eposta: form.eposta.trim() })} className="w-full rounded-2xl bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed px-5 py-3 text-sm font-black text-white cursor-pointer">
+          {isLoading ? 'İşleniyor...' : 'Yöneticiyi Değiştir'}
+        </button>
+      </div>
+    </ModalKabuk>
   );
 };
 
