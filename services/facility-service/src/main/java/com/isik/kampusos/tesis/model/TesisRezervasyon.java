@@ -44,6 +44,9 @@ public class TesisRezervasyon {
     private String iptalNedeni;
     private OffsetDateTime gelmemeTarihi;
 
+    // Tekrarlanan antrenman/bloke serisini gruplayan kimlik (tek seferlik kayıtlarda null)
+    private String tekrarGrupId;
+
     public enum RezervasyonDurumu {
         TASLAK,
         BEKLEMEDE,

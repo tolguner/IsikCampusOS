@@ -280,6 +280,7 @@ public class TesisRezervasyonServisi {
                 .amac(talep.getAmac() != null ? talep.getAmac() : "Takım Antrenmanı / Bloke Saat")
                 .katilimciSayisi(talep.getKatilimciSayisi() > 0 ? talep.getKatilimciSayisi() : 1)
                 .durum(TesisRezervasyon.RezervasyonDurumu.BLOKE)
+                .tekrarGrupId(talep.getTekrarGrupId())
                 .build();
 
         TesisRezervasyon saved = tesisRezervasyonDeposu.save(rezervasyon);

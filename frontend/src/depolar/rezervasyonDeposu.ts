@@ -20,6 +20,7 @@ export interface Rezervasyon {
   iptalEdilmeTarihi?: string;
   iptalNedeni?: string;
   gelmemeTarihi?: string;
+  tekrarGrupId?: string | null;
 }
 
 type RezervasyonFormu = {
@@ -28,6 +29,7 @@ type RezervasyonFormu = {
   bitisTarihi: string;
   amac?: string;
   katilimciSayisi: number;
+  tekrarGrupId?: string;
 };
 
 interface BookingState {

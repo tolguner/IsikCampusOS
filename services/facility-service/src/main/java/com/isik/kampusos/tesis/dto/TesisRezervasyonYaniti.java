@@ -27,6 +27,7 @@ public class TesisRezervasyonYaniti {
     private OffsetDateTime iptalEdilmeTarihi;
     private String iptalNedeni;
     private OffsetDateTime gelmemeTarihi;
+    private String tekrarGrupId;
 
     public static TesisRezervasyonYaniti from(TesisRezervasyon rezervasyon) {
         if (rezervasyon == null) return null;
@@ -45,6 +46,7 @@ public class TesisRezervasyonYaniti {
                 .iptalEdilmeTarihi(rezervasyon.getIptalEdilmeTarihi())
                 .iptalNedeni(rezervasyon.getIptalNedeni())
                 .gelmemeTarihi(rezervasyon.getGelmemeTarihi())
+                .tekrarGrupId(rezervasyon.getTekrarGrupId())
                 .build();
     }
 }

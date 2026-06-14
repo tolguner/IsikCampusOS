@@ -17,4 +17,6 @@ public class TesisRezervasyonTalebi {
     private OffsetDateTime bitisTarihi;
     private String amac;
     private int katilimciSayisi;
+    /** Tekrarlanan antrenman/bloke serisini ilişkilendiren grup kimliği (tek seferlikte null). */
+    private String tekrarGrupId;
 }

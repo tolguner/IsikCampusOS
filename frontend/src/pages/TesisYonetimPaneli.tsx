@@ -299,6 +299,7 @@ export const TesisYonetimPaneli = () => {
     };
 
     const offset = localTimeZoneOffset();
+    const grupId = recurrence !== 'NONE' ? crypto.randomUUID() : undefined;
     const datesToBlock: string[] = [];
     const baseDate = new Date(blockDate);
 
@@ -329,6 +330,7 @@ export const TesisYonetimPaneli = () => {
         bitisTarihi: endIso,
         amac: blockPurpose || 'Takım Antrenmanı',
         katilimciSayisi: 15,
+        tekrarGrupId: grupId,
       });
 
       if (success) {
@@ -387,6 +389,7 @@ export const TesisYonetimPaneli = () => {
     };
 
     const offset = localTimeZoneOffset();
+    const grupId = quickBlockRecurrence !== 'NONE' ? crypto.randomUUID() : undefined;
     const datesToBlock: string[] = [];
     const baseDate = new Date(quickBlockDate);
 
@@ -417,6 +420,7 @@ export const TesisYonetimPaneli = () => {
         bitisTarihi: endIso,
         amac: quickBlockPurpose || 'Takım Antrenmanı',
         katilimciSayisi: 15,
+        tekrarGrupId: grupId,
       });
 
       if (success) {
