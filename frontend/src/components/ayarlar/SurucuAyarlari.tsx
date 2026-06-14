@@ -17,6 +17,27 @@ const durumRengi = (durum: AracDurumu | DogrulamaDurumu) =>
     : durum === 'PASIF' || durum === 'ASKIYA_ALINDI' ? 'border-white/15 bg-white/5 text-white/50'
     : 'border-amber-300/30 bg-amber-500/10 text-amber-200';
 
+// Türkiye standart ehliyet sınıfları (2918 sayılı KTK) — açılır menüde seçilir.
+const EHLIYET_SINIFLARI: { kod: string; aciklama: string }[] = [
+  { kod: 'M', aciklama: 'Moped' },
+  { kod: 'A1', aciklama: 'Hafif motosiklet' },
+  { kod: 'A2', aciklama: 'Motosiklet (orta)' },
+  { kod: 'A', aciklama: 'Motosiklet' },
+  { kod: 'B1', aciklama: 'Dört tekerlekli motosiklet' },
+  { kod: 'B', aciklama: 'Otomobil' },
+  { kod: 'BE', aciklama: 'Otomobil + römork' },
+  { kod: 'C1', aciklama: 'Kamyonet' },
+  { kod: 'C1E', aciklama: 'Kamyonet + römork' },
+  { kod: 'C', aciklama: 'Kamyon' },
+  { kod: 'CE', aciklama: 'Kamyon + römork' },
+  { kod: 'D1', aciklama: 'Minibüs' },
+  { kod: 'D1E', aciklama: 'Minibüs + römork' },
+  { kod: 'D', aciklama: 'Otobüs' },
+  { kod: 'DE', aciklama: 'Otobüs + römork' },
+  { kod: 'F', aciklama: 'Traktör' },
+  { kod: 'G', aciklama: 'İş makinesi' },
+];
+
 const bosArac = { markaModel: '', plaka: '', renk: '', koltukKapasitesi: 4, gorselUrl: '' };
 
 export const SurucuAyarlari = () => {
@@ -98,8 +119,12 @@ export const SurucuAyarlari = () => {
           <div className="mt-3 grid gap-3 md:grid-cols-[140px_1fr]">
             <div>
               <label className="mb-1 block text-xs font-bold text-white/45">Ehliyet sınıfı</label>
-              <input value={ehliyetSinifi} onChange={e => setEhliyetSinifi(e.target.value.toUpperCase())}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none" />
+              <select value={ehliyetSinifi} onChange={e => setEhliyetSinifi(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-[#111123] px-3 py-2.5 text-sm text-white outline-none">
+                {EHLIYET_SINIFLARI.map(s => (
+                  <option key={s.kod} value={s.kod}>{s.kod} — {s.aciklama}</option>
+                ))}
+              </select>
             </div>
             <div>
               <GorselYukleyici etiket="Ehliyet belgesi fotoğrafı (zorunlu)" value={belgeUrl} onChange={setBelgeUrl}
