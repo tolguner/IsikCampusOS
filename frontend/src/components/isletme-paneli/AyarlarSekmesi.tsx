@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Clock, Store as StoreIcon, Save, ShieldCheck, Send } from 'lucide-react';
-import { useIsletmeDeposu, type SaticiAyarFormu, type CalismaSaatiGun, type SaticiDegisiklikTalebim } from '../../depolar/isletmeDeposu';
+import { useIsletmeDeposu, type SaticiAyarFormu, type CalismaSaatiGun } from '../../depolar/isletmeDeposu';
 import { GorselYukleyici } from '../ortak/GorselYukleyici';
 
 export const MUTFAK_TURLERI = [
@@ -9,6 +9,14 @@ export const MUTFAK_TURLERI = [
 ];
 
 const GUN_ADLARI = ['', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+
+// Onaya tabi genel/kimlik alanları (tek talep grubu olarak gönderilir).
+type GenelAlan = 'ad' | 'mutfakTuru' | 'aciklama' | 'konumMetni' | 'logoUrl' | 'kapakGorselUrl';
+const GENEL_ALANLAR: GenelAlan[] = ['ad', 'mutfakTuru', 'aciklama', 'konumMetni', 'logoUrl', 'kapakGorselUrl'];
+const ALAN_ETIKET: Record<GenelAlan, string> = {
+  ad: 'İşletme Adı', mutfakTuru: 'Mutfak Türü', aciklama: 'Açıklama',
+  konumMetni: 'Konum', logoUrl: 'Logo', kapakGorselUrl: 'Kapak Görseli',
+};
 
 // "HH:mm:ss" veya "HH:mm" → "HH:mm"
 const saatKisalt = (s?: string | null) => (s ? s.slice(0, 5) : '');
@@ -19,10 +27,14 @@ export const AyarlarSekmesi = () => {
   const {
     satici, calismaSaatleri, isLoading, degisiklikTalepleri,
     saticimiGetir, saticiGuncelle, calismaSaatleriGetir, calismaSaatleriKaydet,
-    taleplerimGetir, degisiklikTalepEt,
+    taleplerimGetir, genelBilgiTalepEt,
   } = useIsletmeDeposu();
 
   const [profil, setProfil] = useState<SaticiAyarFormu>({});
+  // Genel/kimlik bilgileri (onaya tabi) — tek formda düzenlenir, tek talep gönderilir.
+  const [genel, setGenel] = useState<Record<GenelAlan, string>>({
+    ad: '', mutfakTuru: '', aciklama: '', konumMetni: '', logoUrl: '', kapakGorselUrl: '',
+  });
   const [gunler, setGunler] = useState<CalismaSaatiGun[]>(
     Array.from({ length: 7 }, (_, i) => ({ gun: i + 1, acilis: '09:00', kapanis: '22:00', kapali: false }))
   );
@@ -43,6 +55,16 @@ export const AyarlarSekmesi = () => {
     }
   }, [satici]);
 
+  // Genel bilgi formunu satıcıdan doldur
+  useEffect(() => {
+    if (satici) {
+      setGenel({
+        ad: satici.ad ?? '', mutfakTuru: satici.mutfakTuru ?? '', aciklama: satici.aciklama ?? '',
+        konumMetni: satici.konumMetni ?? '', logoUrl: satici.logoUrl ?? '', kapakGorselUrl: satici.kapakGorselUrl ?? '',
+      });
+    }
+  }, [satici]);
+
   // Mevcut saatleri editöre yansıt
   useEffect(() => {
     if (calismaSaatleri.length > 0) {
@@ -57,6 +79,18 @@ export const AyarlarSekmesi = () => {
 
   const gunGuncelle = (idx: number, k: Partial<CalismaSaatiGun>) =>
     setGunler(g => g.map((x, i) => (i === idx ? { ...x, ...k } : x)));
+
+  // Genel bilgi talep durumu + değişen alanlar
+  const bekleyenler = degisiklikTalepleri.filter(t => t.durum === 'BEKLEMEDE');
+  const bekleyenGrupVar = bekleyenler.length > 0;
+  const revizeTalep = !bekleyenGrupVar ? degisiklikTalepleri.find(t => t.durum === 'REVIZE_TALEP') : undefined;
+  const genelMevcut = (alan: GenelAlan) => (satici?.[alan] ?? '') as string;
+  const degisenAlanlar = GENEL_ALANLAR.filter(a => genel[a] !== genelMevcut(a));
+  const genelTalepGonder = async () => {
+    const diff: Record<string, string> = {};
+    degisenAlanlar.forEach(a => { diff[a] = genel[a]; });
+    if (Object.keys(diff).length > 0) await genelBilgiTalepEt(diff);
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -92,14 +126,52 @@ export const AyarlarSekmesi = () => {
           <ShieldCheck className="w-5 h-5 text-amber-200" />
           <h3 className="text-base font-extrabold text-white">Genel Bilgiler <span className="text-[11px] font-bold text-amber-200/80">(onaya tabi)</span></h3>
         </div>
-        <p className="text-[11px] text-white/40 mb-3">Bu bilgilerin değişikliği sistem yöneticisi onayından geçer. Yeni değeri girip "Değişiklik Talep Et" deyin.</p>
-        <div className="space-y-4">
-          <GenelBilgiAlani etiket="İşletme Adı" alanAdi="ad" mevcut={satici?.ad} tip="text" talepler={degisiklikTalepleri} onTalep={degisiklikTalepEt} isLoading={isLoading} />
-          <GenelBilgiAlani etiket="Mutfak Türü" alanAdi="mutfakTuru" mevcut={satici?.mutfakTuru} tip="select" secenekler={MUTFAK_TURLERI} talepler={degisiklikTalepleri} onTalep={degisiklikTalepEt} isLoading={isLoading} />
-          <GenelBilgiAlani etiket="Açıklama" alanAdi="aciklama" mevcut={satici?.aciklama} tip="text" talepler={degisiklikTalepleri} onTalep={degisiklikTalepEt} isLoading={isLoading} />
-          <GenelBilgiAlani etiket="Konum" alanAdi="konumMetni" mevcut={satici?.konumMetni} tip="text" talepler={degisiklikTalepleri} onTalep={degisiklikTalepEt} isLoading={isLoading} />
-          <GenelBilgiAlani etiket="Logo" alanAdi="logoUrl" mevcut={satici?.logoUrl} tip="logo" talepler={degisiklikTalepleri} onTalep={degisiklikTalepEt} isLoading={isLoading} />
-          <GenelBilgiAlani etiket="Kapak Görseli" alanAdi="kapakGorselUrl" mevcut={satici?.kapakGorselUrl} tip="kapak" talepler={degisiklikTalepleri} onTalep={degisiklikTalepEt} isLoading={isLoading} />
+        <p className="text-[11px] text-white/40 mb-3">Bu bilgilerin değişikliği onaydan geçer. İstediğiniz alanları düzenleyip <b>tek seferde</b> "Değişiklik Talep Et" deyin.</p>
+
+        {bekleyenGrupVar && (
+          <div className="rounded-xl border border-amber-400/25 bg-amber-500/10 p-3 mb-3 text-xs text-amber-100">
+            <p className="font-bold">⏳ Değişiklik talebiniz onay bekliyor</p>
+            <p className="mt-1 text-amber-100/75">{bekleyenler.map(t => ALAN_ETIKET[t.alanAdi as GenelAlan] || t.alanAdi).join(', ')}</p>
+          </div>
+        )}
+        {revizeTalep && (
+          <div className="rounded-xl border border-red-400/25 bg-red-500/10 p-3 mb-3 text-xs text-red-200">
+            ↩ Revize istendi{revizeTalep.geriBildirim ? `: ${revizeTalep.geriBildirim}` : ''}. Düzenleyip tekrar gönderebilirsiniz.
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <Alan etiket="İşletme Adı">
+            <input className={girisSinifi} value={genel.ad} disabled={bekleyenGrupVar} onChange={e => setGenel(g => ({ ...g, ad: e.target.value }))} />
+          </Alan>
+          <Alan etiket="Mutfak Türü">
+            <select className={girisSinifi} value={genel.mutfakTuru} disabled={bekleyenGrupVar} onChange={e => setGenel(g => ({ ...g, mutfakTuru: e.target.value }))}>
+              <option value="">Seçiniz</option>
+              {MUTFAK_TURLERI.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </Alan>
+          <Alan etiket="Açıklama">
+            <input className={girisSinifi} value={genel.aciklama} disabled={bekleyenGrupVar} onChange={e => setGenel(g => ({ ...g, aciklama: e.target.value }))} />
+          </Alan>
+          <Alan etiket="Konum">
+            <input className={girisSinifi} value={genel.konumMetni} disabled={bekleyenGrupVar} onChange={e => setGenel(g => ({ ...g, konumMetni: e.target.value }))} />
+          </Alan>
+          <div className="grid grid-cols-2 gap-3">
+            <Alan etiket="Logo">
+              <GorselYukleyici value={genel.logoUrl} onChange={url => !bekleyenGrupVar && setGenel(g => ({ ...g, logoUrl: url }))} oranSinifi="aspect-square" maksKenar={400} />
+            </Alan>
+            <Alan etiket="Kapak Görseli">
+              <GorselYukleyici value={genel.kapakGorselUrl} onChange={url => !bekleyenGrupVar && setGenel(g => ({ ...g, kapakGorselUrl: url }))} oranSinifi="aspect-square" maksKenar={1200} />
+            </Alan>
+          </div>
+          <button
+            type="button"
+            disabled={bekleyenGrupVar || isLoading || degisenAlanlar.length === 0}
+            onClick={genelTalepGonder}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-extrabold text-amber-100 bg-amber-500/15 border border-amber-400/25 hover:bg-amber-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Send className="w-4 h-4" /> Değişiklik Talep Et{degisenAlanlar.length > 0 ? ` (${degisenAlanlar.length} alan)` : ''}
+          </button>
         </div>
       </div>
 
@@ -152,51 +224,3 @@ const Alan = ({ etiket, children }: { etiket: string; children: React.ReactNode 
   </div>
 );
 
-const GenelBilgiAlani = ({ etiket, alanAdi, mevcut, tip, secenekler, talepler, onTalep, isLoading }: {
-  etiket: string;
-  alanAdi: string;
-  mevcut?: string | null;
-  tip: 'text' | 'select' | 'logo' | 'kapak';
-  secenekler?: string[];
-  talepler: SaticiDegisiklikTalebim[];
-  onTalep: (alanAdi: string, deger: string) => Promise<boolean>;
-  isLoading: boolean;
-}) => {
-  const [deger, setDeger] = useState(mevcut ?? '');
-  useEffect(() => { setDeger(mevcut ?? ''); }, [mevcut]);
-  const talep = talepler.find(t => t.alanAdi === alanAdi);
-  const bekleyen = talep?.durum === 'BEKLEMEDE';
-  const degisti = (deger ?? '') !== (mevcut ?? '');
-
-  return (
-    <Alan etiket={etiket}>
-      {tip === 'select' ? (
-        <select className={girisSinifi} value={deger} onChange={e => setDeger(e.target.value)} disabled={bekleyen}>
-          <option value="">Seçiniz</option>
-          {(secenekler ?? []).map(m => <option key={m} value={m}>{m}</option>)}
-        </select>
-      ) : tip === 'logo' ? (
-        <GorselYukleyici value={deger} onChange={setDeger} oranSinifi="aspect-square" maksKenar={400} />
-      ) : tip === 'kapak' ? (
-        <GorselYukleyici value={deger} onChange={setDeger} oranSinifi="aspect-[3/1]" maksKenar={1200} />
-      ) : (
-        <input className={girisSinifi} value={deger} onChange={e => setDeger(e.target.value)} disabled={bekleyen} />
-      )}
-      <div className="flex items-center justify-between gap-2 mt-1.5">
-        <div className="text-[11px] min-w-0">
-          {talep?.durum === 'BEKLEMEDE' && <span className="text-amber-200">⏳ Onay bekliyor</span>}
-          {talep?.durum === 'ONAYLANDI' && <span className="text-emerald-300/70">✓ Onaylandı</span>}
-          {talep?.durum === 'REVIZE_TALEP' && <span className="text-red-300/80">↩ Revize istendi{talep.geriBildirim ? `: ${talep.geriBildirim}` : ''}</span>}
-        </div>
-        <button
-          type="button"
-          disabled={!degisti || bekleyen || isLoading}
-          onClick={() => onTalep(alanAdi, deger)}
-          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-amber-100 bg-amber-500/15 border border-amber-400/25 hover:bg-amber-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <Send className="w-3 h-3" /> Değişiklik Talep Et
-        </button>
-      </div>
-    </Alan>
-  );
-};

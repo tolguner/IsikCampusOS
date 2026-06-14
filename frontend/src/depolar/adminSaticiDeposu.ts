@@ -15,6 +15,7 @@ export interface SaticiDegisiklikTalebi {
   id: string;
   saticiId: string;
   saticiAdi: string;
+  grupId?: string;
   alanAdi: string;
   mevcutDeger?: string;
   talepEdilenDeger: string;
@@ -103,6 +104,8 @@ interface AdminSaticiState {
   talepleriGetir: () => Promise<void>;
   talepOnayla: (id: string) => Promise<void>;
   talepRevize: (id: string, geriBildirim: string) => Promise<void>;
+  talepGrupOnayla: (grupId: string) => Promise<void>;
+  talepGrupRevize: (grupId: string, geriBildirim: string) => Promise<void>;
 }
 
 const hataMesaji = (err: any, varsayilan: string) =>
@@ -258,6 +261,29 @@ export const useAdminSaticiDeposu = create<AdminSaticiState>((set, get) => ({
     try {
       await api.post(`/yonetim/saticilar/talepler/${id}/revize`, { geriBildirim });
       set({ basariMesaji: 'Revize talep edildi.' });
+      await get().talepleriGetir();
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'Revize talep edilemedi.') });
+    }
+  },
+
+  talepGrupOnayla: async (grupId) => {
+    set({ hata: null, basariMesaji: null });
+    try {
+      await api.post(`/yonetim/saticilar/talepler/grup/${grupId}/onayla`);
+      set({ basariMesaji: 'Tüm değişiklikler onaylandı ve uygulandı.' });
+      await get().talepleriGetir();
+      await get().saticilariGetir();
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'Talep grubu onaylanamadı.') });
+    }
+  },
+
+  talepGrupRevize: async (grupId, geriBildirim) => {
+    set({ hata: null, basariMesaji: null });
+    try {
+      await api.post(`/yonetim/saticilar/talepler/grup/${grupId}/revize`, { geriBildirim });
+      set({ basariMesaji: 'Talep grubu için revize istendi.' });
       await get().talepleriGetir();
     } catch (err: any) {
       set({ hata: hataMesaji(err, 'Revize talep edilemedi.') });

@@ -10,4 +10,5 @@ import java.util.List;
 public interface SaticiDegisiklikIstegiDeposu extends JpaRepository<SaticiDegisiklikIstegi, String> {
     List<SaticiDegisiklikIstegi> findBySaticiIdOrderByOlusturulmaTarihiDesc(String saticiId);
     List<SaticiDegisiklikIstegi> findByDurumOrderByOlusturulmaTarihiDesc(SaticiDegisiklikIstegi.Durum durum);
+    List<SaticiDegisiklikIstegi> findByGrupIdOrderByOlusturulmaTarihiAsc(String grupId);
 }

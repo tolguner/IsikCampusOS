@@ -85,6 +85,14 @@ public class SaticiDenetleyicisi {
         return ResponseEntity.ok(saticiServisi.talepOlustur(auth.getName(), talep));
     }
 
+    /** Tek butonla tüm genel bilgiler için TEK talep grubu. Gövde: {alan: yeniDeger} eşlemesi. */
+    @PostMapping("/api/v1/satici/genel-bilgi-talep")
+    @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
+    public ResponseEntity<List<com.isik.kampusos.yemek.dto.SaticiDegisiklikIstegiYaniti>> genelBilgiTalep(
+            Authentication auth, @RequestBody Map<String, String> degisiklikler) {
+        return ResponseEntity.ok(saticiServisi.talepOlusturToplu(auth.getName(), degisiklikler));
+    }
+
     @GetMapping("/api/v1/satici/degisiklik-taleplerim")
     @PreAuthorize("hasAuthority('ROLE_VENDOR_ADMIN')")
     public ResponseEntity<List<com.isik.kampusos.yemek.dto.SaticiDegisiklikIstegiYaniti>> taleplerim(Authentication auth) {

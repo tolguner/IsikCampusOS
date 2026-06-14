@@ -93,6 +93,7 @@ export type IsletmeRolu = 'SAHIP' | 'PERSONEL' | 'KURYE';
 /** Sahibin açtığı işletme bilgi değişikliği talebi. */
 export interface SaticiDegisiklikTalebim {
   id: string;
+  grupId?: string;
   alanAdi: string;
   mevcutDeger?: string;
   talepEdilenDeger: string;
@@ -119,6 +120,7 @@ interface IsletmeState {
   saticiGuncelle: (form: SaticiAyarFormu) => Promise<boolean>;
   taleplerimGetir: () => Promise<void>;
   degisiklikTalepEt: (alanAdi: string, talepEdilenDeger: string) => Promise<boolean>;
+  genelBilgiTalepEt: (degisiklikler: Record<string, string>) => Promise<boolean>;
   calismaSaatleriGetir: () => Promise<void>;
   calismaSaatleriKaydet: (gunler: CalismaSaatiGun[]) => Promise<boolean>;
   kampanyalariGetir: () => Promise<void>;
@@ -260,6 +262,19 @@ export const useIsletmeDeposu = create<IsletmeState>((set, get) => ({
     try {
       await api.post('/satici/degisiklik-talebi', { alanAdi, talepEdilenDeger });
       set({ successMessage: 'Değişiklik talebi gönderildi; sistem yöneticisi onayına sunuldu.', isLoading: false });
+      await get().taleplerimGetir();
+      return true;
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Talep gönderilemedi.'), isLoading: false });
+      return false;
+    }
+  },
+
+  genelBilgiTalepEt: async (degisiklikler) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      await api.post('/satici/genel-bilgi-talep', degisiklikler);
+      set({ successMessage: 'Genel bilgi değişiklik talebi gönderildi; onaya sunuldu.', isLoading: false });
       await get().taleplerimGetir();
       return true;
     } catch (err: any) {

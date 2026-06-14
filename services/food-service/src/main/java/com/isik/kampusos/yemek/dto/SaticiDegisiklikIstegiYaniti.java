@@ -12,6 +12,7 @@ public class SaticiDegisiklikIstegiYaniti {
     private String id;
     private String saticiId;
     private String saticiAdi;
+    private String grupId;
     private String alanAdi;
     private String mevcutDeger;
     private String talepEdilenDeger;
@@ -25,6 +26,7 @@ public class SaticiDegisiklikIstegiYaniti {
                 .id(i.getId())
                 .saticiId(i.getSaticiId())
                 .saticiAdi(saticiAdi)
+                .grupId(i.getGrupId())
                 .alanAdi(i.getAlanAdi())
                 .mevcutDeger(i.getMevcutDeger())
                 .talepEdilenDeger(i.getTalepEdilenDeger())

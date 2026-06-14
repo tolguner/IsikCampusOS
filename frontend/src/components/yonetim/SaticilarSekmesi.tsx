@@ -4,6 +4,7 @@ import {
   useAdminSaticiDeposu,
   type SaticiVeSahipFormu,
   type SaticiGuncellemeFormu,
+  type SaticiDegisiklikTalebi,
 } from '../../depolar/adminSaticiDeposu';
 import type { Satici } from '../../depolar/yemekDeposu';
 import { KonumSecici } from '../kulup-paneli/KonumSecici';
@@ -17,7 +18,7 @@ const VARSAYILAN_KONUM = { enlem: 41.1762, boylam: 29.6128 };
 
 export const SaticilarSekmesi = () => {
   const {
-    saticilar, vendorAdminler, personelMap, isLoading, talepler,
+    saticilar, vendorAdminler, personelMap, isLoading, talepler, talepGrupOnayla, talepGrupRevize,
     saticilariGetir, vendorAdminleriGetir, personelGetir, saticiVeSahipOlustur, saticiGuncelle, saticiSil, yoneticiDegistir,
     talepleriGetir, talepOnayla, talepRevize,
   } = useAdminSaticiDeposu();
@@ -50,6 +51,22 @@ export const SaticilarSekmesi = () => {
   };
   const gorselAlan = (a: string) => a === 'logoUrl' || a === 'kapakGorselUrl';
 
+  // Talepleri grup (tek gönderim) bazında topla; grupId yoksa (eski kayıt) tek başına grup.
+  const talepGruplari = useMemo(() => {
+    const harita = new Map<string, { grupId?: string; saticiAdi: string; kalemler: SaticiDegisiklikTalebi[] }>();
+    talepler.forEach(t => {
+      const anahtar = t.grupId || t.id;
+      if (!harita.has(anahtar)) harita.set(anahtar, { grupId: t.grupId, saticiAdi: t.saticiAdi, kalemler: [] });
+      harita.get(anahtar)!.kalemler.push(t);
+    });
+    return Array.from(harita.values());
+  }, [talepler]);
+
+  const grupOnayla = (g: { grupId?: string; kalemler: SaticiDegisiklikTalebi[] }) =>
+    g.grupId ? talepGrupOnayla(g.grupId) : talepOnayla(g.kalemler[0].id);
+  const grupRevize = (g: { grupId?: string; kalemler: SaticiDegisiklikTalebi[] }, geri: string) =>
+    g.grupId ? talepGrupRevize(g.grupId, geri) : talepRevize(g.kalemler[0].id, geri);
+
   return (
     <section className="space-y-5">
       <div className="flex items-center justify-between gap-3">
@@ -59,28 +76,30 @@ export const SaticilarSekmesi = () => {
         </button>
       </div>
 
-      {talepler.length > 0 && (
+      {talepGruplari.length > 0 && (
         <div className="rounded-3xl border border-amber-400/25 bg-amber-500/[0.06] p-4 space-y-3">
-          <p className="text-sm font-black text-amber-100">Bekleyen Bilgi Değişikliği Talepleri ({talepler.length})</p>
-          {talepler.map(t => (
-            <div key={t.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 flex flex-wrap items-center gap-3 justify-between">
-              <div className="min-w-0 text-sm">
-                <span className="font-bold text-white">{t.saticiAdi}</span>
-                <span className="text-white/50"> · {ALAN_ETIKET[t.alanAdi] || t.alanAdi}</span>
-                <div className="text-xs text-white/45 mt-1">
-                  {gorselAlan(t.alanAdi) ? (
-                    <span className="inline-flex items-center gap-2">
-                      <span>Mevcut:</span>{t.mevcutDeger ? <img src={t.mevcutDeger} className="h-8 w-8 rounded object-cover border border-white/10" /> : '—'}
-                      <span>→ Yeni:</span><img src={t.talepEdilenDeger} className="h-8 w-8 rounded object-cover border border-emerald-400/30" />
-                    </span>
-                  ) : (
-                    <span><span className="text-white/35 line-through">{t.mevcutDeger || '—'}</span> → <span className="text-emerald-200">{t.talepEdilenDeger}</span></span>
-                  )}
-                </div>
+          <p className="text-sm font-black text-amber-100">Bekleyen Bilgi Değişikliği Talepleri ({talepGruplari.length})</p>
+          {talepGruplari.map((grup, gi) => (
+            <div key={grup.grupId || grup.kalemler[0].id || gi} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 flex flex-wrap items-start gap-3 justify-between">
+              <div className="min-w-0 text-sm space-y-1.5">
+                <p className="font-bold text-white">{grup.saticiAdi} <span className="text-white/40 font-normal">· {grup.kalemler.length} alan</span></p>
+                {grup.kalemler.map(t => (
+                  <div key={t.id} className="text-xs text-white/45">
+                    <span className="font-semibold text-white/60">{ALAN_ETIKET[t.alanAdi] || t.alanAdi}:</span>{' '}
+                    {gorselAlan(t.alanAdi) ? (
+                      <span className="inline-flex items-center gap-2 align-middle">
+                        {t.mevcutDeger ? <img src={t.mevcutDeger} className="h-8 w-8 rounded object-cover border border-white/10" /> : '—'}
+                        <span>→</span><img src={t.talepEdilenDeger} className="h-8 w-8 rounded object-cover border border-emerald-400/30" />
+                      </span>
+                    ) : (
+                      <span><span className="text-white/35 line-through">{t.mevcutDeger || '—'}</span> → <span className="text-emerald-200">{t.talepEdilenDeger || '—'}</span></span>
+                    )}
+                  </div>
+                ))}
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => talepOnayla(t.id)} className="px-3 py-2 rounded-xl text-xs font-black text-white bg-emerald-500/80 hover:bg-emerald-500 cursor-pointer">Onayla</button>
-                <button onClick={() => { const g = window.prompt('Revize gerekçesi (işletmeye iletilecek):'); if (g != null) talepRevize(t.id, g); }} className="px-3 py-2 rounded-xl text-xs font-black text-amber-100 bg-amber-500/15 border border-amber-400/25 hover:bg-amber-500/25 cursor-pointer">Revize İste</button>
+                <button onClick={() => grupOnayla(grup)} className="px-3 py-2 rounded-xl text-xs font-black text-white bg-emerald-500/80 hover:bg-emerald-500 cursor-pointer">Tümünü Onayla</button>
+                <button onClick={() => { const g = window.prompt('Revize gerekçesi (işletmeye iletilecek):'); if (g != null) grupRevize(grup, g); }} className="px-3 py-2 rounded-xl text-xs font-black text-amber-100 bg-amber-500/15 border border-amber-400/25 hover:bg-amber-500/25 cursor-pointer">Revize İste</button>
               </div>
             </div>
           ))}

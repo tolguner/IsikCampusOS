@@ -87,4 +87,19 @@ public class YonetimSaticiDenetleyicisi {
         saticiServisi.talepRevize(id, auth.getName(), govde != null ? govde.get("geriBildirim") : null);
         return ResponseEntity.ok(Map.of("mesaj", "Revize talep edildi."));
     }
+
+    // --- Birleşik (gruplu) talep onay/revize ---
+
+    @PostMapping("/talepler/grup/{grupId}/onayla")
+    public ResponseEntity<Map<String, String>> talepGrupOnayla(@PathVariable String grupId, Authentication auth) {
+        saticiServisi.talepGrupOnayla(grupId, auth.getName());
+        return ResponseEntity.ok(Map.of("mesaj", "Tüm değişiklikler onaylandı ve uygulandı."));
+    }
+
+    @PostMapping("/talepler/grup/{grupId}/revize")
+    public ResponseEntity<Map<String, String>> talepGrupRevize(@PathVariable String grupId, Authentication auth,
+                                                               @RequestBody(required = false) Map<String, String> govde) {
+        saticiServisi.talepGrupRevize(grupId, auth.getName(), govde != null ? govde.get("geriBildirim") : null);
+        return ResponseEntity.ok(Map.of("mesaj", "Talep grubu için revize istendi."));
+    }
 }

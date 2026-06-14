@@ -24,6 +24,9 @@ public class SaticiDegisiklikIstegi {
     @Column(nullable = false)
     private String saticiId;
 
+    /** Aynı gönderimdeki (tek butonla açılan) alan değişikliklerini birleştiren grup. */
+    private String grupId;
+
     @Column(nullable = false)
     private String alanAdi;          // ad | aciklama | konumMetni | logoUrl | kapakGorselUrl | mutfakTuru
 

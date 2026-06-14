@@ -606,6 +606,90 @@ public class SaticiServisi {
                 "'" + istek.getAlanAdi() + "' için revize istendi" + (geriBildirim != null ? ": " + geriBildirim : ""));
     }
 
+    /**
+     * Sahip: tek gönderimde birden çok genel bilgi alanı için TEK talep grubu açar.
+     * Yalnız onaya-tabi ve gerçekten değişmiş alanlar kaydedilir; aynı işletmenin önceki
+     * bekleyen talepleri (varsa) temizlenir — aynı anda tek aktif talep grubu olur.
+     */
+    @Transactional
+    public List<SaticiDegisiklikIstegiYaniti> talepOlusturToplu(String yoneticiId, java.util.Map<String, String> degisiklikler) {
+        Satici s = saticiBul(yoneticiId);
+        if (degisiklikler == null || degisiklikler.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Değişiklik talebi için en az bir alan gerekli.");
+        }
+        // Önceki bekleyen talepleri temizle (yeni talep eskisini geçersiz kılar).
+        talepDeposu.deleteAll(talepDeposu.findBySaticiIdOrderByOlusturulmaTarihiDesc(s.getId()).stream()
+                .filter(i -> i.getDurum() == SaticiDegisiklikIstegi.Durum.BEKLEMEDE).toList());
+
+        String grupId = java.util.UUID.randomUUID().toString();
+        List<SaticiDegisiklikIstegi> olusan = new java.util.ArrayList<>();
+        for (var giris : degisiklikler.entrySet()) {
+            String alan = giris.getKey() == null ? "" : giris.getKey().trim();
+            if (!ONAYA_TABI_ALANLAR.contains(alan)) continue;
+            String yeni = giris.getValue();
+            if (yeni == null) continue;
+            String mevcut = mevcutDeger(s, alan);
+            if (yeni.equals(mevcut == null ? "" : mevcut)) continue;   // değişmemiş alanları atla
+            olusan.add(talepDeposu.save(SaticiDegisiklikIstegi.builder()
+                    .saticiId(s.getId())
+                    .grupId(grupId)
+                    .alanAdi(alan)
+                    .mevcutDeger(mevcut)
+                    .talepEdilenDeger(yeni)
+                    .durum(SaticiDegisiklikIstegi.Durum.BEKLEMEDE)
+                    .build()));
+        }
+        if (olusan.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hiçbir alan değişmedi; talep oluşturulmadı.");
+        }
+        denetim.kaydet("DEGISIKLIK_TALEBI", grupId, "TALEP_ACILDI", yoneticiId, "ROLE_VENDOR_ADMIN",
+                s.getAd() + " — " + olusan.size() + " alan için değişiklik talebi");
+        return olusan.stream().map(i -> SaticiDegisiklikIstegiYaniti.of(i, s.getAd())).toList();
+    }
+
+    /** Admin: bir talep grubunu (tüm alanları) onayla ve işletmeye uygula. */
+    @Transactional
+    public void talepGrupOnayla(String grupId, String adminId) {
+        List<SaticiDegisiklikIstegi> grup = talepDeposu.findByGrupIdOrderByOlusturulmaTarihiAsc(grupId).stream()
+                .filter(i -> i.getDurum() == SaticiDegisiklikIstegi.Durum.BEKLEMEDE).toList();
+        if (grup.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bekleyen talep grubu bulunamadı.");
+        }
+        Satici s = saticiDeposu.findById(grup.get(0).getSaticiId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "İşletme bulunamadı."));
+        LocalDateTime now = LocalDateTime.now();
+        for (SaticiDegisiklikIstegi istek : grup) {
+            alaniUygula(s, istek.getAlanAdi(), istek.getTalepEdilenDeger());
+            istek.setDurum(SaticiDegisiklikIstegi.Durum.ONAYLANDI);
+            istek.setInceleyen(adminId);
+            istek.setIncelemeTarihi(now);
+            talepDeposu.save(istek);
+        }
+        saticiDeposu.save(s);
+        denetim.kaydet("DEGISIKLIK_TALEBI", grupId, "TALEP_ONAYLANDI", adminId, "ROLE_SUPPORT_SERVICES_ADMIN",
+                s.getAd() + " — " + grup.size() + " alan değişikliği onaylandı");
+    }
+
+    /** Admin: bir talep grubunu (tüm alanları) revize iste — değerler uygulanmaz. */
+    @Transactional
+    public void talepGrupRevize(String grupId, String adminId, String geriBildirim) {
+        List<SaticiDegisiklikIstegi> grup = talepDeposu.findByGrupIdOrderByOlusturulmaTarihiAsc(grupId).stream()
+                .filter(i -> i.getDurum() == SaticiDegisiklikIstegi.Durum.BEKLEMEDE).toList();
+        if (grup.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bekleyen talep grubu bulunamadı.");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        for (SaticiDegisiklikIstegi istek : grup) {
+            istek.setDurum(SaticiDegisiklikIstegi.Durum.REVIZE_TALEP);
+            istek.setInceleyen(adminId);
+            istek.setGeriBildirim(geriBildirim);
+            istek.setIncelemeTarihi(now);
+            talepDeposu.save(istek);
+        }
+        denetim.kaydet("DEGISIKLIK_TALEBI", grupId, "TALEP_REVIZE", adminId, "ROLE_SUPPORT_SERVICES_ADMIN",
+                grup.size() + " alanlı talep grubu için revize istendi" + (geriBildirim != null ? ": " + geriBildirim : ""));
+    }
+
     private SaticiDegisiklikIstegi bekleyenTalep(String istekId) {
         SaticiDegisiklikIstegi istek = talepDeposu.findById(istekId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Talep bulunamadı."));
