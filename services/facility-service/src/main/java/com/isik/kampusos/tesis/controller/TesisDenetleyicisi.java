@@ -39,6 +39,23 @@ public class TesisDenetleyicisi {
         return ResponseEntity.ok(tesisServisi.createFacility(auth.getName(), talep));
     }
 
+    /** Tek istekte tanım + politika + çalışma saatleri ile tesis oluşturur (atomik). */
+    @PostMapping("/tam")
+    @PreAuthorize("hasAnyAuthority('ROLE_FACILITY_ADMIN', 'ROLE_ADMIN')")
+    public ResponseEntity<TesisYaniti> createFacilityFull(Authentication auth,
+                                                          @RequestBody TamTesisTalebi talep) {
+        return ResponseEntity.ok(tesisServisi.tamOlustur(auth.getName(), talep));
+    }
+
+    /** Tek istekte tanım + politika + çalışma saatlerini birlikte günceller (atomik). */
+    @PutMapping("/{tesisId}/tam")
+    @PreAuthorize("hasAnyAuthority('ROLE_FACILITY_ADMIN', 'ROLE_ADMIN')")
+    public ResponseEntity<TesisYaniti> updateFacilityFull(Authentication auth,
+                                                          @PathVariable String tesisId,
+                                                          @RequestBody TamTesisTalebi talep) {
+        return ResponseEntity.ok(tesisServisi.tamGuncelle(auth.getName(), tesisId, talep));
+    }
+
     @PatchMapping("/{tesisId}")
     @PreAuthorize("hasAnyAuthority('ROLE_FACILITY_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<Tesis> updateFacility(Authentication auth,

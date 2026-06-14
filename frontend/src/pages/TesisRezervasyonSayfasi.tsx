@@ -624,39 +624,31 @@ export const TesisRezervasyonSayfasi = () => {
                     value={`${selectedFacility.politika?.rezervasyonPenceresiGun || 14} gün önceden`}
                   />
                   <PolicyItem
-                    label="Minimum Ön Bildirim"
-                    value={`${selectedFacility.politika?.minimumBildirimDakika || 15} dakika kala`}
+                    label="Maksimum Süre"
+                    value={`${Math.round((selectedFacility.politika?.maksimumRezervasyonSureDakika || 120) / 60)} saat`}
                   />
                   <PolicyItem
                     label="Son İptal Süresi"
-                    value={`${selectedFacility.politika?.iptalLimitDakika || 30} dakika kalaya kadar`}
-                  />
-                  <PolicyItem
-                    label="Maksimum Süre"
-                    value={`${selectedFacility.politika?.maksimumRezervasyonSureDakika || 120} dakika`}
-                  />
-                  <PolicyItem
-                    label="Geç Kalma Toleransı (No-Show)"
-                    value={`${selectedFacility.politika?.otomatikGelmemeDakika || 15} dakika`}
+                    value={`Başlangıçtan ${Math.round((selectedFacility.politika?.iptalLimitDakika || 60) / 60)} saat öncesine kadar`}
                   />
                   <PolicyItem
                     label="Günlük Rezervasyon Sınırı"
-                    value="En fazla 1 slot / gün (kaynak başına)"
+                    value="En fazla 1 slot / gün"
                   />
                   <PolicyItem
                     label="Eşzamanlı Aktif Sınırı"
                     value="En fazla 3 aktif rezervasyon"
                   />
                   <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3">
-                    <span className="text-xs font-semibold text-white/40">Check-in Zorunluluğu</span>
+                    <span className="text-xs font-semibold text-white/40">Onay Mekanizması</span>
                     <span
                       className={`text-xs font-black px-2.5 py-1 rounded-full ${
-                        selectedFacility.politika?.yoklamaZorunlu
+                        selectedFacility.politika?.onayGerekli
                           ? 'bg-amber-400/10 text-amber-200'
                           : 'bg-emerald-400/10 text-emerald-200'
                       }`}
                     >
-                      {selectedFacility.politika?.yoklamaZorunlu ? 'Zorunlu' : 'Gerekli Değil'}
+                      {selectedFacility.politika?.onayGerekli ? 'Müdürlük onayı gerekir' : 'Anında onaylanır'}
                     </span>
                   </div>
                 </div>
@@ -690,7 +682,7 @@ export const TesisRezervasyonSayfasi = () => {
                   )}
                 </div>
               ) : (
-                <div className="text-xs text-white/30 text-center py-4">Önce bir kaynak birimi seçmelisiniz</div>
+                <div className="text-xs text-white/30 text-center py-4">Önce bir tesis seçmelisiniz</div>
               )}
             </section>
           </div>

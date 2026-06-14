@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshCw, Settings2, ClipboardList, CalendarDays } from 'lucide-react';
 import { ModulSekmeleri } from '../components/yonetim/ModulSekmeleri';
-import { useTesisDeposu, type KullanimKurali, type TesisPolitikasi } from '../depolar/tesisDeposu';
+import { useTesisDeposu, type TamTesisFormu } from '../depolar/tesisDeposu';
 import { useRezervasyonDeposu, type Rezervasyon } from '../depolar/rezervasyonDeposu';
 
 import {
   blankFacilityForm,
-  defaultPolicy,
+  defaultPolicyForm,
   type WeeklyHourDay,
+  type PolitikaFormState,
 } from '../components/tesis-yonetim/ortak';
 import { TakvimGorunumu } from '../components/tesis-yonetim/TakvimGorunumu';
 import { RezervasyonGorunumu } from '../components/tesis-yonetim/RezervasyonGorunumu';
@@ -24,10 +25,8 @@ export const TesisYonetimPaneli = () => {
     successMessage: facilitySuccess,
     fetchFacilities,
     selectFacility,
-    createFacility,
-    updateFacility,
-    updatePolicy,
-    replaceAvailabilityRules,
+    tesisTamOlustur,
+    tesisTamGuncelle,
     deleteFacility,
   } = useTesisDeposu();
 
@@ -47,8 +46,7 @@ export const TesisYonetimPaneli = () => {
 
   // Config Forms
   const [facilityForm, setFacilityForm] = useState(blankFacilityForm);
-  const [policyForm, setPolicyForm] = useState<TesisPolitikasi>(defaultPolicy);
-  const [, setRules] = useState<KullanimKurali[]>([]);
+  const [policyForm, setPolicyForm] = useState<PolitikaFormState>(defaultPolicyForm);
   const [weeklyHours, setWeeklyHours] = useState<WeeklyHourDay[]>([]);
 
   // Block Team Training Form
@@ -173,29 +171,40 @@ export const TesisYonetimPaneli = () => {
   useEffect(() => {
     if (!selectedFacility) {
       setFacilityForm(blankFacilityForm);
-      setPolicyForm(defaultPolicy);
+      setPolicyForm(defaultPolicyForm);
       return;
     }
     setFacilityForm({
       ad: selectedFacility.ad,
-      tesisTuru: selectedFacility.tesisTuru,
       aciklama: selectedFacility.aciklama || '',
       konumMetni: selectedFacility.konumMetni || '',
+      enlem: selectedFacility.enlem ?? blankFacilityForm.enlem,
+      boylam: selectedFacility.boylam ?? blankFacilityForm.boylam,
       kapasite: selectedFacility.kapasite,
       durum: selectedFacility.durum,
     });
-    setPolicyForm(selectedFacility.politika || defaultPolicy);
+    const p = selectedFacility.politika;
+    setPolicyForm(p ? {
+      rezervasyonPenceresiGun: p.rezervasyonPenceresiGun,
+      maksimumRezervasyonSureSaat: Math.max(1, Math.round(p.maksimumRezervasyonSureDakika / 60)),
+      iptalLimitSaat: Math.round(p.iptalLimitDakika / 60),
+      onayGerekli: p.onayGerekli,
+    } : defaultPolicyForm);
   }, [selectedFacility]);
 
-  // Sync availability rules with selected resource
+  // Sync availability rules with selected (gizli) resource
   useEffect(() => {
     if (!selectedResource) {
-      setRules([]);
-      setWeeklyHours([]);
+      // Yeni tesis: 7 gün varsayılan açık şablon (kullanıcı kapatabilir)
+      setWeeklyHours(Array.from({ length: 7 }, (_, i) => ({
+        haftaninGunu: i + 1,
+        isOpen: true,
+        baslangicSaati: '08:00',
+        bitisSaati: '22:00',
+      })));
       return;
     }
     const currentRules = selectedResource.kullanimKurallari || [];
-    setRules(currentRules);
 
     const initialWeekly: WeeklyHourDay[] = [];
     for (let day = 1; day <= 7; day++) {
@@ -219,18 +228,42 @@ export const TesisYonetimPaneli = () => {
     setWeeklyHours(initialWeekly);
   }, [selectedResource]);
 
-  const resetFacilityForm = () => setFacilityForm(blankFacilityForm);
-
-  const handleCreateFacility = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const ok = await createFacility(facilityForm);
-    if (ok) resetFacilityForm();
+  const resetFacilityForm = () => {
+    setFacilityForm(blankFacilityForm);
+    setPolicyForm(defaultPolicyForm);
+    setWeeklyHours([]);
   };
 
-  const handleUpdateFacility = async (event: React.FormEvent) => {
+  // Tek-buton kaydet: tanım + politika + çalışma saatleri birlikte (atomik).
+  const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!selectedFacility) return;
-    await updateFacility(selectedFacility.id, facilityForm);
+    const calismaSaatleri = weeklyHours
+      .filter(w => w.isOpen)
+      .map(w => ({ haftaninGunu: w.haftaninGunu, baslangicSaati: w.baslangicSaati, bitisSaati: w.bitisSaati }));
+    if (calismaSaatleri.length === 0) {
+      window.alert('En az bir gün için çalışma saati tanımlamalısınız.');
+      return;
+    }
+    const payload: TamTesisFormu = {
+      ad: facilityForm.ad,
+      kapasite: facilityForm.kapasite,
+      aciklama: facilityForm.aciklama,
+      konumMetni: facilityForm.konumMetni,
+      enlem: facilityForm.enlem,
+      boylam: facilityForm.boylam,
+      durum: facilityForm.durum,
+      rezervasyonPenceresiGun: policyForm.rezervasyonPenceresiGun,
+      maksimumRezervasyonSureSaat: policyForm.maksimumRezervasyonSureSaat,
+      iptalLimitSaat: policyForm.iptalLimitSaat,
+      onayGerekli: policyForm.onayGerekli,
+      calismaSaatleri,
+    };
+    if (selectedFacility) {
+      await tesisTamGuncelle(selectedFacility.id, payload);
+    } else {
+      const ok = await tesisTamOlustur(payload);
+      if (ok) resetFacilityForm();
+    }
   };
 
   const handleDeleteFacility = async () => {
@@ -242,25 +275,6 @@ export const TesisYonetimPaneli = () => {
         resetFacilityForm();
       }
     }
-  };
-
-  const handleUpdatePolicy = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!selectedFacility) return;
-    await updatePolicy(selectedFacility.id, policyForm);
-  };
-
-  const handleSaveRules = async () => {
-    if (!selectedResource) return;
-    const rulesToSave: KullanimKurali[] = weeklyHours
-      .filter(w => w.isOpen)
-      .map(w => ({
-        haftaninGunu: w.haftaninGunu,
-        baslangicSaati: w.baslangicSaati,
-        bitisSaati: w.bitisSaati,
-        durum: 'AKTIF',
-      }));
-    await replaceAvailabilityRules(selectedResource.id, rulesToSave);
   };
 
   const handleAddBlockSlot = async (e: React.FormEvent) => {
@@ -466,7 +480,7 @@ export const TesisYonetimPaneli = () => {
         aktif={activeView}
         onSecim={setActiveView}
         sekmeler={[
-          { anahtar: 'config', baslik: 'Tesis & Kaynak Yapılandırması', aciklama: 'Tesisler, kaynaklar ve kullanım kuralları', ikon: Settings2 },
+          { anahtar: 'config', baslik: 'Tesis Yapılandırması', aciklama: 'Tesis tanımı, kuralları ve çalışma saatleri', ikon: Settings2 },
           { anahtar: 'bookings', baslik: `Antrenman & Rezervasyon (${allBookings.length})`, aciklama: 'Antrenman ve rezervasyon talep yönetimi', ikon: ClipboardList },
           { anahtar: 'calendar', baslik: 'Genel Rezervasyon Takvimi', aciklama: 'Tüm rezervasyonların takvim görünümü', ikon: CalendarDays },
         ]}
@@ -483,19 +497,17 @@ export const TesisYonetimPaneli = () => {
           facilities={facilities}
           selectedFacilityId={selectedFacilityId}
           selectFacility={selectFacility}
-          resetFacilityForm={resetFacilityForm}
+          resetForm={resetFacilityForm}
           selectedFacility={selectedFacility}
           facilityForm={facilityForm}
           setFacilityForm={setFacilityForm}
-          handleCreateFacility={handleCreateFacility}
-          handleUpdateFacility={handleUpdateFacility}
-          handleDeleteFacility={handleDeleteFacility}
           policyForm={policyForm}
           setPolicyForm={setPolicyForm}
-          handleUpdatePolicy={handleUpdatePolicy}
           weeklyHours={weeklyHours}
           setWeeklyHours={setWeeklyHours}
-          handleSaveRules={handleSaveRules}
+          handleSave={handleSave}
+          handleDeleteFacility={handleDeleteFacility}
+          isLoading={isFacilityLoading}
         />
       ) : activeView === 'bookings' ? (
         <RezervasyonGorunumu

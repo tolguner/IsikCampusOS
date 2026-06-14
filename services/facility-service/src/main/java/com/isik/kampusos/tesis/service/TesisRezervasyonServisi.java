@@ -20,7 +20,6 @@ import java.util.Optional;
 public class TesisRezervasyonServisi {
 
     private final TesisRezervasyonDeposu tesisRezervasyonDeposu;
-    private final RezervasyonYoklamaDeposu rezervasyonYoklamaDeposu;
     private final TesisKaynagiDeposu tesisKaynagiDeposu;
     private final TesisPolitikasiDeposu tesisPolitikasiDeposu;
     private final TesisKullanilabilirlikKuraliDeposu tesisKullanilabilirlikKuraliDeposu;
@@ -163,7 +162,10 @@ public class TesisRezervasyonServisi {
                 .bitisTarihi(end)
                 .amac(talep.getAmac())
                 .katilimciSayisi(talep.getKatilimciSayisi() > 0 ? talep.getKatilimciSayisi() : 1)
-                .durum(TesisRezervasyon.RezervasyonDurumu.ONAYLANDI) // Default active status
+                // Onay mekanizması: politika onay gerektiriyorsa BEKLEMEDE, aksi halde anında ONAYLANDI.
+                .durum(politika.isOnayGerekli()
+                        ? TesisRezervasyon.RezervasyonDurumu.BEKLEMEDE
+                        : TesisRezervasyon.RezervasyonDurumu.ONAYLANDI)
                 .build();
 
         TesisRezervasyon saved = tesisRezervasyonDeposu.save(rezervasyon);
@@ -210,73 +212,6 @@ public class TesisRezervasyonServisi {
         
         TesisRezervasyon saved = tesisRezervasyonDeposu.save(rezervasyon);
         return toResponse(saved);
-    }
-
-    public RezervasyonYoklamaYaniti checkin(String kullaniciId, String roller, String rezervasyonId, RezervasyonYoklamaTalebi talep) {
-        TesisRezervasyon rezervasyon = tesisRezervasyonDeposu.findById(rezervasyonId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Rezervasyon bulunamadı."));
-
-        boolean isAdmin = roller != null && (roller.contains("ROLE_ADMIN") || roller.contains("ROLE_FACILITY_ADMIN"));
-        boolean isOwner = rezervasyon.getRezervasyonYapanKullaniciId().equals(kullaniciId);
-
-        if (!isAdmin && !isOwner) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu rezervasyon için check-in yapmaya yetkiniz yok.");
-        }
-
-        if (rezervasyon.getDurum() != TesisRezervasyon.RezervasyonDurumu.ONAYLANDI && rezervasyon.getDurum() != TesisRezervasyon.RezervasyonDurumu.BEKLEMEDE) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Yalnızca aktif rezervasyonlar için check-in yapılabilir.");
-        }
-
-        if (rezervasyonYoklamaDeposu.existsByRezervasyonId(rezervasyonId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bu rezervasyon için zaten check-in yapılmış.");
-        }
-
-        TesisPolitikasi politika = tesisPolitikasiDeposu.findByTesisIdAndSilinmeTarihiIsNull(rezervasyon.getKaynak().getTesis().getId())
-                .orElse(getDefaultPolicy(rezervasyon.getKaynak().getTesis()));
-
-        OffsetDateTime now = OffsetDateTime.now();
-
-        // Validate time window (e.g. can check in up to 15 mins before and autoNoShowMinutes after start)
-        if (!isAdmin) {
-            OffsetDateTime checkinStartLimit = rezervasyon.getBaslangicTarihi().minusMinutes(15);
-            OffsetDateTime checkinEndLimit = rezervasyon.getBaslangicTarihi().plusMinutes(politika.getOtomatikGelmemeDakika());
-
-            if (now.isBefore(checkinStartLimit)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Check-in süresi henüz başlamadı. Başlangıçtan en erken 15 dakika önce yapabilirsiniz.");
-            }
-            if (now.isAfter(checkinEndLimit)) {
-                rezervasyon.setDurum(TesisRezervasyon.RezervasyonDurumu.GELMEDI);
-                rezervasyon.setGelmemeTarihi(now);
-                tesisRezervasyonDeposu.save(rezervasyon);
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Check-in süresi geçmiştir. Rezervasyonunuz 'Gelmedi' (No-Show) olarak işaretlendi.");
-            }
-        }
-
-        RezervasyonYoklama.YoklamaYontemi yontem = RezervasyonYoklama.YoklamaYontemi.KAREKOD;
-        if (talep.getYontem() != null) {
-            try {
-                yontem = RezervasyonYoklama.YoklamaYontemi.valueOf(talep.getYontem().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz check-in yöntemi.");
-            }
-        }
-
-        RezervasyonYoklama yoklama = RezervasyonYoklama.builder()
-                .rezervasyon(rezervasyon)
-                .kullaniciId(kullaniciId)
-                .yoklamaTarihi(now)
-                .yontem(yontem)
-                .kanitDosyaId(talep.getKanitDosyaId())
-                .durum(RezervasyonYoklama.YoklamaDurumu.GIRIS_YAPILDI)
-                .build();
-
-        RezervasyonYoklama savedYoklama = rezervasyonYoklamaDeposu.save(yoklama);
-        
-        // Update booking status to COMPLETED once checked in
-        rezervasyon.setDurum(TesisRezervasyon.RezervasyonDurumu.TAMAMLANDI);
-        tesisRezervasyonDeposu.save(rezervasyon);
-
-        return RezervasyonYoklamaYaniti.from(savedYoklama);
     }
 
     public TesisRezervasyonYaniti updateBookingStatus(String actorId, String rezervasyonId, String durumStr) {
@@ -348,20 +283,19 @@ public class TesisRezervasyonServisi {
     }
 
     private TesisRezervasyonYaniti toResponse(TesisRezervasyon rezervasyon) {
-        Optional<RezervasyonYoklama> yoklamaOpt = rezervasyonYoklamaDeposu.findByRezervasyonId(rezervasyon.getId());
-        RezervasyonYoklamaYaniti yoklamaYaniti = yoklamaOpt.map(RezervasyonYoklamaYaniti::from).orElse(null);
-        return TesisRezervasyonYaniti.from(rezervasyon, yoklamaYaniti);
+        return TesisRezervasyonYaniti.from(rezervasyon);
     }
 
     private TesisPolitikasi getDefaultPolicy(Tesis tesis) {
         return TesisPolitikasi.builder()
                 .tesis(tesis)
                 .rezervasyonPenceresiGun(14)
-                .minimumBildirimDakika(15)
+                .minimumBildirimDakika(0)
                 .iptalLimitDakika(30)
                 .yoklamaZorunlu(false)
-                .otomatikGelmemeDakika(15)
+                .otomatikGelmemeDakika(0)
                 .maksimumRezervasyonSureDakika(120)
+                .onayGerekli(false)
                 .durum(TesisPolitikasi.PolitikaDurumu.AKTIF)
                 .build();
     }

@@ -352,35 +352,18 @@ export const TakvimGorunumu = ({
                 <span className="text-white/40">Durum:</span>
                 <BookingStatusBadge durum={selectedBookingForModal.durum} />
               </div>
-              {selectedBookingForModal.yoklama && (
-                <div className="py-2.5 flex justify-between gap-3 items-center">
-                  <span className="text-white/40">Giriş (Check-in):</span>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                    Doğrulandı ({new Date(selectedBookingForModal.yoklama.yoklamaTarihi).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })})
-                  </span>
-                </div>
-              )}
             </div>
 
             {/* Quick Actions inside Modal */}
             <div className="pt-2 flex flex-wrap gap-2.5 justify-end">
-              {selectedBookingForModal.durum !== 'BLOKE' && ['BEKLEMEDE', 'ONAYLANDI'].includes(selectedBookingForModal.durum) && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => handleUpdateBookingStatus(selectedBookingForModal.id, 'TAMAMLANDI')}
-                    className="px-4 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-bold transition border border-emerald-500/20 cursor-pointer"
-                  >
-                    Kullanıldı
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleUpdateBookingStatus(selectedBookingForModal.id, 'GELMEDI')}
-                    className="px-4 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition border border-amber-500/20 cursor-pointer"
-                  >
-                    Gelmedi
-                  </button>
-                </>
+              {selectedBookingForModal.durum === 'BEKLEMEDE' && (
+                <button
+                  type="button"
+                  onClick={() => handleUpdateBookingStatus(selectedBookingForModal.id, 'ONAYLANDI')}
+                  className="px-4 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-bold transition border border-emerald-500/20 cursor-pointer"
+                >
+                  Onayla
+                </button>
               )}
               {['BEKLEMEDE', 'ONAYLANDI', 'BLOKE'].includes(selectedBookingForModal.durum) && (
                 <button
@@ -388,7 +371,7 @@ export const TakvimGorunumu = ({
                   onClick={() => handleUpdateBookingStatus(selectedBookingForModal.id, 'IPTAL_EDILDI')}
                   className="px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs font-bold transition border border-red-500/20 cursor-pointer"
                 >
-                  {selectedBookingForModal.durum === 'BLOKE' ? 'Blokajı Kaldır' : 'İptal Et'}
+                  {selectedBookingForModal.durum === 'BLOKE' ? 'Blokajı Kaldır' : (selectedBookingForModal.durum === 'BEKLEMEDE' ? 'Reddet' : 'İptal Et')}
                 </button>
               )}
             </div>

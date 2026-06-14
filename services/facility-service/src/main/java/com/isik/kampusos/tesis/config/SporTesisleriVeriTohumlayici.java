@@ -8,7 +8,6 @@ import com.isik.kampusos.tesis.repository.TesisKullanilabilirlikKuraliDeposu;
 import com.isik.kampusos.tesis.repository.TesisPolitikasiDeposu;
 import com.isik.kampusos.tesis.repository.TesisDeposu;
 import com.isik.kampusos.tesis.repository.TesisKaynagiDeposu;
-import com.isik.kampusos.tesis.repository.RezervasyonYoklamaDeposu;
 import com.isik.kampusos.tesis.repository.TesisRezervasyonDeposu;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +31,6 @@ public class SporTesisleriVeriTohumlayici implements CommandLineRunner {
     private final TesisKaynagiDeposu tesisKaynagiDeposu;
     private final TesisPolitikasiDeposu tesisPolitikasiDeposu;
     private final TesisKullanilabilirlikKuraliDeposu tesisKullanilabilirlikKuraliDeposu;
-    private final RezervasyonYoklamaDeposu rezervasyonYoklamaDeposu;
     private final TesisRezervasyonDeposu tesisRezervasyonDeposu;
 
     @Override
@@ -45,7 +43,6 @@ public class SporTesisleriVeriTohumlayici implements CommandLineRunner {
         // Önceki eski çatı tesis verilerini temizle
         tesisDeposu.findByAdAndSilinmeTarihiIsNull("Işık Üniversitesi Spor Tesisleri").ifPresent(old -> {
             log.info("Eski çatı tesis verileri temizleniyor...");
-            rezervasyonYoklamaDeposu.deleteAll();
             tesisRezervasyonDeposu.deleteAll();
             tesisKullanilabilirlikKuraliDeposu.deleteAll();
             tesisKaynagiDeposu.deleteAll();

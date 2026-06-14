@@ -7,7 +7,6 @@ import {
   Users,
   MapPin,
   X,
-  ScanLine,
   Trash2,
   AlertTriangle,
 } from 'lucide-react';
@@ -18,14 +17,12 @@ const panelStyle = {
 };
 
 export const RezervasyonlarimSayfasi = () => {
-  const { myBookings, isLoading, error, successMessage, fetchMyBookings, cancelBooking, checkin, clearMessages } = useRezervasyonDeposu();
+  const { myBookings, isLoading, error, successMessage, fetchMyBookings, cancelBooking, clearMessages } = useRezervasyonDeposu();
   const [activeTab, setActiveTab] = useState<'active' | 'past'>('active');
-  
+
   // Modals state
   const [selectedBookingForCancel, setSelectedBookingForCancel] = useState<Rezervasyon | null>(null);
   const [cancelReason, setCancelReason] = useState<string>('');
-  const [selectedBookingForCheckin, setSelectedBookingForCheckin] = useState<Rezervasyon | null>(null);
-  const [mockScanning, setMockScanning] = useState<boolean>(false);
 
   useEffect(() => {
     fetchMyBookings();
@@ -43,20 +40,6 @@ export const RezervasyonlarimSayfasi = () => {
     }
   };
 
-  const handleCheckinSubmit = async () => {
-    if (!selectedBookingForCheckin) return;
-    setMockScanning(true);
-    
-    // Simulate a 1.5s QR scanning process
-    setTimeout(async () => {
-      const ok = await checkin(selectedBookingForCheckin.id, 'QR');
-      setMockScanning(false);
-      if (ok) {
-        setSelectedBookingForCheckin(null);
-      }
-    }, 1500);
-  };
-
   const formatDateTime = (isoStr: string) => {
     const d = new Date(isoStr);
     const date = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -64,9 +47,11 @@ export const RezervasyonlarimSayfasi = () => {
     return { date, time };
   };
 
-  // Filter bookings
+  // Filter bookings — süresi geçmiş ya da iptal/sonlanmış olanlar "geçmiş" sayılır
+  const now = new Date();
   const filteredBookings = myBookings.filter((booking) => {
-    const isPast = ['TAMAMLANDI', 'IPTAL_EDILDI', 'GELMEDI'].includes(booking.durum);
+    const isPast = ['TAMAMLANDI', 'IPTAL_EDILDI', 'GELMEDI'].includes(booking.durum)
+      || new Date(booking.bitisTarihi) < now;
     return activeTab === 'active' ? !isPast : isPast;
   });
 
@@ -76,7 +61,7 @@ export const RezervasyonlarimSayfasi = () => {
         <div>
           <h1 className="text-3xl font-black text-white">Tesis Rezervasyonlarım</h1>
           <p className="mt-2 text-sm text-white/45 leading-relaxed">
-            Aktif kampüs rezervasyonlarınızı görüntüleyin, süresi gelenlerin check-in işlemini yapın veya iptal edin.
+            Aktif kampüs rezervasyonlarınızı görüntüleyin veya iptal edin.
           </p>
         </div>
       </div>
@@ -103,7 +88,7 @@ export const RezervasyonlarimSayfasi = () => {
               : 'border-transparent text-white/40 hover:text-white/60'
           }`}
         >
-          Aktif Rezervasyonlar ({myBookings.filter(b => !['TAMAMLANDI', 'IPTAL_EDILDI', 'GELMEDI'].includes(b.durum)).length})
+          Aktif Rezervasyonlar ({myBookings.filter(b => !(['TAMAMLANDI', 'IPTAL_EDILDI', 'GELMEDI'].includes(b.durum) || new Date(b.bitisTarihi) < now)).length})
         </button>
         <button
           onClick={() => setActiveTab('past')}
@@ -113,7 +98,7 @@ export const RezervasyonlarimSayfasi = () => {
               : 'border-transparent text-white/40 hover:text-white/60'
           }`}
         >
-          Geçmiş / İptaller ({myBookings.filter(b => ['TAMAMLANDI', 'IPTAL_EDILDI', 'GELMEDI'].includes(b.durum)).length})
+          Geçmiş / İptaller ({myBookings.filter(b => ['TAMAMLANDI', 'IPTAL_EDILDI', 'GELMEDI'].includes(b.durum) || new Date(b.bitisTarihi) < now).length})
         </button>
       </div>
 
@@ -175,15 +160,8 @@ export const RezervasyonlarimSayfasi = () => {
                   </div>
 
                   {/* Actions area */}
-                  {activeTab === 'active' && (
+                  {activeTab === 'active' && booking.durum !== 'IPTAL_EDILDI' && (
                     <div className="flex flex-wrap gap-2 sm:self-center shrink-0">
-                      <button
-                        onClick={() => setSelectedBookingForCheckin(booking)}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-cyan-300 hover:bg-cyan-200 text-[#071018] font-black text-xs transition shadow-lg shadow-cyan-300/5 cursor-pointer"
-                      >
-                        <ScanLine className="h-4 w-4" />
-                        Giriş Yap (Check-in)
-                      </button>
                       <button
                         onClick={() => setSelectedBookingForCancel(booking)}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 font-bold text-xs transition cursor-pointer"
@@ -206,85 +184,6 @@ export const RezervasyonlarimSayfasi = () => {
           )}
         </div>
       )}
-
-      {/* Checkin Verification Modal */}
-      <AnimatePresence>
-        {selectedBookingForCheckin && (
-          <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm p-4">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-md rounded-3xl p-6 space-y-6 relative text-white"
-              style={panelStyle}
-            >
-              <button
-                onClick={() => setSelectedBookingForCheckin(null)}
-                className="absolute top-4 right-4 text-white/40 hover:text-white/70 transition"
-              >
-                <X className="h-5 w-5" />
-              </button>
-
-              <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-cyan-200/15 bg-cyan-300/10 text-cyan-100">
-                  <ScanLine className="h-5 w-5 animate-pulse" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black">Check-in İşlemi</h3>
-                  <p className="text-xs text-white/40">Tesis girişini doğrulamak için QR kodu taratın</p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-[#090911] border border-white/5 p-6 flex flex-col items-center justify-center space-y-4">
-                {mockScanning ? (
-                  <div className="flex flex-col items-center space-y-3 py-6">
-                    <div className="relative grid h-16 w-16 place-items-center rounded-full bg-cyan-300/10 border-2 border-cyan-300 animate-spin border-t-transparent" />
-                    <span className="text-xs font-bold text-cyan-200/80">QR Kod Doğrulanıyor...</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid h-32 w-32 place-items-center bg-white rounded-2xl border border-white/10 p-2 shadow-inner">
-                      {/* Simulating a premium QR code visual */}
-                      <div className="h-full w-full bg-slate-950 rounded-lg flex flex-col items-center justify-center p-2">
-                        <div className="grid grid-cols-4 gap-1 w-full h-full opacity-80">
-                          {Array.from({ length: 16 }).map((_, i) => (
-                            <div
-                              key={i}
-                              className={`rounded ${
-                                (i * 3 + 1) % 5 === 0 || i % 4 === 0 ? 'bg-cyan-300' : 'bg-transparent'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-center text-xs font-semibold text-white/40 leading-relaxed max-w-xs">
-                      Tesis kapısındaki veya bilgi ekranındaki QR kodu bu görselle hizalayarak girişi doğrulayabilirsiniz.
-                    </p>
-                  </>
-                )}
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={handleCheckinSubmit}
-                  disabled={mockScanning}
-                  className="flex-1 px-5 py-3 rounded-2xl bg-cyan-300 hover:bg-cyan-200 text-[#071018] font-black text-sm transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {mockScanning ? 'Doğrulanıyor...' : 'Simüle Et (Girişi Onayla)'}
-                </button>
-                <button
-                  onClick={() => setSelectedBookingForCheckin(null)}
-                  disabled={mockScanning}
-                  className="px-5 py-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 font-bold text-sm transition cursor-pointer"
-                >
-                  Kapat
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Cancellation Modal */}
       <AnimatePresence>

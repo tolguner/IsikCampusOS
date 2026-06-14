@@ -44,9 +44,11 @@ public class TesisServisi {
     public Tesis createFacility(String actorId, TesisTalebi talep) {
         Tesis tesis = Tesis.builder()
                 .ad(required(talep.getAd(), "Tesis adı zorunludur."))
-                .tesisTuru(parseFacilityType(talep.getTesisTuru()))
+                .tesisTuru(parseFacilityTypeOrDefault(talep.getTesisTuru(), Tesis.TesisTuru.SPOR_ALANI))
                 .aciklama(talep.getAciklama())
                 .konumMetni(talep.getKonumMetni())
+                .enlem(talep.getEnlem())
+                .boylam(talep.getBoylam())
                 .kapasite(requirePositive(talep.getKapasite(), "Kapasite 0'dan büyük olmalıdır."))
                 .durum(parseFacilityStatusOrDefault(talep.getDurum(), Tesis.TesisDurumu.AKTIF))
                 .olusturan(actorId)
@@ -74,9 +76,12 @@ public class TesisServisi {
     public Tesis updateFacility(String actorId, String tesisId, TesisTalebi talep) {
         Tesis tesis = requireFacility(tesisId);
         tesis.setAd(required(talep.getAd(), "Tesis adı zorunludur."));
-        tesis.setTesisTuru(parseFacilityType(talep.getTesisTuru()));
+        tesis.setTesisTuru(parseFacilityTypeOrDefault(talep.getTesisTuru(),
+                tesis.getTesisTuru() != null ? tesis.getTesisTuru() : Tesis.TesisTuru.SPOR_ALANI));
         tesis.setAciklama(talep.getAciklama());
         tesis.setKonumMetni(talep.getKonumMetni());
+        tesis.setEnlem(talep.getEnlem());
+        tesis.setBoylam(talep.getBoylam());
         tesis.setKapasite(requirePositive(talep.getKapasite(), "Kapasite 0'dan büyük olmalıdır."));
         tesis.setDurum(parseFacilityStatusOrDefault(talep.getDurum(), tesis.getDurum()));
         tesis.setGuncelleyen(actorId);
@@ -183,13 +188,76 @@ public class TesisServisi {
                         .build());
 
         politika.setRezervasyonPenceresiGun(requirePositive(talep.getRezervasyonPenceresiGun(), "Rezervasyon penceresi 0'dan büyük olmalıdır."));
-        politika.setMinimumBildirimDakika(requireNonNegative(talep.getMinimumBildirimDakika(), "Minimum ön süre negatif olamaz."));
         politika.setIptalLimitDakika(requireNonNegative(talep.getIptalLimitDakika(), "İptal süresi negatif olamaz."));
-        politika.setYoklamaZorunlu(talep.isYoklamaZorunlu());
-        politika.setOtomatikGelmemeDakika(requireNonNegative(talep.getOtomatikGelmemeDakika(), "No-show süresi negatif olamaz."));
         politika.setMaksimumRezervasyonSureDakika(requirePositive(talep.getMaksimumRezervasyonSureDakika(), "Maksimum rezervasyon süresi 0'dan büyük olmalıdır."));
+        politika.setOnayGerekli(talep.isOnayGerekli());
+        // Kullanımdan kalkan alanlar makul default'a sabitlenir (UX'te yok).
+        politika.setMinimumBildirimDakika(0);
+        politika.setYoklamaZorunlu(false);
+        politika.setOtomatikGelmemeDakika(0);
         politika.setGuncelleyen(actorId);
         return tesisPolitikasiDeposu.save(politika);
+    }
+
+    // ---- Atomik tek-istek oluştur/güncelle: tanım + politika + çalışma saatleri ----
+
+    @Transactional
+    public TesisYaniti tamOlustur(String actorId, TamTesisTalebi talep) {
+        Tesis tesis = createFacility(actorId, toTesisTalebi(talep));
+        upsertPolicy(actorId, tesis.getId(), toPolitikaTalebi(talep));
+        replaceAvailabilityRules(actorId, varsayilanKaynakId(tesis.getId()), toKuralTalepleri(talep));
+        return getFacility(tesis.getId());
+    }
+
+    @Transactional
+    public TesisYaniti tamGuncelle(String actorId, String tesisId, TamTesisTalebi talep) {
+        updateFacility(actorId, tesisId, toTesisTalebi(talep));
+        upsertPolicy(actorId, tesisId, toPolitikaTalebi(talep));
+        replaceAvailabilityRules(actorId, varsayilanKaynakId(tesisId), toKuralTalepleri(talep));
+        return getFacility(tesisId);
+    }
+
+    private TesisTalebi toTesisTalebi(TamTesisTalebi t) {
+        TesisTalebi d = new TesisTalebi();
+        d.setAd(t.getAd());
+        d.setKapasite(t.getKapasite());
+        d.setAciklama(t.getAciklama());
+        d.setKonumMetni(t.getKonumMetni());
+        d.setEnlem(t.getEnlem());
+        d.setBoylam(t.getBoylam());
+        d.setDurum(t.getDurum());
+        return d;
+    }
+
+    private TesisPolitikasiTalebi toPolitikaTalebi(TamTesisTalebi t) {
+        TesisPolitikasiTalebi p = new TesisPolitikasiTalebi();
+        p.setRezervasyonPenceresiGun(t.getRezervasyonPenceresiGun());
+        p.setMaksimumRezervasyonSureDakika(requirePositive(t.getMaksimumRezervasyonSureSaat(), "Maksimum süre 0'dan büyük olmalıdır.") * 60);
+        p.setIptalLimitDakika(requireNonNegative(t.getIptalLimitSaat(), "İptal limiti negatif olamaz.") * 60);
+        p.setOnayGerekli(t.isOnayGerekli());
+        return p;
+    }
+
+    private List<KullanilabilirlikKuraliTalebi> toKuralTalepleri(TamTesisTalebi t) {
+        if (t.getCalismaSaatleri() == null || t.getCalismaSaatleri().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "En az bir çalışma saati tanımlanmalıdır.");
+        }
+        return t.getCalismaSaatleri().stream().map(cs -> {
+            KullanilabilirlikKuraliTalebi k = new KullanilabilirlikKuraliTalebi();
+            k.setHaftaninGunu(cs.getHaftaninGunu());
+            k.setBaslangicSaati(cs.getBaslangicSaati());
+            k.setBitisSaati(cs.getBitisSaati());
+            k.setDurum("AKTIF");
+            return k;
+        }).toList();
+    }
+
+    private String varsayilanKaynakId(String tesisId) {
+        List<TesisKaynagi> kaynaklar = tesisKaynagiDeposu.findByTesisIdAndSilinmeTarihiIsNullOrderByAdAsc(tesisId);
+        if (kaynaklar.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Tesis kaynağı bulunamadı.");
+        }
+        return kaynaklar.get(0).getId();
     }
 
     @Transactional
@@ -291,9 +359,10 @@ public class TesisServisi {
         return value;
     }
 
-    private Tesis.TesisTuru parseFacilityType(String value) {
+    private Tesis.TesisTuru parseFacilityTypeOrDefault(String value, Tesis.TesisTuru fallback) {
+        if (value == null || value.isBlank()) return fallback;
         try {
-            return Tesis.TesisTuru.valueOf(required(value, "Tesis tipi zorunludur.").toUpperCase());
+            return Tesis.TesisTuru.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz tesis tipi.");
         }

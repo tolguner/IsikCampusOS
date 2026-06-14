@@ -10,11 +10,9 @@ public class TesisPolitikasiYaniti {
     private String id;
     private String tesisId;
     private int rezervasyonPenceresiGun;
-    private int minimumBildirimDakika;
     private int iptalLimitDakika;
-    private boolean yoklamaZorunlu;
-    private int otomatikGelmemeDakika;
     private int maksimumRezervasyonSureDakika;
+    private boolean onayGerekli;
     private String durum;
 
     public static TesisPolitikasiYaniti from(TesisPolitikasi politika) {
@@ -25,11 +23,9 @@ public class TesisPolitikasiYaniti {
                 .id(politika.getId())
                 .tesisId(politika.getTesis().getId())
                 .rezervasyonPenceresiGun(politika.getRezervasyonPenceresiGun())
-                .minimumBildirimDakika(politika.getMinimumBildirimDakika())
                 .iptalLimitDakika(politika.getIptalLimitDakika())
-                .yoklamaZorunlu(politika.isYoklamaZorunlu())
-                .otomatikGelmemeDakika(politika.getOtomatikGelmemeDakika())
                 .maksimumRezervasyonSureDakika(politika.getMaksimumRezervasyonSureDakika())
+                .onayGerekli(politika.isOnayGerekli())
                 .durum(politika.getDurum().name())
                 .build();
     }

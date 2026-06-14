@@ -41,6 +41,11 @@ public class TesisPolitikasi {
     @Column(nullable = false)
     private int maksimumRezervasyonSureDakika;
 
+    // Onay mekanizması: true → öğrenci talebi BEKLEMEDE kalır, Spor Müdürlüğü onaylar;
+    // false → rezervasyon anında ONAYLANDI.
+    @Column(nullable = false)
+    private boolean onayGerekli;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PolitikaDurumu durum;

@@ -231,9 +231,6 @@ export const RezervasyonGorunumu = ({
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <span className="text-base font-black">{booking.tesisAd}</span>
-                    {booking.tesisAd !== booking.kaynakAd && (
-                      <span className="text-xs font-semibold text-white/50">/ {booking.kaynakAd}</span>
-                    )}
                     <BookingStatusBadge durum={booking.durum} />
                   </div>
 
@@ -253,33 +250,24 @@ export const RezervasyonGorunumu = ({
                   </div>
                 </div>
 
-                {/* Actions for Admin */}
+                {/* Yönetim aksiyonları: onay bekleyenlerde Onayla/Reddet, aktiflerde İptal */}
                 {['ONAYLANDI', 'BEKLEMEDE', 'BLOKE'].includes(booking.durum) && (
                   <div className="flex gap-2 self-start sm:self-center shrink-0">
-                    {!isBlocked && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateBookingStatus(booking.id, 'TAMAMLANDI')}
-                          className="px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-bold transition border border-emerald-500/20 cursor-pointer"
-                        >
-                          Kullanıldı
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateBookingStatus(booking.id, 'GELMEDI')}
-                          className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold transition border border-amber-500/20 cursor-pointer"
-                        >
-                          Gelmedi
-                        </button>
-                      </>
+                    {booking.durum === 'BEKLEMEDE' && (
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateBookingStatus(booking.id, 'ONAYLANDI')}
+                        className="px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-bold transition border border-emerald-500/20 cursor-pointer"
+                      >
+                        Onayla
+                      </button>
                     )}
                     <button
                       type="button"
                       onClick={() => handleUpdateBookingStatus(booking.id, 'IPTAL_EDILDI')}
                       className="px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs font-bold transition border border-red-500/20 cursor-pointer"
                     >
-                      {isBlocked ? 'Blokajı Kaldır' : 'İptal Et'}
+                      {isBlocked ? 'Blokajı Kaldır' : (booking.durum === 'BEKLEMEDE' ? 'Reddet' : 'İptal Et')}
                     </button>
                   </div>
                 )}

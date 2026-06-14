@@ -3,19 +3,8 @@ import { api } from '../lib/api';
 
 export type RezervasyonDurumu =
   | 'TASLAK' | 'BEKLEMEDE' | 'ONAYLANDI' | 'IPTAL_EDILDI' | 'TAMAMLANDI' | 'GELMEDI' | 'BLOKE';
-export type YoklamaDurumu = 'BEKLEMEDE' | 'GIRIS_YAPILDI' | 'BASARISIZ';
 
 /** Backend (facility-service) yanıtları ile birebir — çeviri (mapper) yoktur. */
-export interface Yoklama {
-  id: string;
-  rezervasyonId: string;
-  kullaniciId: string;
-  yoklamaTarihi: string;
-  yontem: 'QR' | 'MANUAL';
-  kanitDosyaId?: string;
-  durum: YoklamaDurumu;
-}
-
 export interface Rezervasyon {
   id: string;
   kaynakId: string;
@@ -31,7 +20,6 @@ export interface Rezervasyon {
   iptalEdilmeTarihi?: string;
   iptalNedeni?: string;
   gelmemeTarihi?: string;
-  yoklama?: Yoklama;
 }
 
 type RezervasyonFormu = {
@@ -56,7 +44,6 @@ interface BookingState {
   createBooking: (data: RezervasyonFormu) => Promise<boolean>;
   createBlockedSlot: (data: RezervasyonFormu) => Promise<boolean>;
   cancelBooking: (bookingId: string, reason?: string) => Promise<boolean>;
-  checkin: (bookingId: string, method: 'QR' | 'MANUAL', proofAssetId?: string) => Promise<boolean>;
   updateBookingStatus: (bookingId: string, status: string) => Promise<boolean>;
 }
 
@@ -145,23 +132,6 @@ export const useRezervasyonDeposu = create<BookingState>((set, get) => ({
       return true;
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Rezervasyon iptal edilemedi.'), isLoading: false });
-      return false;
-    }
-  },
-
-  checkin: async (bookingId, method, proofAssetId) => {
-    set({ isLoading: true, error: null, successMessage: null });
-    try {
-      const payload = {
-        yontem: method,
-        kanitDosyaId: proofAssetId
-      };
-      await api.post(`/tesisler/rezervasyonlar/${bookingId}/yoklama`, payload);
-      set({ successMessage: 'Check-in işleminiz başarıyla tamamlandı.', isLoading: false });
-      await get().fetchMyBookings();
-      return true;
-    } catch (err: any) {
-      set({ error: getErrorMessage(err, 'Check-in yapılamadı.'), isLoading: false });
       return false;
     }
   },

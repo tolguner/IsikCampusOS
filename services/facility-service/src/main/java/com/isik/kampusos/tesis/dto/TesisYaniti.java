@@ -14,6 +14,8 @@ public class TesisYaniti {
     private String tesisTuru;
     private String aciklama;
     private String konumMetni;
+    private Double enlem;
+    private Double boylam;
     private int kapasite;
     private String durum;
     private TesisPolitikasiYaniti politika;
@@ -26,9 +28,11 @@ public class TesisYaniti {
         return TesisYaniti.builder()
                 .id(tesis.getId())
                 .ad(tesis.getAd())
-                .tesisTuru(tesis.getTesisTuru().name())
+                .tesisTuru(tesis.getTesisTuru() != null ? tesis.getTesisTuru().name() : null)
                 .aciklama(tesis.getAciklama())
                 .konumMetni(tesis.getKonumMetni())
+                .enlem(tesis.getEnlem())
+                .boylam(tesis.getBoylam())
                 .kapasite(tesis.getKapasite())
                 .durum(tesis.getDurum().name())
                 .politika(politikaYaniti)

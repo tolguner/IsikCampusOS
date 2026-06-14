@@ -20,12 +20,33 @@ export interface TesisPolitikasi {
   id?: string;
   tesisId?: string;
   rezervasyonPenceresiGun: number;
-  minimumBildirimDakika: number;
   iptalLimitDakika: number;
-  yoklamaZorunlu: boolean;
-  otomatikGelmemeDakika: number;
   maksimumRezervasyonSureDakika: number;
+  onayGerekli: boolean;
   durum?: string;
+}
+
+/** Çalışma saati (yalnız açık günler) */
+export interface CalismaSaati {
+  haftaninGunu: number;
+  baslangicSaati: string;
+  bitisSaati: string;
+}
+
+/** Atomik tesis oluştur/güncelle gövdesi: tanım + politika (saat) + çalışma saatleri */
+export interface TamTesisFormu {
+  ad: string;
+  kapasite: number;
+  aciklama: string;
+  konumMetni: string;
+  enlem?: number;
+  boylam?: number;
+  durum?: string;
+  rezervasyonPenceresiGun: number;
+  maksimumRezervasyonSureSaat: number;
+  iptalLimitSaat: number;
+  onayGerekli: boolean;
+  calismaSaatleri: CalismaSaati[];
 }
 
 export interface TesisKaynagi {
@@ -43,9 +64,11 @@ export interface TesisKaynagi {
 export interface Tesis {
   id: string;
   ad: string;
-  tesisTuru: TesisTuru;
+  tesisTuru?: TesisTuru;
   aciklama?: string;
   konumMetni?: string;
+  enlem?: number;
+  boylam?: number;
   kapasite: number;
   durum: TesisDurumu;
   politika?: TesisPolitikasi;
@@ -87,6 +110,10 @@ interface FacilityState {
   updateResource: (resourceId: string, data: KaynakFormu) => Promise<boolean>;
   updatePolicy: (facilityId: string, data: TesisPolitikasi) => Promise<boolean>;
   replaceAvailabilityRules: (resourceId: string, rules: KullanimKurali[]) => Promise<boolean>;
+  /** Atomik: tanım + politika + çalışma saatleri tek istekte oluşturulur */
+  tesisTamOlustur: (data: TamTesisFormu) => Promise<boolean>;
+  /** Atomik: tanım + politika + çalışma saatleri tek istekte güncellenir */
+  tesisTamGuncelle: (facilityId: string, data: TamTesisFormu) => Promise<boolean>;
   deleteFacility: (facilityId: string) => Promise<boolean>;
 }
 
@@ -216,6 +243,32 @@ export const useTesisDeposu = create<FacilityState>((set, get) => ({
       return true;
     } catch (err: any) {
       set({ error: getErrorMessage(err, 'Uygunluk kuralları güncellenemedi.'), isLoading: false });
+      return false;
+    }
+  },
+
+  tesisTamOlustur: async (data) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      const res = await api.post<any>('/tesisler/tam', data);
+      set({ selectedFacilityId: res.data.id, successMessage: 'Tesis oluşturuldu.', isLoading: false });
+      await get().fetchFacilities();
+      return true;
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Tesis oluşturulamadı.'), isLoading: false });
+      return false;
+    }
+  },
+
+  tesisTamGuncelle: async (facilityId, data) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      await api.put(`/tesisler/${facilityId}/tam`, data);
+      set({ successMessage: 'Tesis güncellendi.', isLoading: false });
+      await get().fetchFacilities();
+      return true;
+    } catch (err: any) {
+      set({ error: getErrorMessage(err, 'Tesis güncellenemedi.'), isLoading: false });
       return false;
     }
   },

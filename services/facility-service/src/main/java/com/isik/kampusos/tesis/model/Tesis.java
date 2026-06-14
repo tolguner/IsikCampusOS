@@ -20,14 +20,18 @@ public class Tesis {
     @Column(nullable = false)
     private String ad;
 
+    // Tür artık UX'te yok; tüm tesisler spor tesisidir. Geriye dönük uyum için kolon korunur.
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private TesisTuru tesisTuru;
 
     @Column(columnDefinition = "TEXT")
     private String aciklama;
 
     private String konumMetni;
+
+    // Konum harita üzerinden seçilir ve gösterilir
+    private Double enlem;
+    private Double boylam;
 
     @Column(nullable = false)
     private int kapasite;
@@ -49,6 +53,9 @@ public class Tesis {
         guncellenmeTarihi = now;
         if (durum == null) {
             durum = TesisDurumu.AKTIF;
+        }
+        if (tesisTuru == null) {
+            tesisTuru = TesisTuru.SPOR_ALANI;
         }
     }
 

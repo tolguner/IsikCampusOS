@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Tesis, TesisKaynagi, TesisPolitikasi } from '../../depolar/tesisDeposu';
+import type { Tesis, TesisKaynagi } from '../../depolar/tesisDeposu';
 import type { Rezervasyon } from '../../depolar/rezervasyonDeposu';
 
 export const panelStyle = {
@@ -28,24 +28,34 @@ export const dayLabels: Record<number, string> = {
   7: 'Pazar',
 };
 
+// Kampüs varsayılan koordinatı (Işık Üniv. Şile)
+export const VARSAYILAN_KONUM = { enlem: 41.1762, boylam: 29.6128 };
+
 export const blankFacilityForm = {
   ad: '',
-  tesisTuru: 'SPORTS_AREA',
   aciklama: '',
   konumMetni: '',
+  enlem: VARSAYILAN_KONUM.enlem as number | undefined,
+  boylam: VARSAYILAN_KONUM.boylam as number | undefined,
   kapasite: 10,
   durum: 'AKTIF' as Tesis['durum'],
 };
 
 export type TesisFormState = typeof blankFacilityForm;
 
-export const defaultPolicy: TesisPolitikasi = {
+/** Politika formu — süreler kullanıcıya saat cinsinden gösterilir. */
+export interface PolitikaFormState {
+  rezervasyonPenceresiGun: number;
+  maksimumRezervasyonSureSaat: number;
+  iptalLimitSaat: number;
+  onayGerekli: boolean;
+}
+
+export const defaultPolicyForm: PolitikaFormState = {
   rezervasyonPenceresiGun: 14,
-  minimumBildirimDakika: 120,
-  iptalLimitDakika: 60,
-  yoklamaZorunlu: true,
-  otomatikGelmemeDakika: 15,
-  maksimumRezervasyonSureDakika: 120,
+  maksimumRezervasyonSureSaat: 2,
+  iptalLimitSaat: 1,
+  onayGerekli: false,
 };
 
 export interface WeeklyHourDay {

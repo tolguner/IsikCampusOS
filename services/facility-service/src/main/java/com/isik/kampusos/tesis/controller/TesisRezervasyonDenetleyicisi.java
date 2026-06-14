@@ -49,17 +49,6 @@ public class TesisRezervasyonDenetleyicisi {
         return ResponseEntity.ok(rezervasyonServisi.cancelBooking(auth.getName(), roller, rezervasyonId, neden));
     }
 
-    @PostMapping("/{rezervasyonId}/yoklama")
-    @PreAuthorize("hasAnyAuthority('ROLE_STUDENT', 'ROLE_FACILITY_ADMIN', 'ROLE_ADMIN')")
-    public ResponseEntity<RezervasyonYoklamaYaniti> checkin(Authentication auth,
-                                                           @PathVariable String rezervasyonId,
-                                                           @RequestBody RezervasyonYoklamaTalebi talep) {
-        String roller = auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
-        return ResponseEntity.ok(rezervasyonServisi.checkin(auth.getName(), roller, rezervasyonId, talep));
-    }
-
     @PatchMapping("/{rezervasyonId}/durum")
     @PreAuthorize("hasAnyAuthority('ROLE_FACILITY_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<TesisRezervasyonYaniti> updateBookingStatus(Authentication auth,

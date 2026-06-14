@@ -8,6 +8,8 @@ public class TesisTalebi {
     private String tesisTuru;
     private String aciklama;
     private String konumMetni;
+    private Double enlem;
+    private Double boylam;
     private int kapasite;
     private String durum;
 }
