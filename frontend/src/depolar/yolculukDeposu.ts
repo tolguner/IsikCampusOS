@@ -20,6 +20,14 @@ export interface RotaDuragi extends Nokta {
   tahminiDakika: number;
 }
 
+/** Haritada gösterilen bir rota seçeneği (OSRM alternatifi). İlk sıradaki en iyi/ana rotadır. */
+export interface RotaSecenek {
+  polyline: string;
+  toplamDakika: number;
+  mesafeKm: number;
+  osrmKullanildi: boolean;
+}
+
 export interface YolculukIlani {
   id: string;
   surucuKullaniciId: string;
@@ -117,6 +125,7 @@ export interface YolculukIlaniFormu {
   iban?: string;
   aciklama?: string;
   araDurakKabulEdilir: boolean;
+  rotaPolyline?: string;
   tahminiToplamDakika?: number;
   tahminiMesafeKm?: number;
   duraklar: RotaDuragi[];
@@ -147,7 +156,7 @@ interface YolculukState {
   aracEkle: (form: AracFormu) => Promise<boolean>;
   aracGuncelle: (id: string, form: AracFormu) => Promise<boolean>;
   aracSil: (id: string) => Promise<void>;
-  rotaOnizle: (noktalar: { enlem: number; boylam: number }[]) => Promise<string | null>;
+  rotaOnizle: (noktalar: { enlem: number; boylam: number }[]) => Promise<RotaSecenek[]>;
   ilanaKatil: (ilanId: string, binis: Nokta, inis: Nokta, mesaj?: string) => Promise<boolean>;
   talepKabul: (talepId: string) => Promise<void>;
   talepRed: (talepId: string, neden?: string) => Promise<void>;
@@ -289,10 +298,10 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
 
   rotaOnizle: async (noktalar) => {
     try {
-      const res = await api.post<{ polyline: string | null }>('/yolculuklar/rota-onizleme', { noktalar });
-      return res.data.polyline ?? null;
+      const res = await api.post<RotaSecenek[]>('/yolculuklar/rota-onizleme', { noktalar });
+      return (res.data ?? []).filter(r => !!r.polyline);
     } catch {
-      return null;
+      return [];
     }
   },
 

@@ -14,6 +14,7 @@ import {
   type Nokta,
   type OdemeYontemi,
   type RotaDuragi,
+  type RotaSecenek,
   type UcretTipi,
   type YolculukIlani,
 } from '../depolar/yolculukDeposu';
@@ -90,15 +91,19 @@ export const CampusRideSayfasi = () => {
     ilanVaris,
   ], [araDuraklar, ilanBaslangic, ilanVaris]);
 
-  // Form haritası: noktalar değişince gerçek yol-ağı rotasını (OSRM polyline) çek.
-  const [rotaCizgisi, setRotaCizgisi] = useState<[number, number][]>([]);
+  // Form haritası: noktalar değişince OSRM alternatif rotalarını çek; sürücü birini "ana rota" seçer.
+  const [rotaSecenekler, setRotaSecenekler] = useState<RotaSecenek[]>([]);
+  const [seciliRota, setSeciliRota] = useState(0);
   useEffect(() => {
     const zaman = setTimeout(async () => {
-      const polyline = await rotaOnizle(rotaNoktalari.map(n => ({ enlem: n.enlem, boylam: n.boylam })));
-      setRotaCizgisi(polyline ? polylineCoz(polyline) : []);
+      const secenekler = await rotaOnizle(rotaNoktalari.map(n => ({ enlem: n.enlem, boylam: n.boylam })));
+      setRotaSecenekler(secenekler);
+      setSeciliRota(0);
     }, 500);
     return () => clearTimeout(zaman);
   }, [rotaNoktalari, rotaOnizle]);
+
+  const anaRota = rotaSecenekler[seciliRota];
 
   const ilanKaydet = async () => {
     const ok = await ilanOlustur({
@@ -113,9 +118,10 @@ export const CampusRideSayfasi = () => {
       iban: form.iban,
       aciklama: form.aciklama,
       araDurakKabulEdilir: form.araDurakKabulEdilir,
-      // Rota/süre/mesafe artık backend'de OSRM ile hesaplanıyor.
-      tahminiToplamDakika: undefined,
-      tahminiMesafeKm: undefined,
+      // Sürücünün haritadan seçtiği rota ANA rota olur (yoksa backend OSRM'in en iyisini kullanır).
+      rotaPolyline: anaRota?.polyline,
+      tahminiToplamDakika: anaRota?.toplamDakika,
+      tahminiMesafeKm: anaRota?.mesafeKm,
       duraklar: araDuraklar,
     });
     if (ok) setAraDuraklar([]);
@@ -257,7 +263,29 @@ export const CampusRideSayfasi = () => {
               </div>
               <textarea className="ride-input mt-4 min-h-20" value={form.aciklama} onChange={e => setForm(f => ({ ...f, aciklama: e.target.value }))} placeholder="Yolculuk notu" />
               <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]">
-                <RotaHaritasi noktalar={rotaNoktalari} rotaCizgisi={rotaCizgisi} />
+                <div className="space-y-2">
+                  <RotaHaritasi noktalar={rotaNoktalari} secenekler={rotaSecenekler} seciliIndex={seciliRota} onSelect={setSeciliRota} />
+                  {rotaSecenekler.length > 1 && (
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] font-black uppercase tracking-wide text-white/35">Rota seçenekleri</p>
+                      {rotaSecenekler.map((r, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setSeciliRota(i)}
+                          className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left text-sm transition ${
+                            i === seciliRota ? 'border-cyan-300/40 bg-cyan-500/15 text-cyan-50' : 'border-white/10 bg-white/[0.03] text-white/65 hover:bg-white/[0.06]'}`}
+                        >
+                          <span className="flex items-center gap-2 font-bold">
+                            {i === seciliRota ? <Check className="h-3.5 w-3.5 text-cyan-300" /> : <span className="h-2.5 w-2.5 rounded-full border border-white/30" />}
+                            {i === 0 ? 'Önerilen rota' : `Alternatif ${i}`}
+                          </span>
+                          <span className="text-xs text-white/45">{r.toplamDakika} dk · {r.mesafeKm} km</span>
+                        </button>
+                      ))}
+                      <p className="text-[10px] text-white/30">Seçtiğiniz rota ilanın ana rotası olur; diğerleri öneridir.</p>
+                    </div>
+                  )}
+                </div>
                 <div className="space-y-2">
                   <p className="text-xs font-black uppercase tracking-wide text-white/35">Ara duraklar</p>
                   {araDuraklar.map((d, idx) => (
@@ -390,19 +418,33 @@ const PanelBaslik = ({ ikon, baslik }: { ikon: ReactNode; baslik: string }) => (
   </div>
 );
 
-// rotaCizgisi: OSRM'den çözülmüş gerçek yol-ağı noktaları (varsa). Yoksa düz çizgiye düşer.
-const RotaHaritasi = ({ noktalar, rotaCizgisi }: { noktalar: Nokta[]; rotaCizgisi?: [number, number][] }) => {
+// Alternatif OSRM rotalarını çizer: seçilen (ana) rota parlak+kalın, diğerleri soluk+kesikli
+// ve tıklanınca seçilir. Hiç rota yoksa düz çizgiye düşer.
+const RotaHaritasi = ({ noktalar, secenekler, seciliIndex, onSelect }: {
+  noktalar: Nokta[];
+  secenekler: RotaSecenek[];
+  seciliIndex: number;
+  onSelect: (i: number) => void;
+}) => {
   const duraklar = noktalar.map(n => [n.enlem, n.boylam] as [number, number]);
-  const yol = rotaCizgisi && rotaCizgisi.length > 1 ? rotaCizgisi : duraklar;
-  const yolUstunde = !!(rotaCizgisi && rotaCizgisi.length > 1);
+  const cizgiler = useMemo(() => secenekler.map(s => polylineCoz(s.polyline)), [secenekler]);
+  const varRota = cizgiler.some(c => c.length > 1);
   return (
     <div className="relative h-72 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
       <MapContainer key={duraklar.map(p => p.join(',')).join(';')} center={duraklar[0]} zoom={10} scrollWheelZoom={false} className="h-full w-full">
         <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <Polyline positions={yol} pathOptions={{ color: '#06b6d4', weight: 5, dashArray: yolUstunde ? undefined : '6 8' }} />
+        {/* Önce seçilmeyenleri (altta), sonra seçileni (üstte) çiz. */}
+        {cizgiler.map((c, i) => i !== seciliIndex && c.length > 1 && (
+          <Polyline key={`alt-${i}`} positions={c} pathOptions={{ color: '#94a3b8', weight: 4, opacity: 0.5, dashArray: '6 8' }}
+            eventHandlers={{ click: () => onSelect(i) }} />
+        ))}
+        {cizgiler[seciliIndex] && cizgiler[seciliIndex].length > 1 && (
+          <Polyline positions={cizgiler[seciliIndex]} pathOptions={{ color: '#06b6d4', weight: 6 }} />
+        )}
+        {!varRota && <Polyline positions={duraklar} pathOptions={{ color: '#06b6d4', weight: 5, dashArray: '6 8' }} />}
         {duraklar.map((p, i) => <Marker key={i} position={p} />)}
       </MapContainer>
-      {!yolUstunde && (
+      {!varRota && (
         <span className="absolute bottom-2 left-2 z-[400] rounded-lg bg-black/60 px-2 py-1 text-[10px] font-bold text-white/70">
           Rota hesaplanıyor… (geçici düz çizgi)
         </span>

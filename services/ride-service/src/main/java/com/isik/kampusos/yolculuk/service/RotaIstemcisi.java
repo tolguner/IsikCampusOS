@@ -42,35 +42,59 @@ public class RotaIstemcisi {
         private boolean osrmKullanildi;
     }
 
-    /** noktalar: [enlem,boylam] sırasıyla başlangıç → (duraklar) → varış. */
+    /** noktalar: [enlem,boylam] sırasıyla başlangıç → (duraklar) → varış. Tek (en iyi) rota. */
     public RotaSonucu rotaHesapla(List<double[]> noktalar) {
         if (noktalar == null || noktalar.size() < 2) {
             return RotaSonucu.builder().polyline(null).toplamDakika(0).mesafeKm(0)
                     .kumulatifDakika(List.of()).osrmKullanildi(false).build();
         }
         try {
-            JsonNode rota = osrmRoute(noktalar);
-            double sureDk = rota.path("duration").asDouble() / 60.0;
-            double mesafeKm = rota.path("distance").asDouble() / 1000.0;
-            String polyline = rota.path("geometry").asText(null);
-            List<Integer> kumulatif = new ArrayList<>();
-            kumulatif.add(0);
-            double kum = 0;
-            for (JsonNode leg : rota.path("legs")) {
-                kum += leg.path("duration").asDouble() / 60.0;
-                kumulatif.add((int) Math.round(kum));
-            }
-            return RotaSonucu.builder()
-                    .polyline(polyline)
-                    .toplamDakika((int) Math.round(sureDk))
-                    .mesafeKm(Math.round(mesafeKm * 10) / 10.0)
-                    .kumulatifDakika(kumulatif)
-                    .osrmKullanildi(true)
-                    .build();
+            return parseRota(osrmYanit(noktalar, 1).path("routes").get(0));
         } catch (Exception e) {
             log.warn("OSRM rota hesaplanamadı, haversine fallback: {}", e.getMessage());
             return haversineFallback(noktalar);
         }
+    }
+
+    /**
+     * Başlangıç→varış için OSRM alternatif rotaları (en iyisi ilk sırada). Sürücü haritadan
+     * birini "ana rota" seçer; geri kalanlar öneri/alternatif. Ara duraklar varken OSRM genelde
+     * tek rota döndürür. Erişilemezse tek haversine rotasına düşer.
+     */
+    public List<RotaSonucu> rotaAlternatifleri(List<double[]> noktalar, int maks) {
+        if (noktalar == null || noktalar.size() < 2) return List.of();
+        try {
+            JsonNode rotalar = osrmYanit(noktalar, Math.max(1, maks)).path("routes");
+            List<RotaSonucu> sonuc = new ArrayList<>();
+            for (JsonNode r : rotalar) {
+                sonuc.add(parseRota(r));
+                if (sonuc.size() >= maks) break;
+            }
+            return sonuc;
+        } catch (Exception e) {
+            log.warn("OSRM alternatif rota hesaplanamadı, haversine fallback: {}", e.getMessage());
+            return List.of(haversineFallback(noktalar));
+        }
+    }
+
+    private RotaSonucu parseRota(JsonNode rota) {
+        double sureDk = rota.path("duration").asDouble() / 60.0;
+        double mesafeKm = rota.path("distance").asDouble() / 1000.0;
+        String polyline = rota.path("geometry").asText(null);
+        List<Integer> kumulatif = new ArrayList<>();
+        kumulatif.add(0);
+        double kum = 0;
+        for (JsonNode leg : rota.path("legs")) {
+            kum += leg.path("duration").asDouble() / 60.0;
+            kumulatif.add((int) Math.round(kum));
+        }
+        return RotaSonucu.builder()
+                .polyline(polyline)
+                .toplamDakika((int) Math.round(sureDk))
+                .mesafeKm(Math.round(mesafeKm * 10) / 10.0)
+                .kumulatifDakika(kumulatif)
+                .osrmKullanildi(true)
+                .build();
     }
 
     /**
@@ -91,21 +115,23 @@ public class RotaIstemcisi {
         return Math.min(sapma, Math.max(0, yolculuRota - Math.min(temel, dogrudan)));
     }
 
-    private JsonNode osrmRoute(List<double[]> noktalar) {
+    /** OSRM çağrısı; alternatif>1 ise alternatif rotalar istenir. Kök yanıt (routes[]) döner. */
+    private JsonNode osrmYanit(List<double[]> noktalar, int alternatif) {
         StringBuilder koord = new StringBuilder();
         for (double[] n : noktalar) {
             if (koord.length() > 0) koord.append(';');
             koord.append(n[1]).append(',').append(n[0]); // boylam,enlem
         }
+        String tmpl = "/route/v1/driving/{koord}?overview=full&geometries=polyline&annotations=false"
+                + (alternatif > 1 ? "&alternatives=" + alternatif : "");
         JsonNode kok = restClient.get()
-                .uri("/route/v1/driving/{koord}?overview=full&geometries=polyline&annotations=false",
-                        koord.toString())
+                .uri(tmpl, koord.toString())
                 .retrieve()
                 .body(JsonNode.class);
         if (kok == null || !"Ok".equals(kok.path("code").asText()) || kok.path("routes").isEmpty()) {
             throw new IllegalStateException("OSRM yanıtı geçersiz");
         }
-        return kok.path("routes").get(0);
+        return kok;
     }
 
     private RotaSonucu haversineFallback(List<double[]> noktalar) {
