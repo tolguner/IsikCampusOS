@@ -7,7 +7,8 @@ export const YETKILER = {
   ISLETME_YONETICISI: 'ROLE_VENDOR_ADMIN',
   ISLETME_PERSONELI: 'ROLE_VENDOR_STAFF',
   RIDE_YONETICISI: 'ROLE_RIDE_ADMIN',
-  YAPI_DESTEK_HIZMETLER: 'ROLE_BUILDING_SUPPORT_ADMIN',
+  YAPI_LOJISTIK_ULASIM: 'ROLE_BUILDING_SUPPORT_ADMIN',
+  DESTEK_HIZMETLERI: 'ROLE_SUPPORT_SERVICES_ADMIN',
 } as const;
 
 export const YETKI_GRUPLARI = {
@@ -19,8 +20,10 @@ export const YETKI_GRUPLARI = {
   sistemYonetimi: [YETKILER.SISTEM_YONETICISI],
   // İşletme paneline giriş: sahip + personel (panel içi sekmeler role göre filtrelenir)
   isletmePaneli: [YETKILER.ISLETME_YONETICISI, YETKILER.ISLETME_PERSONELI],
-  // CampusRide onayları: RideKampüs Yöneticisi + Yapı, Destek ve Hizmetler Daire Başkanlığı + sistem
-  rideYonetimi: [YETKILER.RIDE_YONETICISI, YETKILER.YAPI_DESTEK_HIZMETLER, YETKILER.SISTEM_YONETICISI],
+  // CampusRide onayları: RideKampüs Yöneticisi + Yapı, Lojistik ve Ulaşım Hizmetleri Müdürlüğü + sistem
+  rideYonetimi: [YETKILER.RIDE_YONETICISI, YETKILER.YAPI_LOJISTIK_ULASIM, YETKILER.SISTEM_YONETICISI],
+  // UniEats işletme yönetimi paneli (işletme/sahip/personel CRUD): Destek Hizmetleri Müdürlüğü
+  isletmeYonetimiPaneli: [YETKILER.DESTEK_HIZMETLERI],
   // Sahip-özel işlemler (menü/ayar/kampanya/ciro/personel yönetimi)
   isletmeYonetimi: [YETKILER.ISLETME_YONETICISI],
   // Öğrencilere/kullanıcılara toplu duyuru gönderebilen idari roller (öğrenci hariç).
@@ -35,13 +38,14 @@ export const YETKI_GRUPLARI = {
 /** Rol kodu → Türkçe etiket (tüm panellerde ortak kullanılır). */
 export const ROL_ETIKETLERI: Record<string, string> = {
   ROLE_ADMIN: 'Sistem Yöneticisi',
-  ROLE_SKS_ADMIN: 'SKS Yöneticisi',
-  ROLE_FACILITY_ADMIN: 'Tesis Yöneticisi',
-  ROLE_REGISTRAR: 'Öğrenci İşleri',
+  ROLE_SKS_ADMIN: 'Akademik, Sosyal ve Kültürel Gelişim Koordinatörlüğü',
+  ROLE_FACILITY_ADMIN: 'Spor Müdürlüğü',
+  ROLE_REGISTRAR: 'Öğrenci İşleri Daire Başkanlığı',
   ROLE_VENDOR_ADMIN: 'İşletme Yöneticisi',
   ROLE_VENDOR_STAFF: 'İşletme Personeli',
   ROLE_RIDE_ADMIN: 'RideKampüs Yöneticisi',
-  ROLE_BUILDING_SUPPORT_ADMIN: 'Yapı, Destek ve Hizmetler Daire Başkanlığı',
+  ROLE_BUILDING_SUPPORT_ADMIN: 'Yapı, Lojistik ve Ulaşım Hizmetleri Müdürlüğü',
+  ROLE_SUPPORT_SERVICES_ADMIN: 'Destek Hizmetleri Müdürlüğü',
   ROLE_STUDENT: 'Öğrenci',
 };
 
