@@ -2,6 +2,9 @@
 
 @layer base {
   :root {
+    /* Native form kontrolleri (select açılır listesi, tarih seçici, kaydırma çubuğu)
+       koyu temayla uyumlu render edilsin. */
+    color-scheme: dark;
     --color-primary: #818cf8;
     --color-primary-light: #a5b4fc;
     --color-secondary: #f472b6;
@@ -28,6 +31,14 @@
     font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* <select> açılır seçenek listesi koyu tema ile uyumlu (Firefox + color-scheme
+     desteklemeyen tarayıcılar için yedek). */
+  option,
+  optgroup {
+    background-color: #0f0f1c;
+    color: var(--color-text);
   }
 }
 
