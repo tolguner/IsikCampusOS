@@ -8,6 +8,7 @@ import { OgrenciIsleriPaneli } from './pages/OgrenciIsleriPaneli';
 import { SksPaneli } from './pages/SksPaneli';
 import { ProfilSayfasi } from './pages/ProfilSayfasi';
 import { AyarlarSayfasi } from './pages/AyarlarSayfasi';
+import { MesajlarSayfasi } from './pages/MesajlarSayfasi';
 import { KuluplerSayfasi } from './pages/KuluplerSayfasi';
 import { KulupDetaySayfasi } from './pages/KulupDetaySayfasi';
 import { BildirimlerSayfasi } from './pages/BildirimlerSayfasi';
@@ -232,6 +233,14 @@ function App() {
           </ProtectedRoute>
         } />
         <Route path="/settings" element={<EskiYolYonlendirme yeniYol={YOLLAR.ayarlar} />} />
+
+        <Route path={YOLLAR.mesajlar} element={
+          <ProtectedRoute>
+            <UygulamaDuzeni>
+              <MesajlarSayfasi />
+            </UygulamaDuzeni>
+          </ProtectedRoute>
+        } />
 
         <Route path={YOLLAR.kulupler} element={
           <ProtectedRoute>

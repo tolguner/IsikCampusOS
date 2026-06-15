@@ -9,6 +9,7 @@ export const YOLLAR = {
   kulupler: '/kulupler',
   kulupDetay: (kulupId: string) => `/kulupler/${kulupId}`,
   bildirimler: '/bildirimler',
+  mesajlar: '/mesajlar',
   kulupYonetimi: '/kulup-yonetimi',
   kulupEtkinlikYonetimi: (etkinlikId: string) => `/kulup-yonetimi/etkinlikler/${etkinlikId}`,
   tesisYonetimi: '/tesis-yonetimi',
