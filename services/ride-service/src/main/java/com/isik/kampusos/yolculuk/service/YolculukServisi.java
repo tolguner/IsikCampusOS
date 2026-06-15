@@ -36,6 +36,7 @@ public class YolculukServisi {
     private final AracDeposu aracDeposu;
     private final YolculukLogServisi logServisi;
     private final com.isik.kampusos.yolculuk.messaging.BildirimYayinlayici bildirimYayinlayici;
+    private final com.isik.kampusos.yolculuk.messaging.KonusmaIstemcisi konusmaIstemcisi;
     private final KullaniciOzetIstemcisi kullaniciOzetIstemcisi;
 
     public List<YolculukIlani> ilanAra(YolculukAramaTalebi arama) {
@@ -240,6 +241,7 @@ public class YolculukServisi {
                     "Yolculuk iptal edildi",
                     saved.getBaslangicBasligi() + " → " + saved.getVarisBasligi()
                             + " yolculuğu sürücü tarafından iptal edildi.");
+            konusmaIstemcisi.konusmaKapat("RIDE", talep.getId());
         }
 
         logServisi.logEkle(
@@ -308,6 +310,9 @@ public class YolculukServisi {
         bildirimYayinlayici.kullaniciyaBildir(ilan.getSurucuKullaniciId(),
                 "Yeni yolcu talebi",
                 rotaEtiketi(ilan) + " ilanınıza yeni bir katılım isteği geldi.");
+        // Başvuran yolcu ile ilan sahibi sürücü arasında konuşma aç.
+        konusmaIstemcisi.konusmaAc("RIDE", saved.getId(),
+                List.of(ilan.getSurucuKullaniciId(), yolcuId), rotaEtiketi(ilan));
         return saved;
     }
 
@@ -372,6 +377,7 @@ public class YolculukServisi {
                 "Talebiniz reddedildi",
                 rotaEtiketi(ilan) + " yolculuğuna katılım talebiniz reddedildi."
                         + (neden != null && !neden.isBlank() ? " Neden: " + neden : ""));
+        konusmaIstemcisi.konusmaKapat("RIDE", talep.getId());
         return saved;
     }
 
@@ -395,6 +401,7 @@ public class YolculukServisi {
                     "Yolcu talebini iptal etti",
                     rotaEtiketi(ilan) + " ilanınızdaki bir yolcu katılım talebini iptal etti.");
         }
+        konusmaIstemcisi.konusmaKapat("RIDE", talep.getId());
         return saved;
     }
 
@@ -418,6 +425,7 @@ public class YolculukServisi {
         bildirimYayinlayici.kullaniciyaBildir(digerKullanici,
                 "Yolculuk tamamlandı",
                 rotaEtiketi(ilan) + " yolculuğu tamamlandı olarak işaretlendi.");
+        konusmaIstemcisi.konusmaKapat("RIDE", talep.getId());
         return saved;
     }
 
