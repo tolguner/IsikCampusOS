@@ -23,8 +23,18 @@ import { Anahtar } from '../components/ortak/Anahtar';
 import { KonumSecici } from '../components/kulup-paneli/KonumSecici';
 import { polylineCoz } from '../lib/rota';
 
-const KAMPUS: Nokta = { ad: 'Işık Üniversitesi Şile Kampüsü', enlem: 41.1762, boylam: 29.6128 };
+const KAMPUS: Nokta = { ad: 'Işık Üniversitesi Şile Kampüsü', enlem: 41.1688, boylam: 29.5605 };
 const VARSAYILAN_VARIS: Nokta = { ad: 'Üsküdar', enlem: 41.0275, boylam: 29.0153 };
+
+// İki nokta arası kuş-uçuşu mesafe (km) — ilan açma için min 1 km kuralında kullanılır.
+const haversineKm = (a: Nokta, b: Nokta) => {
+  const R = 6371;
+  const dLat = ((b.enlem - a.enlem) * Math.PI) / 180;
+  const dLon = ((b.boylam - a.boylam) * Math.PI) / 180;
+  const x = Math.sin(dLat / 2) ** 2 +
+    Math.cos((a.enlem * Math.PI) / 180) * Math.cos((b.enlem * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+};
 
 const bugun = () => new Date().toISOString().slice(0, 10);
 const tarihSaatVarsayilan = () => `${bugun()}T08:30`;
@@ -85,7 +95,9 @@ export const CampusRideSayfasi = () => {
   useEffect(() => () => temizleMesajlar(), [temizleMesajlar]);
 
   const dogrulandi = dogrulama?.durum === 'ONAYLANDI';
-  const ilanAcabilir = dogrulandi && !!seciliAracId;
+  const anaMesafeKm = useMemo(() => haversineKm(ilanBaslangic, ilanVaris), [ilanBaslangic, ilanVaris]);
+  const mesafeYeterli = anaMesafeKm >= 1;
+  const ilanAcabilir = dogrulandi && !!seciliAracId && mesafeYeterli;
   const rotaNoktalari = useMemo(() => [
     ilanBaslangic,
     ...araDuraklar,
@@ -249,7 +261,13 @@ export const CampusRideSayfasi = () => {
               <button disabled={!ilanAcabilir || isLoading} onClick={ilanKaydet} className="mt-5 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40">
                 İlanı Yayınla
               </button>
-              {!ilanAcabilir && (
+              {dogrulandi && onayliAraclar.length > 0 && !mesafeYeterli && (
+                <p className="mt-2 flex items-start gap-1.5 text-[11px] font-semibold text-amber-200/80">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  Başlangıç ve varış arasında en az 1 km olmalı (şu an ~{anaMesafeKm.toFixed(1)} km). Farklı noktalar seçin.
+                </p>
+              )}
+              {(!dogrulandi || onayliAraclar.length === 0) && (
                 <p className="mt-2 text-[11px] text-white/35">
                   {!dogrulandi ? 'Ehliyetiniz onaylanmadan ilan açamazsınız. ' : ''}
                   {onayliAraclar.length === 0 ? 'Onaylı bir aracınız olmalı. ' : ''}

@@ -73,6 +73,14 @@ public class YolculukServisi {
                         "İlan açmak için onaylanmış bir araç seçmelisiniz. Araçlarınızı Ayarlar'dan ekleyip onaylatın."));
         zorunluNokta(talep.getBaslangic(), "Başlangıç noktası");
         zorunluNokta(talep.getVaris(), "Varış noktası");
+        // Aynı / çok yakın iki nokta arasında ilan açılamaz: en az 1 km gerekir.
+        double anaNoktaMesafesi = mesafeKm(
+                talep.getBaslangic().getEnlem(), talep.getBaslangic().getBoylam(),
+                talep.getVaris().getEnlem(), talep.getVaris().getBoylam());
+        if (anaNoktaMesafesi < 1.0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Başlangıç ve varış noktaları arasında en az 1 km mesafe olmalıdır.");
+        }
         if (talep.getKalkisZamani() == null || talep.getKalkisZamani().isBefore(LocalDateTime.now().minusMinutes(5))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kalkış zamanı gelecekte olmalıdır.");
         }
