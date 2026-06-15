@@ -48,9 +48,8 @@ export const CampusRideSayfasi = () => {
     kalkisZamani: tarihSaatVarsayilan(),
     koltukSayisi: 3,
     ucretTipi: 'UCRETLI' as UcretTipi,
-    odemeYontemi: 'NAKIT_VEYA_IBAN' as OdemeYontemi,
+    odemeYontemi: 'NAKIT' as OdemeYontemi,
     kisiBasiUcret: 80,
-    iban: '',
     aciklama: '',
     araDurakKabulEdilir: true,
   });
@@ -107,6 +106,15 @@ export const CampusRideSayfasi = () => {
 
   const anaRota = rotaSecenekler[seciliRota];
 
+  // Kalkış zamanı + rotanın tahmini süresinden varış saatini hesapla.
+  const tahminiVaris = useMemo(() => {
+    if (!form.kalkisZamani || !anaRota?.toplamDakika) return null;
+    const t = new Date(form.kalkisZamani);
+    if (isNaN(t.getTime())) return null;
+    t.setMinutes(t.getMinutes() + Math.round(anaRota.toplamDakika));
+    return t.toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }, [form.kalkisZamani, anaRota]);
+
   const ilanKaydet = async () => {
     const ok = await ilanOlustur({
       aracId: seciliAracId,
@@ -117,7 +125,6 @@ export const CampusRideSayfasi = () => {
       ucretTipi: form.ucretTipi,
       odemeYontemi: form.ucretTipi === 'UCRETSIZ' ? 'YOK' : form.odemeYontemi,
       kisiBasiUcret: form.ucretTipi === 'UCRETSIZ' ? 0 : form.kisiBasiUcret,
-      iban: form.iban,
       aciklama: form.aciklama,
       araDurakKabulEdilir: form.araDurakKabulEdilir,
       // Sürücünün haritadan seçtiği rota ANA rota olur (yoksa backend OSRM'in en iyisini kullanır).
@@ -244,21 +251,35 @@ export const CampusRideSayfasi = () => {
               <div className="grid gap-4 lg:grid-cols-2">
                 <NoktaSecici label="Başlangıç" value={ilanBaslangic} onChange={setIlanBaslangic} populer={populerNoktalar} />
                 <NoktaSecici label="Varış" value={ilanVaris} onChange={setIlanVaris} populer={populerNoktalar} />
-                <input className="ride-input" type="datetime-local" value={form.kalkisZamani} onChange={e => setForm(f => ({ ...f, kalkisZamani: e.target.value }))} />
-                <input className="ride-input" type="number" min={1} max={8} value={form.koltukSayisi} onChange={e => setForm(f => ({ ...f, koltukSayisi: Number(e.target.value) }))} />
-                <select className="ride-input" value={form.ucretTipi} onChange={e => setForm(f => ({ ...f, ucretTipi: e.target.value as UcretTipi }))}>
-                  <option value="UCRETSIZ">Ücretsiz</option>
-                  <option value="UCRETLI">Ücretli</option>
-                </select>
-                <select className="ride-input" value={form.odemeYontemi} onChange={e => setForm(f => ({ ...f, odemeYontemi: e.target.value as OdemeYontemi }))} disabled={form.ucretTipi === 'UCRETSIZ'}>
-                  <option value="NAKIT">Nakit</option>
-                  <option value="IBAN">IBAN</option>
-                  <option value="NAKIT_VEYA_IBAN">Nakit veya IBAN</option>
-                </select>
-                <input className="ride-input" type="number" value={form.kisiBasiUcret} onChange={e => setForm(f => ({ ...f, kisiBasiUcret: Number(e.target.value) }))} disabled={form.ucretTipi === 'UCRETSIZ'} placeholder="Kişi başı ücret" />
-                <input className="ride-input" value={form.iban} onChange={e => setForm(f => ({ ...f, iban: e.target.value }))} placeholder="IBAN (opsiyonel)" />
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Kalkış tarihi & saati</span>
+                  <input className="ride-input" type="datetime-local" value={form.kalkisZamani} onChange={e => setForm(f => ({ ...f, kalkisZamani: e.target.value }))} />
+                  {tahminiVaris && (
+                    <span className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-cyan-200/80">
+                      <Clock className="h-3 w-3" /> Tahmini varış: {tahminiVaris}
+                    </span>
+                  )}
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Boş koltuk sayısı</span>
+                  <input className="ride-input" type="number" min={1} max={8} value={form.koltukSayisi} onChange={e => setForm(f => ({ ...f, koltukSayisi: Number(e.target.value) }))} />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Ücret tipi</span>
+                  <select className="ride-input" value={form.ucretTipi} onChange={e => setForm(f => ({ ...f, ucretTipi: e.target.value as UcretTipi }))}>
+                    <option value="UCRETSIZ">Ücretsiz</option>
+                    <option value="UCRETLI">Ücretli (kişi başı)</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Kişi başı ücret (₺)</span>
+                  <input className="ride-input" type="number" min={0} value={form.kisiBasiUcret} onChange={e => setForm(f => ({ ...f, kisiBasiUcret: Number(e.target.value) }))} disabled={form.ucretTipi === 'UCRETSIZ'} placeholder="Örn. 80" />
+                </label>
               </div>
-              <textarea className="ride-input mt-4 min-h-20" value={form.aciklama} onChange={e => setForm(f => ({ ...f, aciklama: e.target.value }))} placeholder="Yolculuk notu" />
+              <label className="mt-4 block">
+                <span className="mb-1 block text-xs font-bold text-white/45">Yolculuk detayları</span>
+                <textarea className="ride-input min-h-20" value={form.aciklama} onChange={e => setForm(f => ({ ...f, aciklama: e.target.value }))} placeholder="Rota, buluşma noktası, bagaj, evcil hayvan vb. detaylar" />
+              </label>
               <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]">
                 <div className="space-y-2">
                   <RotaHaritasi noktalar={rotaNoktalari} secenekler={rotaSecenekler} seciliIndex={seciliRota} onSelect={setSeciliRota} />
