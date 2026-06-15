@@ -47,6 +47,7 @@ public class SiparisServisi {
     private final SaticiDeposu saticiDeposu;
     private final MenuOgesiDeposu menuOgesiDeposu;
     private final BildirimYayinlayici bildirimYayinlayici;
+    private final com.isik.kampusos.yemek.messaging.KonusmaIstemcisi konusmaIstemcisi;
     private final SaticiServisi saticiServisi;
     private final AuthKimlikIstemcisi authIstemci;
     private final ProfilIstemcisi profilIstemci;
@@ -242,6 +243,7 @@ public class SiparisServisi {
         s.setDurum(Siparis.SiparisDurumu.IPTAL_EDILDI);
         s.setIptalTarihi(LocalDateTime.now());
         Siparis kaydedilen = siparisDeposu.save(s);
+        konusmaIstemcisi.konusmaKapat("FOOD", s.getId());
         // İşletme tarafına haber ver — hazırlığa boşuna başlamasınlar.
         saticiDeposu.findById(s.getSaticiId()).ifPresent(satici ->
                 isletmeyeYayinla(satici, "Sipariş iptal edildi",
@@ -322,6 +324,10 @@ public class SiparisServisi {
             v.siparis.setTahminiHazirDakika(tahminiDakika);
             mesaj = "Siparişiniz onaylandı. Tahmini hazırlık süresi: ~" + tahminiDakika + " dk.";
         }
+        // Sipariş üstlenildi → müşteri ile işleyen personel arasında konuşma aç.
+        konusmaIstemcisi.konusmaAc("FOOD", v.siparis.getId(),
+                java.util.List.of(v.siparis.getMusteriKullaniciId(), yoneticiId),
+                "Sipariş #" + v.siparis.getId().substring(0, 8));
         return kaydetVeBildir(v, "Siparişiniz onaylandı", mesaj);
     }
 
@@ -336,6 +342,7 @@ public class SiparisServisi {
         v.siparis.setRedNedeni(neden);
         v.siparis.setIptalTarihi(LocalDateTime.now());
         v.siparis.setIsleyenKullaniciId(yoneticiId);   // reddeden personel/sahip
+        konusmaIstemcisi.konusmaKapat("FOOD", v.siparis.getId());
         return kaydetVeBildir(v, "Siparişiniz reddedildi", "Siparişiniz reddedildi" + (neden != null && !neden.isBlank() ? ": " + neden : "."));
     }
 
@@ -381,6 +388,7 @@ public class SiparisServisi {
         v.siparis.setDurum(Siparis.SiparisDurumu.TESLIM_EDILDI);
         v.siparis.setTahsilEdilenOdeme(tahsil);
         v.siparis.setTeslimTarihi(LocalDateTime.now());
+        konusmaIstemcisi.konusmaKapat("FOOD", v.siparis.getId());
         return kaydetVeBildir(v, "Siparişiniz teslim edildi", "Siparişiniz teslim edildi. Afiyet olsun!");
     }
 
