@@ -41,7 +41,8 @@ public class GuvenlikYapilandirmasi {
                     "/api/v1/kimlik/sifremi-unuttum",
                     "/api/v1/kimlik/sifre-sifirla",
                     "/api/v1/kimlik/eposta-dogrula",
-                    "/api/v1/sertifikalar/**"
+                    "/api/v1/sertifikalar/**",
+                    "/api/v1/internal/**"
                 ).permitAll()
                 // Authenticated endpoints
                 .requestMatchers(

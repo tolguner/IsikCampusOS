@@ -22,13 +22,25 @@ public class YolculukYonetimDenetleyicisi {
     private final YolculukAdminServisi adminServisi;
     private final com.isik.kampusos.yolculuk.service.PopulerNoktaServisi populerNoktaServisi;
     private final com.isik.kampusos.yolculuk.service.AracServisi aracServisi;
+    private final com.isik.kampusos.yolculuk.service.KullaniciOzetIstemcisi kullaniciOzetIstemcisi;
 
     // --- Araç onayları (admin) ---
 
     @GetMapping("/araclar/bekleyen")
     @PreAuthorize("hasAnyAuthority('ROLE_RIDE_ADMIN', 'ROLE_BUILDING_SUPPORT_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<List<com.isik.kampusos.yolculuk.model.Arac>> bekleyenAraclar() {
-        return ResponseEntity.ok(aracServisi.bekleyenler());
+        var liste = aracServisi.bekleyenler();
+        var ozetler = kullaniciOzetIstemcisi.ozetler(liste.stream().map(com.isik.kampusos.yolculuk.model.Arac::getKullaniciId).toList());
+        liste.forEach(a -> {
+            var o = ozetler.get(a.getKullaniciId());
+            if (o != null) {
+                a.setBasvuranAdSoyad(o.adSoyad());
+                a.setBasvuranOgrenciNo(o.ogrenciNumarasi());
+                a.setBasvuranTelefon(o.telefon());
+                a.setBasvuranEposta(o.eposta());
+            }
+        });
+        return ResponseEntity.ok(liste);
     }
 
     @PostMapping("/araclar/{id}/incele")
@@ -74,7 +86,18 @@ public class YolculukYonetimDenetleyicisi {
     @GetMapping("/surucu-dogrulamalari/bekleyen")
     @PreAuthorize("hasAnyAuthority('ROLE_RIDE_ADMIN', 'ROLE_BUILDING_SUPPORT_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<List<SurucuDogrulama>> bekleyenDogrulamalar() {
-        return ResponseEntity.ok(dogrulamaServisi.bekleyenler());
+        var liste = dogrulamaServisi.bekleyenler();
+        var ozetler = kullaniciOzetIstemcisi.ozetler(liste.stream().map(SurucuDogrulama::getKullaniciId).toList());
+        liste.forEach(d -> {
+            var o = ozetler.get(d.getKullaniciId());
+            if (o != null) {
+                d.setBasvuranAdSoyad(o.adSoyad());
+                d.setBasvuranOgrenciNo(o.ogrenciNumarasi());
+                d.setBasvuranTelefon(o.telefon());
+                d.setBasvuranEposta(o.eposta());
+            }
+        });
+        return ResponseEntity.ok(liste);
     }
 
     @PostMapping("/surucu-dogrulamalari/{id}/incele")
@@ -87,7 +110,17 @@ public class YolculukYonetimDenetleyicisi {
     @GetMapping("/sikayetler")
     @PreAuthorize("hasAnyAuthority('ROLE_RIDE_ADMIN', 'ROLE_BUILDING_SUPPORT_ADMIN', 'ROLE_ADMIN')")
     public ResponseEntity<List<YolculukSikayeti>> sikayetler() {
-        return ResponseEntity.ok(adminServisi.sikayetler());
+        var liste = adminServisi.sikayetler();
+        var idler = new java.util.ArrayList<String>();
+        liste.forEach(s -> { idler.add(s.getSikayetciKullaniciId()); idler.add(s.getHedefKullaniciId()); });
+        var ozetler = kullaniciOzetIstemcisi.ozetler(idler);
+        liste.forEach(s -> {
+            var sk = ozetler.get(s.getSikayetciKullaniciId());
+            var hd = ozetler.get(s.getHedefKullaniciId());
+            if (sk != null) { s.setSikayetciAdSoyad(sk.adSoyad()); s.setSikayetciOgrenciNo(sk.ogrenciNumarasi()); }
+            if (hd != null) { s.setHedefAdSoyad(hd.adSoyad()); }
+        });
+        return ResponseEntity.ok(liste);
     }
 
     @PostMapping("/sikayetler/{id}/incele")

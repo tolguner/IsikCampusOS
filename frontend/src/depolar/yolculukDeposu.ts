@@ -69,10 +69,22 @@ export interface YolculukTalebi {
   olusturulmaTarihi: string;
 }
 
-export interface SurucuDogrulama {
+/** Başvuran kimliği — yönetim panelinde gösterilir (auth-service'ten çözülür). */
+export interface BasvuranBilgi {
+  basvuranAdSoyad?: string;
+  basvuranOgrenciNo?: string;
+  basvuranTelefon?: string;
+  basvuranEposta?: string;
+}
+
+export interface SurucuDogrulama extends BasvuranBilgi {
   id: string;
   kullaniciId: string;
   ehliyetSinifi: string;
+  ehliyetNo?: string;
+  ehliyetSahibiAdSoyad?: string;
+  verilisTarihi?: string;
+  gecerlilikTarihi?: string;
   belgeUrl?: string;
   durum: DogrulamaDurumu;
   adminNotu?: string;
@@ -80,9 +92,13 @@ export interface SurucuDogrulama {
 
 export type AracDurumu = 'BEKLEMEDE' | 'ONAYLANDI' | 'REDDEDILDI' | 'PASIF';
 
-export interface Arac {
+export interface Arac extends BasvuranBilgi {
   id: string;
   kullaniciId: string;
+  marka?: string;
+  model?: string;
+  aracTipi?: string;
+  modelYili?: number;
   markaModel: string;
   plaka: string;
   renk?: string;
@@ -94,11 +110,24 @@ export interface Arac {
 }
 
 export interface AracFormu {
-  markaModel: string;
+  marka?: string;
+  model?: string;
+  aracTipi?: string;
+  modelYili?: number;
+  markaModel?: string;
   plaka: string;
   renk?: string;
   koltukKapasitesi?: number;
   gorselUrl: string;
+}
+
+export interface DogrulamaFormu {
+  ehliyetSinifi: string;
+  ehliyetNo?: string;
+  ehliyetSahibiAdSoyad?: string;
+  verilisTarihi?: string;
+  gecerlilikTarihi?: string;
+  belgeUrl: string;
 }
 
 export interface Sikayet {
@@ -106,6 +135,9 @@ export interface Sikayet {
   talepId: string;
   sikayetciKullaniciId: string;
   hedefKullaniciId: string;
+  sikayetciAdSoyad?: string;
+  sikayetciOgrenciNo?: string;
+  hedefAdSoyad?: string;
   neden: string;
   aciklama: string;
   durum: SikayetDurumu;
@@ -151,8 +183,10 @@ interface YolculukState {
   ilanAra: (params: Record<string, string | number | boolean | undefined>) => Promise<void>;
   ilanOlustur: (form: YolculukIlaniFormu) => Promise<boolean>;
   benimVerilerimiGetir: () => Promise<void>;
-  dogrulamaBasvur: (form: { ehliyetSinifi: string; belgeUrl: string }) => Promise<boolean>;
+  dogrulamaBasvur: (form: DogrulamaFormu) => Promise<boolean>;
   araclarimGetir: () => Promise<void>;
+  aracMarkalariGetir: () => Promise<string[]>;
+  aracModelleriGetir: (marka: string) => Promise<string[]>;
   aracEkle: (form: AracFormu) => Promise<boolean>;
   aracGuncelle: (id: string, form: AracFormu) => Promise<boolean>;
   aracSil: (id: string) => Promise<void>;
@@ -258,6 +292,20 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
       const res = await api.get<Arac[]>('/yolculuklar/araclar');
       set({ araclar: res.data });
     } catch { /* sessiz */ }
+  },
+
+  aracMarkalariGetir: async () => {
+    try {
+      const res = await api.get<string[]>('/yolculuklar/arac-veri/markalar');
+      return res.data || [];
+    } catch { return []; }
+  },
+
+  aracModelleriGetir: async (marka) => {
+    try {
+      const res = await api.get<string[]>(`/yolculuklar/arac-veri/modeller?marka=${encodeURIComponent(marka)}`);
+      return res.data || [];
+    } catch { return []; }
   },
 
   aracEkle: async (form) => {

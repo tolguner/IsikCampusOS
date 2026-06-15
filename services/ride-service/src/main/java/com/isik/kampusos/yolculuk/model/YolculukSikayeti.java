@@ -48,6 +48,11 @@ public class YolculukSikayeti {
     private LocalDateTime olusturulmaTarihi;
     private LocalDateTime incelenmeTarihi;
 
+    // Yönetim paneli gösterimi için (DB'ye yazılmaz; auth-service'ten çözülür)
+    @Transient private String sikayetciAdSoyad;
+    @Transient private String sikayetciOgrenciNo;
+    @Transient private String hedefAdSoyad;
+
     @PrePersist
     protected void onCreate() {
         this.olusturulmaTarihi = LocalDateTime.now();

@@ -23,8 +23,14 @@ public class Arac {
     @Column(nullable = false)
     private String kullaniciId;
 
+    // Geriye uyum için korunur; kayıtta marka + " " + model olarak doldurulur.
     @Column(nullable = false)
     private String markaModel;
+
+    private String marka;
+    private String model;
+    private String aracTipi;     // Sedan, Hatchback, SUV, ...
+    private Integer modelYili;
 
     @Column(nullable = false)
     private String plaka;
@@ -47,6 +53,12 @@ public class Arac {
     private String inceleyenKullaniciId;
     private LocalDateTime olusturulmaTarihi;
     private LocalDateTime incelenmeTarihi;
+
+    // Yönetim paneli gösterimi için (DB'ye yazılmaz; auth-service'ten çözülür)
+    @Transient private String basvuranAdSoyad;
+    @Transient private String basvuranOgrenciNo;
+    @Transient private String basvuranTelefon;
+    @Transient private String basvuranEposta;
 
     @PrePersist
     void onCreate() {

@@ -25,6 +25,12 @@ public class SurucuDogrulama {
     @Column(nullable = false)
     private String ehliyetSinifi;
 
+    // Kapsamlı ehliyet bilgileri
+    private String ehliyetNo;
+    private String ehliyetSahibiAdSoyad;
+    private java.time.LocalDate verilisTarihi;
+    private java.time.LocalDate gecerlilikTarihi;
+
     // Geriye-uyum (legacy): araç bilgisi artık ayrı `araclar` tablosunda tutulur.
     private String aracMarkaModel;
     private String plaka;
@@ -45,6 +51,12 @@ public class SurucuDogrulama {
     private String inceleyenKullaniciId;
     private LocalDateTime olusturulmaTarihi;
     private LocalDateTime incelenmeTarihi;
+
+    // Yönetim paneli gösterimi için (DB'ye yazılmaz; auth-service'ten çözülür)
+    @Transient private String basvuranAdSoyad;
+    @Transient private String basvuranOgrenciNo;
+    @Transient private String basvuranTelefon;
+    @Transient private String basvuranEposta;
 
     @PrePersist
     protected void onCreate() {

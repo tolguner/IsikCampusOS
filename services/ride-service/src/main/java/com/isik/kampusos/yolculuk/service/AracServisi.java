@@ -29,7 +29,11 @@ public class AracServisi {
     public Arac ekle(String kullaniciId, AracTalebi talep) {
         Arac arac = Arac.builder()
                 .kullaniciId(kullaniciId)
-                .markaModel(zorunlu(talep.getMarkaModel(), "Araç marka/model"))
+                .marka(talep.getMarka())
+                .model(talep.getModel())
+                .aracTipi(talep.getAracTipi())
+                .modelYili(talep.getModelYili())
+                .markaModel(zorunlu(markaModelHesapla(talep), "Araç marka/model"))
                 .plaka(zorunlu(talep.getPlaka(), "Plaka").toUpperCase(Locale.forLanguageTag("tr-TR")))
                 .renk(talep.getRenk())
                 .koltukKapasitesi(talep.getKoltukKapasitesi())
@@ -39,11 +43,24 @@ public class AracServisi {
         return depo.save(arac);
     }
 
+    /** marka + model varsa birleştirir; yoksa legacy markaModel alanına düşer. */
+    private String markaModelHesapla(AracTalebi talep) {
+        String marka = talep.getMarka() == null ? "" : talep.getMarka().trim();
+        String model = talep.getModel() == null ? "" : talep.getModel().trim();
+        String birlesik = (marka + " " + model).trim();
+        if (!birlesik.isBlank()) return birlesik;
+        return talep.getMarkaModel();
+    }
+
     /** Araç güncellenince yeniden onaya düşer (onaylı araç düzenlenirse durum BEKLEMEDE olur). */
     @Transactional
     public Arac guncelle(String kullaniciId, String id, AracTalebi talep) {
         Arac arac = sahipligiDogrula(kullaniciId, id);
-        arac.setMarkaModel(zorunlu(talep.getMarkaModel(), "Araç marka/model"));
+        arac.setMarka(talep.getMarka());
+        arac.setModel(talep.getModel());
+        arac.setAracTipi(talep.getAracTipi());
+        arac.setModelYili(talep.getModelYili());
+        arac.setMarkaModel(zorunlu(markaModelHesapla(talep), "Araç marka/model"));
         arac.setPlaka(zorunlu(talep.getPlaka(), "Plaka").toUpperCase(Locale.forLanguageTag("tr-TR")));
         arac.setRenk(talep.getRenk());
         arac.setKoltukKapasitesi(talep.getKoltukKapasitesi());
