@@ -157,27 +157,29 @@ export const SurucuAyarlari = () => {
             <p className="flex items-center gap-1.5 text-[11px] text-cyan-200/70">
               <Sparkles className="w-3.5 h-3.5 shrink-0" /> Ehliyet fotoğrafını yükleyip aşağıdaki bilgileri eksiksiz doldurun. Başvurunuz Yapı, Lojistik ve Ulaşım Hizmetleri Müdürlüğü onayı sonrasında geçerli olacaktır.
             </p>
-            <GorselYukleyici etiket="Ehliyet belgesi fotoğrafı (zorunlu)" value={belgeUrl} onChange={belgeYuklendi} oranSinifi="aspect-[16/9]" />
+            <div className="grid gap-4 md:grid-cols-[minmax(0,240px)_1fr] md:items-start">
+              <GorselYukleyici etiket="Ehliyet belgesi fotoğrafı (zorunlu)" value={belgeUrl} onChange={belgeYuklendi} oranSinifi="aspect-[16/10]" />
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-white/45">Ehliyet sınıfı</span>
-                <select value={ehliyetSinifi} onChange={e => setEhliyetSinifi(e.target.value)} className={girisClass}>
-                  {EHLIYET_SINIFLARI.map(s => <option key={s.kod} value={s.kod}>{s.kod} — {s.aciklama}</option>)}
-                </select>
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-white/45">Ehliyet no</span>
-                <input value={ehliyetNo} onChange={e => setEhliyetNo(e.target.value)} placeholder="Ehliyet numarası" className={girisClass} />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-white/45">Veriliş tarihi</span>
-                <input type="date" value={verilisTarihi} onChange={e => setVerilisTarihi(e.target.value)} className={`${girisClass} [color-scheme:dark]`} />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-white/45">Geçerlilik (son kullanma) tarihi</span>
-                <input type="date" value={gecerlilikTarihi} onChange={e => setGecerlilikTarihi(e.target.value)} className={`${girisClass} [color-scheme:dark]`} />
-              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Ehliyet sınıfı</span>
+                  <select value={ehliyetSinifi} onChange={e => setEhliyetSinifi(e.target.value)} className={girisClass}>
+                    {EHLIYET_SINIFLARI.map(s => <option key={s.kod} value={s.kod}>{s.kod} — {s.aciklama}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Ehliyet no</span>
+                  <input value={ehliyetNo} onChange={e => setEhliyetNo(e.target.value)} placeholder="Ehliyet numarası" className={girisClass} />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Veriliş tarihi</span>
+                  <input type="date" value={verilisTarihi} onChange={e => setVerilisTarihi(e.target.value)} className={`${girisClass} [color-scheme:dark]`} />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Geçerlilik (son kullanma) tarihi</span>
+                  <input type="date" value={gecerlilikTarihi} onChange={e => setGecerlilikTarihi(e.target.value)} className={`${girisClass} [color-scheme:dark]`} />
+                </label>
+              </div>
             </div>
             <div>
               <button onClick={ehliyetGonder} disabled={!gonderilebilir || isLoading}
@@ -247,43 +249,45 @@ export const SurucuAyarlari = () => {
             </div>
             <datalist id="arac-markalari">{markalar.map(m => <option key={m} value={m} />)}</datalist>
             <datalist id="arac-modelleri">{modeller.map(m => <option key={m} value={m} />)}</datalist>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-white/45">Marka</span>
-                <input list="arac-markalari" value={aracForm.marka} onChange={e => markaSec(e.target.value)} placeholder="Marka (örn. Volkswagen)" className={girisClass} />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-white/45">Model</span>
-                <input list="arac-modelleri" value={aracForm.model} onChange={e => setAracForm(f => ({ ...f, model: e.target.value }))} placeholder="Model (örn. Golf)" className={girisClass} disabled={!aracForm.marka.trim()} />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-white/45">Araç tipi</span>
-                <select value={aracForm.aracTipi} onChange={e => setAracForm(f => ({ ...f, aracTipi: e.target.value }))} className={girisClass}>
-                  <option value="">Seçiniz</option>
-                  {ARAC_TIPLERI.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-white/45">Model yılı</span>
-                <select value={aracForm.modelYili ?? ''} onChange={e => setAracForm(f => ({ ...f, modelYili: e.target.value ? Number(e.target.value) : undefined }))} className={girisClass}>
-                  <option value="">Seçiniz</option>
-                  {YILLAR.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-white/45">Plaka</span>
-                <input value={aracForm.plaka} onChange={e => setAracForm(f => ({ ...f, plaka: e.target.value.toUpperCase() }))} placeholder="34 ABC 123" className={girisClass} />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-white/45">Renk (opsiyonel)</span>
-                <input value={aracForm.renk} onChange={e => setAracForm(f => ({ ...f, renk: e.target.value }))} placeholder="Renk" className={girisClass} />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-white/45">Koltuk kapasitesi</span>
-                <input type="number" min={1} max={8} value={aracForm.koltukKapasitesi} onChange={e => setAracForm(f => ({ ...f, koltukKapasitesi: Number(e.target.value) }))} className={girisClass} />
-              </label>
+            <div className="grid gap-4 md:grid-cols-[1fr_minmax(0,240px)] md:items-start">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Marka</span>
+                  <input list="arac-markalari" value={aracForm.marka} onChange={e => markaSec(e.target.value)} placeholder="Marka (örn. Volkswagen)" className={girisClass} />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Model</span>
+                  <input list="arac-modelleri" value={aracForm.model} onChange={e => setAracForm(f => ({ ...f, model: e.target.value }))} placeholder="Model (örn. Golf)" className={girisClass} disabled={!aracForm.marka.trim()} />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Araç tipi</span>
+                  <select value={aracForm.aracTipi} onChange={e => setAracForm(f => ({ ...f, aracTipi: e.target.value }))} className={girisClass}>
+                    <option value="">Seçiniz</option>
+                    {ARAC_TIPLERI.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Model yılı</span>
+                  <select value={aracForm.modelYili ?? ''} onChange={e => setAracForm(f => ({ ...f, modelYili: e.target.value ? Number(e.target.value) : undefined }))} className={girisClass}>
+                    <option value="">Seçiniz</option>
+                    {YILLAR.map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Plaka</span>
+                  <input value={aracForm.plaka} onChange={e => setAracForm(f => ({ ...f, plaka: e.target.value.toUpperCase() }))} placeholder="34 ABC 123" className={girisClass} />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Renk (opsiyonel)</span>
+                  <input value={aracForm.renk} onChange={e => setAracForm(f => ({ ...f, renk: e.target.value }))} placeholder="Renk" className={girisClass} />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold text-white/45">Koltuk kapasitesi</span>
+                  <input type="number" min={1} max={8} value={aracForm.koltukKapasitesi} onChange={e => setAracForm(f => ({ ...f, koltukKapasitesi: Number(e.target.value) }))} className={girisClass} />
+                </label>
+              </div>
+              <GorselYukleyici etiket="Araç fotoğrafı (zorunlu)" value={aracForm.gorselUrl} onChange={u => setAracForm(f => ({ ...f, gorselUrl: u }))} oranSinifi="aspect-[16/10]" />
             </div>
-            <GorselYukleyici etiket="Araç fotoğrafı (zorunlu)" value={aracForm.gorselUrl} onChange={u => setAracForm(f => ({ ...f, gorselUrl: u }))} />
             <div className="flex items-center gap-3">
               <button onClick={aracKaydet} disabled={!aracGecerli || isLoading}
                 className="rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-40">
