@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Shield, Monitor, Moon, Sun, MonitorSmartphone, Globe, Palette, Phone, Car } from 'lucide-react';
+import { Bell, Shield, Monitor, Moon, Sun, MonitorSmartphone, Phone } from 'lucide-react';
 import { useProfilDeposu } from '../depolar/profilDeposu';
 import { SurucuAyarlari } from '../components/ayarlar/SurucuAyarlari';
 
@@ -36,34 +36,11 @@ export const AyarlarSayfasi = () => {
         <p className="text-white/40 mt-1">Uygulama tercihlerinizi ve bildirim ayarlarınızı yapılandırın.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        
-        {/* Settings Sidebar */}
-        <div className="md:col-span-1 space-y-2">
-          <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02]">
-            <nav className="flex flex-col gap-1">
-              <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-500/10 text-indigo-400 font-medium text-sm text-left transition-colors">
-                <Palette className="w-4 h-4" /> Görünüm & Tema
-              </button>
-              <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:bg-white/5 hover:text-white font-medium text-sm text-left transition-colors cursor-pointer">
-                <Bell className="w-4 h-4" /> Bildirimler
-              </button>
-              <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:bg-white/5 hover:text-white font-medium text-sm text-left transition-colors cursor-pointer">
-                <Globe className="w-4 h-4" /> Dil ve Bölge
-              </button>
-              <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:bg-white/5 hover:text-white font-medium text-sm text-left transition-colors cursor-pointer">
-                <Shield className="w-4 h-4" /> Gizlilik
-              </button>
-              <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:bg-white/5 hover:text-white font-medium text-sm text-left transition-colors cursor-pointer">
-                <Car className="w-4 h-4" /> Sürücü & Araçlar
-              </button>
-            </nav>
-          </div>
-        </div>
+      <div className="w-full">
 
         {/* Settings Content */}
-        <div className="md:col-span-2 space-y-6">
-          
+        <div className="w-full space-y-6">
+
           {/* Theme Section */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="p-6 rounded-3xl border border-white/5 bg-white/[0.02]"
