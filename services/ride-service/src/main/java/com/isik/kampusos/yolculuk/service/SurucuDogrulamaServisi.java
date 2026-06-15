@@ -18,6 +18,7 @@ import java.util.List;
 public class SurucuDogrulamaServisi {
 
     private final SurucuDogrulamaDeposu depo;
+    private final KullaniciOzetIstemcisi kullaniciOzetIstemcisi;
 
     public SurucuDogrulama benim(String kullaniciId) {
         return depo.findByKullaniciId(kullaniciId).orElse(null);
@@ -29,7 +30,9 @@ public class SurucuDogrulamaServisi {
         kayit.setKullaniciId(kullaniciId);
         kayit.setEhliyetSinifi(zorunlu(talep.getEhliyetSinifi(), "Ehliyet sınıfı"));
         kayit.setEhliyetNo(talep.getEhliyetNo());
-        kayit.setEhliyetSahibiAdSoyad(talep.getEhliyetSahibiAdSoyad());
+        // Ehliyet sahibi adı her zaman giriş yapan kullanıcının kendi ad-soyadıdır (elle girilmez).
+        var o = kullaniciOzetIstemcisi.ozetler(java.util.List.of(kullaniciId)).get(kullaniciId);
+        kayit.setEhliyetSahibiAdSoyad(o != null ? o.adSoyad() : null);
         kayit.setVerilisTarihi(talep.getVerilisTarihi());
         kayit.setGecerlilikTarihi(talep.getGecerlilikTarihi());
         // Ehliyet artık araçtan bağımsız; belge fotoğrafı zorunlu (yalnız metin yeterli değil).

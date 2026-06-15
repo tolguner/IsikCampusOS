@@ -124,10 +124,19 @@ export interface AracFormu {
 export interface DogrulamaFormu {
   ehliyetSinifi: string;
   ehliyetNo?: string;
-  ehliyetSahibiAdSoyad?: string;
   verilisTarihi?: string;
   gecerlilikTarihi?: string;
   belgeUrl: string;
+}
+
+export interface EhliyetAnalizSonucu {
+  ehliyet: boolean;
+  sinif?: string | null;
+  ehliyetNo?: string | null;
+  verilisTarihi?: string | null;
+  gecerlilikTarihi?: string | null;
+  analizYapildi: boolean;
+  mesaj?: string;
 }
 
 export interface Sikayet {
@@ -184,6 +193,7 @@ interface YolculukState {
   ilanOlustur: (form: YolculukIlaniFormu) => Promise<boolean>;
   benimVerilerimiGetir: () => Promise<void>;
   dogrulamaBasvur: (form: DogrulamaFormu) => Promise<boolean>;
+  ehliyetAnaliz: (gorsel: string) => Promise<EhliyetAnalizSonucu>;
   araclarimGetir: () => Promise<void>;
   aracMarkalariGetir: () => Promise<string[]>;
   aracModelleriGetir: (marka: string) => Promise<string[]>;
@@ -292,6 +302,15 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
       const res = await api.get<Arac[]>('/yolculuklar/araclar');
       set({ araclar: res.data });
     } catch { /* sessiz */ }
+  },
+
+  ehliyetAnaliz: async (gorsel) => {
+    try {
+      const res = await api.post<EhliyetAnalizSonucu>('/yolculuklar/ehliyet-analiz', { gorsel });
+      return res.data;
+    } catch {
+      return { ehliyet: false, analizYapildi: false, mesaj: 'Analiz yapılamadı; alanları elle girebilirsiniz.' };
+    }
   },
 
   aracMarkalariGetir: async () => {

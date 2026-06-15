@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Car, BadgeCheck, Plus, Pencil, Trash2, X, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Car, BadgeCheck, Plus, Pencil, Trash2, X, ShieldCheck, AlertTriangle, Loader2, Sparkles } from 'lucide-react';
 import {
   useYolculukDeposu,
   DOGRULAMA_ETIKETLERI,
@@ -8,6 +8,7 @@ import {
   type Arac,
   type AracDurumu,
   type DogrulamaDurumu,
+  type EhliyetAnalizSonucu,
 } from '../../depolar/yolculukDeposu';
 import { GorselYukleyici } from '../ortak/GorselYukleyici';
 
@@ -41,15 +42,16 @@ export const SurucuAyarlari = () => {
   const {
     dogrulama, araclar, isLoading,
     benimVerilerimiGetir, araclarimGetir, dogrulamaBasvur, aracEkle, aracGuncelle, aracSil,
-    aracMarkalariGetir, aracModelleriGetir,
+    aracMarkalariGetir, aracModelleriGetir, ehliyetAnaliz,
   } = useYolculukDeposu();
 
   const [ehliyetSinifi, setEhliyetSinifi] = useState('B');
   const [ehliyetNo, setEhliyetNo] = useState('');
-  const [ehliyetSahibi, setEhliyetSahibi] = useState('');
   const [verilisTarihi, setVerilisTarihi] = useState('');
   const [gecerlilikTarihi, setGecerlilikTarihi] = useState('');
   const [belgeUrl, setBelgeUrl] = useState('');
+  const [analiz, setAnaliz] = useState<EhliyetAnalizSonucu | null>(null);
+  const [analizYapiliyor, setAnalizYapiliyor] = useState(false);
 
   const [aracForm, setAracForm] = useState<typeof bosArac>(bosArac);
   const [duzenlenenId, setDuzenlenenId] = useState<string | null>(null);
@@ -68,13 +70,34 @@ export const SurucuAyarlari = () => {
     if (marka.trim()) setModeller(await aracModelleriGetir(marka));
   };
 
+  // Belge yüklendiğinde görüntü-AI ile otomatik analiz: ehliyet mi? + alan çıkarımı.
+  const belgeYuklendi = async (url: string) => {
+    setBelgeUrl(url);
+    setAnaliz(null);
+    if (!url) return;
+    setAnalizYapiliyor(true);
+    const sonuc = await ehliyetAnaliz(url);
+    setAnaliz(sonuc);
+    if (sonuc.analizYapildi && sonuc.ehliyet) {
+      if (sonuc.sinif && EHLIYET_SINIFLARI.some(s => s.kod === sonuc.sinif)) setEhliyetSinifi(sonuc.sinif);
+      if (sonuc.ehliyetNo) setEhliyetNo(sonuc.ehliyetNo);
+      if (sonuc.verilisTarihi) setVerilisTarihi(sonuc.verilisTarihi);
+      if (sonuc.gecerlilikTarihi) setGecerlilikTarihi(sonuc.gecerlilikTarihi);
+    }
+    setAnalizYapiliyor(false);
+  };
+
+  // Analiz görseli ehliyet değil dediyse gönderimi engelle (onaya gitmeden anlaşılır).
+  const ehliyetReddi = !!(analiz?.analizYapildi && !analiz.ehliyet);
+  const gonderilebilir = !!belgeUrl && !analizYapiliyor && !ehliyetReddi;
+
   const ehliyetGonder = async () => {
-    if (!belgeUrl) return;
+    if (!gonderilebilir) return;
     const ok = await dogrulamaBasvur({
-      ehliyetSinifi, ehliyetNo: ehliyetNo.trim() || undefined, ehliyetSahibiAdSoyad: ehliyetSahibi.trim() || undefined,
+      ehliyetSinifi, ehliyetNo: ehliyetNo.trim() || undefined,
       verilisTarihi: verilisTarihi || undefined, gecerlilikTarihi: gecerlilikTarihi || undefined, belgeUrl,
     });
-    if (ok) setBelgeUrl('');
+    if (ok) { setBelgeUrl(''); setAnaliz(null); }
   };
 
   const formuAc = async (arac?: Arac) => {
@@ -139,6 +162,24 @@ export const SurucuAyarlari = () => {
           </p>
         ) : (
           <div className="mt-3 space-y-3">
+            <p className="flex items-center gap-1.5 text-[11px] text-cyan-200/70">
+              <Sparkles className="w-3.5 h-3.5 shrink-0" /> Ehliyet fotoğrafını yükleyin; ehliyet no ve tarihler otomatik okunur. Ad-soyad hesabınızdan alınır.
+            </p>
+            <GorselYukleyici etiket="Ehliyet belgesi fotoğrafı (zorunlu)" value={belgeUrl} onChange={belgeYuklendi} oranSinifi="aspect-[16/9]" />
+
+            {/* Görüntü-AI analiz durumu */}
+            {analizYapiliyor && (
+              <p className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-500/10 px-3 py-2 text-xs font-bold text-cyan-100">
+                <Loader2 className="w-4 h-4 animate-spin" /> Ehliyet görseli analiz ediliyor...
+              </p>
+            )}
+            {analiz && !analizYapiliyor && analiz.analizYapildi && (
+              <p className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${analiz.ehliyet ? 'border-emerald-300/25 bg-emerald-500/10 text-emerald-100' : 'border-red-300/25 bg-red-500/10 text-red-100'}`}>
+                {analiz.ehliyet ? <BadgeCheck className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
+                {analiz.ehliyet ? 'Ehliyet doğrulandı; okunan bilgiler aşağıya işlendi, kontrol edip gönderin.' : 'Bu görsel bir ehliyet gibi görünmüyor. Lütfen geçerli bir ehliyet fotoğrafı yükleyin.'}
+              </p>
+            )}
+
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-xs font-bold text-white/45">Ehliyet sınıfı</span>
@@ -150,10 +191,6 @@ export const SurucuAyarlari = () => {
                 <span className="mb-1 block text-xs font-bold text-white/45">Ehliyet no</span>
                 <input value={ehliyetNo} onChange={e => setEhliyetNo(e.target.value)} placeholder="Ehliyet numarası" className={girisClass} />
               </label>
-              <label className="block sm:col-span-2">
-                <span className="mb-1 block text-xs font-bold text-white/45">Ehliyet sahibi ad soyad</span>
-                <input value={ehliyetSahibi} onChange={e => setEhliyetSahibi(e.target.value)} placeholder="Belgedeki ad soyad" className={girisClass} />
-              </label>
               <label className="block">
                 <span className="mb-1 block text-xs font-bold text-white/45">Veriliş tarihi</span>
                 <input type="date" value={verilisTarihi} onChange={e => setVerilisTarihi(e.target.value)} className={`${girisClass} [color-scheme:dark]`} />
@@ -163,13 +200,13 @@ export const SurucuAyarlari = () => {
                 <input type="date" value={gecerlilikTarihi} onChange={e => setGecerlilikTarihi(e.target.value)} className={`${girisClass} [color-scheme:dark]`} />
               </label>
             </div>
-            <GorselYukleyici etiket="Ehliyet belgesi fotoğrafı (zorunlu)" value={belgeUrl} onChange={setBelgeUrl} oranSinifi="aspect-[16/9]" />
             <div>
-              <button onClick={ehliyetGonder} disabled={!belgeUrl || isLoading}
+              <button onClick={ehliyetGonder} disabled={!gonderilebilir || isLoading}
                 className="rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-black text-white disabled:opacity-40">
                 {dogrulama ? 'Yeniden Doğrulamaya Gönder' : 'Doğrulamaya Gönder'}
               </button>
               {!belgeUrl && <span className="ml-3 text-[11px] text-white/35">Ehliyet fotoğrafı yüklemeden gönderilemez.</span>}
+              {ehliyetReddi && <span className="ml-3 text-[11px] text-red-200/70">Geçerli bir ehliyet görseli gerekiyor.</span>}
             </div>
           </div>
         )}
