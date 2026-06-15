@@ -129,16 +129,6 @@ export interface DogrulamaFormu {
   belgeUrl: string;
 }
 
-export interface EhliyetAnalizSonucu {
-  ehliyet: boolean;
-  sinif?: string | null;
-  ehliyetNo?: string | null;
-  verilisTarihi?: string | null;
-  gecerlilikTarihi?: string | null;
-  analizYapildi: boolean;
-  mesaj?: string;
-}
-
 export interface Sikayet {
   id: string;
   talepId: string;
@@ -204,7 +194,6 @@ interface YolculukState {
   ilanOlustur: (form: YolculukIlaniFormu) => Promise<boolean>;
   benimVerilerimiGetir: () => Promise<void>;
   dogrulamaBasvur: (form: DogrulamaFormu) => Promise<boolean>;
-  ehliyetAnaliz: (gorsel: string) => Promise<EhliyetAnalizSonucu>;
   araclarimGetir: () => Promise<void>;
   aracMarkalariGetir: () => Promise<string[]>;
   aracModelleriGetir: (marka: string) => Promise<string[]>;
@@ -302,12 +291,9 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
     set({ isLoading: true, hata: null, basariMesaji: null });
     try {
       const res = await api.post<SurucuDogrulama>('/yolculuklar/surucu-dogrulama', form);
-      const otomatik = res.data?.durum === 'ONAYLANDI';
       set({
         dogrulama: res.data, isLoading: false,
-        basariMesaji: otomatik
-          ? 'Kimlik bilgileri eşleşti; ehliyetiniz otomatik onaylandı.'
-          : 'Sürücü doğrulama başvurusu gönderildi; yönetici onayı bekleniyor.',
+        basariMesaji: 'Sürücü doğrulama başvurusu gönderildi; yönetici onayı bekleniyor.',
       });
       return true;
     } catch (err: any) {
@@ -321,15 +307,6 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
       const res = await api.get<Arac[]>('/yolculuklar/araclar');
       set({ araclar: res.data });
     } catch { /* sessiz */ }
-  },
-
-  ehliyetAnaliz: async (gorsel) => {
-    try {
-      const res = await api.post<EhliyetAnalizSonucu>('/yolculuklar/ehliyet-analiz', { gorsel });
-      return res.data;
-    } catch {
-      return { ehliyet: false, analizYapildi: false, mesaj: 'Analiz yapılamadı; alanları elle girebilirsiniz.' };
-    }
   },
 
   aracMarkalariGetir: async () => {

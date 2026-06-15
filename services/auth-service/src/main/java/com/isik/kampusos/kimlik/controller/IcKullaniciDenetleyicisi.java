@@ -35,7 +35,6 @@ public class IcKullaniciDenetleyicisi {
         o.setOgrenciNumarasi(k.getOgrenciNumarasi());
         o.setTelefon(k.getTelefon());
         o.setEposta(k.getEposta());
-        o.setTcKimlikMaskeli(k.getTcKimlikMaskeli());
         return o;
     }
 
@@ -52,6 +51,5 @@ public class IcKullaniciDenetleyicisi {
         private String ogrenciNumarasi;
         private String telefon;
         private String eposta;
-        private String tcKimlikMaskeli;  // ilk 5 hane + maske; kimlik eşleşmesi için
     }
 }

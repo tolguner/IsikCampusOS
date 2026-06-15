@@ -8,7 +8,6 @@ import {
   type Arac,
   type AracDurumu,
   type DogrulamaDurumu,
-  type EhliyetAnalizSonucu,
 } from '../../depolar/yolculukDeposu';
 import { GorselYukleyici } from '../ortak/GorselYukleyici';
 
@@ -42,7 +41,7 @@ export const SurucuAyarlari = () => {
   const {
     dogrulama, araclar, isLoading,
     benimVerilerimiGetir, araclarimGetir, dogrulamaBasvur, aracEkle, aracGuncelle, aracSil,
-    aracMarkalariGetir, aracModelleriGetir, ehliyetAnaliz,
+    aracMarkalariGetir, aracModelleriGetir,
   } = useYolculukDeposu();
 
   const [ehliyetSinifi, setEhliyetSinifi] = useState('B');
