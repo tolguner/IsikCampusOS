@@ -42,7 +42,7 @@ export const DestekHizmetleriPaneli = () => {
             <h1 className="text-3xl font-black">Destek Hizmetleri Müdürlüğü</h1>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-white/45">
               İşletmeleri, işletme yöneticilerini ve personel hesaplarını yönetin; bilgi-değişikliği
-              taleplerini onaylayın; işletme işlem loglarını inceleyin.
+              taleplerini onaylayın.
             </p>
           </div>
         </div>
