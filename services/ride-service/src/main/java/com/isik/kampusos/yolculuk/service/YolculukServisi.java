@@ -36,6 +36,7 @@ public class YolculukServisi {
     private final AracDeposu aracDeposu;
     private final YolculukLogServisi logServisi;
     private final com.isik.kampusos.yolculuk.messaging.BildirimYayinlayici bildirimYayinlayici;
+    private final KullaniciOzetIstemcisi kullaniciOzetIstemcisi;
 
     public List<YolculukIlani> ilanAra(YolculukAramaTalebi arama) {
         LocalDateTime baslangicZaman;
@@ -311,11 +312,27 @@ public class YolculukServisi {
     }
 
     public List<YolculukTalebi> surucuTalepleri(String surucuId) {
-        List<String> ilanIdleri = ilanDeposu.findBySurucuKullaniciIdOrderByKalkisZamaniDesc(surucuId).stream()
-                .map(YolculukIlani::getId)
-                .toList();
-        if (ilanIdleri.isEmpty()) return List.of();
-        return talepDeposu.findByIlanIdInOrderByOlusturulmaTarihiDesc(ilanIdleri);
+        List<YolculukIlani> ilanlar = ilanDeposu.findBySurucuKullaniciIdOrderByKalkisZamaniDesc(surucuId);
+        if (ilanlar.isEmpty()) return List.of();
+        java.util.Map<String, YolculukIlani> ilanHaritasi = ilanlar.stream()
+                .collect(java.util.stream.Collectors.toMap(YolculukIlani::getId, i -> i, (a, b) -> a));
+
+        List<YolculukTalebi> talepler = talepDeposu.findByIlanIdInOrderByOlusturulmaTarihiDesc(ilanHaritasi.keySet());
+
+        // Talebi gönderen yolcuların ad-soyad/öğrenci no bilgisini auth-service'ten çöz.
+        var ozetler = kullaniciOzetIstemcisi.ozetler(
+                talepler.stream().map(YolculukTalebi::getYolcuKullaniciId).toList());
+        talepler.forEach(t -> {
+            var o = ozetler.get(t.getYolcuKullaniciId());
+            if (o != null) { t.setYolcuAdSoyad(o.adSoyad()); t.setYolcuOgrenciNo(o.ogrenciNumarasi()); }
+            YolculukIlani ilan = ilanHaritasi.get(t.getIlanId());
+            if (ilan != null) {
+                t.setIlanBaslangicBasligi(ilan.getBaslangicBasligi());
+                t.setIlanVarisBasligi(ilan.getVarisBasligi());
+                t.setIlanKalkisZamani(ilan.getKalkisZamani());
+            }
+        });
+        return talepler;
     }
 
     @Transactional

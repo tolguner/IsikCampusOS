@@ -388,7 +388,7 @@ export const CampusRideSayfasi = () => {
                   <TalepSatiri key={t.id} talep={t} onIptal={() => talepIptal(t.id)} onTamamla={() => talepTamamla(t.id)} onPuanla={() => puanla(t.id, 5, 'Güvenli ve zamanında.')} onSikayet={() => sikayetEt(t.id, 'DIGER', 'İnceleme rica ederim.')} />
                 ))}
               </ListePanel>
-              <ListePanel baslik="Sürücü Talepleri" bos="İlanlarınıza gelen aktif talep yok.">
+              <ListePanel baslik="Yolcu Talepleri" bos="İlanlarınıza gelen aktif talep yok.">
                 {surucuTalepleri.filter(t => talepAktif(t.durum)).map(t => (
                   <TalepSatiri key={t.id} talep={t} onKabul={() => talepKabul(t.id)} onRed={() => talepRed(t.id, 'Sürücü tarafından uygun bulunmadı.')} onTamamla={() => talepTamamla(t.id)} />
                 ))}
@@ -408,7 +408,7 @@ export const CampusRideSayfasi = () => {
                     <TalepSatiri key={t.id} talep={t} onPuanla={() => puanla(t.id, 5, 'Güvenli ve zamanında.')} onSikayet={() => sikayetEt(t.id, 'DIGER', 'İnceleme rica ederim.')} />
                   ))}
                 </ListePanel>
-                <ListePanel baslik="Geçmiş Sürücü Talepleri" bos="Geçmiş talep yok.">
+                <ListePanel baslik="Geçmiş Yolcu Talepleri" bos="Geçmiş talep yok.">
                   {surucuTalepleri.filter(t => !talepAktif(t.durum)).map(t => (
                     <TalepSatiri key={t.id} talep={t} />
                   ))}
@@ -629,8 +629,14 @@ const TalepSatiri = ({ talep, onKabul, onRed, onIptal, onTamamla, onPuanla, onSi
 }) => (
   <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
     <div className="flex items-start justify-between gap-2">
-      <div>
+      <div className="min-w-0">
         <p className="text-sm font-black">{talep.binisBasligi} → {talep.inisBasligi}</p>
+        {talep.ilanBaslangicBasligi && (
+          <p className="mt-0.5 text-[11px] text-white/40">İlan: {talep.ilanBaslangicBasligi} → {talep.ilanVarisBasligi}</p>
+        )}
+        {talep.yolcuAdSoyad && (
+          <p className="mt-0.5 text-xs font-semibold text-cyan-200/75">Yolcu: {talep.yolcuAdSoyad}{talep.yolcuOgrenciNo ? ` · ${talep.yolcuOgrenciNo}` : ''}</p>
+        )}
         <p className="mt-1 text-xs text-white/40">{TALEP_ETIKETLERI[talep.durum as keyof typeof TALEP_ETIKETLERI]} · {talep.koltukSayisi} koltuk</p>
       </div>
       <span className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-bold text-white/45">{talep.tahminiBinisDakika != null ? `+${talep.tahminiBinisDakika} dk` : 'Öneri'}</span>
@@ -641,7 +647,7 @@ const TalepSatiri = ({ talep, onKabul, onRed, onIptal, onTamamla, onPuanla, onSi
       {onIptal && ['BEKLEMEDE', 'KABUL_EDILDI'].includes(talep.durum) && <Aksiyon onClick={onIptal} icon={<X className="h-3.5 w-3.5" />} text="İptal" />}
       {onTamamla && talep.durum === 'KABUL_EDILDI' && <Aksiyon onClick={onTamamla} icon={<Flag className="h-3.5 w-3.5" />} text="Tamamla" />}
       {onPuanla && talep.durum === 'TAMAMLANDI' && <Aksiyon onClick={onPuanla} icon={<Star className="h-3.5 w-3.5" />} text="Puanla" />}
-      {onSikayet && <Aksiyon onClick={onSikayet} icon={<AlertTriangle className="h-3.5 w-3.5" />} text="Şikayet" />}
+      {onSikayet && ['KABUL_EDILDI', 'TAMAMLANDI'].includes(talep.durum) && <Aksiyon onClick={onSikayet} icon={<AlertTriangle className="h-3.5 w-3.5" />} text="Şikayet" />}
     </div>
   </div>
 );

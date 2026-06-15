@@ -66,6 +66,13 @@ public class YolculukTalebi {
     private LocalDateTime iptalTarihi;
     private LocalDateTime tamamlanmaTarihi;
 
+    // Gösterim için (DB'ye yazılmaz): talebi gönderen yolcu ve ilgili ilan bilgisi.
+    @Transient private String yolcuAdSoyad;
+    @Transient private String yolcuOgrenciNo;
+    @Transient private String ilanBaslangicBasligi;
+    @Transient private String ilanVarisBasligi;
+    @Transient private LocalDateTime ilanKalkisZamani;
+
     @PrePersist
     protected void onCreate() {
         this.olusturulmaTarihi = LocalDateTime.now();
