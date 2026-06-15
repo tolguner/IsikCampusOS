@@ -741,9 +741,11 @@ export const EtkinliklerSekmesi = ({ selectedClub }: EtkinliklerSekmesiProps) =>
                         ? 'Etkinlik sona erdi; yoklama +1 saat esnekliği içinde açık kalır.'
                         : 'Geçmiş etkinliklerde düzenleme, yoklama ve iptal kapalıdır.'}
                   </p>
-                  <Link to={YOLLAR.kulupEtkinlikYonetimi(event.id)} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-2.5 text-xs font-black text-purple-50 bg-purple-500/70 hover:bg-purple-500">
-                    Detayları Yönet
-                  </Link>
+                  {!showActionPanel && (
+                    <Link to={YOLLAR.kulupEtkinlikYonetimi(event.id)} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-2.5 text-xs font-black text-purple-50 bg-purple-500/70 hover:bg-purple-500">
+                      Detayları Yönet
+                    </Link>
+                  )}
                 </div>
               )}
               </>
