@@ -670,8 +670,8 @@ export const SksPaneli = () => {
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
         <div>
           <h1 className="text-4xl font-extrabold gradient-text">Akademik, Sosyal ve Kültürel Gelişim Koordinatörlüğü</h1>
-          <p className="text-white/45 mt-3 max-w-3xl">
-            İş akışını seç, yalnızca o modüle odaklan. Kulüp yönetimi, kayıt oluşturma ve etkinlik talepleri ayrı alanlarda çalışır.
+          <p className="text-white/45 mt-3 lg:whitespace-nowrap">
+            Kulüp yönetimi, kayıt oluşturma ve etkinlik talepleri ayrı alanlarda çalışır.
           </p>
         </div>
         <div className="flex items-center gap-3">
