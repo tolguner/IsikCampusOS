@@ -202,8 +202,8 @@ export const CampusRideSayfasi = () => {
       )}
 
       {aktifSekme === 'surucu' && (
-        <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
-          <div className="space-y-4">
+        <section className="grid gap-5 lg:grid-cols-[1fr_360px] lg:items-start">
+          <div className="space-y-4 lg:order-2">
             <PanelBaslik ikon={<CarFront className="h-5 w-5" />} baslik="Sürücü Durumu" />
             <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
               <DurumSatiri
@@ -229,9 +229,37 @@ export const CampusRideSayfasi = () => {
                 ehliyetiniz onaylı ve en az bir aracınız onaylı olmalıdır.
               </p>
             </div>
+
+            {/* Yolculuk özeti — seçilen rota, saat ve ücret bilgilerinin derli toplu görünümü */}
+            <div className="rounded-3xl border border-cyan-300/20 bg-cyan-500/[0.06] p-5">
+              <p className="mb-3 flex items-center gap-2 text-sm font-black text-cyan-100">
+                <CarFront className="h-4 w-4" /> Yolculuk Özeti
+              </p>
+              <div className="space-y-2.5 text-sm">
+                <OzetSatir icon={<MapPin className="h-3.5 w-3.5" />} label="Güzergah" value={`${ilanBaslangic.ad} → ${ilanVaris.ad}`} />
+                <OzetSatir icon={<Users className="h-3.5 w-3.5" />} label="Boş koltuk" value={`${form.koltukSayisi} koltuk`} />
+                <OzetSatir icon={<CreditCard className="h-3.5 w-3.5" />} label="Ücret"
+                  value={form.ucretTipi === 'UCRETSIZ' ? 'Ücretsiz' : `${form.kisiBasiUcret} ₺ / kişi`} />
+                <OzetSatir icon={<CalendarClock className="h-3.5 w-3.5" />} label="Kalkış"
+                  value={form.kalkisZamani ? new Date(form.kalkisZamani).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'} />
+                <OzetSatir icon={<Clock className="h-3.5 w-3.5" />} label="Tahmini varış" value={tahminiVaris ?? 'Rota hesaplanıyor…'} />
+                <OzetSatir icon={<Flag className="h-3.5 w-3.5" />} label="Süre / mesafe"
+                  value={anaRota ? `${anaRota.toplamDakika} dk · ${anaRota.mesafeKm} km` : '—'} />
+              </div>
+              <button disabled={!ilanAcabilir || isLoading} onClick={ilanKaydet} className="mt-5 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40">
+                İlanı Yayınla
+              </button>
+              {!ilanAcabilir && (
+                <p className="mt-2 text-[11px] text-white/35">
+                  {!dogrulandi ? 'Ehliyetiniz onaylanmadan ilan açamazsınız. ' : ''}
+                  {onayliAraclar.length === 0 ? 'Onaylı bir aracınız olmalı. ' : ''}
+                  Ayarlar &gt; Sürücü &amp; Araçlar bölümünü kullanın.
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 lg:order-1">
             <PanelBaslik ikon={<Plus className="h-5 w-5" />} baslik="Yolculuk İlanı Oluştur" />
             <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
               <div className="mb-4">
@@ -327,38 +355,6 @@ export const CampusRideSayfasi = () => {
                   baslik="Yolcular rota üzerindeki ek biniş/iniş noktalarını önerebilir"
                 />
               </div>
-              {/* Yolculuk özeti — seçilen rota, saat ve ücret bilgilerinin derli toplu görünümü */}
-              <div className="mt-5 rounded-2xl border border-cyan-300/20 bg-cyan-500/[0.06] p-4">
-                <p className="mb-3 flex items-center gap-2 text-sm font-black text-cyan-100">
-                  <CarFront className="h-4 w-4" /> Yolculuk Özeti
-                </p>
-                <div className="grid gap-x-6 gap-y-2.5 text-sm sm:grid-cols-2">
-                  <div className="space-y-2.5">
-                    <OzetSatir icon={<MapPin className="h-3.5 w-3.5" />} label="Güzergah" value={`${ilanBaslangic.ad} → ${ilanVaris.ad}`} />
-                    <OzetSatir icon={<Users className="h-3.5 w-3.5" />} label="Boş koltuk" value={`${form.koltukSayisi} koltuk`} />
-                    <OzetSatir icon={<CreditCard className="h-3.5 w-3.5" />} label="Ücret"
-                      value={form.ucretTipi === 'UCRETSIZ' ? 'Ücretsiz' : `${form.kisiBasiUcret} ₺ / kişi`} />
-                  </div>
-                  <div className="space-y-2.5">
-                    <OzetSatir icon={<CalendarClock className="h-3.5 w-3.5" />} label="Kalkış"
-                      value={form.kalkisZamani ? new Date(form.kalkisZamani).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'} />
-                    <OzetSatir icon={<Clock className="h-3.5 w-3.5" />} label="Tahmini varış" value={tahminiVaris ?? 'Rota hesaplanıyor…'} />
-                    <OzetSatir icon={<Flag className="h-3.5 w-3.5" />} label="Süre / mesafe"
-                      value={anaRota ? `${anaRota.toplamDakika} dk · ${anaRota.mesafeKm} km` : '—'} />
-                  </div>
-                </div>
-              </div>
-
-              <button disabled={!ilanAcabilir || isLoading} onClick={ilanKaydet} className="mt-5 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40">
-                İlanı Yayınla
-              </button>
-              {!ilanAcabilir && (
-                <p className="mt-2 text-[11px] text-white/35">
-                  {!dogrulandi ? 'Ehliyetiniz onaylanmadan ilan açamazsınız. ' : ''}
-                  {onayliAraclar.length === 0 ? 'Onaylı bir aracınız olmalı. ' : ''}
-                  Ayarlar &gt; Sürücü &amp; Araçlar bölümünü kullanın.
-                </p>
-              )}
             </div>
           </div>
         </section>
