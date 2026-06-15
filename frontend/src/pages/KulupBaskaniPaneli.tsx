@@ -74,7 +74,7 @@ export const KulupBaskaniPaneli = () => {
         <DuyuruButonu />
       </header>
 
-          <section className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {tabs.map(tab => {
           const Icon = tab.icon;
           const active = activeTab === tab.key;
