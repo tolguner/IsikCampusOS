@@ -304,7 +304,15 @@ public class YolculukServisi {
                 .tahminiInisDakika(enYakinDurakDakika(ilan.getDuraklar(), inisK))
                 .mesaj(talep.getMesaj())
                 .build();
-        return talepDeposu.save(kayit);
+        YolculukTalebi saved = talepDeposu.save(kayit);
+        bildirimYayinlayici.kullaniciyaBildir(ilan.getSurucuKullaniciId(),
+                "Yeni yolcu talebi",
+                rotaEtiketi(ilan) + " ilanınıza yeni bir katılım isteği geldi.");
+        return saved;
+    }
+
+    private String rotaEtiketi(YolculukIlani ilan) {
+        return ilan.getBaslangicBasligi() + " → " + ilan.getVarisBasligi();
     }
 
     public List<YolculukTalebi> taleplerim(String yolcuId) {
@@ -342,20 +350,29 @@ public class YolculukServisi {
         YolculukEslesmeServisi.talebiKabulEt(ilan, talep);
         talep.setCevapTarihi(LocalDateTime.now());
         ilanDeposu.save(ilan);
-        return talepDeposu.save(talep);
+        YolculukTalebi saved = talepDeposu.save(talep);
+        bildirimYayinlayici.kullaniciyaBildir(talep.getYolcuKullaniciId(),
+                "Talebiniz kabul edildi",
+                rotaEtiketi(ilan) + " yolculuğuna katılım talebiniz kabul edildi.");
+        return saved;
     }
 
     @Transactional
     public YolculukTalebi talepReddet(String surucuId, String talepId, String neden) {
         YolculukTalebi talep = talepBul(talepId);
-        ilanSahiplikle(surucuId, talep.getIlanId());
+        YolculukIlani ilan = ilanSahiplikle(surucuId, talep.getIlanId());
         if (talep.getDurum() != YolculukTalebi.TalepDurumu.BEKLEMEDE) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Yalnızca bekleyen talepler reddedilebilir.");
         }
         talep.setDurum(YolculukTalebi.TalepDurumu.REDDEDILDI);
         talep.setRedNedeni(neden);
         talep.setCevapTarihi(LocalDateTime.now());
-        return talepDeposu.save(talep);
+        YolculukTalebi saved = talepDeposu.save(talep);
+        bildirimYayinlayici.kullaniciyaBildir(talep.getYolcuKullaniciId(),
+                "Talebiniz reddedildi",
+                rotaEtiketi(ilan) + " yolculuğuna katılım talebiniz reddedildi."
+                        + (neden != null && !neden.isBlank() ? " Neden: " + neden : ""));
+        return saved;
     }
 
     @Transactional
@@ -364,15 +381,21 @@ public class YolculukServisi {
         if (!talep.getYolcuKullaniciId().equals(yolcuId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu talep size ait değil.");
         }
-        if (talep.getDurum() == YolculukTalebi.TalepDurumu.KABUL_EDILDI) {
-            YolculukIlani ilan = ilanDeposu.findById(talep.getIlanId()).orElseThrow();
+        YolculukIlani ilan = ilanDeposu.findById(talep.getIlanId()).orElse(null);
+        if (talep.getDurum() == YolculukTalebi.TalepDurumu.KABUL_EDILDI && ilan != null) {
             ilan.setKabulEdilenKoltukSayisi(Math.max(0, ilan.getKabulEdilenKoltukSayisi() - talep.getKoltukSayisi()));
             if (ilan.getDurum() == YolculukIlani.IlanDurumu.DOLU) ilan.setDurum(YolculukIlani.IlanDurumu.AKTIF);
             ilanDeposu.save(ilan);
         }
         talep.setDurum(YolculukTalebi.TalepDurumu.IPTAL);
         talep.setIptalTarihi(LocalDateTime.now());
-        return talepDeposu.save(talep);
+        YolculukTalebi saved = talepDeposu.save(talep);
+        if (ilan != null) {
+            bildirimYayinlayici.kullaniciyaBildir(ilan.getSurucuKullaniciId(),
+                    "Yolcu talebini iptal etti",
+                    rotaEtiketi(ilan) + " ilanınızdaki bir yolcu katılım talebini iptal etti.");
+        }
+        return saved;
     }
 
     @Transactional
@@ -388,7 +411,14 @@ public class YolculukServisi {
         }
         talep.setDurum(YolculukTalebi.TalepDurumu.TAMAMLANDI);
         talep.setTamamlanmaTarihi(LocalDateTime.now());
-        return talepDeposu.save(talep);
+        YolculukTalebi saved = talepDeposu.save(talep);
+        // Tamamlamayı yapan dışındaki karşı tarafa bildir.
+        String digerKullanici = kullaniciId.equals(talep.getYolcuKullaniciId())
+                ? ilan.getSurucuKullaniciId() : talep.getYolcuKullaniciId();
+        bildirimYayinlayici.kullaniciyaBildir(digerKullanici,
+                "Yolculuk tamamlandı",
+                rotaEtiketi(ilan) + " yolculuğu tamamlandı olarak işaretlendi.");
+        return saved;
     }
 
     @Transactional
