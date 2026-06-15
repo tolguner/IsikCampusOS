@@ -51,15 +51,18 @@ export const RezervasyonGorunumu = ({
 }: RezervasyonGorunumuProps) => {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
+  // İptal edilen rezervasyon/blokeler listeden çıkar (slot otomatik tekrar rezerve edilebilir olur).
+  const gorunenler = useMemo(() => allBookings.filter(b => b.durum !== 'IPTAL_EDILDI'), [allBookings]);
+
   // Tekrarlanan antrenman/blokeleri (tekrarGrupId) tek bir öğeye topla; gerisini tekil bırak.
   const items = useMemo(() => {
     const seen = new Set<string>();
     const result: ({ type: 'single'; booking: Rezervasyon } | { type: 'group'; grupId: string; bookings: Rezervasyon[] })[] = [];
-    for (const b of allBookings) {
+    for (const b of gorunenler) {
       if (b.durum === 'BLOKE' && b.tekrarGrupId) {
         if (seen.has(b.tekrarGrupId)) continue;
         seen.add(b.tekrarGrupId);
-        const members = allBookings
+        const members = gorunenler
           .filter(x => x.tekrarGrupId === b.tekrarGrupId)
           .sort((a, c) => new Date(a.baslangicTarihi).getTime() - new Date(c.baslangicTarihi).getTime());
         if (members.length > 1) {
@@ -70,7 +73,7 @@ export const RezervasyonGorunumu = ({
       result.push({ type: 'single', booking: b });
     }
     return result;
-  }, [allBookings]);
+  }, [gorunenler]);
 
   const tekrarSikligi = (members: Rezervasyon[]): string => {
     if (members.length < 2) return 'Tekrarlı';
@@ -399,9 +402,9 @@ export const RezervasyonGorunumu = ({
               : renderBookingCard(item.booking)
           )}
 
-          {allBookings.length === 0 && (
+          {items.length === 0 && (
             <div className="rounded-2xl border border-dashed border-white/10 px-4 py-12 text-center text-sm text-white/35 font-semibold">
-              Henüz kayıtlı bir rezervasyon veya antrenman bulunmuyor.
+              Henüz aktif bir rezervasyon veya antrenman bulunmuyor.
             </div>
           )}
         </div>

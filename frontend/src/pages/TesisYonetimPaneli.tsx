@@ -502,7 +502,7 @@ export const TesisYonetimPaneli = () => {
         onSecim={setActiveView}
         sekmeler={[
           { anahtar: 'config', baslik: 'Tesis Yapılandırması', aciklama: 'Tesis tanımı, kuralları ve çalışma saatleri', ikon: Settings2 },
-          { anahtar: 'bookings', baslik: `Antrenman & Rezervasyon (${allBookings.length})`, aciklama: 'Antrenman ve rezervasyon talep yönetimi', ikon: ClipboardList },
+          { anahtar: 'bookings', baslik: `Antrenman & Rezervasyon (${allBookings.filter(b => b.durum !== 'IPTAL_EDILDI').length})`, aciklama: 'Antrenman ve rezervasyon talep yönetimi', ikon: ClipboardList },
           { anahtar: 'calendar', baslik: 'Genel Rezervasyon Takvimi', aciklama: 'Tüm rezervasyonların takvim görünümü', ikon: CalendarDays },
         ]}
       />
