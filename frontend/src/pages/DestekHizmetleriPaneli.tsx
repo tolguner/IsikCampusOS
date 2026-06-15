@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Store, ScrollText, ClipboardCheck, Megaphone } from 'lucide-react';
+import { Store, ScrollText, ClipboardCheck } from 'lucide-react';
 import { SaticilarSekmesi } from '../components/yonetim/SaticilarSekmesi';
 import { DegisiklikTalepleriSekmesi } from '../components/yonetim/DegisiklikTalepleriSekmesi';
-import { TopluDuyuruSekmesi } from '../components/yonetim/TopluDuyuruSekmesi';
 import { useAdminSaticiDeposu } from '../depolar/adminSaticiDeposu';
 import { ModulSekmeleri } from '../components/yonetim/ModulSekmeleri';
 import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
+import { DuyuruButonu } from '../components/DuyuruButonu';
 
-type Sekme = 'isletmeler' | 'talepler' | 'duyuru' | 'loglar';
+type Sekme = 'isletmeler' | 'talepler' | 'loglar';
 
 const VARLIK_ETIKET: Record<string, string> = {
   ISLETME: 'İşletme', PERSONEL: 'Personel', SIPARIS: 'Sipariş', DEGISIKLIK_TALEBI: 'Değişiklik Talebi',
@@ -33,17 +33,20 @@ export const DestekHizmetleriPaneli = () => {
 
   return (
     <div className="space-y-6 text-white">
-      <div className="flex items-start gap-3">
-        <div className="grid h-12 w-12 place-items-center rounded-2xl border border-purple-300/25 bg-purple-500/10 text-purple-200">
-          <Store className="h-6 w-6" />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-purple-300/25 bg-purple-500/10 text-purple-200">
+            <Store className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-black">Destek Hizmetleri Müdürlüğü</h1>
+            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-white/45">
+              İşletmeleri, işletme yöneticilerini ve personel hesaplarını yönetin; bilgi-değişikliği
+              taleplerini onaylayın; işletme işlem loglarını inceleyin.
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-3xl font-black">Destek Hizmetleri Müdürlüğü</h1>
-          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-white/45">
-            İşletmeleri, işletme yöneticilerini ve personel hesaplarını yönetin; bilgi-değişikliği
-            taleplerini onaylayın; işletme işlem loglarını inceleyin.
-          </p>
-        </div>
+        <DuyuruButonu />
       </div>
 
       <ModulSekmeleri
@@ -52,7 +55,6 @@ export const DestekHizmetleriPaneli = () => {
         sekmeler={[
           { anahtar: 'isletmeler', baslik: 'İşletmeler', aciklama: 'İşletme listesi, sahip ve personel yönetimi', ikon: Store },
           { anahtar: 'talepler', baslik: 'Bilgi Değişikliği Talepleri', aciklama: 'Bekleyen bilgi-değişikliği onayları', ikon: ClipboardCheck, rozet: bekleyenGrupSayisi },
-          { anahtar: 'duyuru', baslik: 'Toplu Duyuru', aciklama: 'Öğrenci ve işletmelere kurumsal duyuru', ikon: Megaphone },
           { anahtar: 'loglar', baslik: 'İşletme Logları', aciklama: 'İşletme işlem denetim kayıtları', ikon: ScrollText },
         ]}
       />
@@ -62,8 +64,6 @@ export const DestekHizmetleriPaneli = () => {
       {sekme === 'isletmeler' && <SaticilarSekmesi />}
 
       {sekme === 'talepler' && <DegisiklikTalepleriSekmesi />}
-
-      {sekme === 'duyuru' && <TopluDuyuruSekmesi />}
 
       {sekme === 'loglar' && (
         <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.025]">

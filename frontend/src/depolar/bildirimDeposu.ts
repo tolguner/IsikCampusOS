@@ -57,6 +57,15 @@ interface BildirimState {
     resimUrl?: string;
     hedefKitle?: 'TUM_OGRENCILER' | 'TUM_KULLANICILAR';
   }) => Promise<boolean>;
+  /** Destek Hizmetleri → birden çok hedef kitleye kurumsal duyuru. */
+  destekDuyuruGonder: (veri: {
+    baslik: string;
+    mesaj: string;
+    baglantiUrl?: string;
+    baglantiEtiketi?: string;
+    resimUrl?: string;
+    hedefKitleler: string[];
+  }) => Promise<boolean>;
 }
 
 const okunmamisSay = (bildirimler: Bildirim[]) =>
@@ -164,6 +173,18 @@ export const useBildirimDeposu = create<BildirimState>((set, get) => ({
     set({ yukleniyor: true, hata: null });
     try {
       await api.post('/bildirimler/toplu-duyuru', veri);
+      set({ yukleniyor: false });
+      return true;
+    } catch (err: any) {
+      set({ hata: err.response?.data?.message || 'Duyuru gönderilemedi.', yukleniyor: false });
+      return false;
+    }
+  },
+
+  destekDuyuruGonder: async (veri) => {
+    set({ yukleniyor: true, hata: null });
+    try {
+      await api.post('/bildirimler/destek-duyuru', veri);
       set({ yukleniyor: false });
       return true;
     } catch (err: any) {

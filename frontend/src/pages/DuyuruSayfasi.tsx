@@ -5,6 +5,14 @@ import { useBildirimDeposu } from '../depolar/bildirimDeposu';
 import { useKimlikDeposu } from '../depolar/kimlikDeposu';
 import { useKulupDeposu } from '../depolar/kulupDeposu';
 import { rolleriAyir } from '../yardimcilar/yetkiler';
+import { Anahtar } from '../components/ortak/Anahtar';
+
+// Destek Hizmetleri Müdürlüğü — çoklu seçilebilir hedef kitleler
+const DESTEK_KITLELERI: { anahtar: string; etiket: string }[] = [
+  { anahtar: 'TUM_OGRENCILER', etiket: 'Tüm öğrenciler' },
+  { anahtar: 'ISLETME_YONETICILERI', etiket: 'Tüm işletme yöneticileri' },
+  { anahtar: 'ISLETME_PERSONELLERI', etiket: 'Tüm işletme personelleri' },
+];
 
 const inputClass =
   'w-full rounded-2xl bg-[#111123] border border-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-pink-400/60';
@@ -23,6 +31,7 @@ export const DuyuruSayfasi = () => {
   const user = useKimlikDeposu(s => s.user);
   const topluDuyuruGonder = useBildirimDeposu(s => s.topluDuyuruGonder);
   const sksDuyuruGonder = useBildirimDeposu(s => s.duyuruOlustur);
+  const destekDuyuruGonder = useBildirimDeposu(s => s.destekDuyuruGonder);
   const yukleniyor = useBildirimDeposu(s => s.yukleniyor);
   const hata = useBildirimDeposu(s => s.hata);
   const managedClubs = useKulupDeposu(s => s.managedClubs);
@@ -36,6 +45,11 @@ export const DuyuruSayfasi = () => {
   const isFacility = roller.includes('ROLE_FACILITY_ADMIN');
   const isSks = roller.includes('ROLE_SKS_ADMIN');
   const isStudent = roller.includes('ROLE_STUDENT');
+  const isDestek = roller.includes('ROLE_SUPPORT_SERVICES_ADMIN');
+
+  // Destek: çoklu hedef kitle seçimi
+  const [destekSecili, setDestekSecili] = useState<Record<string, boolean>>({});
+  const destekSeciliKitleler = DESTEK_KITLELERI.filter(k => destekSecili[k.anahtar]);
 
   useEffect(() => {
     if (isStudent) fetchManagedClubs();
@@ -73,7 +87,8 @@ export const DuyuruSayfasi = () => {
   const [form, setForm] = useState<DuyuruFormu>({ baslik: '', mesaj: '', baglantiUrl: '', baglantiEtiketi: '', resimUrl: '' });
   const [basari, setBasari] = useState(false);
 
-  const gecerli = form.baslik.trim().length > 0 && form.mesaj.trim().length > 0 && !!secili;
+  const gecerli = form.baslik.trim().length > 0 && form.mesaj.trim().length > 0 &&
+    (isDestek ? destekSeciliKitleler.length > 0 : !!secili);
 
   const gorselSec = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -84,24 +99,33 @@ export const DuyuruSayfasi = () => {
   };
 
   const gonder = async () => {
-    if (!secili) return;
-    const ok = await secili.gonder({
+    const govde = {
       baslik: form.baslik,
       mesaj: form.mesaj,
       baglantiUrl: form.baglantiUrl || undefined,
       baglantiEtiketi: form.baglantiEtiketi || undefined,
       resimUrl: form.resimUrl || undefined,
-    });
+    };
+    let ok = false;
+    if (isDestek) {
+      ok = await destekDuyuruGonder({ ...govde, hedefKitleler: destekSeciliKitleler.map(k => k.anahtar) });
+    } else {
+      if (!secili) return;
+      ok = await secili.gonder(govde);
+    }
     if (ok) setBasari(true);
   };
 
   const yeniDuyuru = () => {
     setBasari(false);
     setForm({ baslik: '', mesaj: '', baglantiUrl: '', baglantiEtiketi: '', resimUrl: '' });
+    setDestekSecili({});
   };
 
-  const gonderenAdi = secili?.gonderenAdi ?? 'Kampüs Yönetimi';
-  const hedefEtiketi = secili?.label ?? '';
+  const gonderenAdi = isDestek ? 'Destek Hizmetleri Müdürlüğü' : (secili?.gonderenAdi ?? 'Kampüs Yönetimi');
+  const hedefEtiketi = isDestek
+    ? (destekSeciliKitleler.length ? destekSeciliKitleler.map(k => k.etiket).join(', ') : 'Hedef kitle seçilmedi')
+    : (secili?.label ?? '');
 
   return (
     <div className="space-y-6 text-white pb-12">
@@ -131,7 +155,7 @@ export const DuyuruSayfasi = () => {
         <div className="rounded-2xl px-4 py-3 text-sm font-semibold border border-red-400/25 bg-red-500/12 text-red-100">{hata || kulupHata}</div>
       )}
 
-      {secenekler.length === 0 ? (
+      {!isDestek && secenekler.length === 0 ? (
         <div className="rounded-3xl border border-white/10 bg-white/[0.025] p-10 text-center text-sm font-semibold text-white/45">
           Duyuru gönderme yetkiniz bulunmuyor.
         </div>
@@ -149,8 +173,18 @@ export const DuyuruSayfasi = () => {
           {/* Form */}
           <section className="rounded-3xl border border-white/10 bg-white/[0.025] p-6 space-y-5">
             <div>
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-white/35">Hedef Kitle</label>
-              {secenekler.length > 1 ? (
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-white/35">
+                Hedef Kitle{isDestek ? ' (birden çok seçilebilir)' : ''}
+              </label>
+              {isDestek ? (
+                <div className="space-y-2">
+                  {DESTEK_KITLELERI.map(k => (
+                    <div key={k.anahtar} className="rounded-2xl border border-white/10 bg-[#111123] px-4 py-3">
+                      <Anahtar acik={!!destekSecili[k.anahtar]} onChange={v => setDestekSecili(p => ({ ...p, [k.anahtar]: v }))} baslik={k.etiket} ton="purple" />
+                    </div>
+                  ))}
+                </div>
+              ) : secenekler.length > 1 ? (
                 <select className={inputClass} value={secili?.value} onChange={e => setSeciliDeger(e.target.value)}>
                   {secenekler.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
