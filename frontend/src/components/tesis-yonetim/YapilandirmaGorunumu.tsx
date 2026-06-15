@@ -98,7 +98,6 @@ export const YapilandirmaGorunumu = ({
 
       {/* Sağ: tek form (tanım + politika + çalışma saatleri) */}
       <form className="space-y-6" onSubmit={handleSave}>
-        <div className="grid gap-6 items-start xl:grid-cols-2">
         {/* Tanım */}
         <section className="rounded-3xl p-5" style={panelStyle}>
           <SectionTitle icon={Plus} title="Tesis Tanımı" subtitle={selectedFacility ? 'Seçili tesisi düzenleyin.' : 'Yeni spor tesisi oluşturun.'} />
@@ -158,7 +157,6 @@ export const YapilandirmaGorunumu = ({
             </span>
           </label>
         </section>
-        </div>
 
         {/* Çalışma saatleri */}
         <section className="rounded-3xl p-5" style={panelStyle}>
