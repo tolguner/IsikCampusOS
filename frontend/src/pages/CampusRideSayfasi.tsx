@@ -382,23 +382,50 @@ export const CampusRideSayfasi = () => {
         </section>
       )}
 
-      {aktifSekme === 'benim' && (
-        <section className="grid gap-5 lg:grid-cols-3">
-          <ListePanel baslik="İlanlarım" bos="Henüz ilanınız yok.">
-            {benimIlanlarim.map(i => <IlanKarti key={i.id} ilan={i} kompakt onIptal={() => ilanIptal(i.id)} />)}
-          </ListePanel>
-          <ListePanel baslik="Başvurularım" bos="Henüz başvurunuz yok.">
-            {taleplerim.map(t => (
-              <TalepSatiri key={t.id} talep={t} onIptal={() => talepIptal(t.id)} onTamamla={() => talepTamamla(t.id)} onPuanla={() => puanla(t.id, 5, 'Güvenli ve zamanında.')} onSikayet={() => sikayetEt(t.id, 'DIGER', 'İnceleme rica ederim.')} />
-            ))}
-          </ListePanel>
-          <ListePanel baslik="Sürücü Talepleri" bos="İlanlarınıza gelen talep yok.">
-            {surucuTalepleri.map(t => (
-              <TalepSatiri key={t.id} talep={t} onKabul={() => talepKabul(t.id)} onRed={() => talepRed(t.id, 'Sürücü tarafından uygun bulunmadı.')} onTamamla={() => talepTamamla(t.id)} />
-            ))}
-          </ListePanel>
-        </section>
-      )}
+      {aktifSekme === 'benim' && (() => {
+        const ilanAktif = (d: string) => d === 'AKTIF' || d === 'DOLU';
+        const talepAktif = (d: string) => d === 'BEKLEMEDE' || d === 'KABUL_EDILDI';
+        return (
+          <div className="space-y-8">
+            <section className="grid gap-5 lg:grid-cols-3">
+              <ListePanel baslik="İlanlarım" bos="Aktif ilanınız yok.">
+                {benimIlanlarim.filter(i => ilanAktif(i.durum)).map(i => <IlanKarti key={i.id} ilan={i} kompakt onIptal={() => ilanIptal(i.id)} />)}
+              </ListePanel>
+              <ListePanel baslik="Başvurularım" bos="Aktif başvurunuz yok.">
+                {taleplerim.filter(t => talepAktif(t.durum)).map(t => (
+                  <TalepSatiri key={t.id} talep={t} onIptal={() => talepIptal(t.id)} onTamamla={() => talepTamamla(t.id)} onPuanla={() => puanla(t.id, 5, 'Güvenli ve zamanında.')} onSikayet={() => sikayetEt(t.id, 'DIGER', 'İnceleme rica ederim.')} />
+                ))}
+              </ListePanel>
+              <ListePanel baslik="Sürücü Talepleri" bos="İlanlarınıza gelen aktif talep yok.">
+                {surucuTalepleri.filter(t => talepAktif(t.durum)).map(t => (
+                  <TalepSatiri key={t.id} talep={t} onKabul={() => talepKabul(t.id)} onRed={() => talepRed(t.id, 'Sürücü tarafından uygun bulunmadı.')} onTamamla={() => talepTamamla(t.id)} />
+                ))}
+              </ListePanel>
+            </section>
+
+            <section>
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-wide text-white/40">
+                <Clock className="h-4 w-4" /> Geçmiş
+              </h2>
+              <div className="grid gap-5 lg:grid-cols-3">
+                <ListePanel baslik="Geçmiş İlanlarım" bos="Geçmiş ilan yok.">
+                  {benimIlanlarim.filter(i => !ilanAktif(i.durum)).map(i => <IlanKarti key={i.id} ilan={i} kompakt />)}
+                </ListePanel>
+                <ListePanel baslik="Geçmiş Başvurularım" bos="Geçmiş başvuru yok.">
+                  {taleplerim.filter(t => !talepAktif(t.durum)).map(t => (
+                    <TalepSatiri key={t.id} talep={t} onPuanla={() => puanla(t.id, 5, 'Güvenli ve zamanında.')} onSikayet={() => sikayetEt(t.id, 'DIGER', 'İnceleme rica ederim.')} />
+                  ))}
+                </ListePanel>
+                <ListePanel baslik="Geçmiş Sürücü Talepleri" bos="Geçmiş talep yok.">
+                  {surucuTalepleri.filter(t => !talepAktif(t.durum)).map(t => (
+                    <TalepSatiri key={t.id} talep={t} />
+                  ))}
+                </ListePanel>
+              </div>
+            </section>
+          </div>
+        );
+      })()}
     </div>
   );
 };
