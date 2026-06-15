@@ -192,6 +192,7 @@ interface YolculukState {
   populerNoktalariGetir: () => Promise<void>;
   ilanAra: (params: Record<string, string | number | boolean | undefined>) => Promise<void>;
   ilanOlustur: (form: YolculukIlaniFormu) => Promise<boolean>;
+  ilanIptal: (ilanId: string) => Promise<void>;
   benimVerilerimiGetir: () => Promise<void>;
   dogrulamaBasvur: (form: DogrulamaFormu) => Promise<boolean>;
   araclarimGetir: () => Promise<void>;
@@ -389,6 +390,16 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
   talepRed: async (talepId, neden) => {
     await api.post(`/yolculuklar/talepler/${talepId}/red`, { not: neden });
     await get().benimVerilerimiGetir();
+  },
+
+  ilanIptal: async (ilanId) => {
+    try {
+      await api.post(`/yolculuklar/ilanlar/${ilanId}/iptal`);
+      set({ basariMesaji: 'İlan iptal edildi; kabul edilen yolculara bildirim gönderildi.' });
+      await get().benimVerilerimiGetir();
+    } catch (err: any) {
+      set({ hata: hataMesaji(err, 'İlan iptal edilemedi.') });
+    }
   },
 
   talepIptal: async (talepId) => {

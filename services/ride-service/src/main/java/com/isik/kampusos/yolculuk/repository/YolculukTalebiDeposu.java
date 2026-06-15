@@ -16,4 +16,6 @@ public interface YolculukTalebiDeposu extends JpaRepository<YolculukTalebi, Stri
 
     Optional<YolculukTalebi> findByIlanIdAndYolcuKullaniciIdAndDurumIn(
             String ilanId, String yolcuKullaniciId, Collection<YolculukTalebi.TalepDurumu> durumlar);
+
+    List<YolculukTalebi> findByIlanIdAndDurumIn(String ilanId, Collection<YolculukTalebi.TalepDurumu> durumlar);
 }

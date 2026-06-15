@@ -44,7 +44,7 @@ export const CampusRideSayfasi = () => {
   const {
     ilanlar, benimIlanlarim, taleplerim, surucuTalepleri, dogrulama, populerNoktalar, araclar,
     isLoading, hata, basariMesaji,
-    ilanAra, ilanOlustur, benimVerilerimiGetir, populerNoktalariGetir, araclarimGetir, rotaOnizle,
+    ilanAra, ilanOlustur, ilanIptal, benimVerilerimiGetir, populerNoktalariGetir, araclarimGetir, rotaOnizle,
     ilanaKatil, talepKabul, talepRed, talepIptal, talepTamamla, puanla, sikayetEt, temizleMesajlar,
   } = useYolculukDeposu();
 
@@ -385,7 +385,7 @@ export const CampusRideSayfasi = () => {
       {aktifSekme === 'benim' && (
         <section className="grid gap-5 lg:grid-cols-3">
           <ListePanel baslik="İlanlarım" bos="Henüz ilanınız yok.">
-            {benimIlanlarim.map(i => <IlanKarti key={i.id} ilan={i} kompakt />)}
+            {benimIlanlarim.map(i => <IlanKarti key={i.id} ilan={i} kompakt onIptal={() => ilanIptal(i.id)} />)}
           </ListePanel>
           <ListePanel baslik="Başvurularım" bos="Henüz başvurunuz yok.">
             {taleplerim.map(t => (
@@ -522,9 +522,17 @@ const DurumSatiri = ({ etiket, tamam, bekliyor, metin }: { etiket: string; tamam
   </div>
 );
 
-const IlanKarti = ({ ilan, onBasvur, kompakt }: { ilan: YolculukIlani; onBasvur?: () => void; kompakt?: boolean }) => {
+const ILAN_DURUM: Record<string, { etiket: string; sinif: string }> = {
+  AKTIF: { etiket: 'Aktif', sinif: 'border-emerald-300/25 bg-emerald-500/10 text-emerald-200' },
+  DOLU: { etiket: 'Dolu', sinif: 'border-amber-300/25 bg-amber-500/10 text-amber-200' },
+  IPTAL: { etiket: 'İptal edildi', sinif: 'border-red-300/25 bg-red-500/10 text-red-200' },
+  TAMAMLANDI: { etiket: 'Tamamlandı', sinif: 'border-white/15 bg-white/5 text-white/50' },
+};
+
+const IlanKarti = ({ ilan, onBasvur, onIptal, kompakt }: { ilan: YolculukIlani; onBasvur?: () => void; onIptal?: () => void; kompakt?: boolean }) => {
   const duraklar = ilan.duraklar ?? [];
   const bos = ilan.koltukSayisi - ilan.kabulEdilenKoltukSayisi;
+  const iptalEdilebilir = ilan.durum === 'AKTIF' || ilan.durum === 'DOLU';
   return (
     <motion.article initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
       <div className="flex items-start justify-between gap-3">
@@ -532,7 +540,9 @@ const IlanKarti = ({ ilan, onBasvur, kompakt }: { ilan: YolculukIlani; onBasvur?
           <h3 className="text-base font-black text-white">{ilan.baslangicBasligi} → {ilan.varisBasligi}</h3>
           <p className="mt-1 flex items-center gap-1.5 text-xs text-white/45"><CalendarClock className="h-3.5 w-3.5" /> {new Date(ilan.kalkisZamani).toLocaleString('tr-TR')}</p>
         </div>
-        <span className="rounded-xl border border-cyan-300/20 bg-cyan-500/10 px-2.5 py-1 text-xs font-black text-cyan-100">{ilan.uygunlukSkoru ?? 0} skor</span>
+        {kompakt
+          ? <span className={`rounded-xl border px-2.5 py-1 text-xs font-black ${ILAN_DURUM[ilan.durum]?.sinif ?? 'border-white/15 bg-white/5 text-white/50'}`}>{ILAN_DURUM[ilan.durum]?.etiket ?? ilan.durum}</span>
+          : <span className="rounded-xl border border-cyan-300/20 bg-cyan-500/10 px-2.5 py-1 text-xs font-black text-cyan-100">{ilan.uygunlukSkoru ?? 0} skor</span>}
       </div>
       <div className="mt-4 flex flex-wrap gap-2 text-xs">
         <Bilgi icon={<Users className="h-3.5 w-3.5" />} text={`${bos} boş koltuk`} />
@@ -554,6 +564,14 @@ const IlanKarti = ({ ilan, onBasvur, kompakt }: { ilan: YolculukIlani; onBasvur?
       {onBasvur && (
         <button onClick={onBasvur} className="mt-5 w-full rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-black text-white hover:bg-cyan-400">
           Katılım İsteği Gönder
+        </button>
+      )}
+      {onIptal && iptalEdilebilir && (
+        <button
+          onClick={() => { if (window.confirm('İlanı iptal etmek istediğinize emin misiniz? Kabul edilen yolculara bildirim gönderilecek.')) onIptal(); }}
+          className="mt-4 inline-flex items-center gap-1.5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-2.5 text-sm font-black text-red-200 hover:bg-red-500/20"
+        >
+          <X className="h-4 w-4" /> İlanı İptal Et
         </button>
       )}
     </motion.article>

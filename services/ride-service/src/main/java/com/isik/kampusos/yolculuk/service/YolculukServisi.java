@@ -35,6 +35,7 @@ public class YolculukServisi {
     private final PopulerNoktaServisi populerNoktaServisi;
     private final AracDeposu aracDeposu;
     private final YolculukLogServisi logServisi;
+    private final com.isik.kampusos.yolculuk.messaging.BildirimYayinlayici bildirimYayinlayici;
 
     public List<YolculukIlani> ilanAra(YolculukAramaTalebi arama) {
         LocalDate tarih = arama.getTarih() != null ? arama.getTarih() : LocalDate.now();
@@ -209,11 +210,26 @@ public class YolculukServisi {
         ilan.setIptalTarihi(LocalDateTime.now());
         YolculukIlani saved = ilanDeposu.save(ilan);
 
+        // Aktif yolcuların (kabul edilmiş + bekleyen) taleplerini iptal et ve her birine bildir.
+        List<YolculukTalebi> etkilenenler = talepDeposu.findByIlanIdAndDurumIn(saved.getId(),
+                List.of(YolculukTalebi.TalepDurumu.KABUL_EDILDI, YolculukTalebi.TalepDurumu.BEKLEMEDE));
+        for (YolculukTalebi talep : etkilenenler) {
+            talep.setDurum(YolculukTalebi.TalepDurumu.IPTAL);
+            talep.setRedNedeni("Sürücü ilanı iptal etti.");
+            talep.setIptalTarihi(LocalDateTime.now());
+            talepDeposu.save(talep);
+            bildirimYayinlayici.kullaniciyaBildir(
+                    talep.getYolcuKullaniciId(),
+                    "Yolculuk iptal edildi",
+                    saved.getBaslangicBasligi() + " → " + saved.getVarisBasligi()
+                            + " yolculuğu sürücü tarafından iptal edildi.");
+        }
+
         logServisi.logEkle(
                 surucuId,
                 "ILAN_IPTAL_EDILDI",
                 saved.getId(),
-                "İlan iptal edildi."
+                "İlan iptal edildi. Bilgilendirilen yolcu sayısı: " + etkilenenler.size()
         );
 
         return saved;
