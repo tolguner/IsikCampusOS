@@ -23,8 +23,8 @@ import { Anahtar } from '../components/ortak/Anahtar';
 import { KonumSecici } from '../components/kulup-paneli/KonumSecici';
 import { polylineCoz } from '../lib/rota';
 
-const KAMPUS: Nokta = { ad: 'İşık Üniversitesi Şile Kampüsü', enlem: 41.1762, boylam: 29.6128 };
-const VARSAYILAN_VARIS: Nokta = { ad: 'Kadıköy', enlem: 40.9909, boylam: 29.0254 };
+const KAMPUS: Nokta = { ad: 'Işık Üniversitesi Şile Kampüsü', enlem: 41.1762, boylam: 29.6128 };
+const VARSAYILAN_VARIS: Nokta = { ad: 'Üsküdar', enlem: 41.0275, boylam: 29.0153 };
 
 const bugun = () => new Date().toISOString().slice(0, 10);
 const tarihSaatVarsayilan = () => `${bugun()}T08:30`;
