@@ -254,11 +254,6 @@ export const CampusRideSayfasi = () => {
                 <label className="block">
                   <span className="mb-1 block text-xs font-bold text-white/45">Kalkış tarihi & saati</span>
                   <input className="ride-input" type="datetime-local" value={form.kalkisZamani} onChange={e => setForm(f => ({ ...f, kalkisZamani: e.target.value }))} />
-                  {tahminiVaris && (
-                    <span className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-cyan-200/80">
-                      <Clock className="h-3 w-3" /> Tahmini varış: {tahminiVaris}
-                    </span>
-                  )}
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-xs font-bold text-white/45">Boş koltuk sayısı</span>
@@ -332,6 +327,24 @@ export const CampusRideSayfasi = () => {
                   baslik="Yolcular rota üzerindeki ek biniş/iniş noktalarını önerebilir"
                 />
               </div>
+              {/* Yolculuk özeti — seçilen rota, saat ve ücret bilgilerinin derli toplu görünümü */}
+              <div className="mt-5 rounded-2xl border border-cyan-300/20 bg-cyan-500/[0.06] p-4">
+                <p className="mb-3 flex items-center gap-2 text-sm font-black text-cyan-100">
+                  <CarFront className="h-4 w-4" /> Yolculuk Özeti
+                </p>
+                <div className="grid gap-x-6 gap-y-2.5 text-sm sm:grid-cols-2">
+                  <OzetSatir icon={<MapPin className="h-3.5 w-3.5" />} label="Güzergah" value={`${ilanBaslangic.ad} → ${ilanVaris.ad}`} />
+                  <OzetSatir icon={<CalendarClock className="h-3.5 w-3.5" />} label="Kalkış"
+                    value={form.kalkisZamani ? new Date(form.kalkisZamani).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'} />
+                  <OzetSatir icon={<Clock className="h-3.5 w-3.5" />} label="Tahmini varış" value={tahminiVaris ?? 'Rota hesaplanıyor…'} />
+                  <OzetSatir icon={<Flag className="h-3.5 w-3.5" />} label="Süre / mesafe"
+                    value={anaRota ? `${anaRota.toplamDakika} dk · ${anaRota.mesafeKm} km` : '—'} />
+                  <OzetSatir icon={<Users className="h-3.5 w-3.5" />} label="Boş koltuk" value={`${form.koltukSayisi} koltuk`} />
+                  <OzetSatir icon={<CreditCard className="h-3.5 w-3.5" />} label="Ücret"
+                    value={form.ucretTipi === 'UCRETSIZ' ? 'Ücretsiz' : `${form.kisiBasiUcret} ₺ / kişi`} />
+                </div>
+              </div>
+
               <button disabled={!ilanAcabilir || isLoading} onClick={ilanKaydet} className="mt-5 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40">
                 İlanı Yayınla
               </button>
@@ -527,6 +540,14 @@ const IlanKarti = ({ ilan, onBasvur, kompakt }: { ilan: YolculukIlani; onBasvur?
 
 const Bilgi = ({ icon, text }: { icon: ReactNode; text: string }) => (
   <span className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1 font-bold text-white/55">{icon}{text}</span>
+);
+
+const OzetSatir = ({ icon, label, value }: { icon: ReactNode; label: string; value: string }) => (
+  <div className="flex items-center gap-2">
+    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-cyan-500/15 text-cyan-200">{icon}</span>
+    <span className="text-white/45">{label}:</span>
+    <span className="min-w-0 truncate font-bold text-white/85">{value}</span>
+  </div>
 );
 
 const ListePanel = ({ baslik, bos, children }: { baslik: string; bos: string; children: ReactNode }) => (
