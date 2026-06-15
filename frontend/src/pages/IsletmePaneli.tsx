@@ -18,8 +18,13 @@ export const IsletmePaneli = () => {
   const user = useKimlikDeposu(state => state.user);
   const sahipMi = rolleriAyir(user?.roller).includes(YETKILER.ISLETME_YONETICISI);
   const [sekme, setSekme] = useState<Sekme>('siparisler');
+  const [yuklendi, setYuklendi] = useState(false);
 
-  useEffect(() => { saticimiGetir(); }, [saticimiGetir]);
+  // Yönetici değiştiğinde eski yöneticinin işletmesi başkasına geçer; bu hesap aktif olsa
+  // bile artık bir işletmeye bağlı olmayabilir → dostane boş-durum gösterilir.
+  const isletmeYok = yuklendi && !satici;
+
+  useEffect(() => { saticimiGetir().finally(() => setYuklendi(true)); }, [saticimiGetir]);
   useEffect(() => () => clearMessages(), [clearMessages]);
 
   const acikDurumDegistir = () => {
@@ -66,30 +71,46 @@ export const IsletmePaneli = () => {
         )}
       </div>
 
-      <MesajBildirimi hata={error} basari={successMessage} onKapat={clearMessages} />
+      {!isletmeYok && <MesajBildirimi hata={error} basari={successMessage} onKapat={clearMessages} />}
 
-      {/* Sekmeler */}
-      <div className="flex gap-2 border-b border-white/8 pb-px">
-        {sekmeler.map(s => (
-          <button
-            key={s.id}
-            onClick={() => setSekme(s.id)}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-bold transition-colors border-b-2 ${sekme === s.id ? 'text-white border-orange-400' : 'text-white/45 border-transparent hover:text-white/70'}`}
-          >
-            {s.ikon} {s.etiket}
-          </button>
-        ))}
-      </div>
+      {isletmeYok ? (
+        /* Hesap aktif ama bağlı işletme yok (ör. yönetici değiştirildi) — dostane boş-durum */
+        <div className="rounded-3xl border border-dashed border-white/12 bg-white/[0.02] px-6 py-16 text-center">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-orange-500/10 border border-orange-400/20 text-orange-200">
+            <Store className="h-7 w-7" />
+          </div>
+          <h2 className="text-lg font-black text-white">Şu an bir işletmeye atanmış değilsiniz</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-white/45">
+            Bir işletmenin yöneticisi veya personeli olarak atandığınızda paneliniz burada görünecektir.
+            Bilgi için yetkili birimle (Destek Hizmetleri Müdürlüğü) görüşün.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Sekmeler */}
+          <div className="flex gap-2 border-b border-white/8 pb-px">
+            {sekmeler.map(s => (
+              <button
+                key={s.id}
+                onClick={() => setSekme(s.id)}
+                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-bold transition-colors border-b-2 ${sekme === s.id ? 'text-white border-orange-400' : 'text-white/45 border-transparent hover:text-white/70'}`}
+              >
+                {s.ikon} {s.etiket}
+              </button>
+            ))}
+          </div>
 
-      {/* İçerik */}
-      <div>
-        {sekme === 'siparisler' && <SiparislerSekmesi />}
-        {sahipMi && sekme === 'menu' && <MenuSekmesi />}
-        {sahipMi && sekme === 'kampanyalar' && <KampanyalarSekmesi />}
-        {sahipMi && sekme === 'personel' && <PersonelSekmesi />}
-        {sahipMi && sekme === 'ciro' && <CiroSekmesi />}
-        {sahipMi && sekme === 'ayarlar' && <AyarlarSekmesi />}
-      </div>
+          {/* İçerik */}
+          <div>
+            {sekme === 'siparisler' && <SiparislerSekmesi />}
+            {sahipMi && sekme === 'menu' && <MenuSekmesi />}
+            {sahipMi && sekme === 'kampanyalar' && <KampanyalarSekmesi />}
+            {sahipMi && sekme === 'personel' && <PersonelSekmesi />}
+            {sahipMi && sekme === 'ciro' && <CiroSekmesi />}
+            {sahipMi && sekme === 'ayarlar' && <AyarlarSekmesi />}
+          </div>
+        </>
+      )}
     </div>
   );
 };
