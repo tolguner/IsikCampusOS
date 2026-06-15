@@ -15,6 +15,7 @@ import {
   QrCode,
 } from 'lucide-react';
 import type { Kulup } from '../../depolar/kulupDeposu';
+import { Anahtar } from '../ortak/Anahtar';
 import { useEtkinlikDeposu, type Etkinlik } from '../../depolar/etkinlikDeposu';
 import { YOLLAR } from '../../yardimcilar/yollar';
 import {
@@ -470,11 +471,8 @@ export const EtkinliklerSekmesi = ({ selectedClub }: EtkinliklerSekmesiProps) =>
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <label className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-white/70 flex flex-col gap-2">
-            <div className="flex items-center">
-              <input type="checkbox" checked={eventForm.hasCapacityLimit} onChange={e => setEventForm(prev => ({ ...prev, hasCapacityLimit: e.target.checked }))} className="mr-2" />
-              Sınırlı kontenjan
-            </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-white/70 flex flex-col gap-2">
+            <Anahtar acik={eventForm.hasCapacityLimit} onChange={v => setEventForm(prev => ({ ...prev, hasCapacityLimit: v }))} baslik="Sınırlı kontenjan" />
             {eventForm.hasCapacityLimit && (
               <div className="flex items-center gap-1 bg-[#0c0c1c] border border-white/10 rounded-xl p-1 w-full max-w-[200px] mt-1">
                 <button
@@ -506,12 +504,9 @@ export const EtkinliklerSekmesi = ({ selectedClub }: EtkinliklerSekmesiProps) =>
                 </button>
               </div>
             )}
-          </label>
-          <label className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-white/70 flex flex-col gap-2">
-            <div className="flex items-center">
-              <input type="checkbox" checked={eventForm.paid} onChange={e => setEventForm(prev => ({ ...prev, paid: e.target.checked }))} className="mr-2" />
-              Ücretli etkinlik
-            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-white/70 flex flex-col gap-2">
+            <Anahtar acik={eventForm.paid} onChange={v => setEventForm(prev => ({ ...prev, paid: v }))} baslik="Ücretli etkinlik" />
             {eventForm.paid && (
               <div className="space-y-3 mt-1">
                 <div className="flex items-center gap-1 bg-[#0c0c1c] border border-white/10 rounded-xl p-1 w-full max-w-[200px]">
@@ -550,34 +545,26 @@ export const EtkinliklerSekmesi = ({ selectedClub }: EtkinliklerSekmesiProps) =>
                 <textarea value={eventForm.paymentInstructions} onChange={e => setEventForm(prev => ({ ...prev, paymentInstructions: e.target.value }))} className={`${textareaClass}`} placeholder="Ödeme açıklaması / açıklama kodu" />
               </div>
             )}
-          </label>
+          </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <label className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-white/70">
-            <input type="checkbox" checked={eventForm.qrCheckInEnabled} onChange={e => setEventForm(prev => ({ ...prev, qrCheckInEnabled: e.target.checked }))} className="mr-2" />
-            QR katılım doğrulama
-          </label>
-          <label className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-white/70">
-            <input type="checkbox" checked={eventForm.certificateEnabled} onChange={e => setEventForm(prev => ({ ...prev, certificateEnabled: e.target.checked }))} className="mr-2" />
-            Sertifikalı etkinlik
+          <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-white/70">
+            <Anahtar acik={eventForm.qrCheckInEnabled} onChange={v => setEventForm(prev => ({ ...prev, qrCheckInEnabled: v }))} baslik="QR katılım doğrulama" />
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-white/70">
+            <Anahtar acik={eventForm.certificateEnabled} onChange={v => setEventForm(prev => ({ ...prev, certificateEnabled: v }))} baslik="Sertifikalı etkinlik" />
             {eventForm.certificateEnabled && (
               <input value={eventForm.certificateTitle} onChange={e => setEventForm(prev => ({ ...prev, certificateTitle: e.target.value }))} className={`${inputClass} mt-3`} placeholder="Sertifika başlığı" />
             )}
-          </label>
+          </div>
         </div>
         <section className="rounded-3xl border border-white/10 bg-white/[0.025] p-4 space-y-3">
-          <label className="flex items-start gap-3 text-sm font-semibold text-white/70">
-            <input
-              type="checkbox"
-              checked={eventForm.reminderEnabled}
-              onChange={e => setEventForm(prev => ({ ...prev, reminderEnabled: e.target.checked }))}
-              className="mt-1"
-            />
-            <span>
-              <span className="block font-black text-white">Zamanlanmış hatırlatma duyuruları</span>
-              <span className="block text-xs text-white/40 mt-1">Seçilen zamanlarda kayıt olan öğrencilere otomatik bildirim gider.</span>
-            </span>
-          </label>
+          <Anahtar
+            acik={eventForm.reminderEnabled}
+            onChange={v => setEventForm(prev => ({ ...prev, reminderEnabled: v }))}
+            baslik="Zamanlanmış hatırlatma duyuruları"
+            aciklama="Seçilen zamanlarda kayıt olan öğrencilere otomatik bildirim gider."
+          />
           {eventForm.reminderEnabled && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {reminderOptions.map(option => {
