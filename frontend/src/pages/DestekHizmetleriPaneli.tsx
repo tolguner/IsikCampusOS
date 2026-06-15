@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Store, ScrollText, ClipboardCheck } from 'lucide-react';
+import { Store, ScrollText, ClipboardCheck, Megaphone } from 'lucide-react';
 import { SaticilarSekmesi } from '../components/yonetim/SaticilarSekmesi';
 import { DegisiklikTalepleriSekmesi } from '../components/yonetim/DegisiklikTalepleriSekmesi';
+import { TopluDuyuruSekmesi } from '../components/yonetim/TopluDuyuruSekmesi';
 import { useAdminSaticiDeposu } from '../depolar/adminSaticiDeposu';
 import { ModulSekmeleri } from '../components/yonetim/ModulSekmeleri';
 import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
 
-type Sekme = 'isletmeler' | 'talepler' | 'loglar';
+type Sekme = 'isletmeler' | 'talepler' | 'duyuru' | 'loglar';
 
 const VARLIK_ETIKET: Record<string, string> = {
   ISLETME: 'İşletme', PERSONEL: 'Personel', SIPARIS: 'Sipariş', DEGISIKLIK_TALEBI: 'Değişiklik Talebi',
@@ -51,6 +52,7 @@ export const DestekHizmetleriPaneli = () => {
         sekmeler={[
           { anahtar: 'isletmeler', baslik: 'İşletmeler', aciklama: 'İşletme listesi, sahip ve personel yönetimi', ikon: Store },
           { anahtar: 'talepler', baslik: 'Bilgi Değişikliği Talepleri', aciklama: 'Bekleyen bilgi-değişikliği onayları', ikon: ClipboardCheck, rozet: bekleyenGrupSayisi },
+          { anahtar: 'duyuru', baslik: 'Toplu Duyuru', aciklama: 'Öğrenci ve işletmelere kurumsal duyuru', ikon: Megaphone },
           { anahtar: 'loglar', baslik: 'İşletme Logları', aciklama: 'İşletme işlem denetim kayıtları', ikon: ScrollText },
         ]}
       />
@@ -60,6 +62,8 @@ export const DestekHizmetleriPaneli = () => {
       {sekme === 'isletmeler' && <SaticilarSekmesi />}
 
       {sekme === 'talepler' && <DegisiklikTalepleriSekmesi />}
+
+      {sekme === 'duyuru' && <TopluDuyuruSekmesi />}
 
       {sekme === 'loglar' && (
         <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.025]">

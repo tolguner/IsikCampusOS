@@ -61,6 +61,8 @@ public class BildirimAkisYoneticisi {
             case TUM_OGRENCILER -> abone.roller().contains("ROLE_STUDENT");
             case SKS_YONETICILERI -> abone.roller().contains("ROLE_SKS_ADMIN") || abone.roller().contains("ROLE_ADMIN");
             case TESIS_YONETICILERI -> abone.roller().contains("ROLE_FACILITY_ADMIN") || abone.roller().contains("ROLE_ADMIN");
+            case ISLETME_YONETICILERI -> abone.roller().contains("ROLE_VENDOR_ADMIN") || abone.roller().contains("ROLE_ADMIN");
+            case ISLETME_PERSONELLERI -> abone.roller().contains("ROLE_VENDOR_STAFF") || abone.roller().contains("ROLE_ADMIN");
             case KULUP_BASKANLARI -> false; // başkanlara KULLANICI olarak fan-out edilir
         };
     }

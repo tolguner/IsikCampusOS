@@ -1,6 +1,7 @@
 package com.isik.kampusos.bildirim.controller;
 
 import com.isik.kampusos.bildirim.dto.BildirimYaniti;
+import com.isik.kampusos.bildirim.dto.DestekDuyuruTalebi;
 import com.isik.kampusos.bildirim.dto.OgrenciDuyuruTalebi;
 import com.isik.kampusos.bildirim.messaging.BildirimAkisYoneticisi;
 import com.isik.kampusos.bildirim.model.Bildirim;
@@ -53,6 +54,27 @@ public class BildirimDenetleyicisi {
                 talep.getBaglantiEtiketi(), talep.getResimUrl(), kitle, auth.getName(), gonderenAdi);
         String hedef = kitle == Bildirim.HedefKitle.TUM_KULLANICILAR ? "tüm kullanıcılara" : "tüm öğrencilere";
         return ResponseEntity.ok(Map.of("mesaj", "Duyuru " + hedef + " gönderildi.", "gonderen", gonderenAdi));
+    }
+
+    /** Destek Hizmetleri Müdürlüğü: birden çok hedef kitleye (öğrenci / işletme yön. / işletme personeli) toplu duyuru. */
+    @PostMapping("/destek-duyuru")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPPORT_SERVICES_ADMIN','ROLE_ADMIN')")
+    public ResponseEntity<Map<String, String>> destekDuyuruGonder(Authentication auth,
+                                                                  @RequestBody DestekDuyuruTalebi talep) {
+        List<String> izinli = List.of("TUM_OGRENCILER", "ISLETME_YONETICILERI", "ISLETME_PERSONELLERI");
+        List<Bildirim.HedefKitle> kitleler = (talep.getHedefKitleler() == null ? List.<String>of() : talep.getHedefKitleler()).stream()
+                .filter(k -> k != null && izinli.contains(k.trim().toUpperCase()))
+                .map(k -> Bildirim.HedefKitle.valueOf(k.trim().toUpperCase()))
+                .distinct()
+                .toList();
+        if (kitleler.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "En az bir hedef kitle seçilmelidir.");
+        }
+        String gonderenAdi = "Destek Hizmetleri Müdürlüğü";
+        kitleler.forEach(kitle -> bildirimServisi.topluDuyuruOlustur(
+                talep.getBaslik(), talep.getMesaj(), talep.getBaglantiUrl(),
+                talep.getBaglantiEtiketi(), talep.getResimUrl(), kitle, auth.getName(), gonderenAdi));
+        return ResponseEntity.ok(Map.of("mesaj", "Duyuru " + kitleler.size() + " hedef kitleye gönderildi.", "gonderen", gonderenAdi));
     }
 
     /** Gönderenin kurumsal kimliğini JWT rolünden çözer (öğrenciye gösterilir). */

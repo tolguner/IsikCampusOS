@@ -117,6 +117,12 @@ public class BildirimServisi {
         if (yetkiler != null && (yetkiler.contains("ROLE_FACILITY_ADMIN") || yetkiler.contains("ROLE_ADMIN"))) {
             kitleler.add(Bildirim.HedefKitle.TESIS_YONETICILERI);
         }
+        if (yetkiler != null && (yetkiler.contains("ROLE_VENDOR_ADMIN") || yetkiler.contains("ROLE_ADMIN"))) {
+            kitleler.add(Bildirim.HedefKitle.ISLETME_YONETICILERI);
+        }
+        if (yetkiler != null && (yetkiler.contains("ROLE_VENDOR_STAFF") || yetkiler.contains("ROLE_ADMIN"))) {
+            kitleler.add(Bildirim.HedefKitle.ISLETME_PERSONELLERI);
+        }
         return kitleler;
     }
 
