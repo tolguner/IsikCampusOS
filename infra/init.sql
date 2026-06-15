@@ -9,3 +9,4 @@ CREATE DATABASE ride_db;
 CREATE DATABASE club_db;
 CREATE DATABASE projectmatch_db;
 CREATE DATABASE microjob_db;
+CREATE DATABASE mesaj_db;

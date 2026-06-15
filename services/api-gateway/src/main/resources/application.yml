@@ -210,6 +210,14 @@ spring:
           filters:
             - KimlikDogrulama
 
+        # Genel mesajlaşma modülü (message-service)
+        - id: message-service
+          uri: lb://MESSAGE-SERVICE
+          predicates:
+            - Path=/api/v1/mesajlar/**
+          filters:
+            - KimlikDogrulama
+
         - id: frontend
           uri: ${FRONTEND_URL:http://localhost:5173}
           predicates:

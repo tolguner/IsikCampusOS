@@ -33,6 +33,7 @@
         <module>services/facility-service</module>
         <module>services/food-service</module>
         <module>services/ride-service</module>
+        <module>services/message-service</module>
     </modules>
 
     <dependencyManagement>

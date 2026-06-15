@@ -254,6 +254,24 @@ services:
     networks:
       - campusos-net
 
+  message-service:
+    image: eclipse-temurin:21-jre-alpine
+    container_name: campusos-message
+    restart: unless-stopped
+    depends_on:
+      - eureka-server
+      - postgres
+    volumes:
+      - ./services/message-service/target:/app
+    command: sh -c "java -jar /app/*.jar"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/mesaj_db
+      - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+    networks:
+      - campusos-net
+
   # FRONTEND — host'a port AÇMAZ; tek giriş noktası API Gateway (8080).
   # Gateway, "/**" isteklerini bu container'a (frontend:5173) proxy'ler.
   frontend:
