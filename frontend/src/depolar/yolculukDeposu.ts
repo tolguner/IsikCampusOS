@@ -154,6 +154,16 @@ export interface Sikayet {
   olusturulmaTarihi: string;
 }
 
+export interface SistemLogu {
+  id: string;
+  islemYapanId: string;
+  islemYapanAdSoyad?: string;
+  hedefId: string;
+  islemTipi: string;
+  mesaj: string;
+  olusturulmaTarihi: string;
+}
+
 export interface YolculukIlaniFormu {
   aracId: string;
   baslangic: Nokta;
@@ -183,6 +193,7 @@ interface YolculukState {
   populerNoktalar: Nokta[];
   araclar: Arac[];
   bekleyenAraclar: Arac[];
+  loglar: SistemLogu[];
   isLoading: boolean;
   hata: string | null;
   basariMesaji: string | null;
@@ -212,6 +223,7 @@ interface YolculukState {
   dogrulamaIncele: (id: string, durum: DogrulamaDurumu, not?: string) => Promise<void>;
   aracIncele: (id: string, durum: AracDurumu, not?: string) => Promise<void>;
   sikayetIncele: (id: string, durum: SikayetDurumu, not?: string) => Promise<void>;
+  loglariGetir: () => Promise<void>;
 }
 
 const hataMesaji = (err: any, fallback: string) =>
@@ -228,6 +240,7 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
   populerNoktalar: [],
   araclar: [],
   bekleyenAraclar: [],
+  loglar: [],
   isLoading: false,
   hata: null,
   basariMesaji: null,
@@ -448,6 +461,13 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
   sikayetIncele: async (id, durum, not) => {
     await api.post(`/yolculuk-yonetim/sikayetler/${id}/incele`, { durum, not });
     await get().adminVerileriniGetir();
+  },
+
+  loglariGetir: async () => {
+    try {
+      const res = await api.get<SistemLogu[]>('/yolculuk-yonetim/loglar');
+      set({ loglar: res.data });
+    } catch { /* sessiz hata */ }
   },
 }));
 

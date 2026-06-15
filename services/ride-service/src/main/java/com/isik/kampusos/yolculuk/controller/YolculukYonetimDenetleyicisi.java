@@ -129,4 +129,18 @@ public class YolculukYonetimDenetleyicisi {
                                                           @RequestBody AdminIncelemeTalebi talep) {
         return ResponseEntity.ok(adminServisi.sikayetIncele(auth.getName(), id, talep));
     }
+
+    @GetMapping("/loglar")
+    @PreAuthorize("hasAnyAuthority('ROLE_RIDE_ADMIN', 'ROLE_BUILDING_SUPPORT_ADMIN', 'ROLE_ADMIN')")
+    public ResponseEntity<List<com.isik.kampusos.yolculuk.model.YolculukSistemLogu>> loglariGetir() {
+        var liste = adminServisi.loglariGetir();
+        var ozetler = kullaniciOzetIstemcisi.ozetler(liste.stream().map(com.isik.kampusos.yolculuk.model.YolculukSistemLogu::getIslemYapanId).toList());
+        liste.forEach(log -> {
+            var o = ozetler.get(log.getIslemYapanId());
+            if (o != null) {
+                log.setIslemYapanAdSoyad(o.adSoyad());
+            }
+        });
+        return ResponseEntity.ok(liste);
+    }
 }

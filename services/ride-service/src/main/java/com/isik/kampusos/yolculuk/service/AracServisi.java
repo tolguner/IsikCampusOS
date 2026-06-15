@@ -20,6 +20,7 @@ import java.util.Locale;
 public class AracServisi {
 
     private final AracDeposu depo;
+    private final YolculukLogServisi logServisi;
 
     public List<Arac> benimAraclarim(String kullaniciId) {
         return depo.findByKullaniciIdOrderByOlusturulmaTarihiDesc(kullaniciId);
@@ -96,7 +97,16 @@ public class AracServisi {
         arac.setAdminNotu(talep.getNot());
         arac.setInceleyenKullaniciId(adminId);
         arac.setIncelenmeTarihi(LocalDateTime.now());
-        return depo.save(arac);
+        Arac saved = depo.save(arac);
+
+        logServisi.logEkle(
+                adminId,
+                "ARAC_INCELEME",
+                saved.getId(),
+                "Araç " + durum + " olarak işaretlendi. Neden/Not: " + (talep.getNot() != null ? talep.getNot() : "-")
+        );
+
+        return saved;
     }
 
     private Arac sahipligiDogrula(String kullaniciId, String id) {

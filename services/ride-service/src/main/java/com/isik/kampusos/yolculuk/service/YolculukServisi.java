@@ -34,6 +34,7 @@ public class YolculukServisi {
     private final RotaIstemcisi rotaIstemcisi;
     private final PopulerNoktaServisi populerNoktaServisi;
     private final AracDeposu aracDeposu;
+    private final YolculukLogServisi logServisi;
 
     public List<YolculukIlani> ilanAra(YolculukAramaTalebi arama) {
         LocalDate tarih = arama.getTarih() != null ? arama.getTarih() : LocalDate.now();
@@ -161,7 +162,16 @@ public class YolculukServisi {
         // Başlangıç/varış noktalarını popüler-nokta sayacına işle.
         populerNoktaServisi.kullanimArttir(talep.getBaslangic());
         populerNoktaServisi.kullanimArttir(talep.getVaris());
-        return ilanDeposu.save(ilan);
+        YolculukIlani saved = ilanDeposu.save(ilan);
+
+        logServisi.logEkle(
+                surucuId,
+                "ILAN_OLUSTURULDU",
+                saved.getId(),
+                talep.getBaslangic().getAd() + " -> " + talep.getVaris().getAd() + " (" + koltukSayisi + " koltuk)"
+        );
+
+        return saved;
     }
 
     /**
@@ -189,7 +199,16 @@ public class YolculukServisi {
         }
         ilan.setDurum(YolculukIlani.IlanDurumu.IPTAL);
         ilan.setIptalTarihi(LocalDateTime.now());
-        return ilanDeposu.save(ilan);
+        YolculukIlani saved = ilanDeposu.save(ilan);
+
+        logServisi.logEkle(
+                surucuId,
+                "ILAN_IPTAL_EDILDI",
+                saved.getId(),
+                "İlan iptal edildi."
+        );
+
+        return saved;
     }
 
     @Transactional

@@ -18,6 +18,7 @@ import java.util.Locale;
 public class YolculukAdminServisi {
 
     private final YolculukSikayetiDeposu sikayetDeposu;
+    private final YolculukLogServisi logServisi;
 
     public List<YolculukSikayeti> sikayetler() {
         return sikayetDeposu.findAllByOrderByOlusturulmaTarihiDesc();
@@ -37,6 +38,19 @@ public class YolculukAdminServisi {
         sikayet.setAdminNotu(talep.getNot());
         sikayet.setInceleyenKullaniciId(adminId);
         sikayet.setIncelenmeTarihi(LocalDateTime.now());
-        return sikayetDeposu.save(sikayet);
+        YolculukSikayeti saved = sikayetDeposu.save(sikayet);
+
+        logServisi.logEkle(
+                adminId,
+                "SIKAYET_INCELEME",
+                saved.getId(),
+                "Şikayet durumu " + durum + " yapıldı. Not: " + (talep.getNot() != null ? talep.getNot() : "-")
+        );
+
+        return saved;
+    }
+
+    public List<com.isik.kampusos.yolculuk.model.YolculukSistemLogu> loglariGetir() {
+        return logServisi.tumLoglar();
     }
 }
