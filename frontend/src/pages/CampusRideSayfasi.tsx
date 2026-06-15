@@ -333,15 +333,19 @@ export const CampusRideSayfasi = () => {
                   <CarFront className="h-4 w-4" /> Yolculuk Özeti
                 </p>
                 <div className="grid gap-x-6 gap-y-2.5 text-sm sm:grid-cols-2">
-                  <OzetSatir icon={<MapPin className="h-3.5 w-3.5" />} label="Güzergah" value={`${ilanBaslangic.ad} → ${ilanVaris.ad}`} />
-                  <OzetSatir icon={<CalendarClock className="h-3.5 w-3.5" />} label="Kalkış"
-                    value={form.kalkisZamani ? new Date(form.kalkisZamani).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'} />
-                  <OzetSatir icon={<Clock className="h-3.5 w-3.5" />} label="Tahmini varış" value={tahminiVaris ?? 'Rota hesaplanıyor…'} />
-                  <OzetSatir icon={<Flag className="h-3.5 w-3.5" />} label="Süre / mesafe"
-                    value={anaRota ? `${anaRota.toplamDakika} dk · ${anaRota.mesafeKm} km` : '—'} />
-                  <OzetSatir icon={<Users className="h-3.5 w-3.5" />} label="Boş koltuk" value={`${form.koltukSayisi} koltuk`} />
-                  <OzetSatir icon={<CreditCard className="h-3.5 w-3.5" />} label="Ücret"
-                    value={form.ucretTipi === 'UCRETSIZ' ? 'Ücretsiz' : `${form.kisiBasiUcret} ₺ / kişi`} />
+                  <div className="space-y-2.5">
+                    <OzetSatir icon={<MapPin className="h-3.5 w-3.5" />} label="Güzergah" value={`${ilanBaslangic.ad} → ${ilanVaris.ad}`} />
+                    <OzetSatir icon={<Users className="h-3.5 w-3.5" />} label="Boş koltuk" value={`${form.koltukSayisi} koltuk`} />
+                    <OzetSatir icon={<CreditCard className="h-3.5 w-3.5" />} label="Ücret"
+                      value={form.ucretTipi === 'UCRETSIZ' ? 'Ücretsiz' : `${form.kisiBasiUcret} ₺ / kişi`} />
+                  </div>
+                  <div className="space-y-2.5">
+                    <OzetSatir icon={<CalendarClock className="h-3.5 w-3.5" />} label="Kalkış"
+                      value={form.kalkisZamani ? new Date(form.kalkisZamani).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'} />
+                    <OzetSatir icon={<Clock className="h-3.5 w-3.5" />} label="Tahmini varış" value={tahminiVaris ?? 'Rota hesaplanıyor…'} />
+                    <OzetSatir icon={<Flag className="h-3.5 w-3.5" />} label="Süre / mesafe"
+                      value={anaRota ? `${anaRota.toplamDakika} dk · ${anaRota.mesafeKm} km` : '—'} />
+                  </div>
                 </div>
               </div>
 
