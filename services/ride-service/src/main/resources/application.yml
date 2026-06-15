@@ -39,10 +39,10 @@ rota:
   osrm:
     url: ${ROTA_OSRM_URL:https://router.project-osrm.org}
 
-# Ehliyet görseli analizi (görüntü-AI). Anahtar yoksa analiz devre dışı kalır;
+# Ehliyet görseli analizi (Google Gemini vision). Anahtar yoksa analiz devre dışı kalır;
 # alanlar elle girilmeye devam eder (akış bozulmaz).
 ehliyet:
   analiz:
     api-key: ${EHLIYET_ANALIZ_API_KEY:}
-    url: ${EHLIYET_ANALIZ_URL:https://api.anthropic.com/v1/messages}
-    model: ${EHLIYET_ANALIZ_MODEL:claude-haiku-4-5}
+    url: ${EHLIYET_ANALIZ_URL:https://generativelanguage.googleapis.com/v1beta}
+    model: ${EHLIYET_ANALIZ_MODEL:gemini-2.0-flash}

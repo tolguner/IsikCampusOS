@@ -22,7 +22,7 @@ public class KullaniciOzetIstemcisi {
     private final RestClient restClient = RestClient.create();
 
     public record KullaniciOzeti(String id, String ad, String soyad, String ogrenciNumarasi,
-                                 String telefon, String eposta) {
+                                 String telefon, String eposta, String tcKimlikMaskeli) {
         public String adSoyad() {
             return ((ad == null ? "" : ad) + " " + (soyad == null ? "" : soyad)).trim();
         }

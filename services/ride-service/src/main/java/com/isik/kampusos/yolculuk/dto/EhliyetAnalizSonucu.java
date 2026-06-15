@@ -18,11 +18,15 @@ public class EhliyetAnalizSonucu {
     private String ehliyetNo;
     private String verilisTarihi;     // ISO yyyy-MM-dd (model çıktısı)
     private String gecerlilikTarihi;  // ISO yyyy-MM-dd
+    private String tcNo;              // belgede okunan TC kimlik no (otomatik onay kimlik eşleşmesi için)
+    private String adSoyad;           // belgede okunan ad-soyad (kimlik eşleşmesi için)
     /** Analiz gerçekten çalıştı mı (anahtar var + yanıt alındı)? */
     private boolean analizYapildi;
     private String mesaj;
 
     public static EhliyetAnalizSonucu devreDisi(String mesaj) {
-        return new EhliyetAnalizSonucu(false, null, null, null, null, false, mesaj);
+        EhliyetAnalizSonucu s = new EhliyetAnalizSonucu();
+        s.setMesaj(mesaj);
+        return s;
     }
 }

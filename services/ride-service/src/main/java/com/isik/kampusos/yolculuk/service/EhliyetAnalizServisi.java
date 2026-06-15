@@ -9,15 +9,16 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Yüklenen ehliyet görselini bir görüntü-AI (Anthropic vision) modeline gönderip
- * belgenin ehliyet olup olmadığını ve ehliyet no / veriliş / geçerlilik tarihi /
- * sınıf alanlarını otomatik çıkarır. Anahtar yoksa veya API erişilemezse zarifçe
- * "analiz yapılmadı" döner; başvuran alanları elle girer (akış bozulmaz).
+ * Yüklenen ehliyet görselini Google Gemini vision modeline gönderip belgenin ehliyet
+ * olup olmadığını ve ehliyet no / veriliş / geçerlilik / sınıf / TC no / ad-soyad alanlarını
+ * otomatik çıkarır. Anahtar yoksa veya API erişilemezse zarifçe "analiz yapılmadı" döner;
+ * başvuran alanları elle girer (akış bozulmaz).
  */
 @Service
 @Slf4j
@@ -33,18 +34,20 @@ public class EhliyetAnalizServisi {
     private static final String YONERGE = """
             Bu bir kullanıcının yüklediği belgenin fotoğrafı. Görevin:
             1) Görselin bir SÜRÜCÜ BELGESİ (ehliyet) olup olmadığını belirle.
-            2) Eğer ehliyetse şu alanları oku: sınıf(lar) (ör. B), belge/ehliyet numarası,
-               veriliş tarihi (Türk ehliyetinde 4a), son geçerlilik tarihi (4b).
-            YALNIZCA aşağıdaki şemada geçerli JSON döndür, başka hiçbir metin ekleme:
+            2) Eğer ehliyetse şu alanları oku: sınıf(lar) (ör. B), belge/ehliyet numarası (alan 5),
+               veriliş tarihi (alan 4a), son geçerlilik tarihi (alan 4b), TC kimlik numarası (alan 4d, 11 hane),
+               ehliyet sahibinin adı ve soyadı (alan 1 ve 2).
+            YALNIZCA şu şemada geçerli JSON döndür, başka metin yok:
             {"ehliyet": true|false, "sinif": "B" veya null, "ehliyetNo": "..." veya null,
-             "verilisTarihi": "YYYY-MM-DD" veya null, "gecerlilikTarihi": "YYYY-MM-DD" veya null}
+             "verilisTarihi": "YYYY-MM-DD" veya null, "gecerlilikTarihi": "YYYY-MM-DD" veya null,
+             "tcNo": "11 haneli" veya null, "adSoyad": "Ad Soyad" veya null}
             Okuyamadığın alanı null bırak. Tarihleri ISO (YYYY-MM-DD) biçimine çevir.
             """;
 
     public EhliyetAnalizServisi(
-            @Value("${ehliyet.analiz.url:https://api.anthropic.com/v1/messages}") String url,
+            @Value("${ehliyet.analiz.url:https://generativelanguage.googleapis.com/v1beta}") String url,
             @Value("${ehliyet.analiz.api-key:}") String apiKey,
-            @Value("${ehliyet.analiz.model:claude-haiku-4-5}") String model) {
+            @Value("${ehliyet.analiz.model:gemini-2.0-flash}") String model) {
         this.apiKey = apiKey;
         this.model = model;
         this.restClient = RestClient.builder().baseUrl(url).build();
@@ -67,24 +70,20 @@ public class EhliyetAnalizServisi {
 
         try {
             Map<String, Object> govde = Map.of(
-                    "model", model,
-                    "max_tokens", 300,
-                    "messages", java.util.List.of(Map.of(
-                            "role", "user",
-                            "content", java.util.List.of(
-                                    Map.of("type", "image", "source", Map.of(
-                                            "type", "base64", "media_type", medyaTipi, "data", base64)),
-                                    Map.of("type", "text", "text", YONERGE)))));
+                    "contents", List.of(Map.of("parts", List.of(
+                            Map.of("inline_data", Map.of("mime_type", medyaTipi, "data", base64)),
+                            Map.of("text", YONERGE)))),
+                    "generationConfig", Map.of("response_mime_type", "application/json", "temperature", 0));
 
             JsonNode yanit = restClient.post()
-                    .header("x-api-key", apiKey)
-                    .header("anthropic-version", "2023-06-01")
+                    .uri("/models/{model}:generateContent?key={key}", model, apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(govde)
                     .retrieve()
                     .body(JsonNode.class);
 
-            String metin = yanit.path("content").path(0).path("text").asText("");
+            String metin = yanit.path("candidates").path(0).path("content")
+                    .path("parts").path(0).path("text").asText("");
             JsonNode j = MAPPER.readTree(jsonCikar(metin));
             EhliyetAnalizSonucu s = new EhliyetAnalizSonucu();
             s.setAnalizYapildi(true);
@@ -93,6 +92,8 @@ public class EhliyetAnalizServisi {
             s.setEhliyetNo(metinVeyaNull(j, "ehliyetNo"));
             s.setVerilisTarihi(metinVeyaNull(j, "verilisTarihi"));
             s.setGecerlilikTarihi(metinVeyaNull(j, "gecerlilikTarihi"));
+            s.setTcNo(metinVeyaNull(j, "tcNo"));
+            s.setAdSoyad(metinVeyaNull(j, "adSoyad"));
             s.setMesaj(s.isEhliyet() ? "Ehliyet doğrulandı." : "Bu görsel bir ehliyet gibi görünmüyor.");
             return s;
         } catch (Exception e) {

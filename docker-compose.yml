@@ -250,7 +250,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ride_db
       - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
       - ROTA_OSRM_URL=${ROTA_OSRM_URL:-https://router.project-osrm.org}
-      - EHLIYET_ANALIZ_API_KEY=${ANTHROPIC_API_KEY:-}
+      - EHLIYET_ANALIZ_API_KEY=${GEMINI_API_KEY:-}
     networks:
       - campusos-net
 

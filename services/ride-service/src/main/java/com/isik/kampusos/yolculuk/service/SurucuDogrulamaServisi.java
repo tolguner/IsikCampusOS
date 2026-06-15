@@ -19,6 +19,7 @@ public class SurucuDogrulamaServisi {
 
     private final SurucuDogrulamaDeposu depo;
     private final KullaniciOzetIstemcisi kullaniciOzetIstemcisi;
+    private final EhliyetAnalizServisi ehliyetAnalizServisi;
 
     public SurucuDogrulama benim(String kullaniciId) {
         return depo.findByKullaniciId(kullaniciId).orElse(null);
@@ -37,11 +38,49 @@ public class SurucuDogrulamaServisi {
         kayit.setGecerlilikTarihi(talep.getGecerlilikTarihi());
         // Ehliyet artık araçtan bağımsız; belge fotoğrafı zorunlu (yalnız metin yeterli değil).
         kayit.setBelgeUrl(zorunlu(talep.getBelgeUrl(), "Ehliyet belgesi fotoğrafı"));
-        kayit.setDurum(SurucuDogrulama.DogrulamaDurumu.BEKLEMEDE);
-        kayit.setAdminNotu(null);
-        kayit.setInceleyenKullaniciId(null);
-        kayit.setIncelenmeTarihi(null);
+
+        // Görseli sunucu tarafında (güvenilir) analiz et: belge gerçekten ehliyet mi ve
+        // üzerindeki ad-soyad + TC, giriş yapan hesapla eşleşiyor mu? Eşleşirse Halit'in
+        // manuel onayına gerek kalmadan otomatik ONAYLANDI; aksi halde BEKLEMEDE.
+        var analiz = ehliyetAnalizServisi.analizEt(talep.getBelgeUrl());
+        boolean otomatikOnay = analiz.isAnalizYapildi() && analiz.isEhliyet() && o != null
+                && adEslesir(analiz.getAdSoyad(), o.adSoyad())
+                && tcEslesir(analiz.getTcNo(), o.tcKimlikMaskeli());
+
+        if (otomatikOnay) {
+            kayit.setDurum(SurucuDogrulama.DogrulamaDurumu.ONAYLANDI);
+            kayit.setAdminNotu("Kimlik bilgileri (ad-soyad ve TC) hesapla eşleştiği için otomatik onaylandı.");
+            kayit.setInceleyenKullaniciId("SISTEM");
+            kayit.setIncelenmeTarihi(LocalDateTime.now());
+        } else {
+            kayit.setDurum(SurucuDogrulama.DogrulamaDurumu.BEKLEMEDE);
+            kayit.setAdminNotu(null);
+            kayit.setInceleyenKullaniciId(null);
+            kayit.setIncelenmeTarihi(null);
+        }
         return depo.save(kayit);
+    }
+
+    /** Belgedeki ad-soyad, hesaptaki ad-soyadla eşleşiyor mu? (hesabın tüm sözcükleri belgede geçmeli) */
+    private boolean adEslesir(String belgeAd, String hesapAd) {
+        if (belgeAd == null || belgeAd.isBlank() || hesapAd == null || hesapAd.isBlank()) return false;
+        String b = sadelestir(belgeAd);
+        for (String parca : sadelestir(hesapAd).split(" ")) {
+            if (!parca.isBlank() && !b.contains(parca)) return false;
+        }
+        return true;
+    }
+
+    /** Belgeden okunan tam TC'nin ilk 5 hanesi, hesaptaki maskeli TC (ilk5+******) ile eşleşiyor mu? */
+    private boolean tcEslesir(String belgeTc, String maskeliTc) {
+        if (belgeTc == null || maskeliTc == null) return false;
+        String b = belgeTc.replaceAll("\\D", "");
+        String m = maskeliTc.replaceAll("\\D", "");
+        return b.length() >= 5 && m.length() >= 5 && b.startsWith(m.substring(0, 5));
+    }
+
+    private String sadelestir(String s) {
+        return s.trim().toUpperCase(new java.util.Locale("tr", "TR")).replaceAll("\\s+", " ");
     }
 
     public List<SurucuDogrulama> bekleyenler() {

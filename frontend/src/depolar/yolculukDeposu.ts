@@ -289,7 +289,13 @@ export const useYolculukDeposu = create<YolculukState>((set, get) => ({
     set({ isLoading: true, hata: null, basariMesaji: null });
     try {
       const res = await api.post<SurucuDogrulama>('/yolculuklar/surucu-dogrulama', form);
-      set({ dogrulama: res.data, isLoading: false, basariMesaji: 'Sürücü doğrulama başvurusu gönderildi.' });
+      const otomatik = res.data?.durum === 'ONAYLANDI';
+      set({
+        dogrulama: res.data, isLoading: false,
+        basariMesaji: otomatik
+          ? 'Kimlik bilgileri eşleşti; ehliyetiniz otomatik onaylandı.'
+          : 'Sürücü doğrulama başvurusu gönderildi; yönetici onayı bekleniyor.',
+      });
       return true;
     } catch (err: any) {
       set({ hata: hataMesaji(err, 'Doğrulama başvurusu gönderilemedi.'), isLoading: false });
