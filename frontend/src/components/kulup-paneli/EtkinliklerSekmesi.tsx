@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import type { Kulup } from '../../depolar/kulupDeposu';
 import { Anahtar } from '../ortak/Anahtar';
+import { EtkinlikDetayButonu } from './EtkinlikDetayButonu';
 import { useEtkinlikDeposu, type Etkinlik } from '../../depolar/etkinlikDeposu';
 import { YOLLAR } from '../../yardimcilar/yollar';
 import {
@@ -668,9 +669,7 @@ export const EtkinliklerSekmesi = ({ selectedClub }: EtkinliklerSekmesiProps) =>
               </div>
               {showActionPanel && (
                 <div className="flex flex-col gap-2 lg:w-44">
-                  <Link to={YOLLAR.kulupEtkinlikYonetimi(event.id)} className="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-cyan-100 bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/15">
-                    Detay
-                  </Link>
+                  <EtkinlikDetayButonu etkinlikId={event.id} />
                   {canEditEvent && (
                     <button onClick={() => startEditingEvent(event)} type="button" className="rounded-2xl px-4 py-2.5 text-sm font-bold text-white/80 bg-white/[0.06] hover:bg-white/[0.1] border border-white/10">
                       Düzenle
@@ -741,11 +740,7 @@ export const EtkinliklerSekmesi = ({ selectedClub }: EtkinliklerSekmesiProps) =>
                         ? 'Etkinlik sona erdi; yoklama +1 saat esnekliği içinde açık kalır.'
                         : 'Geçmiş etkinliklerde düzenleme, yoklama ve iptal kapalıdır.'}
                   </p>
-                  {!showActionPanel && (
-                    <Link to={YOLLAR.kulupEtkinlikYonetimi(event.id)} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-2.5 text-xs font-black text-purple-50 bg-purple-500/70 hover:bg-purple-500">
-                      Detayları Yönet
-                    </Link>
-                  )}
+                  {!showActionPanel && <EtkinlikDetayButonu etkinlikId={event.id} tamGenislik />}
                 </div>
               )}
               </>
