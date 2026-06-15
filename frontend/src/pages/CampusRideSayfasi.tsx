@@ -314,7 +314,11 @@ export const CampusRideSayfasi = () => {
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-xs font-bold text-white/45">Kişi başı ücret (₺)</span>
-                  <input className="ride-input" type="number" min={0} value={form.kisiBasiUcret} onChange={e => setForm(f => ({ ...f, kisiBasiUcret: Number(e.target.value) }))} disabled={form.ucretTipi === 'UCRETSIZ'} placeholder="Örn. 80" />
+                  {form.ucretTipi === 'UCRETSIZ' ? (
+                    <input className="ride-input" type="text" value="Ücretsiz" disabled readOnly />
+                  ) : (
+                    <input className="ride-input" type="number" min={0} value={form.kisiBasiUcret} onChange={e => setForm(f => ({ ...f, kisiBasiUcret: Number(e.target.value) }))} placeholder="Örn. 80" />
+                  )}
                 </label>
               </div>
               <label className="mt-4 block">
