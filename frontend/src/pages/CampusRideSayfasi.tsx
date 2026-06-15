@@ -80,17 +80,9 @@ export const CampusRideSayfasi = () => {
     if (!seciliAracId && onayliAraclar.length > 0) setSeciliAracId(onayliAraclar[0].id);
   }, [onayliAraclar, seciliAracId]);
 
-  useEffect(() => {
-    ilanAra({
-      tarih,
-      baslangic: baslangic.ad,
-      baslangicEnlem: baslangic.enlem,
-      baslangicBoylam: baslangic.boylam,
-      varis: varis.ad,
-      varisEnlem: varis.enlem,
-      varisBoylam: varis.boylam,
-    });
-  }, [baslangic, ilanAra, tarih, varis]);
+  // Sayfa açılışında arama yapılmadan tüm gelecek ilanlar tarihsel yakınlığa göre listelenir.
+  // Filtreli arama yalnızca "Ara" butonuna basınca çalışır.
+  useEffect(() => { ilanAra({}); }, [ilanAra]);
 
   useEffect(() => () => temizleMesajlar(), [temizleMesajlar]);
 
@@ -206,7 +198,7 @@ export const CampusRideSayfasi = () => {
             ))}
             {!isLoading && ilanlar.length === 0 && (
               <div className="col-span-full rounded-3xl border border-white/10 bg-white/[0.03] p-12 text-center text-white/45">
-                Bu tarih ve rota için uygun ilan bulunamadı.
+                Şu an uygun ilan bulunamadı. Farklı tarih/rota için arama yapabilirsiniz.
               </div>
             )}
           </div>

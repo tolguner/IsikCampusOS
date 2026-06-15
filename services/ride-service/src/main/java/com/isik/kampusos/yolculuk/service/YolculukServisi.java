@@ -38,13 +38,25 @@ public class YolculukServisi {
     private final com.isik.kampusos.yolculuk.messaging.BildirimYayinlayici bildirimYayinlayici;
 
     public List<YolculukIlani> ilanAra(YolculukAramaTalebi arama) {
-        LocalDate tarih = arama.getTarih() != null ? arama.getTarih() : LocalDate.now();
+        LocalDateTime baslangicZaman;
+        LocalDateTime bitisZaman;
+        if (arama.getTarih() != null) {
+            baslangicZaman = arama.getTarih().atStartOfDay();
+            bitisZaman = arama.getTarih().plusDays(1).atStartOfDay().minusNanos(1);
+        } else {
+            // Tarih seçilmediyse: şu andan itibaren tüm gelecekteki ilanlar (tarihsel yakınlık sırası).
+            baslangicZaman = LocalDateTime.now();
+            bitisZaman = LocalDateTime.now().plusYears(5);
+        }
         List<YolculukIlani> ilanlar = ilanDeposu.findByKalkisZamaniBetweenAndDurumInOrderByKalkisZamaniAsc(
-                tarih.atStartOfDay(),
-                tarih.plusDays(1).atStartOfDay().minusNanos(1),
+                baslangicZaman, bitisZaman,
                 List.of(YolculukIlani.IlanDurumu.AKTIF, YolculukIlani.IlanDurumu.DOLU));
 
-        return ilanlar.stream()
+        // Biniş+iniş verildiyse koridor (rota yakınlığı) araması; verilmediyse tüm ilanlar listelenir.
+        boolean koridorAramasi = arama.getBaslangicEnlem() != null && arama.getBaslangicBoylam() != null
+                && arama.getVarisEnlem() != null && arama.getVarisBoylam() != null;
+
+        var akis = ilanlar.stream()
                 .filter(i -> i.bosKoltukSayisi() > 0)
                 .filter(i -> arama.getSadeceUcretsiz() == null || !arama.getSadeceUcretsiz()
                         || i.getUcretTipi() == YolculukIlani.UcretTipi.UCRETSIZ)
@@ -55,9 +67,13 @@ public class YolculukServisi {
                 // BlaBlaCar mantığı: aranan biniş+iniş verildiyse, sürücünün rotası bu yolculuğu
                 // makul mesafede kapsamıyorsa ilan listelenmez (alakasız şehir/bölge elenir).
                 .filter(i -> aramaKapsiyorMu(i, arama))
-                .peek(i -> i.setUygunlukSkoru(skorla(i, arama)))
-                .sorted(Comparator.comparingInt(YolculukIlani::getUygunlukSkoru).reversed()
+                .peek(i -> i.setUygunlukSkoru(skorla(i, arama)));
+
+        // Koridor araması: uygunluk skoruna göre; aksi halde tarihsel yakınlığa göre (en yakın önce).
+        return (koridorAramasi
+                ? akis.sorted(Comparator.comparingInt(YolculukIlani::getUygunlukSkoru).reversed()
                         .thenComparing(YolculukIlani::getKalkisZamani))
+                : akis.sorted(Comparator.comparing(YolculukIlani::getKalkisZamani)))
                 .toList();
     }
 
