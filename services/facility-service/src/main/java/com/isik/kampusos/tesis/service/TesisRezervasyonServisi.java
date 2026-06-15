@@ -23,6 +23,7 @@ public class TesisRezervasyonServisi {
     private final TesisKaynagiDeposu tesisKaynagiDeposu;
     private final TesisPolitikasiDeposu tesisPolitikasiDeposu;
     private final TesisKullanilabilirlikKuraliDeposu tesisKullanilabilirlikKuraliDeposu;
+    private final com.isik.kampusos.tesis.messaging.BildirimYayinlayici bildirimYayinlayici;
 
     /**
      * İki zaman aralığının çakışıp çakışmadığını belirler (yarı-açık aralık mantığı:
@@ -169,6 +170,11 @@ public class TesisRezervasyonServisi {
                 .build();
 
         TesisRezervasyon saved = tesisRezervasyonDeposu.save(rezervasyon);
+
+        // Onay gerektiren rezervasyon → Spor Müdürlüğü'ne talep bildirimi
+        if (politika.isOnayGerekli()) {
+            bildirimYayinlayici.yeniTalepBildir(kaynak.getTesis().getAd(), tarihMetni(start));
+        }
         return toResponse(saved);
     }
 
@@ -225,6 +231,7 @@ public class TesisRezervasyonServisi {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz rezervasyon durumu.");
         }
 
+        TesisRezervasyon.RezervasyonDurumu eskiDurum = rezervasyon.getDurum();
         rezervasyon.setDurum(durum);
         if (durum == TesisRezervasyon.RezervasyonDurumu.GELMEDI) {
             rezervasyon.setGelmemeTarihi(OffsetDateTime.now());
@@ -234,7 +241,26 @@ public class TesisRezervasyonServisi {
         }
 
         TesisRezervasyon saved = tesisRezervasyonDeposu.save(rezervasyon);
+
+        // Öğrenci rezervasyonu (bloke değil) onaylandı/reddedildiyse öğrenciye bildir
+        if (eskiDurum != TesisRezervasyon.RezervasyonDurumu.BLOKE) {
+            String tesisAd = saved.getKaynak().getTesis().getAd();
+            if (durum == TesisRezervasyon.RezervasyonDurumu.ONAYLANDI) {
+                bildirimYayinlayici.ogrenciyeSonucBildir(saved.getRezervasyonYapanKullaniciId(),
+                        "Rezervasyonunuz onaylandı",
+                        tesisAd + " rezervasyon talebiniz Spor Müdürlüğü tarafından onaylandı.");
+            } else if (durum == TesisRezervasyon.RezervasyonDurumu.IPTAL_EDILDI) {
+                bildirimYayinlayici.ogrenciyeSonucBildir(saved.getRezervasyonYapanKullaniciId(),
+                        "Rezervasyonunuz reddedildi",
+                        tesisAd + " rezervasyon talebiniz Spor Müdürlüğü tarafından reddedildi/iptal edildi.");
+            }
+        }
         return toResponse(saved);
+    }
+
+    private String tarihMetni(OffsetDateTime t) {
+        if (t == null) return null;
+        return t.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
     }
 
     public List<TesisRezervasyonYaniti> listCalendarBookings(String kaynakId, OffsetDateTime start, OffsetDateTime end) {

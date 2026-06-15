@@ -200,12 +200,14 @@ services:
     depends_on:
       - eureka-server
       - postgres
+      - kafka
     volumes:
       - ./services/facility-service/target:/app
     command: sh -c "java -jar /app/*.jar"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/facility_db
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
     networks:
       - campusos-net

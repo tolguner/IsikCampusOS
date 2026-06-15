@@ -114,6 +114,9 @@ public class BildirimServisi {
         if (yetkiler != null && (yetkiler.contains("ROLE_SKS_ADMIN") || yetkiler.contains("ROLE_ADMIN"))) {
             kitleler.add(Bildirim.HedefKitle.SKS_YONETICILERI);
         }
+        if (yetkiler != null && (yetkiler.contains("ROLE_FACILITY_ADMIN") || yetkiler.contains("ROLE_ADMIN"))) {
+            kitleler.add(Bildirim.HedefKitle.TESIS_YONETICILERI);
+        }
         return kitleler;
     }
 

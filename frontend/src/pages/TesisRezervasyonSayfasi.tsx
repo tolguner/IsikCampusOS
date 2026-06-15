@@ -585,7 +585,9 @@ export const TesisRezervasyonSayfasi = () => {
                   disabled={isBookingLoading || !selectedResourceId || !selectedDate || selectedHours.length === 0}
                   className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-cyan-300 hover:bg-cyan-200 text-[#071018] font-black text-sm transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-cyan-300/10 cursor-pointer"
                 >
-                  {isBookingLoading ? 'Rezervasyon Yapılıyor...' : 'Rezervasyonu Tamamla'}
+                  {isBookingLoading
+                    ? 'Gönderiliyor...'
+                    : (selectedFacility?.politika?.onayGerekli ? 'Onaya Gönder' : 'Rezervasyonu Tamamla')}
                 </button>
               </form>
             </section>

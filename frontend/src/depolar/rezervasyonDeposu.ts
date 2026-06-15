@@ -99,8 +99,14 @@ export const useRezervasyonDeposu = create<BookingState>((set, get) => ({
     set({ isLoading: true, error: null, successMessage: null });
     try {
       const payload = data;
-      await api.post('/tesisler/rezervasyonlar', payload);
-      set({ successMessage: 'Rezervasyonunuz başarıyla oluşturuldu.', isLoading: false });
+      const res = await api.post<any>('/tesisler/rezervasyonlar', payload);
+      const onayBekliyor = res.data?.durum === 'BEKLEMEDE';
+      set({
+        successMessage: onayBekliyor
+          ? 'Talebiniz onaya gönderildi. Spor Müdürlüğü onayladığında bilgilendirileceksiniz.'
+          : 'Rezervasyonunuz başarıyla oluşturuldu.',
+        isLoading: false,
+      });
       await get().fetchMyBookings();
       return true;
     } catch (err: any) {
