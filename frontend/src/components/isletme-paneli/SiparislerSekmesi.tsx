@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Wallet, CreditCard, Clock, RefreshCw, Check, Ban, UserCheck, Lock } from 'lucide-react';
+import { MapPin, Phone, Wallet, CreditCard, Clock, RefreshCw, Check, Ban, UserCheck, Lock, MessageSquare } from 'lucide-react';
+import { MesajPaneli } from '../ortak/MesajPaneli';
 import { useIsletmeDeposu } from '../../depolar/isletmeDeposu';
 import { useKimlikDeposu } from '../../depolar/kimlikDeposu';
 import { rolleriAyir, YETKILER } from '../../yardimcilar/yetkiler';
@@ -145,6 +146,7 @@ const SiparisKarti = ({ siparis }: { siparis: Siparis }) => {
   const [redNedeni, setRedNedeni] = useState('');
   const [teslimAcik, setTeslimAcik] = useState(false);
   const [kabulAcik, setKabulAcik] = useState(false);
+  const [mesajAcik, setMesajAcik] = useState(false);
   const [mesgul, setMesgul] = useState(false);
 
   const eylem = async (fn: () => Promise<boolean>) => {
@@ -288,6 +290,18 @@ const SiparisKarti = ({ siparis }: { siparis: Siparis }) => {
             </Buton>
             <Buton renk="notr" mesgul={mesgul} onClick={() => setRedAcik(false)}>Vazgeç</Buton>
           </div>
+        </div>
+      )}
+
+      {['KABUL_EDILDI', 'HAZIRLANIYOR', 'HAZIR', 'YOLDA', 'TESLIM_EDILDI'].includes(siparis.durum) && (
+        <div className="mt-3 pt-3 border-t border-white/8">
+          <button
+            onClick={() => setMesajAcik(o => !o)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-cyan-100 bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/20"
+          >
+            <MessageSquare className="w-3.5 h-3.5" /> {mesajAcik ? 'Mesajı Kapat' : 'Müşteri ile Mesajlaş'}
+          </button>
+          {mesajAcik && <div className="mt-3"><MesajPaneli modul="FOOD" baglamId={siparis.id} /></div>}
         </div>
       )}
     </motion.div>

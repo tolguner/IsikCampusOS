@@ -6,8 +6,9 @@ import 'leaflet/dist/leaflet.css';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle, CalendarClock, CarFront, Check, Clock, CreditCard, Flag,
-  MapPin, Plus, Search, Settings, Star, Users, X,
+  MapPin, MessageSquare, Plus, Search, Settings, Star, Users, X,
 } from 'lucide-react';
+import { MesajPaneli } from '../components/ortak/MesajPaneli';
 import {
   TALEP_ETIKETLERI,
   useYolculukDeposu,
@@ -626,31 +627,37 @@ const TalepSatiri = ({ talep, onKabul, onRed, onIptal, onTamamla, onPuanla, onSi
   onTamamla?: () => void;
   onPuanla?: () => void;
   onSikayet?: () => void;
-}) => (
-  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-    <div className="flex items-start justify-between gap-2">
-      <div className="min-w-0">
-        <p className="text-sm font-black">{talep.binisBasligi} → {talep.inisBasligi}</p>
-        {talep.ilanBaslangicBasligi && (
-          <p className="mt-0.5 text-[11px] text-white/40">İlan: {talep.ilanBaslangicBasligi} → {talep.ilanVarisBasligi}</p>
-        )}
-        {talep.yolcuAdSoyad && (
-          <p className="mt-0.5 text-xs font-semibold text-cyan-200/75">Yolcu: {talep.yolcuAdSoyad}{talep.yolcuOgrenciNo ? ` · ${talep.yolcuOgrenciNo}` : ''}</p>
-        )}
-        <p className="mt-1 text-xs text-white/40">{TALEP_ETIKETLERI[talep.durum as keyof typeof TALEP_ETIKETLERI]} · {talep.koltukSayisi} koltuk</p>
+}) => {
+  const [mesajAcik, setMesajAcik] = useState(false);
+  const mesajlasilabilir = ['BEKLEMEDE', 'KABUL_EDILDI', 'TAMAMLANDI'].includes(talep.durum);
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-sm font-black">{talep.binisBasligi} → {talep.inisBasligi}</p>
+          {talep.ilanBaslangicBasligi && (
+            <p className="mt-0.5 text-[11px] text-white/40">İlan: {talep.ilanBaslangicBasligi} → {talep.ilanVarisBasligi}</p>
+          )}
+          {talep.yolcuAdSoyad && (
+            <p className="mt-0.5 text-xs font-semibold text-cyan-200/75">Yolcu: {talep.yolcuAdSoyad}{talep.yolcuOgrenciNo ? ` · ${talep.yolcuOgrenciNo}` : ''}</p>
+          )}
+          <p className="mt-1 text-xs text-white/40">{TALEP_ETIKETLERI[talep.durum as keyof typeof TALEP_ETIKETLERI]} · {talep.koltukSayisi} koltuk</p>
+        </div>
+        <span className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-bold text-white/45">{talep.tahminiBinisDakika != null ? `+${talep.tahminiBinisDakika} dk` : 'Öneri'}</span>
       </div>
-      <span className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-bold text-white/45">{talep.tahminiBinisDakika != null ? `+${talep.tahminiBinisDakika} dk` : 'Öneri'}</span>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {onKabul && talep.durum === 'BEKLEMEDE' && <Aksiyon onClick={onKabul} icon={<Check className="h-3.5 w-3.5" />} text="Kabul" />}
+        {onRed && talep.durum === 'BEKLEMEDE' && <Aksiyon onClick={onRed} icon={<X className="h-3.5 w-3.5" />} text="Red" />}
+        {onIptal && ['BEKLEMEDE', 'KABUL_EDILDI'].includes(talep.durum) && <Aksiyon onClick={onIptal} icon={<X className="h-3.5 w-3.5" />} text="İptal" />}
+        {onTamamla && talep.durum === 'KABUL_EDILDI' && <Aksiyon onClick={onTamamla} icon={<Flag className="h-3.5 w-3.5" />} text="Tamamla" />}
+        {onPuanla && talep.durum === 'TAMAMLANDI' && <Aksiyon onClick={onPuanla} icon={<Star className="h-3.5 w-3.5" />} text="Puanla" />}
+        {onSikayet && ['KABUL_EDILDI', 'TAMAMLANDI'].includes(talep.durum) && <Aksiyon onClick={onSikayet} icon={<AlertTriangle className="h-3.5 w-3.5" />} text="Şikayet" />}
+        {mesajlasilabilir && <Aksiyon onClick={() => setMesajAcik(o => !o)} icon={<MessageSquare className="h-3.5 w-3.5" />} text={mesajAcik ? 'Mesajı Kapat' : 'Mesaj'} />}
+      </div>
+      {mesajAcik && mesajlasilabilir && <div className="mt-3"><MesajPaneli modul="RIDE" baglamId={talep.id} /></div>}
     </div>
-    <div className="mt-3 flex flex-wrap gap-2">
-      {onKabul && talep.durum === 'BEKLEMEDE' && <Aksiyon onClick={onKabul} icon={<Check className="h-3.5 w-3.5" />} text="Kabul" />}
-      {onRed && talep.durum === 'BEKLEMEDE' && <Aksiyon onClick={onRed} icon={<X className="h-3.5 w-3.5" />} text="Red" />}
-      {onIptal && ['BEKLEMEDE', 'KABUL_EDILDI'].includes(talep.durum) && <Aksiyon onClick={onIptal} icon={<X className="h-3.5 w-3.5" />} text="İptal" />}
-      {onTamamla && talep.durum === 'KABUL_EDILDI' && <Aksiyon onClick={onTamamla} icon={<Flag className="h-3.5 w-3.5" />} text="Tamamla" />}
-      {onPuanla && talep.durum === 'TAMAMLANDI' && <Aksiyon onClick={onPuanla} icon={<Star className="h-3.5 w-3.5" />} text="Puanla" />}
-      {onSikayet && ['KABUL_EDILDI', 'TAMAMLANDI'].includes(talep.durum) && <Aksiyon onClick={onSikayet} icon={<AlertTriangle className="h-3.5 w-3.5" />} text="Şikayet" />}
-    </div>
-  </div>
-);
+  );
+};
 
 const Aksiyon = ({ onClick, icon, text }: { onClick: () => void; icon: ReactNode; text: string }) => (
   <button onClick={onClick} className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-white/65 hover:bg-white/10">

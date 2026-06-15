@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ClipboardList, ArrowLeft, MapPin, Wallet, CreditCard, XCircle, Clock,
+  ClipboardList, ArrowLeft, MapPin, Wallet, CreditCard, XCircle, Clock, MessageSquare,
 } from 'lucide-react';
+import { MesajPaneli } from '../components/ortak/MesajPaneli';
 import {
   useYemekDeposu, SIPARIS_DURUM_BILGISI,
   type Siparis, type SiparisDurumu,
@@ -67,6 +68,8 @@ export const YemekSiparislerimSayfasi = () => {
 
 const SiparisKarti = ({ siparis, onIptal, iptalEdiliyor }: { siparis: Siparis; onIptal: () => void; iptalEdiliyor: boolean }) => {
   const durumBilgi = SIPARIS_DURUM_BILGISI[siparis.durum];
+  const [mesajAcik, setMesajAcik] = useState(false);
+  const mesajlasilabilir = ['KABUL_EDILDI', 'HAZIRLANIYOR', 'HAZIR', 'YOLDA', 'TESLIM_EDILDI'].includes(siparis.durum);
   const iptalEdilebilir = siparis.durum === 'BEKLEMEDE';
   const sonlandi = siparis.durum === 'REDDEDILDI' || siparis.durum === 'IPTAL_EDILDI';
   const gelAl = siparis.teslimatTuru === 'GEL_AL';
@@ -175,6 +178,18 @@ const SiparisKarti = ({ siparis, onIptal, iptalEdiliyor }: { siparis: Siparis; o
           </button>
         )}
       </div>
+
+      {mesajlasilabilir && (
+        <div className="mt-3 pt-3 border-t border-white/8">
+          <button
+            onClick={() => setMesajAcik(o => !o)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold text-cyan-100 bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/20 transition-colors"
+          >
+            <MessageSquare className="w-4 h-4" /> {mesajAcik ? 'Mesajı Kapat' : 'İşletme ile Mesajlaş'}
+          </button>
+          {mesajAcik && <div className="mt-3"><MesajPaneli modul="FOOD" baglamId={siparis.id} /></div>}
+        </div>
+      )}
     </motion.div>
   );
 };
