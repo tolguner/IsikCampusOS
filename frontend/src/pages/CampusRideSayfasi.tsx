@@ -19,6 +19,7 @@ import {
   type YolculukIlani,
 } from '../depolar/yolculukDeposu';
 import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
+import { Anahtar } from '../components/ortak/Anahtar';
 import { KonumSecici } from '../components/kulup-paneli/KonumSecici';
 import { polylineCoz } from '../lib/rota';
 
@@ -303,10 +304,13 @@ export const CampusRideSayfasi = () => {
                   </div>
                 </div>
               </div>
-              <label className="mt-4 flex items-center gap-2 text-sm font-semibold text-white/60">
-                <input type="checkbox" checked={form.araDurakKabulEdilir} onChange={e => setForm(f => ({ ...f, araDurakKabulEdilir: e.target.checked }))} />
-                Yolcular rota üzerindeki ek biniş/iniş noktalarını önerebilir
-              </label>
+              <div className="mt-4">
+                <Anahtar
+                  acik={form.araDurakKabulEdilir}
+                  onChange={v => setForm(f => ({ ...f, araDurakKabulEdilir: v }))}
+                  baslik="Yolcular rota üzerindeki ek biniş/iniş noktalarını önerebilir"
+                />
+              </div>
               <button disabled={!ilanAcabilir || isLoading} onClick={ilanKaydet} className="mt-5 rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-40">
                 İlanı Yayınla
               </button>

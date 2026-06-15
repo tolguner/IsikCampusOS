@@ -2,6 +2,7 @@ import React from 'react';
 import { Clock3, MapPin, Plus, Save, Settings2, Trash2 } from 'lucide-react';
 import type { Tesis } from '../../depolar/tesisDeposu';
 import { KonumSecici } from '../kulup-paneli/KonumSecici';
+import { Anahtar } from '../ortak/Anahtar';
 import {
   panelStyle,
   inputClass,
@@ -147,15 +148,14 @@ export const YapilandirmaGorunumu = ({
             <NumberField label="Maks. süre (saat)" value={policyForm.maksimumRezervasyonSureSaat} onChange={value => setPolicyForm(prev => ({ ...prev, maksimumRezervasyonSureSaat: value }))} />
             <NumberField label="İptal limiti (saat)" value={policyForm.iptalLimitSaat} onChange={value => setPolicyForm(prev => ({ ...prev, iptalLimitSaat: value }))} />
           </div>
-          <label className="mt-3 flex items-center gap-3 rounded-2xl border border-white/10 bg-[#111123] px-4 py-3.5 text-sm font-bold text-white/80 font-sans cursor-pointer">
-            <input type="checkbox" checked={policyForm.onayGerekli} onChange={e => setPolicyForm(prev => ({ ...prev, onayGerekli: e.target.checked }))} />
-            <span>
-              Onay mekanizması
-              <span className="ml-2 font-semibold text-white/40">
-                {policyForm.onayGerekli ? 'Açık — talepler Spor Müdürlüğü onayı bekler.' : 'Kapalı — rezervasyonlar anında onaylanır.'}
-              </span>
-            </span>
-          </label>
+          <div className="mt-3 rounded-2xl border border-white/10 bg-[#111123] px-4 py-3.5">
+            <Anahtar
+              acik={policyForm.onayGerekli}
+              onChange={v => setPolicyForm(prev => ({ ...prev, onayGerekli: v }))}
+              baslik="Onay mekanizması"
+              aciklama={policyForm.onayGerekli ? 'Açık — talepler Spor Müdürlüğü onayı bekler.' : 'Kapalı — rezervasyonlar anında onaylanır.'}
+            />
+          </div>
         </section>
 
         {/* Çalışma saatleri */}

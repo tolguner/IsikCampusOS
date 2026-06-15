@@ -185,10 +185,16 @@ export const AyarlarSekmesi = () => {
           {gunler.map((g, i) => (
             <div key={g.gun} className="flex items-center gap-2 rounded-xl px-3 py-2 border border-white/8 bg-white/[0.02]">
               <span className="w-20 text-sm font-bold text-white/80">{GUN_ADLARI[g.gun]}</span>
-              <label className="flex items-center gap-1.5 text-xs text-white/55 cursor-pointer select-none">
-                <input type="checkbox" checked={!g.kapali} onChange={e => gunGuncelle(i, { kapali: !e.target.checked })} className="accent-orange-500" />
-                Açık
-              </label>
+              <button
+                type="button"
+                onClick={() => gunGuncelle(i, { kapali: !g.kapali })}
+                title={!g.kapali ? 'Açık' : 'Kapalı'}
+                className="shrink-0 cursor-pointer"
+              >
+                <span className={`relative inline-flex h-5 w-9 rounded-full transition-colors duration-200 ${!g.kapali ? 'bg-orange-500' : 'bg-white/15'}`}>
+                  <span className={`pointer-events-none mt-0.5 ml-0.5 inline-block h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${!g.kapali ? 'translate-x-4' : 'translate-x-0'}`} />
+                </span>
+              </button>
               {!g.kapali ? (
                 <div className="flex items-center gap-1.5 ml-auto">
                   <input type="time" value={g.acilis} onChange={e => gunGuncelle(i, { acilis: e.target.value })} className="rounded-lg px-2 py-1 text-sm text-white bg-white/5 border border-white/10 [color-scheme:dark]" />
