@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { RefreshCw, Settings2, ClipboardList, CalendarDays } from 'lucide-react';
+import { RefreshCw, Settings2, ClipboardList, CalendarDays, ClipboardCheck } from 'lucide-react';
 import { ModulSekmeleri } from '../components/yonetim/ModulSekmeleri';
 import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
 import { useTesisDeposu, type TamTesisFormu } from '../depolar/tesisDeposu';
@@ -13,6 +13,7 @@ import {
 } from '../components/tesis-yonetim/ortak';
 import { TakvimGorunumu } from '../components/tesis-yonetim/TakvimGorunumu';
 import { RezervasyonGorunumu } from '../components/tesis-yonetim/RezervasyonGorunumu';
+import { RezervasyonTalepleriGorunumu } from '../components/tesis-yonetim/RezervasyonTalepleriGorunumu';
 import { YapilandirmaGorunumu } from '../components/tesis-yonetim/YapilandirmaGorunumu';
 import { DuyuruButonu } from '../components/DuyuruButonu';
 
@@ -45,7 +46,7 @@ export const TesisYonetimPaneli = () => {
     clearMessages: clearBookingMessages,
   } = useRezervasyonDeposu();
 
-  const [activeView, setActiveView] = useState<'config' | 'bookings' | 'calendar'>('config');
+  const [activeView, setActiveView] = useState<'config' | 'talepler' | 'bookings' | 'calendar'>('config');
 
   // Config Forms
   const [facilityForm, setFacilityForm] = useState(blankFacilityForm);
@@ -88,10 +89,16 @@ export const TesisYonetimPaneli = () => {
   }, [fetchFacilities]);
 
   useEffect(() => {
-    if (activeView === 'bookings') {
+    if (activeView === 'bookings' || activeView === 'talepler') {
       fetchAllBookings();
     }
   }, [activeView, fetchAllBookings]);
+
+  // Onay bekleyen (BEKLEMEDE) talepler
+  const bekleyenTalepler = useMemo(
+    () => allBookings.filter(b => b.durum === 'BEKLEMEDE'),
+    [allBookings]
+  );
 
   // Set default calendar facility
   useEffect(() => {
@@ -475,7 +482,7 @@ export const TesisYonetimPaneli = () => {
           onClick={() => {
             if (activeView === 'config') {
               fetchFacilities();
-            } else if (activeView === 'bookings') {
+            } else if (activeView === 'bookings' || activeView === 'talepler') {
               fetchAllBookings();
             } else if (activeView === 'calendar' && calendarFacilityId) {
               const facility = facilities.find(f => f.id === calendarFacilityId);
@@ -502,7 +509,8 @@ export const TesisYonetimPaneli = () => {
         onSecim={setActiveView}
         sekmeler={[
           { anahtar: 'config', baslik: 'Tesis Yapılandırması', aciklama: 'Tesis tanımı, kuralları ve çalışma saatleri', ikon: Settings2 },
-          { anahtar: 'bookings', baslik: `Antrenman & Rezervasyon (${allBookings.filter(b => b.durum !== 'IPTAL_EDILDI').length})`, aciklama: 'Antrenman ve rezervasyon talep yönetimi', ikon: ClipboardList },
+          { anahtar: 'talepler', baslik: 'Rezervasyon Talepleri', aciklama: 'Onay bekleyen öğrenci rezervasyonları', ikon: ClipboardCheck, rozet: bekleyenTalepler.length },
+          { anahtar: 'bookings', baslik: `Antrenman & Rezervasyon (${allBookings.filter(b => b.durum !== 'IPTAL_EDILDI').length})`, aciklama: 'Antrenman ve rezervasyon yönetimi', ikon: ClipboardList },
           { anahtar: 'calendar', baslik: 'Genel Rezervasyon Takvimi', aciklama: 'Tüm rezervasyonların takvim görünümü', ikon: CalendarDays },
         ]}
       />
@@ -525,6 +533,12 @@ export const TesisYonetimPaneli = () => {
           handleSave={handleSave}
           handleDeleteFacility={handleDeleteFacility}
           isLoading={isFacilityLoading}
+        />
+      ) : activeView === 'talepler' ? (
+        <RezervasyonTalepleriGorunumu
+          talepler={bekleyenTalepler}
+          formatDateTime={formatDateTime}
+          handleUpdateBookingStatus={handleUpdateBookingStatus}
         />
       ) : activeView === 'bookings' ? (
         <RezervasyonGorunumu
