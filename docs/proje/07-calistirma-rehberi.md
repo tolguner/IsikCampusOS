@@ -11,15 +11,26 @@ Bu rehber, IsikCampusOS'u yerel geliştirme ortamında ayağa kaldırmak içindi
 
 ## 2. Ortam Değişkenleri
 
-Kök dizinde `.env` dosyası bulunur. Gerçek Gmail SMTP ile e-posta göndermek için `.env.gmail.example` örnek alınabilir:
+Kök dizinde `.env` dosyası bulunur (git'e gönderilmez). Şablon için `.env.example` kopyalanır:
 
 ```powershell
-Copy-Item .env.gmail.example .env
+Copy-Item .env.example .env
 ```
 
-Ardından `.env` içindeki `MAIL_PASSWORD` değerini geçerli bir Gmail App Password ile değiştirin. E-posta testini Gmail olmadan yapmak için varsayılan **Mailpit** (yerel SMTP, arayüz `:8025`) kullanılır.
+### `JWT_SECRET` (zorunlu)
 
-> **Güvenlik notu:** `JWT_SECRET` üretimde mutlaka environment variable üzerinden verilmelidir; depodaki varsayılan yalnızca yerel geliştirme içindir.
+`JWT_SECRET` artık **hiçbir yerde sabit varsayılana sahip değildir**; tüm servisler ve API Gateway bu değeri yalnızca ortam değişkeninden okur. Ayarlanmazsa `docker compose` ve servisler **başlatılırken hata verir** (fail-fast). Güçlü bir değer üretip `.env` içine ekleyin:
+
+```powershell
+# Bash / Git Bash
+openssl rand -hex 32
+```
+
+Üretilen değeri `.env` içinde `JWT_SECRET=...` olarak tanımlayın. **Tüm servisler ve gateway aynı değeri kullanmalıdır**, aksi halde token doğrulaması başarısız olur. Yerel `mvnw` ile (docker olmadan) çalıştırırken de aynı `JWT_SECRET` ortamda tanımlı olmalıdır.
+
+### Mail (opsiyonel)
+
+Gerçek Gmail SMTP ile e-posta göndermek için `.env.gmail.example` örnek alınıp `.env` içindeki `MAIL_PASSWORD` geçerli bir Gmail App Password ile değiştirilir. E-posta testini Gmail olmadan yapmak için varsayılan **Mailpit** (yerel SMTP, arayüz `:8025`) kullanılır.
 
 ## 3. Altyapıyı Başlatma
 

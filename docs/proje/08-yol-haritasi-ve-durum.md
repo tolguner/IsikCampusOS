@@ -29,7 +29,7 @@ Yeni modül eklemeden önce ele alınması önerilen konular:
 
 | # | Konu | Öncelik |
 |---|------|---------|
-| 1 | JWT secret hâlâ `application.yml` / `docker-compose.yml` içinde varsayılan değerde — yalnızca env'den okunmalı | Yüksek |
+| 1 | ~~JWT secret `application.yml` / `docker-compose.yml` içinde varsayılan değerde~~ ✅ **Kapatıldı (2026-06-16):** sabit varsayılanlar kaldırıldı; `JWT_SECRET` yalnızca env'den okunur, yoksa fail-fast (bkz. `.env.example`) | — |
 | 2 | Flyway çoğu serviste aktif olsa da `ddl-auto: validate` ile migration uyumu düzenli kontrol edilmeli | Orta |
 | 3 | Otomatik test kapsamı sınırlı — kritik iş kuralları için birim/entegrasyon testleri | Orta |
 | 4 | Bazı proje dokümanları ve tez metinleri kodun son halini geriden takip edebilir; kod gerçekliğiyle periyodik hizalama gerekir | Orta |
@@ -38,7 +38,7 @@ Yeni modül eklemeden önce ele alınması önerilen konular:
 ## 3. Geliştirme Yol Haritası
 
 ### Faz A — Çekirdeği sağlamlaştırma (mevcut odak)
-- [ ] JWT secret'i tamamen env tabanlı hale getirme
+- [x] JWT secret'i tamamen env tabanlı hale getirme (sabit varsayılanlar kaldırıldı, fail-fast)
 - [ ] Kritik iş kuralları için test altyapısı (auth giriş, RSVP kapasite/waitlist, rezervasyon çakışma, etkinlik onay yetkisi)
 - [ ] Flyway migration disiplinine geçiş (önce auth-service)
 

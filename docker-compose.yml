@@ -98,7 +98,7 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - FRONTEND_URL=http://frontend:5173
-      - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET zorunlu - .env dosyasina ekleyin}
     ports:
       - "8080:8080"
     networks:
@@ -133,7 +133,7 @@ services:
       - MAIL_SMTP_STARTTLS=${MAIL_SMTP_STARTTLS:-false}
       - MAIL_SMTP_STARTTLS_REQUIRED=${MAIL_SMTP_STARTTLS_REQUIRED:-false}
       - MAIL_ENABLED=${MAIL_ENABLED:-true}
-      - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET zorunlu - .env dosyasina ekleyin}
     networks:
       - campusos-net
 
@@ -170,7 +170,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/club_db
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET zorunlu - .env dosyasina ekleyin}
     networks:
       - campusos-net
 
@@ -189,7 +189,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/notification_db
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET zorunlu - .env dosyasina ekleyin}
     networks:
       - campusos-net
 
@@ -208,7 +208,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/facility_db
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET zorunlu - .env dosyasina ekleyin}
     networks:
       - campusos-net
 
@@ -227,7 +227,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/food_db
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET zorunlu - .env dosyasina ekleyin}
     networks:
       - campusos-net
 
@@ -248,7 +248,7 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ride_db
-      - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET zorunlu - .env dosyasina ekleyin}
       - ROTA_OSRM_URL=${ROTA_OSRM_URL:-https://router.project-osrm.org}
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
     networks:
@@ -267,7 +267,7 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/mesaj_db
-      - JWT_SECRET=${JWT_SECRET:-campusos_super_secret_key_change_in_production_min32ch}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET zorunlu - .env dosyasina ekleyin}
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
     networks:
       - campusos-net

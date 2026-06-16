@@ -60,5 +60,5 @@ logging:
 security:
   jwt:
     # JWT secret environment variable'dan okunur — API Gateway ile AYNI değer olmalı.
-    secret: ${JWT_SECRET:3cfa76ef14937c1c0ea519f8fc29b945279b945279b945279b945279b945279b}
+    secret: ${JWT_SECRET}
     expiration: 86400000

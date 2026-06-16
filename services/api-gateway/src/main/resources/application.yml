@@ -233,4 +233,4 @@ eureka:
 security:
   jwt:
     # JWT secret zorunlu olarak environment variable'dan okunur.
-    secret: ${JWT_SECRET:3cfa76ef14937c1c0ea519f8fc29b945279b945279b945279b945279b945279b}
+    secret: ${JWT_SECRET}
