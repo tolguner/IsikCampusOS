@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { FormEvent } from 'react';
-import { Link } from 'react-router-dom';
 import {
   CalendarDays,
   ChevronLeft,
@@ -18,7 +17,6 @@ import type { Kulup } from '../../depolar/kulupDeposu';
 import { Anahtar } from '../ortak/Anahtar';
 import { EtkinlikDetayButonu } from './EtkinlikDetayButonu';
 import { useEtkinlikDeposu, type Etkinlik } from '../../depolar/etkinlikDeposu';
-import { YOLLAR } from '../../yardimcilar/yollar';
 import {
   inputClass,
   textareaClass,

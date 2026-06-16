@@ -264,6 +264,10 @@ public class YolculukServisi {
         if (!YolculukEslesmeServisi.kabulEdilebilirMi(ilan)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu ilanda boş koltuk yok.");
         }
+        int istenenKoltukSayisi = Math.max(1, talep.getKoltukSayisi());
+        if (ilan.bosKoltukSayisi() < istenenKoltukSayisi) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bu ilanda yeterli boş koltuk yok.");
+        }
         talepDeposu.findByIlanIdAndYolcuKullaniciIdAndDurumIn(ilanId, yolcuId,
                 List.of(YolculukTalebi.TalepDurumu.BEKLEMEDE, YolculukTalebi.TalepDurumu.KABUL_EDILDI))
                 .ifPresent(t -> {
@@ -301,7 +305,7 @@ public class YolculukServisi {
                 .inisBasligi(talep.getInis().getAd())
                 .inisEnlem(talep.getInis().getEnlem())
                 .inisBoylam(talep.getInis().getBoylam())
-                .koltukSayisi(Math.max(1, talep.getKoltukSayisi()))
+                .koltukSayisi(istenenKoltukSayisi)
                 .tahminiBinisDakika(enYakinDurakDakika(ilan.getDuraklar(), binisK))
                 .tahminiInisDakika(enYakinDurakDakika(ilan.getDuraklar(), inisK))
                 .mesaj(talep.getMesaj())

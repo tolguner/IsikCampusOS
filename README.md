@@ -32,15 +32,14 @@ Sistem **microservices** mimarisini benimser:
 | `api-gateway` | 8080 | Yonlendirme, JWT dogrulama, rate limiting |
 | `auth-service` | 8081 | Kimlik, token, e-posta dogrulama |
 | `profile-service` | 8082 | Profil, beceri, guven skoru |
-| `notification-service` | 8083 | In-app ve e-posta bildirimi |
-| `moderation-service` | 8084 | Rapor, vaka, yaptirim |
-| `analytics-service` | 8085 | Olay toplama, metrik, dashboard |
+| `notification-service` | 8083 | In-app bildirim, SSE, Kafka bildirim olaylari |
 | `facility-service` | 8086 | Tesis rezervasyon ve check-in |
-| `food-service` | 8087 | Vendor, menu, siparis |
-| `ride-service` | 8088 | Paylasimli yolculuk eslestirme |
+| `food-service` | 8087 | Satici, menu, kampanya, siparis, isletme paneli |
+| `ride-service` | 8088 | Paylasimli yolculuk, rota, arac/ehliyet dogrulama |
 | `club-service` | 8089 | Kulup, etkinlik, RSVP |
-| `projectmatch-service` | 8090 | Proje ilani, ekip eslestirme |
-| `microjob-service` | 8091 | Is ilani, teklif, kontrat |
+| `message-service` | 8090 | Baglam bazli konusma ve mesajlasma |
+
+Planlanan servisler: `projectmatch-service`, `microjob-service`. Moderasyon ve analitik ileride ayri servisler olarak degerlendirilebilir.
 
 ## Platform Modulleri
 
@@ -64,14 +63,11 @@ isikcampusos/
     auth-service/
     profile-service/
     notification-service/
-    moderation-service/
-    analytics-service/
     facility-service/
     food-service/
     ride-service/
     club-service/
-    projectmatch-service/
-    microjob-service/
+    message-service/
   frontend/
   infra/
     docker-compose.yml
@@ -98,7 +94,7 @@ isikcampusos/
 docker compose -f infra/docker-compose.infra.yml up -d
 
 # Tum sistemi baslat
-docker compose -f infra/docker-compose.yml up --build
+docker compose up --build
 ```
 
 ## Gmail SMTP ile Gercek E-posta
@@ -123,11 +119,8 @@ Gerekli Gmail ayarlari:
 
 `.env` dosyasi `start-dev.ps1` ve `start-backend-only.ps1` tarafindan otomatik yuklenir. Bu dosya gizli bilgi icerdigi icin git'e eklenmez.
 
-## Sonraki Adim
+## Guncel Durum
 
-Bu dokuman tabani uzerinden bir sonraki asamada asagidaki islerden birine gecebiliriz:
+`auth`, `profile`, `club`, `notification`, `facility`, `food`, `ride` ve `message` servisleri kod tabaninda mevcuttur ve API Gateway uzerinden route edilir. Frontend; giris, rol bazli paneller, kulup/etkinlik, tesis, yemek, CampusRide, bildirim ve mesajlasma ekranlarini icerir.
 
-1. Docker Compose stack ve servis iskeletlerini olusturmak
-2. api-gateway routing ve JWT konfigurasyonunu yazmak
-3. auth-service ve profile-service MVP kodlarini baslatmak
-4. Kafka topic tanimlarini ve ortak event modellerini olusturmak
+Siradaki ana genisleme adaylari `projectmatch-service` ve `microjob-service`tir. Kisa vadeli teknik odak ise mevcut servislerin test kapsamini, dokuman tutarliligini ve frontend build temizligini iyilestirmektir.

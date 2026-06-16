@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useKimlikDeposu } from '../depolar/kimlikDeposu';
 import { Link, useNavigate } from 'react-router-dom';
 import { YOLLAR } from '../yardimcilar/yollar';
+import { TemaDegistirici } from '../components/duzen/TemaDegistirici';
 import {
   Mail, Lock, Loader2, AlertCircle, Eye, EyeOff,
   Calendar, BookOpen, ArrowRight, CheckCircle2, Zap,
-  Car, Utensils, Briefcase, FolderKanban, Info, KeyRound, BadgeCheck
+  Car, Utensils, Briefcase, FolderKanban, Info, KeyRound, BadgeCheck, Sparkles, ShieldCheck
 } from 'lucide-react';
 
 type AuthMode = 'login' | 'forgot' | 'reset';
@@ -46,46 +47,42 @@ export const GirisSayfasi = () => {
   };
 
   const modules = [
-    { icon: Calendar, title: 'Akıllı Etkinlik Motoru', desc: 'Kulüp etkinliklerini oluştur, SKS onayı al, RSVP topla ve katılımı takip et.', color: 'from-violet-500 to-purple-600', tag: 'Etkinlikler' },
-    { icon: BookOpen, title: 'Tesis Rezervasyonu', desc: 'Derslik, spor salonu ve toplantı odalarını çakışmasız şekilde rezerve et.', color: 'from-cyan-500 to-blue-600', tag: 'Tesisler' },
-    { icon: Utensils, title: 'Kampüs Yemek Merkezi', desc: 'Kampüs içi işletmelerden ön sipariş ver, sıra beklemeden teslim al.', color: 'from-orange-500 to-red-500', tag: 'Yemek' },
-    { icon: Car, title: 'Kampüs Yolculuk', desc: 'Kampüs-şehir arası güvenli araç paylaşımı ile yolculuk eşleşmesi yap.', color: 'from-emerald-500 to-teal-600', tag: 'Yolculuk' },
-    { icon: FolderKanban, title: 'Proje Eşleştirme', desc: 'Beceri profiline göre proje ekipleri bul, davet gönder ve takım kur.', color: 'from-pink-500 to-rose-600', tag: 'Projeler' },
-    { icon: Briefcase, title: 'Mikro İş Pazarı', desc: 'Kampüs içi küçük işleri ilan et, teklif al, teslim et ve puanla.', color: 'from-amber-500 to-orange-600', tag: 'İş İlanları' },
+    { icon: Calendar, title: 'ClubHub', desc: 'Kulüp ve etkinlik yönetimi', color: 'from-violet-500 to-purple-600', status: 'Aktif' },
+    { icon: BookOpen, title: 'SpotReserve', desc: 'Spor tesisleri rezervasyon sistemi', color: 'from-cyan-500 to-blue-600', status: 'Aktif' },
+    { icon: Utensils, title: 'UniEats', desc: 'Kampüs çevrimiçi yemek siparişi', color: 'from-orange-500 to-red-500', status: 'Aktif' },
+    { icon: Car, title: 'CampusRide', desc: 'Paylaşımlı yolculuk sistemi', color: 'from-emerald-500 to-teal-600', status: 'Aktif' },
+    { icon: FolderKanban, title: 'ProjectMatch', desc: 'Proje eşleştirme sistemi', color: 'from-indigo-500 to-violet-600', status: 'Çok yakında' },
+    { icon: Briefcase, title: 'MicroJob', desc: 'Kampüs içi mikro iş pazarı', color: 'from-pink-500 to-rose-600', status: 'Çok yakında' },
   ];
 
-  const stats = [
-    { value: '5,000+', label: 'Aktif Öğrenci' },
-    { value: '120+', label: 'Etkinlik / Yıl' },
-    { value: '45+', label: 'Öğrenci Kulübü' },
-    { value: '6', label: 'Ana Modül' },
-  ];
-
-  const inputStyle = { background: 'rgba(255,255,255,0.04)', border: '1.5px solid rgba(255,255,255,0.07)' };
+  const inputStyle = { background: 'var(--input-bg)', border: '1.5px solid var(--input-border)' };
   const inputFocus = (e: React.FocusEvent<HTMLInputElement>) => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.08)'; };
-  const inputBlur = (e: React.FocusEvent<HTMLInputElement>) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.boxShadow = 'none'; };
+  const inputBlur = (e: React.FocusEvent<HTMLInputElement>) => { e.currentTarget.style.borderColor = 'var(--input-border)'; e.currentTarget.style.boxShadow = 'none'; };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#050510]">
+    <div className="theme-page min-h-screen relative overflow-hidden bg-[#050510]">
       {/* AMBIENT BACKGROUND */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#060818] via-[#0A0C27] to-[#070716]" />
-        <div className="absolute bottom-[-15%] left-[-8%] w-[700px] h-[700px] rounded-full animate-float" style={{ background: 'radial-gradient(circle, rgba(0,210,255,0.35) 0%, rgba(0,150,255,0.15) 40%, transparent 70%)' }} />
-        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full animate-float-reverse" style={{ background: 'radial-gradient(circle, rgba(138,43,226,0.45) 0%, rgba(100,40,200,0.18) 40%, transparent 70%)' }} />
-        <div className="absolute top-[40%] left-[30%] w-[500px] h-[500px] rounded-full animate-pulse-glow" style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.25) 0%, transparent 60%)' }} />
+        <div className="theme-app-gradient absolute inset-0 bg-gradient-to-br from-[#060818] via-[#0A0C27] to-[#070716]" />
+        <div className="absolute bottom-[-15%] left-[-8%] w-[700px] h-[700px] rounded-full animate-float" style={{ background: 'radial-gradient(circle, var(--ambient-cyan-strong) 0%, var(--ambient-cyan-soft) 40%, transparent 70%)' }} />
+        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full animate-float-reverse" style={{ background: 'radial-gradient(circle, var(--ambient-indigo-strong) 0%, var(--ambient-indigo-soft) 40%, transparent 70%)' }} />
+        <div className="absolute top-[40%] left-[30%] w-[500px] h-[500px] rounded-full animate-pulse-glow" style={{ background: 'radial-gradient(circle, var(--ambient-pink-strong) 0%, transparent 60%)' }} />
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")` }} />
       </div>
 
       {/* NAVBAR */}
-      <nav className="relative z-30 mx-5 mt-5 px-6 py-3.5 rounded-3xl flex justify-between items-center" style={{ background: 'rgba(10, 10, 25, 0.55)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
+      <nav className="theme-nav relative z-30 mx-5 mt-5 px-6 py-3.5 rounded-3xl flex justify-between items-center" style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+          <Link to={YOLLAR.tanitim} className="flex items-center gap-3 rounded-2xl outline-none transition hover:opacity-85 focus-visible:ring-2 focus-visible:ring-indigo-300">
           <img src="/isik-ikon.png" alt="Işık Üniversitesi İkon" className="w-7 h-7 object-contain" />
           <div>
-            <span className="font-bold text-lg text-white">Işık<span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">CampusOS</span></span>
-            <p className="text-[11px] text-white/40 -mt-0.5">Kampüs İşletim Sistemi</p>
+            <span className="theme-text font-bold text-lg text-white">Işık<span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">CampusOS</span></span>
+            <p className="theme-muted text-[11px] text-white/40 -mt-0.5">Dijital Kampüs Platformu</p>
           </div>
+          </Link>
         </motion.div>
         <div className="flex items-center gap-3">
+          <TemaDegistirici />
           <img src="/isik-logo.png" alt="Işık Üniversitesi" className="h-6 object-contain" />
         </div>
       </nav>
@@ -95,42 +92,55 @@ export const GirisSayfasi = () => {
         {/* LEFT — Platform Showcase */}
         <div className="hidden lg:flex flex-col flex-1 pr-12 xl:pr-20">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }}>
-            <div className="mb-6"><img src="/isik-logo.png" alt="Işık Üniversitesi" className="h-10 object-contain" /></div>
-            <h1 className="text-5xl xl:text-6xl font-extrabold text-white leading-[1.1] mb-5">
-              Kampüs Hayatını<br />
-              <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 bg-clip-text text-transparent">Yeniden Keşfet</span>
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-100">
+              <Sparkles className="h-4 w-4" />
+              Işık Üniversitesi dijital kampüs platformu
+            </div>
+            <h1 className="text-5xl xl:text-7xl font-black text-white leading-[1.02] mb-5 tracking-normal">
+              Kampüs artık<br />
+              <span className="bg-gradient-to-r from-cyan-300 via-indigo-300 to-fuchsia-400 bg-clip-text text-transparent">tek işletim sistemi</span>
             </h1>
-            <p className="text-white/45 text-lg max-w-xl mb-10 leading-relaxed">
-              6 entegre modülle etkinliklerden tesis rezervasyonlarına, yemek siparişlerinden araç paylaşımına kadar kampüs deneyimini tek platformda dijitalleştir.
+            <p className="text-white/50 text-lg max-w-2xl mb-7 leading-relaxed">
+              ClubHub, SpotReserve, UniEats ve CampusRide aynı kimli ve aynı kullanıcı
+              deneyimiyle birleşir. Işık CampusOS kampüs yaşamını tek platformda toplar.
             </p>
+            <div className="mb-8 flex flex-wrap gap-3">
+              <Link to={YOLLAR.tanitim} className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-slate-950 transition hover:bg-cyan-100">
+                Projeyi tanı
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-bold text-white/70">
+                <ShieldCheck className="h-4 w-4 text-emerald-300" />
+                Kapalı üniversite topluluğu
+              </div>
+            </div>
           </motion.div>
-          <div className="grid grid-cols-3 gap-3 mb-10 max-w-2xl">
+
+          <div className="mb-8 grid max-w-3xl grid-cols-3 gap-3">
             {modules.map((mod, index) => (
               <motion.div key={mod.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + index * 0.08, duration: 0.5 }}
-                className="group p-4 rounded-2xl cursor-default transition-all duration-300"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-                <div className="flex items-center gap-2 mb-2.5">
-                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${mod.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                    <mod.icon className="w-4 h-4 text-white" />
+                className="theme-card group relative min-h-[132px] overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.065]">
+                <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${mod.color}`} />
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${mod.color} shadow-lg shadow-black/20 transition-transform group-hover:scale-105`}>
+                    <mod.icon className="h-5 w-5 text-white" />
                   </div>
-                  <span className="text-[10px] font-semibold text-white/25 uppercase tracking-wider">{mod.tag}</span>
+                  <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${mod.status === 'Aktif' ? 'bg-emerald-300/12 text-emerald-100' : 'bg-white/10 text-white/60'}`}>
+                    {mod.status}
+                  </span>
                 </div>
-                <h3 className="font-bold text-white text-[13px] mb-1 leading-tight">{mod.title}</h3>
-                <p className="text-white/35 text-[11px] leading-relaxed">{mod.desc}</p>
+                <h3 className="mb-1 text-lg font-black leading-tight text-white">{mod.title}</h3>
+                <p className="text-xs font-semibold leading-5 text-white/45">{mod.desc}</p>
               </motion.div>
             ))}
           </div>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9, duration: 0.5 }} className="flex gap-8 xl:gap-10">
-            {stats.map((stat) => (<div key={stat.label}><div className="text-2xl font-extrabold text-white">{stat.value}</div><div className="text-xs text-white/30 mt-1">{stat.label}</div></div>))}
-          </motion.div>
+
         </div>
 
         {/* RIGHT — Auth Card */}
         <motion.div initial={{ opacity: 0, scale: 0.95, x: 30 }} animate={{ opacity: 1, scale: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
           className="w-full lg:w-[440px] xl:w-[460px] flex-shrink-0 rounded-3xl p-8 sm:p-9 relative overflow-hidden mx-auto lg:mx-0"
-          style={{ background: 'rgba(12, 12, 30, 0.65)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 0 80px rgba(99,102,241,0.05), 0 32px 64px rgba(0,0,0,0.4)' }}>
+          style={{ background: 'var(--auth-card-bg)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid var(--auth-card-border)', boxShadow: 'var(--auth-card-shadow)' }}>
           <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)' }} />
           <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.08) 0%, transparent 70%)' }} />
 

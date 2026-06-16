@@ -92,6 +92,12 @@ public class TesisRezervasyonServisi {
                     String.format("Tek seferde en fazla %d dakikalık rezervasyon yapabilirsiniz.", politika.getMaksimumRezervasyonSureDakika()));
         }
 
+        int katilimciSayisi = talep.getKatilimciSayisi() > 0 ? talep.getKatilimciSayisi() : 1;
+        if (katilimciSayisi > kaynak.getKapasite()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format("Katılımcı sayısı kaynak kapasitesini aşamaz. Kapasite: %d", kaynak.getKapasite()));
+        }
+
         // 5. Çalışma saatleri (müsaitlik kuralları) kontrolü
         List<TesisKullanilabilirlikKurali> kurallar = tesisKullanilabilirlikKuraliDeposu.findByKaynakIdOrderByHaftaninGunuAscBaslangicSaatiAsc(kaynak.getId());
         
@@ -162,7 +168,7 @@ public class TesisRezervasyonServisi {
                 .baslangicTarihi(start)
                 .bitisTarihi(end)
                 .amac(talep.getAmac())
-                .katilimciSayisi(talep.getKatilimciSayisi() > 0 ? talep.getKatilimciSayisi() : 1)
+                .katilimciSayisi(katilimciSayisi)
                 // Onay mekanizması: politika onay gerektiriyorsa BEKLEMEDE, aksi halde anında ONAYLANDI.
                 .durum(politika.isOnayGerekli()
                         ? TesisRezervasyon.RezervasyonDurumu.BEKLEMEDE

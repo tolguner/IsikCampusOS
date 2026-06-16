@@ -1,0 +1,712 @@
+import { useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, useScroll, useTransform, type Variants } from 'framer-motion';
+import {
+  ArrowRight, ArrowDown, Sparkles, ShieldCheck, Fingerprint, Network,
+  Calendar, Building2, Utensils, Car, FolderKanban, Briefcase,
+  MessageSquare, BellRing, Users, Server, Database, Workflow,
+  Lock, GitBranch, Boxes, Layers, Zap, CheckCircle2, Radio,
+  QrCode, Award, CalendarCheck, Star, Megaphone, ShoppingBag,
+  Route, BadgeCheck, ScrollText, Quote, LogIn, Smartphone, Bell,
+} from 'lucide-react';
+import { YOLLAR } from '../yardimcilar/yollar';
+import { TemaDegistirici } from '../components/duzen/TemaDegistirici';
+
+/* ------------------------------------------------------------------ */
+/*  Animasyon yardımcıları                                            */
+/* ------------------------------------------------------------------ */
+
+const yukariGel: Variants = {
+  gizli: { opacity: 0, y: 32 },
+  gorunur: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+};
+
+const kademeli: Variants = {
+  gizli: {},
+  gorunur: { transition: { staggerChildren: 0.09 } },
+};
+
+type BolumProps = {
+  children: React.ReactNode;
+  className?: string;
+  id?: string;
+};
+
+// Görünüme girince bir kez animasyonla beliren bölüm sarmalayıcısı.
+const Bolum = ({ children, className = '', id }: BolumProps) => (
+  <motion.section
+    id={id}
+    variants={kademeli}
+    initial="gizli"
+    whileInView="gorunur"
+    viewport={{ once: true, amount: 0.18 }}
+    className={`relative mx-auto w-full max-w-6xl px-6 py-20 sm:py-28 ${className}`}
+  >
+    {children}
+  </motion.section>
+);
+
+const BolumBaslik = ({ etiket, baslik, aciklama }: { etiket: string; baslik: React.ReactNode; aciklama?: string }) => (
+  <motion.div variants={yukariGel} className="mx-auto mb-14 max-w-3xl text-center">
+    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-300/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-100">
+      <Sparkles className="h-3.5 w-3.5" />
+      {etiket}
+    </div>
+    <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">{baslik}</h2>
+    {aciklama && <p className="mt-5 text-base leading-7 text-white/55 sm:text-lg">{aciklama}</p>}
+  </motion.div>
+);
+
+/* ------------------------------------------------------------------ */
+/*  Veri                                                              */
+/* ------------------------------------------------------------------ */
+
+const navBaglantilari = [
+  { etiket: 'Problem', href: '#problem' },
+  { etiket: 'Çözüm', href: '#cozum' },
+  { etiket: 'Modüller', href: '#moduller' },
+  { etiket: 'Mimari', href: '#mimari' },
+  { etiket: 'Teknoloji', href: '#teknoloji' },
+  { etiket: 'Yol Haritası', href: '#yol-haritasi' },
+];
+
+const moduller = [
+  {
+    ad: 'ClubHub', altBaslik: 'Kulüp & Etkinlik Yönetimi', icon: Calendar,
+    renk: 'from-violet-500 to-purple-600', durum: 'Aktif',
+    aciklama: 'Kulüp kuruluşundan etkinlik sertifikasına kadar tüm öğrenci topluluğu yaşam döngüsü.',
+    ozellikler: [
+      { icon: Users, metin: 'Üyelik & SKS onay zinciri' },
+      { icon: CalendarCheck, metin: 'Etkinlik + RSVP & yedek liste' },
+      { icon: QrCode, metin: 'QR ile etkinlik check-in' },
+      { icon: Award, metin: 'Dijital katılım sertifikası' },
+    ],
+  },
+  {
+    ad: 'SpotReserve', altBaslik: 'Spor Tesisi Rezervasyonu', icon: Building2,
+    renk: 'from-cyan-500 to-blue-600', durum: 'Aktif',
+    aciklama: 'Tesis ve kaynakların çakışmasız, kurallı ve denetlenebilir biçimde rezervasyonu.',
+    ozellikler: [
+      { icon: CalendarCheck, metin: 'Uygunluk & saat dilimleri' },
+      { icon: ShieldCheck, metin: 'Çakışma kontrolü' },
+      { icon: Layers, metin: 'Tesis & kaynak yönetimi' },
+      { icon: CheckCircle2, metin: 'Rezervasyon check-in' },
+    ],
+  },
+  {
+    ad: 'UniEats', altBaslik: 'Kampüs Yemek Siparişi', icon: Utensils,
+    renk: 'from-orange-500 to-red-500', durum: 'Aktif',
+    aciklama: 'İşletmeden öğrenciye uçtan uca sipariş: menü, kampanya, favori ve anlık durum takibi.',
+    ozellikler: [
+      { icon: ShoppingBag, metin: 'Menü, seçenek & ekstralar' },
+      { icon: Megaphone, metin: 'Kampanya & indirimler' },
+      { icon: Workflow, metin: 'Sipariş durum makinesi' },
+      { icon: Star, metin: 'Favori satıcılar & ciro' },
+    ],
+  },
+  {
+    ad: 'CampusRide', altBaslik: 'Paylaşımlı Yolculuk', icon: Car,
+    renk: 'from-emerald-500 to-teal-600', durum: 'Aktif',
+    aciklama: 'Doğrulanmış sürücü ve yolcular için güvenli kampüs içi/dışı yolculuk paylaşımı.',
+    ozellikler: [
+      { icon: Route, metin: 'İlan / talep & rota önizleme' },
+      { icon: BadgeCheck, metin: 'Araç & ehliyet doğrulama' },
+      { icon: Star, metin: 'Puanlama sistemi' },
+      { icon: ShieldCheck, metin: 'Şikayet & yönetim logları' },
+    ],
+  },
+];
+
+// Hero içindeki mini telefon önizlemesinde gösterilen modül kısayolları.
+const telefonModulleri = [
+  { ad: 'ClubHub', icon: Calendar, renk: 'from-violet-500 to-purple-600' },
+  { ad: 'SpotReserve', icon: Building2, renk: 'from-cyan-500 to-blue-600' },
+  { ad: 'UniEats', icon: Utensils, renk: 'from-orange-500 to-red-500' },
+  { ad: 'CampusRide', icon: Car, renk: 'from-emerald-500 to-teal-600' },
+];
+
+const yakindaModuller = [
+  { ad: 'ProjectMatch', altBaslik: 'Proje Eşleştirme', icon: FolderKanban, renk: 'from-indigo-500 to-violet-600', aciklama: 'Beceri profili temelli akran eşleştirme ile proje ekipleri kurma.' },
+  { ad: 'MicroJob', altBaslik: 'Kampüs İçi Mikro İş', icon: Briefcase, renk: 'from-pink-500 to-rose-600', aciklama: 'Kısa süreli iş ilanı, teklif, anlaşma ve itibar göstergeleri.' },
+];
+
+// Platform genelinde kullanılan ortak yetenekler (modül üstü).
+const platformYetenekleri = [
+  { icon: Fingerprint, baslik: 'Tek Kimlik', metin: 'Üniversite e-postası ile tek giriş; tüm modüller aynı kimliği paylaşır.' },
+  { icon: BellRing, baslik: 'Anlık Bildirim', metin: 'In-app bildirim + SSE canlı akış, modüller arası fan-out.' },
+  { icon: MessageSquare, baslik: 'Bağlam Bazlı Mesajlaşma', metin: 'Yemek/yolculuk gibi bağlamlara bağlı konuşmalar, canlı mesaj akışı.' },
+];
+
+const mimariServisler = [
+  { ad: 'auth', port: '8081', rol: 'Kimlik & JWT' },
+  { ad: 'profile', port: '8082', rol: 'Profil' },
+  { ad: 'notification', port: '8083', rol: 'Bildirim & SSE' },
+  { ad: 'facility', port: '8086', rol: 'Tesis & rezervasyon' },
+  { ad: 'food', port: '8087', rol: 'Yemek siparişi' },
+  { ad: 'ride', port: '8088', rol: 'CampusRide' },
+  { ad: 'club', port: '8089', rol: 'Kulüp & etkinlik' },
+  { ad: 'message', port: '8090', rol: 'Mesajlaşma' },
+];
+
+const teknolojiGruplari = [
+  {
+    baslik: 'Backend', icon: Server, renk: 'text-emerald-300',
+    ogeler: ['Java 17 + Spring Boot', 'Spring Cloud Gateway', 'Eureka servis keşfi', 'Spring Data JPA', 'JWT + Spring Security'],
+  },
+  {
+    baslik: 'Frontend', icon: Layers, renk: 'text-cyan-300',
+    ogeler: ['React 19 + TypeScript', 'Vite', 'React Router', 'Zustand', 'Tailwind CSS + Framer Motion'],
+  },
+  {
+    baslik: 'Veri & Olay', icon: Database, renk: 'text-violet-300',
+    ogeler: ['PostgreSQL (db-per-service)', 'Apache Kafka + Zookeeper', 'Flyway migration', 'Redis (önbellek)'],
+  },
+  {
+    baslik: 'Altyapı & Gözlem', icon: Boxes, renk: 'text-orange-300',
+    ogeler: ['Docker Compose', 'Zipkin (distributed tracing)', 'Mailpit (e-posta testi)', 'Monorepo yapısı'],
+  },
+];
+
+const roller = [
+  { ad: 'Öğrenci', kod: 'STUDENT', metin: 'Kulüp, etkinlik, tesis, yemek ve yolculuk akışlarının ana kullanıcısı.' },
+  { ad: 'Kulüp Başkanı', kod: 'YONETICI (domain)', metin: 'Kendi kulübü için etkinlik, duyuru ve üye yönetimi.' },
+  { ad: 'SKS Personeli', kod: 'SKS_ADMIN', metin: 'Kulüp/etkinlik onayı, başkan atama, performans izleme.' },
+  { ad: 'Öğrenci İşleri', kod: 'REGISTRAR', metin: 'Öğrenci hesabı oluşturma ve durum yönetimi.' },
+  { ad: 'Tesis Yöneticisi', kod: 'FACILITY_ADMIN', metin: 'Tesis kaynakları, politika ve uygunluk kuralları.' },
+  { ad: 'İşletme Yetkilisi', kod: 'VENDOR_ADMIN / STAFF', metin: 'Satıcı profili, menü, kampanya, personel ve sipariş operasyonu.' },
+  { ad: 'Ride Yönetimi', kod: 'RIDE / BUILDING_SUPPORT', metin: 'Sürücü/araç doğrulama, şikayet ve yolculuk logları.' },
+  { ad: 'Sistem Yöneticisi', kod: 'ADMIN', metin: 'Roller, güvenlik ve sistem geneli yönetim.' },
+];
+
+const istatistikler = [
+  { sayi: '11', etiket: 'Mikroservis', icon: Server },
+  { sayi: '6', etiket: 'Aktif modül', icon: Boxes },
+  { sayi: '10+', etiket: 'Sistem rolü', icon: Users },
+  { sayi: '8', etiket: 'Bağımsız veritabanı', icon: Database },
+];
+
+const yolHaritasi = [
+  { faz: 'A', baslik: 'Çekirdeği sağlamlaştırma', durum: 'Devam ediyor', aktif: true, metin: 'JWT secret env tabanlı yapılması, kritik iş kuralları için test altyapısı, Flyway migration disiplini.' },
+  { faz: 'B', baslik: 'Yeni modülleri sağlamlaştırma', durum: 'Sırada', aktif: false, metin: 'Yemek sipariş durum makinesi, CampusRide doğrulama/şikayet ve SSE akışlarının uçtan uca testleri.' },
+  { faz: 'C', baslik: 'Yeni modüller', durum: 'Planlı', aktif: false, metin: 'ProjectMatch (proje eşleştirme) ve MicroJob (mikro iş pazarı) servislerinin geliştirilmesi.' },
+  { faz: 'D', baslik: 'Mobil uygulama (iOS & Android)', durum: 'Planlı', aktif: false, vurgu: true, metin: 'Mevcut API Gateway’i tüketen native mobil uygulama: push bildirim, QR check-in ve konum tabanlı CampusRide ile cepte kampüs deneyimi.' },
+  { faz: 'E', baslik: 'Olgunlaştırma', durum: 'Planlı', aktif: false, metin: 'Moderasyon/analitik servisleri, genişletilmiş gözlemlenebilirlik ve demo senaryosu.' },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Sayfa                                                             */
+/* ------------------------------------------------------------------ */
+
+export const TanitimSayfasi = () => {
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll();
+  const ilerleme = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+
+  return (
+    <div className="theme-page relative min-h-screen overflow-hidden bg-[#050510] text-white">
+      {/* Scroll ilerleme çubuğu */}
+      <motion.div
+        style={{ width: ilerleme }}
+        className="fixed left-0 top-0 z-50 h-1 bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-500"
+      />
+
+      {/* Ambient arkaplan + ince ızgara dokusu */}
+      <div className="pointer-events-none fixed inset-0">
+        <div className="theme-app-gradient absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(34,211,238,0.20),transparent_30%),radial-gradient(circle_at_80%_20%,rgba(168,85,247,0.26),transparent_32%),linear-gradient(135deg,#050510,#0a0b24_55%,#080718)]" />
+        <div className="animate-float absolute bottom-[-15%] left-[-8%] h-[640px] w-[640px] rounded-full" style={{ background: 'radial-gradient(circle, var(--ambient-cyan-strong) 0%, var(--ambient-cyan-soft) 40%, transparent 70%)' }} />
+        <div className="animate-float-reverse absolute top-[-10%] right-[-5%] h-[560px] w-[560px] rounded-full" style={{ background: 'radial-gradient(circle, var(--ambient-indigo-strong) 0%, var(--ambient-indigo-soft) 40%, transparent 70%)' }} />
+        <div
+          className="absolute inset-0 opacity-[0.18]"
+          style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '54px 54px', maskImage: 'radial-gradient(ellipse at 50% 0%, black, transparent 75%)', WebkitMaskImage: 'radial-gradient(ellipse at 50% 0%, black, transparent 75%)' }}
+        />
+      </div>
+
+      {/* NAV */}
+      <nav className="theme-nav sticky top-0 z-40 mx-3 mt-3 flex items-center justify-between rounded-3xl px-5 py-3 sm:mx-5 sm:mt-5 sm:px-6" style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
+        <Link to={YOLLAR.giris} className="flex items-center gap-3 rounded-2xl outline-none transition hover:opacity-85">
+          <img src="/isik-ikon.png" alt="Işık Üniversitesi" className="h-7 w-7 object-contain" />
+          <div>
+            <span className="theme-text text-lg font-bold text-white">Işık<span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">CampusOS</span></span>
+            <p className="theme-muted -mt-0.5 text-[11px] text-white/40">Dijital Kampüs Platformu</p>
+          </div>
+        </Link>
+        <div className="hidden items-center gap-1 lg:flex">
+          {navBaglantilari.map((b) => (
+            <a key={b.href} href={b.href} className="rounded-xl px-3 py-2 text-sm font-semibold text-white/55 transition hover:bg-white/[0.06] hover:text-white">
+              {b.etiket}
+            </a>
+          ))}
+        </div>
+        <div className="flex items-center gap-3">
+          <TemaDegistirici />
+          <Link to={YOLLAR.giris} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-cyan-100">
+            <LogIn className="h-4 w-4" />
+            <span className="hidden sm:inline">Giriş Yap</span>
+          </Link>
+        </div>
+      </nav>
+
+      <main className="relative z-10">
+        {/* 1 — HERO */}
+        <section ref={heroRef} className="relative mx-auto grid min-h-[90vh] max-w-6xl grid-cols-1 items-center gap-12 px-6 py-20 lg:grid-cols-[1.1fr_0.9fr]">
+          <motion.div initial="gizli" animate="gorunur" variants={kademeli}>
+            <motion.div variants={yukariGel} className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-100">
+              <Sparkles className="h-4 w-4" />
+              Işık Üniversitesi · Kapalı dijital kampüs platformu
+            </motion.div>
+            <motion.h1 variants={yukariGel} className="text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl xl:text-7xl">
+              Kampüs artık<br />
+              <span className="bg-gradient-to-r from-cyan-300 via-indigo-300 to-fuchsia-400 bg-clip-text text-transparent">tek işletim sistemi.</span>
+            </motion.h1>
+            <motion.p variants={yukariGel} className="mt-7 max-w-xl text-lg leading-8 text-white/60">
+              Kulüpler, tesis rezervasyonu, yemek siparişi ve paylaşımlı yolculuk; tek kimlik,
+              tek geçit ve ortak bir güven katmanı altında birleşiyor. Dağınık kampüs süreçlerini
+              tutarlı tek bir deneyimde toplayan mikroservis tabanlı bir platform.
+            </motion.p>
+            <motion.div variants={yukariGel} className="mt-9 flex flex-wrap items-center gap-3">
+              <a href="#moduller" className="inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-950 transition hover:bg-cyan-100">
+                Modülleri keşfet
+                <ArrowDown className="h-4 w-4" />
+              </a>
+              <Link to={YOLLAR.giris} className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-3.5 text-sm font-bold text-white/75 transition hover:bg-white/[0.08] hover:text-white">
+                Platforma giriş
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </motion.div>
+            <motion.div variants={yukariGel} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white/45">
+              <ShieldCheck className="h-4 w-4 text-emerald-300" />
+              Yalnızca doğrulanmış üniversite üyelerine açık
+            </motion.div>
+          </motion.div>
+
+          {/* Telefon önizlemesi */}
+          <motion.div
+            initial={{ opacity: 0, y: 40, rotate: -3 }}
+            animate={{ opacity: 1, y: 0, rotate: -4 }}
+            transition={{ duration: 0.9, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="relative mx-auto hidden lg:block"
+          >
+            <div className="absolute -inset-10 rounded-full bg-indigo-500/20 blur-3xl" />
+            <motion.div
+              animate={{ y: [0, -14, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              className="relative h-[540px] w-[270px] rounded-[2.6rem] border border-white/15 bg-gradient-to-b from-[#0d0f24] to-[#070613] p-3 shadow-[0_40px_80px_rgba(0,0,0,0.55)]"
+            >
+              {/* çentik */}
+              <div className="absolute left-1/2 top-3 z-10 h-5 w-28 -translate-x-1/2 rounded-full bg-black/60" />
+              <div className="flex h-full flex-col overflow-hidden rounded-[2rem] bg-[radial-gradient(circle_at_30%_0%,rgba(99,102,241,0.25),transparent_55%),#070613] p-4">
+                <div className="mb-5 mt-6 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">İyi günler 👋</p>
+                    <p className="text-base font-black text-white">Kampüsün hazır</p>
+                  </div>
+                  <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/[0.06]">
+                    <Bell className="h-4 w-4 text-white/70" />
+                    <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-fuchsia-500" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {telefonModulleri.map((m, i) => (
+                    <motion.div
+                      key={m.ad}
+                      initial={{ opacity: 0, scale: 0.85 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.6 + i * 0.12 }}
+                      className="rounded-2xl border border-white/10 bg-white/[0.04] p-3"
+                    >
+                      <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${m.renk}`}>
+                        <m.icon className="h-4 w-4 text-white" />
+                      </div>
+                      <p className="text-[11px] font-black text-white">{m.ad}</p>
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-300"><Car className="h-3.5 w-3.5" /></div>
+                    <div className="flex-1">
+                      <div className="h-1.5 w-3/4 rounded-full bg-white/15" />
+                      <div className="mt-1.5 h-1.5 w-1/2 rounded-full bg-white/10" />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-auto flex items-center justify-center gap-1.5 pt-3 text-[9px] font-bold uppercase tracking-widest text-white/30">
+                  <Smartphone className="h-3 w-3" /> Mobil sürüm yolda
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/30"
+          >
+            <ArrowDown className="h-6 w-6 animate-bounce" />
+          </motion.div>
+        </section>
+
+        {/* İSTATİSTİK ŞERİDİ */}
+        <Bolum className="!py-10">
+          <motion.div variants={kademeli} className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {istatistikler.map((s) => (
+              <motion.div key={s.etiket} variants={yukariGel} className="theme-card flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-4 backdrop-blur-xl">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-cyan-200">
+                  <s.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-2xl font-black leading-none text-white">{s.sayi}</div>
+                  <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-white/45">{s.etiket}</div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </Bolum>
+
+        {/* 2 — PROBLEM */}
+        <Bolum id="problem">
+          <BolumBaslik
+            etiket="Problem"
+            baslik={<>Kampüs yaşamı <span className="bg-gradient-to-r from-rose-300 to-orange-300 bg-clip-text text-transparent">dağınık kanallara</span> sıkışmış</>}
+            aciklama="Kulüp duyuruları, tesis talepleri, yemek ve ulaşım koordinasyonu bugün çoğunlukla denetimsiz harici kanallarda yürüyor. Bu dağınıklık güven, görünürlük ve tutarlılık sorunlarına yol açıyor."
+          />
+          <motion.div variants={kademeli} className="grid gap-5 md:grid-cols-3">
+            {[
+              { icon: Megaphone, baslik: 'Dağınık iletişim', metin: 'Duyurular WhatsApp/Instagram gruplarına, e-postalara ve manuel listelere bölünmüş durumda.' },
+              { icon: ShieldCheck, baslik: 'Denetimsiz güven', metin: 'Harici kanallarda kimin doğrulanmış üniversite üyesi olduğu belirsiz; kötüye kullanım kolay.' },
+              { icon: Workflow, baslik: 'Tutarsız deneyim', metin: 'Her süreç farklı bir araçta; öğrenci her seferinde yeni bir akış öğrenmek zorunda.' },
+            ].map((p) => (
+              <motion.div key={p.baslik} variants={yukariGel} className="theme-card rounded-3xl border border-white/10 bg-white/[0.035] p-6 backdrop-blur-xl">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-300">
+                  <p.icon className="h-6 w-6" />
+                </div>
+                <h3 className="mb-2 text-lg font-black text-white">{p.baslik}</h3>
+                <p className="text-sm leading-6 text-white/55">{p.metin}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </Bolum>
+
+        {/* 3 — ÇÖZÜM / VİZYON */}
+        <Bolum id="cozum">
+          <BolumBaslik
+            etiket="Çözüm & Vizyon"
+            baslik={<>Tek omurga, <span className="bg-gradient-to-r from-cyan-300 to-indigo-300 bg-clip-text text-transparent">tek güven katmanı</span></>}
+            aciklama="IsikCampusOS bu dağınıklığı tek bir güvenli ve tutarlı deneyim omurgasında birleştirir. Sisteme yalnızca doğrulanmış üniversite üyeleri erişir."
+          />
+          <motion.div variants={kademeli} className="grid gap-5 md:grid-cols-3">
+            {[
+              { icon: Fingerprint, baslik: 'Tek kimlik ile onboarding', metin: 'Üniversite e-postası ile giriş; e-posta doğrulama ve JWT tabanlı oturum.' },
+              { icon: Lock, baslik: 'Merkezi güvenlik', metin: 'JWT API Gateway’de doğrulanır; rol ve kullanıcı bilgisi servislere güvenli iletilir.' },
+              { icon: Network, baslik: 'Tutarlı kullanıcı deneyimi', metin: 'Tüm modüllerde ortak tasarım dili; bilişsel geçiş maliyeti minimuma iner.' },
+            ].map((c) => (
+              <motion.div key={c.baslik} variants={yukariGel} className="theme-card rounded-3xl border border-white/10 bg-white/[0.035] p-6 backdrop-blur-xl">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/12 text-cyan-200">
+                  <c.icon className="h-6 w-6" />
+                </div>
+                <h3 className="mb-2 text-lg font-black text-white">{c.baslik}</h3>
+                <p className="text-sm leading-6 text-white/55">{c.metin}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Platform üstü yetenekler */}
+          <motion.div variants={yukariGel} className="mt-6 grid gap-4 rounded-3xl border border-white/10 bg-white/[0.025] p-6 sm:grid-cols-3">
+            {platformYetenekleri.map((y) => (
+              <div key={y.baslik} className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-indigo-200">
+                  <y.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white">{y.baslik}</h4>
+                  <p className="mt-0.5 text-xs leading-5 text-white/50">{y.metin}</p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        </Bolum>
+
+        {/* 4 — MODÜLLER */}
+        <Bolum id="moduller">
+          <BolumBaslik
+            etiket="Modüller"
+            baslik={<>Kampüsün <span className="bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-transparent">dört aktif</span> ekosistemi</>}
+            aciklama="Her modül bağımsız bir mikroservis olarak çalışır ama aynı kimliği, bildirimi ve mesajlaşmayı paylaşır."
+          />
+          <motion.div variants={kademeli} className="grid gap-6 md:grid-cols-2">
+            {moduller.map((m) => (
+              <motion.div
+                key={m.ad} variants={yukariGel}
+                className="theme-card group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] p-7 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.06]"
+              >
+                <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${m.renk}`} />
+                <div className="mb-5 flex items-start justify-between gap-3">
+                  <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${m.renk} shadow-lg shadow-black/20 transition-transform group-hover:scale-105`}>
+                    <m.icon className="h-7 w-7 text-white" />
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-300/12 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-emerald-100">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    {m.durum}
+                  </span>
+                </div>
+                <h3 className="text-2xl font-black text-white">{m.ad}</h3>
+                <p className="mt-0.5 text-sm font-bold text-white/45">{m.altBaslik}</p>
+                <p className="mt-3 text-sm leading-6 text-white/55">{m.aciklama}</p>
+                <div className="mt-5 grid grid-cols-2 gap-2.5">
+                  {m.ozellikler.map((o) => (
+                    <div key={o.metin} className="flex items-center gap-2 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2">
+                      <o.icon className="h-4 w-4 shrink-0 text-cyan-200/80" />
+                      <span className="text-[12px] font-semibold leading-4 text-white/65">{o.metin}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Yakında gelen modüller */}
+          <motion.div variants={yukariGel} className="mt-10">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="h-px flex-1 bg-white/10" />
+              <span className="text-xs font-black uppercase tracking-[0.16em] text-white/40">Yol Haritasında</span>
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
+            <div className="grid gap-5 md:grid-cols-2">
+              {yakindaModuller.map((m) => (
+                <div key={m.ad} className="relative overflow-hidden rounded-3xl border border-dashed border-white/15 bg-white/[0.02] p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${m.renk} opacity-80`}>
+                        <m.icon className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-black text-white">{m.ad}</h4>
+                        <p className="text-xs font-bold text-white/40">{m.altBaslik}</p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white/55">Çok yakında</span>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-white/50">{m.aciklama}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </Bolum>
+
+        {/* 5 — MİMARİ */}
+        <Bolum id="mimari">
+          <BolumBaslik
+            etiket="Mimari"
+            baslik={<>Bağımsız servisler, <span className="bg-gradient-to-r from-emerald-300 to-cyan-300 bg-clip-text text-transparent">tek geçit</span></>}
+            aciklama="İstemci hiçbir servise doğrudan erişmez. Tüm trafik API Gateway’den geçer; kimlik merkezde doğrulanır, servisler Eureka ile keşfedilir, kritik olaylar Kafka ile akar."
+          />
+          <motion.div variants={yukariGel} className="theme-card rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl sm:p-8">
+            {/* Katman 1: istemci + gateway */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex items-center gap-2 rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-5 py-3 text-sm font-black text-cyan-100">
+                <Layers className="h-4 w-4" /> React Frontend
+              </div>
+              <div className="text-white/30"><ArrowDown className="h-5 w-5" /></div>
+              <div className="flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-5 py-3 text-sm font-black text-indigo-100">
+                <Zap className="h-4 w-4" /> API Gateway :8080
+                <span className="ml-1 rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white/60">JWT doğrulama · X-User-Roles</span>
+              </div>
+            </div>
+
+            {/* bağlayıcı */}
+            <div className="my-5 flex justify-center text-white/25"><div className="h-6 w-px bg-white/15" /></div>
+
+            {/* Katman 2: servisler */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {mimariServisler.map((s) => (
+                <div key={s.ad} className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-center transition hover:border-white/25 hover:bg-white/[0.07]">
+                  <div className="font-mono text-sm font-black text-white">{s.ad}</div>
+                  <div className="mt-0.5 text-[10px] font-bold text-cyan-200/70">:{s.port}</div>
+                  <div className="mt-1 text-[11px] leading-4 text-white/45">{s.rol}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Katman 3: altyapı şeridi */}
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-bold text-white/70">
+                <GitBranch className="h-4 w-4 text-emerald-300" /> Eureka servis keşfi
+              </div>
+              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-bold text-white/70">
+                <Radio className="h-4 w-4 text-orange-300" /> Kafka olay akışı
+              </div>
+              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-bold text-white/70">
+                <Database className="h-4 w-4 text-violet-300" /> DB-per-service
+              </div>
+            </div>
+
+            <p className="mt-6 text-center text-xs leading-5 text-white/40">
+              Örn. <span className="font-mono text-white/60">user.registered</span> olayı auth → profile akışıyla otomatik profil oluşturur;
+              yemek/yolculuk modülleri <span className="font-mono text-white/60">bildirim.olustur</span> ile bildirim üretir.
+            </p>
+          </motion.div>
+        </Bolum>
+
+        {/* 6 — TEKNOLOJİLER */}
+        <Bolum id="teknoloji">
+          <BolumBaslik
+            etiket="Teknoloji Yığını"
+            baslik={<>Üretim sınıfı <span className="bg-gradient-to-r from-cyan-300 to-emerald-300 bg-clip-text text-transparent">teknolojiler</span></>}
+            aciklama="Modern ve ölçeklenebilir bir kurumsal yığın üzerine inşa edildi."
+          />
+          <motion.div variants={kademeli} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {teknolojiGruplari.map((g) => (
+              <motion.div key={g.baslik} variants={yukariGel} className="theme-card rounded-3xl border border-white/10 bg-white/[0.035] p-6 backdrop-blur-xl">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/[0.06]">
+                    <g.icon className={`h-5 w-5 ${g.renk}`} />
+                  </div>
+                  <h3 className="text-lg font-black text-white">{g.baslik}</h3>
+                </div>
+                <ul className="space-y-2">
+                  {g.ogeler.map((o) => (
+                    <li key={o} className="flex items-center gap-2 text-sm text-white/60">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300/70" />
+                      {o}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
+          </motion.div>
+        </Bolum>
+
+        {/* 7 — ROLLER */}
+        <Bolum id="roller">
+          <BolumBaslik
+            etiket="Roller & Yetkiler"
+            baslik={<>Herkese <span className="bg-gradient-to-r from-amber-300 to-orange-300 bg-clip-text text-transparent">doğru yetki</span></>}
+            aciklama="Rol bazlı erişim kontrolü (RBAC) yalnızca role değil; sahiplik, durum ve bağlama göre de uygulanır. Kullanıcı yalnızca kendi kaynaklarında işlem yapar."
+          />
+          <motion.div variants={kademeli} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {roller.map((r) => (
+              <motion.div key={r.kod} variants={yukariGel} className="theme-card rounded-2xl border border-white/10 bg-white/[0.035] p-5 backdrop-blur-xl">
+                <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/12 text-amber-200">
+                  <Users className="h-4 w-4" />
+                </div>
+                <h3 className="text-sm font-black text-white">{r.ad}</h3>
+                <code className="mt-0.5 block text-[10px] font-bold text-amber-200/70">{r.kod}</code>
+                <p className="mt-2 text-xs leading-5 text-white/50">{r.metin}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </Bolum>
+
+        {/* 8 — ALINTI */}
+        <Bolum id="vurgu">
+          <motion.div variants={yukariGel} className="overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-indigo-500/15 via-white/[0.03] to-cyan-500/15 p-10 text-center backdrop-blur-xl sm:p-14">
+            <Quote className="mx-auto mb-5 h-8 w-8 text-white/25" />
+            <p className="mx-auto max-w-3xl text-2xl font-black leading-snug text-white sm:text-3xl">
+              “Kampüs yaşamının her ders dışı süreci; aynı kimlik, aynı güven ve aynı deneyimle tek platformda.”
+            </p>
+            <p className="mt-5 text-sm font-semibold uppercase tracking-[0.2em] text-white/40">IsikCampusOS Vizyonu</p>
+          </motion.div>
+        </Bolum>
+
+        {/* 9 — MOBİL VURGUSU */}
+        <Bolum id="mobil">
+          <motion.div variants={yukariGel} className="grid items-center gap-10 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.025] p-8 backdrop-blur-xl sm:p-12 lg:grid-cols-[1fr_auto]">
+            <div>
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-fuchsia-300/20 bg-fuchsia-400/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-fuchsia-100">
+                <Smartphone className="h-3.5 w-3.5" /> Gelecek Planı
+              </div>
+              <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+                Kampüs, <span className="bg-gradient-to-r from-fuchsia-300 to-indigo-300 bg-clip-text text-transparent">cebinde</span>
+              </h2>
+              <p className="mt-4 max-w-xl text-base leading-7 text-white/55">
+                Sıradaki büyük adım: mevcut API Gateway’i tüketen native bir <strong className="text-white/80">iOS & Android</strong> uygulaması.
+                Web ile aynı kimlik ve aynı modüller; üstüne mobile özgü yetenekler.
+              </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                {[
+                  { icon: BellRing, metin: 'Push bildirim' },
+                  { icon: QrCode, metin: 'Cepte QR check-in' },
+                  { icon: Route, metin: 'Konum tabanlı CampusRide' },
+                ].map((o) => (
+                  <div key={o.metin} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white/70">
+                    <o.icon className="h-4 w-4 text-fuchsia-200" />
+                    {o.metin}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* küçük telefon ikonu rozeti */}
+            <div className="relative mx-auto hidden h-44 w-44 shrink-0 items-center justify-center lg:flex">
+              <div className="absolute inset-0 rounded-full bg-fuchsia-500/20 blur-2xl" />
+              <div className="relative flex h-32 w-32 items-center justify-center rounded-[2rem] border border-white/15 bg-gradient-to-br from-fuchsia-500/30 to-indigo-500/30">
+                <Smartphone className="h-14 w-14 text-white" />
+              </div>
+            </div>
+          </motion.div>
+        </Bolum>
+
+        {/* 10 — YOL HARİTASI */}
+        <Bolum id="yol-haritasi">
+          <BolumBaslik
+            etiket="Yol Haritası"
+            baslik={<>Bugünden <span className="bg-gradient-to-r from-fuchsia-300 to-indigo-300 bg-clip-text text-transparent">yarına</span></>}
+            aciklama="Çekirdeği sağlamlaştırma, yeni modüller ve mobil uygulama; şeffaf bir geliştirme planıyla ilerliyor."
+          />
+          <motion.div variants={kademeli} className="relative mx-auto max-w-3xl">
+            <div className="absolute left-[19px] top-2 bottom-2 w-px bg-white/10" />
+            <div className="space-y-5">
+              {yolHaritasi.map((f) => (
+                <motion.div key={f.faz} variants={yukariGel} className="relative flex items-start gap-5">
+                  <div className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 ${f.aktif ? 'border-cyan-400 bg-cyan-400/20 text-cyan-200' : f.vurgu ? 'border-fuchsia-400/60 bg-fuchsia-500/15 text-fuchsia-200' : 'border-white/15 bg-[#0a0b1e] text-white/40'}`}>
+                    <span className="text-xs font-black">{f.faz}</span>
+                  </div>
+                  <div className={`flex-1 rounded-2xl border bg-white/[0.035] p-5 backdrop-blur-xl ${f.aktif ? 'border-cyan-400/30' : f.vurgu ? 'border-fuchsia-400/30' : 'border-white/10'}`}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-base font-black text-white">{f.baslik}</h3>
+                      {f.vurgu && <Smartphone className="h-4 w-4 text-fuchsia-200" />}
+                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${f.aktif ? 'bg-cyan-300/15 text-cyan-100' : f.vurgu ? 'bg-fuchsia-300/15 text-fuchsia-100' : 'bg-white/10 text-white/50'}`}>{f.durum}</span>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-white/55">{f.metin}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </Bolum>
+
+        {/* 11 — KAPANIŞ CTA */}
+        <Bolum id="cta" className="pb-32">
+          <motion.div variants={yukariGel} className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] p-10 text-center backdrop-blur-xl sm:p-16">
+            <div className="absolute -top-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)' }} />
+            <div className="relative">
+              <img src="/isik-ikon.png" alt="Işık Üniversitesi" className="mx-auto mb-6 h-12 w-12 object-contain" />
+              <h2 className="text-3xl font-black tracking-tight text-white sm:text-5xl">
+                Kampüsünü <span className="bg-gradient-to-r from-cyan-300 via-indigo-300 to-fuchsia-400 bg-clip-text text-transparent">tek yerden</span> yönet
+              </h2>
+              <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-white/55">
+                IsikCampusOS, Işık Üniversitesi mensuplarına özeldir. Hesap bilgilerin için Öğrenci İşleri ile iletişime geç.
+              </p>
+              <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+                <Link to={YOLLAR.giris} className="inline-flex items-center gap-2 rounded-2xl bg-white px-7 py-3.5 text-sm font-black text-slate-950 transition hover:bg-cyan-100">
+                  <LogIn className="h-4 w-4" />
+                  Platforma giriş yap
+                </Link>
+                <Link to={YOLLAR.sertifikaDogrula} className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-7 py-3.5 text-sm font-bold text-white/75 transition hover:bg-white/[0.08] hover:text-white">
+                  <ScrollText className="h-4 w-4" />
+                  Sertifika doğrula
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+
+          <footer className="mt-16 flex flex-col items-center gap-3 text-center text-xs text-white/35">
+            <div className="flex items-center gap-2">
+              <Boxes className="h-4 w-4" />
+              <span>IsikCampusOS · Mikroservis tabanlı dijital kampüs platformu</span>
+            </div>
+            <p>Işık Üniversitesi · Yönetim Bilişim Sistemleri bitirme projesi</p>
+          </footer>
+        </Bolum>
+      </main>
+    </div>
+  );
+};

@@ -10,28 +10,32 @@ IsikCampusOS, Işık Üniversitesi öğrencileri ve personeli için tasarlanmı�
 
 ## 3. Modüller ve Gerçekleştirim Durumu
 
-> **ÖNEMLİ:** Aşağıdaki tablo, projenin **tam vizyonunu** (hedeflenen 6 fonksiyonel modül) ve bu modüllerin **mevcut gerçekleştirim durumunu** ayrı ayrı gösterir. Bu ayrım tüm proje dokümanlarında tutarlı biçimde korunur.
+> **ÖNEMLİ:** Aşağıdaki tablo, projenin tam vizyonunu ve bu modüllerin **mevcut kod durumunu** ayrı ayrı gösterir. Bu ayrım tüm proje dokümanlarında tutarlı biçimde korunur.
 
 | Modül | Kapsam | Durum |
 |-------|--------|-------|
 | **Kimlik ve Yetkilendirme** | Üniversite e-postası ile giriş, JWT, e-posta doğrulama, öğrenci yönetimi | ✅ **Kodlandı** (`auth-service`) |
 | **Profil Yönetimi** | Otomatik profil oluşturma, profil görüntüleme/güncelleme, onay akışı | ✅ **Kodlandı** (`profile-service`) |
-| **Kulüp ve Etkinlik Yönetimi** | Kulüp kuruluşu, üyelik, etkinlik, RSVP, QR check-in, sertifika, bildirim | ✅ **Kodlandı** (`club-service`) |
+| **Kulüp ve Etkinlik Yönetimi** | Kulüp kuruluşu, üyelik, etkinlik, RSVP, QR check-in, sertifika, kulüp duyuruları | ✅ **Kodlandı** (`club-service`) |
 | **Spor Tesisleri Rezervasyon** | Tesis/kaynak, uygunluk, çakışmasız rezervasyon, check-in | ✅ **Kodlandı** (`facility-service`) |
-| **Kampüs Yemek Sipariş ve Yönetim** | Satıcı, menü, sipariş, asenkron durum takibi | 🔵 **Planlandı** (henüz kodlanmadı) |
-| **Paylaşımlı Yolculuk (CampusRide)** | Sürücü/yolcu ilanı, rota ve uygunluk temelli eşleştirme | 🔵 **Planlandı** (henüz kodlanmadı) |
+| **Bildirim Yönetimi** | In-app bildirim, SSE akışı, toplu/destek duyurusu, Kafka bildirim tüketimi | ✅ **Kodlandı** (`notification-service`) |
+| **Mesajlaşma** | Bağlam bazlı konuşma, mesaj akışı, okunmamış sayısı, SSE | ✅ **Kodlandı** (`message-service`) |
+| **Kampüs Yemek Sipariş ve Yönetim** | Satıcı, menü, kategori, kampanya, favori, sipariş, işletme paneli, durum takibi | ✅ **Kodlandı** (`food-service`) |
+| **Paylaşımlı Yolculuk (CampusRide)** | Sürücü/yolcu ilanı, rota önizleme, araç/ehliyet doğrulama, talep, puan, şikayet | ✅ **Kodlandı** (`ride-service`) |
 | **Proje Eşleştirme (ProjectMatch)** | Beceri profili, proje ilanı, uyum temelli akran eşleştirme | 🔵 **Planlandı** (henüz kodlanmadı) |
 | **Kampüs İçi Mikro İş (MicroJob)** | Kısa süreli iş ilanı, teklif, anlaşma, itibar göstergeleri | 🔵 **Planlandı** (henüz kodlanmadı) |
 
-**Özet:** Çekirdek altyapı + kimlik + profil + kulüp/etkinlik + tesis rezervasyon modülleri **çalışır durumdadır**. Yemek, yolculuk, proje eşleştirme ve mikro iş modülleri **tasarım aşamasında** olup yol haritasının sonraki fazlarına bırakılmıştır (bkz. [08-yol-haritasi-ve-durum.md](08-yol-haritasi-ve-durum.md)).
+**Özet:** Çekirdek altyapı + kimlik + profil + kulüp/etkinlik + bildirim + tesis rezervasyon + yemek + yolculuk + mesajlaşma modülleri kod tabanında mevcuttur. ProjectMatch ve MicroJob modülleri henüz tasarım/plan aşamasındadır (bkz. [08-yol-haritasi-ve-durum.md](08-yol-haritasi-ve-durum.md)).
 
 ## 4. Hedef Kullanıcılar
 
-- **Öğrenciler:** Kulüplere katılma, etkinliklere RSVP, tesis rezervasyonu, profil yönetimi; ileride yemek/yolculuk/proje/mikro iş.
+- **Öğrenciler:** Kulüplere katılma, etkinliklere RSVP, tesis rezervasyonu, profil yönetimi, yemek siparişi, CampusRide ilan/talep akışları, bağlam bazlı mesajlaşma; ileride proje/mikro iş.
 - **Kulüp Başkanları (domain rolü):** Kendi kulüpleri adına etkinlik oluşturma, üye ve katılım yönetimi.
 - **SKS Personeli:** Kulüp ve etkinlik onay süreçleri, kulüp performansı izleme.
 - **Öğrenci İşleri (Registrar):** Öğrenci hesabı oluşturma ve durum yönetimi.
 - **Tesis Yöneticileri:** Tesis kaynakları ve rezervasyon politikaları yönetimi.
+- **İşletme Yetkilileri:** Satıcı profili, menü, kampanya, personel ve sipariş yönetimi.
+- **Ride Yöneticileri:** Sürücü/araç doğrulama, şikayet inceleme ve yolculuk loglarını izleme.
 - **Sistem Yöneticisi (Admin):** Roller, güvenlik ve sistem geneli yönetim.
 
 ## 5. Temel Tasarım İlkeleri

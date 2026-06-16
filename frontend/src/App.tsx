@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { UygulamaDuzeni } from './components/duzen/UygulamaDuzeni';
+import { TemaUygulayici } from './components/duzen/TemaUygulayici';
 import { GirisSayfasi } from './pages/GirisSayfasi';
+import { TanitimSayfasi } from './pages/TanitimSayfasi';
 import { EpostaDogrulama } from './pages/EpostaDogrulama';
 import { SifreDegistir } from './pages/SifreDegistir';
 import { OgrenciIsleriPaneli } from './pages/OgrenciIsleriPaneli';
@@ -165,9 +167,11 @@ function App() {
 
   return (
     <BrowserRouter>
+      <TemaUygulayici />
       <OtomatikMesajTemizleyici />
       <Routes>
         {/* Auth — giriş sayfası */}
+        <Route path={YOLLAR.tanitim} element={<TanitimSayfasi />} />
         <Route path={YOLLAR.giris} element={!hasSession ? <GirisSayfasi /> : <Navigate to={YOLLAR.anaSayfa} />} />
         <Route path="/login" element={<EskiYolYonlendirme yeniYol={YOLLAR.giris} />} />
         <Route path={YOLLAR.sertifikaDogrula} element={<SertifikaDogrulamaSayfasi />} />

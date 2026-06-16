@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useTesisDeposu } from '../depolar/tesisDeposu';
 import { useRezervasyonDeposu } from '../depolar/rezervasyonDeposu';
-import { motion } from 'framer-motion';
 import {
   Building2,
   Calendar,
@@ -13,8 +13,10 @@ import {
   ChevronRight,
   Lock,
   CalendarDays,
+  ClipboardList,
 } from 'lucide-react';
 import { MesajBildirimi } from '../components/ortak/MesajBildirimi';
+import { YOLLAR } from '../yardimcilar/yollar';
 
 const panelStyle = {
   background: 'rgba(255,255,255,0.045)',
@@ -296,11 +298,20 @@ export const TesisRezervasyonSayfasi = () => {
 
   return (
     <div className="space-y-6 text-white pb-12">
-      <div>
-        <h1 className="text-3xl font-black text-white">Spor Tesisleri Rezervasyon Takvimi</h1>
-        <p className="mt-2 text-sm text-white/45 leading-relaxed">
-          Işık Üniversitesi Spor Müdürlüğü antrenman takvimini inceleyin, boş saatleri görerek kolayca rezerve edin.
-        </p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h1 className="text-3xl font-black text-white">Spor Tesisleri Rezervasyon Takvimi</h1>
+          <p className="mt-2 text-sm text-white/45 leading-relaxed">
+            Işık Üniversitesi Spor Müdürlüğü antrenman takvimini inceleyin, boş saatleri görerek kolayca rezerve edin.
+          </p>
+        </div>
+        <Link
+          to={YOLLAR.rezervasyonlarim}
+          className="inline-flex w-fit items-center gap-2 rounded-2xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-3 text-sm font-black text-cyan-100 transition hover:bg-cyan-400/15"
+        >
+          <ClipboardList className="h-4 w-4" />
+          Rezervasyonlarım
+        </Link>
       </div>
 
       <MesajBildirimi hata={error} basari={successMessage} onKapat={clearMessages} />

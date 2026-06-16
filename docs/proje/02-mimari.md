@@ -16,21 +16,23 @@ IsikCampusOS, **mikroservis mimarisi** ile inşa edilmiştir. Her domain bağım
 | `api-gateway` | 8080 | Yönlendirme, CORS, merkezi JWT doğrulama | `com.isik.kampusos.gecit` |
 | `auth-service` | 8081 | Kimlik, JWT, e-posta doğrulama, öğrenci yönetimi, sertifika doğrulama | `com.isik.kampusos.kimlik` |
 | `profile-service` | 8082 | Profil kayıtları, profil değişiklik onayı | `com.isik.kampusos.profil` |
-| `club-service` | 8089 | Kulüp, etkinlik, RSVP, check-in, **bildirim**, akademik kadro, denetim günlüğü | `com.isik.kampusos.kulup` |
+| `notification-service` | 8083 | In-app bildirim, SSE akışı, toplu/destek duyurusu, Kafka bildirim tüketimi | `com.isik.kampusos.bildirim` |
 | `facility-service` | 8086 | Tesis, kaynak, rezervasyon, uygunluk, check-in | `com.isik.kampusos.tesis` |
+| `food-service` | 8087 | Satıcı, menü, kategori, kampanya, favori, sipariş, işletme/personel yönetimi | `com.isik.kampusos.yemek` |
+| `ride-service` | 8088 | CampusRide ilan, talep, rota önizleme, araç/ehliyet doğrulama, puan, şikayet | `com.isik.kampusos.yolculuk` |
+| `club-service` | 8089 | Kulüp, etkinlik, RSVP, QR check-in, sertifika, akademik kadro, denetim günlüğü | `com.isik.kampusos.kulup` |
+| `message-service` | 8090 | Bağlam bazlı konuşma, mesaj gönderimi, okunmamış sayısı, SSE mesaj akışı | `com.isik.kampusos.mesaj` |
 
-**Not:** Bildirim (notification) işlevi ayrı bir servis değildir; `club-service` içinde gömülü olarak (in-app, `club_db`) çalışmaktadır. Bu, bilinçli bir mimari karardır: bildirimin bugün tek tüketicisi club-service olduğu için ayrı servise çıkarılmamış; ikinci bir modül bildirim üretmeye başladığında olay güdümlü bağımsız `notification-service` olarak ayrılması planlanmıştır (bkz. [08-yol-haritasi-ve-durum.md](08-yol-haritasi-ve-durum.md), ADR-001).
+**Not:** Bildirim işlevi artık bağımsız `notification-service` olarak kodlanmıştır. `club-service` içinde kalan `/api/v1/bildirimler/duyurular` ucu kulüp/SKS duyuru fan-out ihtiyacı nedeniyle gateway'de özel olarak `club-service`e yönlenir; genel bildirim okuma, okundu işaretleme ve SSE akışı `notification-service`tedir.
 
 ### 2.2. Planlanan Servisler (henüz kodlanmadı)
 
 | Servis | Port | Sorumluluk |
 |--------|------|------------|
-| `food-service` | 8087 | Satıcı, menü, sipariş yönetimi |
-| `ride-service` | 8088 | Paylaşımlı yolculuk ilanı ve eşleştirme |
-| `projectmatch-service` | 8090 | Beceri profili, proje ilanı, ekip eşleştirme |
-| `microjob-service` | 8091 | İş ilanı, teklif, anlaşma |
+| `projectmatch-service` | TBD | Beceri profili, proje ilanı, ekip eşleştirme |
+| `microjob-service` | TBD | İş ilanı, teklif, anlaşma |
 
-> İleride bildirim, moderasyon ve analitik işlevleri büyüdükçe ayrı servislere (`notification-service`, `moderation-service`, `analytics-service`) çıkarılabilir. Şu an böyle ayrı servisler **yoktur**.
+> Moderasyon ve analitik işlevleri henüz ayrı servis olarak kodlanmamıştır. Gerektiğinde yeni servisler olarak eklenecektir.
 
 ## 3. Altyapı Bileşenleri
 
@@ -92,16 +94,26 @@ Kritik domain olayları Kafka topic'lerine yayılır ve ilgili servisler tüketi
 | `/api/v1/kimlik/**` | auth-service | Hayır (login/doğrulama public) |
 | `/api/v1/ogrenciler/**` | auth-service | Evet |
 | `/api/v1/kullanicilar/**` | auth-service | Evet |
+| `/api/v1/yonetim/saticilar/**` | food-service | Evet |
+| `/api/v1/saticilar/**` | food-service | Evet |
+| `/api/v1/satici/**` | food-service | Evet |
+| `/api/v1/siparisler/**` | food-service | Evet |
+| `/api/v1/favoriler/**` | food-service | Evet |
+| `/api/v1/yolculuklar/**` | ride-service | Evet |
+| `/api/v1/yolculuk-yonetim/**` | ride-service | Evet |
+| `/api/v1/yonetim/kulupler/**` | club-service | Evet |
+| `/api/v1/yonetim/**` | auth-service | Evet |
 | `/api/v1/sertifikalar/**` | auth-service | Hayır (sertifika doğrulama public) |
 | `/api/v1/profiller/**` | profile-service | Evet |
 | `/api/v1/etkinlikler/**` | club-service | Evet |
 | `/api/v1/kulupler/**` | club-service | Evet |
-| `/api/v1/bildirimler/**` | club-service | Evet |
-| `/api/v1/yonetim/**` | club-service | Evet |
+| `/api/v1/bildirimler/duyurular` | club-service | Evet |
+| `/api/v1/bildirimler/**` | notification-service | Evet |
 | `/api/v1/akademik-kadro/**` | club-service | Evet |
 | `/api/v1/tesisler/**` | facility-service | Evet |
 | `/api/v1/tesis-kaynaklari/**` | facility-service | Evet |
 | `/api/v1/tesis-yonetim/**` | facility-service | Evet |
+| `/api/v1/mesajlar/**` | message-service | Evet |
 | `/**` | frontend | — |
 
 ## 7. Mimari Şema
@@ -112,24 +124,33 @@ flowchart TD
     Gateway -->|Servis Keşfi| Eureka[Eureka :8761]
     Gateway -->|X-User-Id / X-User-Roles| Auth[auth-service :8081]
     Gateway --> Profile[profile-service :8082]
-    Gateway --> Event[club-service :8089]
+    Gateway --> Notification[notification-service :8083]
     Gateway --> Facility[facility-service :8086]
+    Gateway --> Food[food-service :8087]
+    Gateway --> Ride[ride-service :8088]
+    Gateway --> Club[club-service :8089]
+    Gateway --> Message[message-service :8090]
 
     Auth -->|user.registered| Kafka[(Apache Kafka)]
     Kafka -.->|tüketir| Profile
-    Event -->|sertifika olayı| Kafka
+    Club -->|sertifika olayı| Kafka
     Kafka -.->|tüketir| Auth
+    Food -->|bildirim.olustur| Kafka
+    Ride -->|bildirim.olustur| Kafka
+    Kafka -.->|tüketir| Notification
 
     Auth --> AuthDB[(auth_db)]
     Profile --> ProfDB[(profile_db)]
-    Event --> EventDB[(club_db)]
+    Notification --> NotifDB[(notification_db)]
     Facility --> FacDB[(facility_db)]
+    Food --> FoodDB[(food_db)]
+    Ride --> RideDB[(ride_db)]
+    Club --> ClubDB[(club_db)]
+    Message --> MsgDB[(mesaj_db)]
 
     subgraph "Planlanan (henüz yok)"
-        Food[food-service :8087]
-        Ride[ride-service :8088]
-        ProjMatch[projectmatch-service :8090]
-        MicroJob[microjob-service :8091]
+        ProjMatch[projectmatch-service]
+        MicroJob[microjob-service]
     end
 ```
 

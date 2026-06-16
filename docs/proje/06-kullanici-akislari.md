@@ -1,6 +1,6 @@
 # 06 — Kullanıcı Akışları
 
-Bu doküman, platformun temel iş akışlarını özetler. Çalışan modüllerin akışları gerçek koda dayanır; planlanan modüllerin akışları hedef tasarımdır.
+Bu doküman, platformun temel iş akışlarını özetler. Çalışan modüllerin akışları gerçek koda dayanır; planlanan ProjectMatch ve MicroJob akışları hedef tasarımdır.
 
 ## 1. Kayıt ve Aktivasyon (çalışıyor)
 
@@ -11,6 +11,7 @@ Bu doküman, platformun temel iş akışlarını özetler. Çalışan modülleri
    - E-posta doğrulaması yapar (doğrulama kodu).
    - Zorunlu şifre değiştirme akışını tamamlar.
 5. Doğrulama tamamlanınca kullanıcı dashboard'a erişir.
+6. Kullanıcı profilinde biyografi, yetenekler, profil görseli ve iletişim paylaşım iznini doğrudan güncelleyebilir; kimlik kaynaklı alanlar idari/onaylı akışlardan gelir.
 
 > Frontend tarafında bu zorunluluklar korumalı rota mantığıyla uygulanır: e-posta doğrulanmadan veya zorunlu şifre değişmeden dashboard'a geçilemez.
 
@@ -20,6 +21,9 @@ Giriş sonrası kullanıcı rolüne göre yönlendirilir:
 - SKS yönetimi → SKS Dashboard
 - Öğrenci İşleri → Registrar Dashboard
 - Tesis yönetimi → Facility Admin Dashboard
+- İşletme yetkilisi → İşletme Paneli
+- Destek/yapı işleri yönetimi → Destek Hizmetleri Paneli
+- Ride yöneticisi → Ride Yönetim Paneli
 - Öğrenci → Student Dashboard
 
 ## 3. Kulüp ve Etkinlik Akışı (çalışıyor)
@@ -45,23 +49,48 @@ Giriş sonrası kullanıcı rolüne göre yönlendirilir:
 
 1. Öğrenci tesis ve kaynakları listeler, uygunluk durumunu görür.
 2. Tarih/saat/kaynak seçerek rezervasyon oluşturur.
-3. Aynı kaynak ve zaman aralığında çakışan rezervasyon engellenir.
-4. Rezervasyon iptal edilebilir; check-in/yoklama kaydı tutulur.
-5. Tesis yöneticisi kaynakları, politikaları ve uygunluk kurallarını yönetir.
+3. Katılımcı sayısı seçilen kaynağın kapasitesini aşamaz.
+4. Aynı kaynak ve zaman aralığında çakışan rezervasyon engellenir.
+5. Rezervasyon iptal edilebilir; check-in/yoklama kaydı tutulur.
+6. Tesis yöneticisi kaynakları, politikaları ve uygunluk kurallarını yönetir.
 
 ## 5. Bildirim Akışı (çalışıyor)
 
-- Kritik domain aksiyonları (kulüp/etkinlik onayı, duyuru vb.) in-app bildirim üretir.
+- Kritik domain aksiyonları (kulüp/etkinlik onayı, duyuru, yemek siparişi, yolculuk talebi vb.) in-app bildirim üretir.
 - Bildirimler okundu/okunmadı durumuyla listelenir.
-- Bildirim işlevi `club-service` içinde gömülüdür.
+- Bildirimler `notification-service` içinde saklanır; yeni bildirimler SSE ile istemciye akar.
+- Kulüp/SKS duyuru fan-out akışı `club-service` üzerinden başlar, genel bildirim listesi ve okundu işaretleme `notification-service`tedir.
 
-## 6. Planlanan Modül Akışları (hedef tasarım — henüz kodlanmadı)
+## 6. Yemek Sipariş Akışı (çalışıyor)
 
-### Yemek Sipariş (food)
-`sipariş ver → satıcı kabul → hazırlanıyor → teslime hazır → teslim alındı`; asenkron durum takibi, teslim kodu.
+1. Öğrenci satıcıları listeler, mutfak türü/arama/sıralama ile filtreler.
+2. Satıcı menüsünden ürün, seçenek ve teslimat türü seçerek sepet oluşturur.
+3. Sipariş önizlemesi ara toplam, teslimat ücreti, indirim ve toplam tutarı hesaplar.
+4. Öğrenci siparişi verir; işletme panelinde sipariş beklemeye düşer.
+5. İşletme siparişi kabul eder veya reddeder.
+6. Kabul edilen sipariş `hazırlanıyor → hazır → yolda/teslim` akışında ilerler.
+7. Öğrenci siparişlerini izler; uygun durumlarda işletme ile mesajlaşabilir.
+8. Sipariş durumu bildirim olarak kullanıcıya iletilir.
 
-### Paylaşımlı Yolculuk (ride)
-Sürücü/yolcu ilanı → uygunluk ve rota temelli eşleştirme → kabul → yolculuk → puanlama; kapalı topluluk güven sinyalleri.
+## 7. CampusRide Akışı (çalışıyor)
+
+1. Öğrenci sürücü doğrulaması ve araç bilgilerini girer.
+2. Ride yöneticisi bekleyen sürücü/araç doğrulamalarını inceler.
+3. Doğrulanmış kullanıcı ilan oluşturur; rota önizleme ve popüler noktalar kullanılabilir.
+4. Yolcu ilana binis/inis noktalarıyla katılım talebi gönderir.
+5. Talep edilen koltuk sayısı ilandaki boş koltuğu aşamaz.
+6. Sürücü talebi kabul eder veya reddeder.
+7. Kabul edilen yolculuk tamamlanır; taraflar puanlama/şikayet akışlarını kullanabilir.
+8. İlgili talep üzerinden sürücü-yolcu mesajlaşması açılabilir.
+
+## 8. Mesajlaşma Akışı (çalışıyor)
+
+1. Food veya Ride gibi bir domain, ilgili bağlam için konuşma açar ya da kapatır.
+2. Kullanıcı `/mesajlar` ekranında konuşmalarını ve okunmamış sayısını görür.
+3. Konuşma içinden mesaj gönderilir; yeni mesajlar SSE ile istemciye akar.
+4. Konuşma okundu işaretlenebilir.
+
+## 9. Planlanan Modül Akışları (hedef tasarım — henüz kodlanmadı)
 
 ### Proje Eşleştirme (projectmatch)
 Beceri profili → proje ilanı → uyum skoru → davet → ekip oluşturma.

@@ -65,6 +65,10 @@ public class EtkinlikKatilimServisi {
             if (etkinlik.getMevcutRsvpSayisi() < etkinlik.getKontenjan()) {
                 ilkKatilimDurumunuUygula(etkinlik, katilim);
                 etkinlik.setMevcutRsvpSayisi(etkinlik.getMevcutRsvpSayisi() + 1);
+            } else if (etkinlik.isYedekListesiSiniriVar()
+                    && etkinlik.getMevcutYedekSayisi() < etkinlik.getYedekListesiKontenjani()) {
+                katilim.setDurum(EtkinlikKatilimi.KatilimDurumu.YEDEKTE);
+                etkinlik.setMevcutYedekSayisi(etkinlik.getMevcutYedekSayisi() + 1);
             } else {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Etkinlik kontenjanı doludur");
             }
@@ -88,6 +92,7 @@ public class EtkinlikKatilimServisi {
         
         if (katilim.getDurum() == EtkinlikKatilimi.KatilimDurumu.ONAYLANDI || katilim.getDurum() == EtkinlikKatilimi.KatilimDurumu.ODEME_BEKLIYOR) {
             etkinlik.setMevcutRsvpSayisi(etkinlik.getMevcutRsvpSayisi() - 1);
+            ilkYedekKatilimiAnaListeyeAl(etkinlik);
         } else if (katilim.getDurum() == EtkinlikKatilimi.KatilimDurumu.YEDEKTE) {
             etkinlik.setMevcutYedekSayisi(etkinlik.getMevcutYedekSayisi() - 1);
         }
@@ -95,6 +100,20 @@ public class EtkinlikKatilimServisi {
         katilim.setDurum(EtkinlikKatilimi.KatilimDurumu.IPTAL_EDILDI);
         etkinlikDeposu.save(etkinlik);
         return etkinlikKatilimiDeposu.save(katilim);
+    }
+
+    private void ilkYedekKatilimiAnaListeyeAl(Etkinlik etkinlik) {
+        etkinlikKatilimiDeposu.findByEtkinlikIdAndDurumOrderByOlusturulmaTarihiAsc(
+                        etkinlik.getId(),
+                        EtkinlikKatilimi.KatilimDurumu.YEDEKTE
+                ).stream()
+                .findFirst()
+                .ifPresent(yedek -> {
+                    ilkKatilimDurumunuUygula(etkinlik, yedek);
+                    etkinlik.setMevcutYedekSayisi(Math.max(0, etkinlik.getMevcutYedekSayisi() - 1));
+                    etkinlik.setMevcutRsvpSayisi(etkinlik.getMevcutRsvpSayisi() + 1);
+                    etkinlikKatilimiDeposu.save(yedek);
+                });
     }
 
     @Transactional

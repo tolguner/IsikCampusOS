@@ -7,7 +7,7 @@
 - **Kimlik:** Korumalı uç noktalar `Authorization: Bearer <JWT>` başlığı gerektirir. Gateway, doğrulanan kullanıcıyı `X-User-Id` ve `X-User-Roles` başlıklarıyla downstream servise iletir.
 - **Dil:** Yollar Türkçedir (`kimlik`, `kulupler`, `etkinlikler`, `tesisler`).
 
-> Aşağıdaki uç noktalar **koddaki gerçek controller'lara** dayanır. Planlanan modüllerin (yemek, yolculuk, proje, mikro iş) API'leri ileride tanımlanacaktır.
+> Aşağıdaki uç noktalar **koddaki gerçek controller'lara** dayanır. ProjectMatch ve MicroJob API'leri henüz kodlanmamıştır.
 
 ## 2. Kimlik — auth-service
 
@@ -70,10 +70,58 @@
 - Rezervasyon oluşturma / iptal / check-in uç noktaları
 - `/api/v1/tesis-yonetim/**` — tesis yöneticisi işlemleri (kaynak, politika, uygunluk kuralı yönetimi)
 
-## 6. Standart Davranışlar
+## 6. Bildirim — notification-service / club-service
+
+- `GET /api/v1/bildirimler` — bildirimleri listele
+- `GET /api/v1/bildirimler/akis` — SSE bildirim akışı
+- `PATCH /api/v1/bildirimler/{bildirimId}/oku` — okundu işaretle
+- `POST /api/v1/bildirimler/toplu-duyuru` — sistem/toplu duyuru
+- `POST /api/v1/bildirimler/destek-duyuru` — destek duyurusu
+- `POST /api/v1/bildirimler/duyurular` — kulüp/SKS duyurusu (`club-service`)
+
+## 7. Yemek Sipariş — food-service
+
+- `GET /api/v1/saticilar` — satıcıları listele
+- `GET /api/v1/saticilar/{saticiId}` — satıcı detayı
+- `GET /api/v1/saticilar/{saticiId}/menu` — satıcı menüsü
+- `GET /api/v1/saticilar/mutfak-turleri` — mutfak türleri
+- `POST /api/v1/siparisler` — sipariş oluştur
+- `POST /api/v1/siparisler/onizleme` — sipariş tutar/teslimat önizlemesi
+- `GET /api/v1/siparisler/benim` — kullanıcının siparişleri
+- `POST /api/v1/siparisler/{id}/iptal` — sipariş iptali
+- `POST /api/v1/favoriler/{saticiId}` / `DELETE /api/v1/favoriler/{saticiId}` — favori satıcı yönetimi
+- `/api/v1/satici/**` — işletme paneli: profil, çalışma saatleri, kampanya, kategori, menü, sipariş, ciro ve personel işlemleri
+- `/api/v1/yonetim/saticilar/**` — sistem/destek yönetimi: satıcı, yönetici, personel, değişiklik talebi ve denetim işlemleri
+
+## 8. CampusRide — ride-service
+
+- `GET /api/v1/yolculuklar/populer-noktalar` — popüler noktalar
+- `GET /api/v1/yolculuklar/ilanlar` / `POST /api/v1/yolculuklar/ilanlar` — ilan listele/oluştur
+- `GET /api/v1/yolculuklar/ilanlar/benim` — kullanıcının ilanları
+- `POST /api/v1/yolculuklar/ilanlar/{id}/katil` — ilana katılım talebi
+- `POST /api/v1/yolculuklar/ilanlar/{id}/iptal` — ilan iptali
+- `GET /api/v1/yolculuklar/talepler/benim` — kullanıcının yolculuk talepleri
+- `GET /api/v1/yolculuklar/surucu/talepler` — sürücünün gelen talepleri
+- `POST /api/v1/yolculuklar/talepler/{id}/kabul|red|iptal|tamamla|puanla|sikayet` — talep yaşam döngüsü
+- `GET|POST /api/v1/yolculuklar/surucu-dogrulama` — sürücü doğrulama
+- `GET|POST|PUT|DELETE /api/v1/yolculuklar/araclar` — araç yönetimi
+- `POST /api/v1/yolculuklar/rota-onizleme` — rota önizleme
+- `/api/v1/yolculuk-yonetim/**` — araç/ehliyet doğrulama, popüler nokta, şikayet ve sistem logu yönetimi
+
+## 9. Mesajlaşma — message-service
+
+- `GET /api/v1/mesajlar/konusmalar` — konuşmaları listele
+- `GET /api/v1/mesajlar/konusmalar/{id}` — konuşma mesajları
+- `POST /api/v1/mesajlar/konusmalar/{id}` — mesaj gönder
+- `POST /api/v1/mesajlar/konusmalar/{id}/okundu` — konuşmayı okundu işaretle
+- `GET /api/v1/mesajlar/baglam/{modul}/{baglamId}` — FOOD/RIDE gibi bağlam için konuşma getir/aç
+- `GET /api/v1/mesajlar/okunmamis-sayisi` — okunmamış mesaj sayısı
+- `GET /api/v1/mesajlar/akis` — SSE mesaj akışı
+
+## 10. Standart Davranışlar
 
 - **Hata modeli:** Standart HTTP durum kodları; yetkisiz istekte `401`, yetersiz yetkide `403`, bulunamayanda `404`, çakışmada `409`.
 - **Doğrulama:** İstek gövdeleri sunucu tarafında doğrulanır (Bean Validation + servis kuralları).
 - **Sayfalama:** Liste uç noktalarında sayfalama hedeflenir.
 
-> **Planlanan API'ler:** `food-service`, `ride-service`, `projectmatch-service` ve `microjob-service` uç noktaları ilgili modüller geliştirildiğinde bu dokümana eklenecektir.
+> **Planlanan API'ler:** `projectmatch-service` ve `microjob-service` uç noktaları ilgili modüller geliştirildiğinde bu dokümana eklenecektir.

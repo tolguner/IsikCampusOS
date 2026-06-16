@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { api } from '../lib/api';
 import { type Etkinlik, mapEventResponse } from './etkinlikDeposu';
 
-/** Backend (event-service) KulupYaniti ile birebir — çeviri (mapper) yoktur. */
+/** Backend (club-service) KulupYaniti ile birebir — çeviri (mapper) yoktur. */
 export interface Kulup {
   id: string;
   ad: string;
@@ -158,7 +158,7 @@ const getErrorMessage = (err: any, fallback: string) => {
   return err?.response?.data?.message || err?.message || fallback;
 };
 
-// API (event-service) yanıtları artık tiplerle birebir aynı; çeviri yapılmaz.
+// API (club-service) yanıtları artık tiplerle birebir aynı; çeviri yapılmaz.
 // Bu ince passthrough'lar yalnızca res.data'ya doğru tipi verir.
 const mapClubResponse = (data: any): Kulup => data;
 const mapClubProfileChangeRequestResponse = (data: any): KulupProfilDegisiklikIstegi => data;

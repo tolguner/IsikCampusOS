@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
  
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Random;
  
 @Service
@@ -28,7 +29,8 @@ public class KimlikServisi {
     private final EpostaServisi epostaServisi;
  
     public KimlikYaniti girisYap(GirisIstegi request) {
-        Kullanici kullanici = kullaniciDeposu.findByEposta(request.getEposta())
+        String eposta = request.getEposta() == null ? null : request.getEposta().trim().toLowerCase(Locale.ROOT);
+        Kullanici kullanici = kullaniciDeposu.findByEposta(eposta)
                 .orElseThrow(() -> new RuntimeException("Geçersiz e-posta veya şifre."));
  
         if (kullanici.getDurum() != KullaniciDurumu.AKTIF) {

@@ -42,8 +42,12 @@ Servisler şu sırayla ayağa kaldırılmalıdır:
 2. `api-gateway` (:8080)
 3. `auth-service` (:8081)
 4. `profile-service` (:8082)
-5. `club-service` (:8089)
+5. `notification-service` (:8083)
 6. `facility-service` (:8086)
+7. `food-service` (:8087)
+8. `ride-service` (:8088)
+9. `club-service` (:8089)
+10. `message-service` (:8090)
 
 Her servis kendi dizininde Spring Boot uygulaması olarak çalıştırılabilir. Proje kökünde hazır başlatma betikleri bulunur:
 
@@ -88,6 +92,12 @@ docker compose up --build
 | Eureka paneli | http://localhost:8761 |
 | Zipkin (tracing) | http://localhost:9411 |
 | Mailpit (e-posta) | http://localhost:8025 |
+| notification-service | http://localhost:8083 |
+| facility-service | http://localhost:8086 |
+| food-service | http://localhost:8087 |
+| ride-service | http://localhost:8088 |
+| club-service | http://localhost:8089 |
+| message-service | http://localhost:8090 |
 
 ## 8. Sık Karşılaşılan Sorunlar
 

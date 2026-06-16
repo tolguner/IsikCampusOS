@@ -34,10 +34,6 @@ public class ProfilServisi {
     public Profil profilGuncelle(String kullaniciId, ProfilDetayi updateDto) {
         Profil profil = kullaniciIdIleProfilGetir(kullaniciId);
         
-        if (updateDto.getAd() != null) profil.setAd(updateDto.getAd());
-        if (updateDto.getSoyad() != null) profil.setSoyad(updateDto.getSoyad());
-        if (updateDto.getBolum() != null) profil.setBolum(updateDto.getBolum());
-        
         if (updateDto.getProfilResmiUrl() != null) {
             String base64Data = updateDto.getProfilResmiUrl();
             if (base64Data.trim().isEmpty()) {

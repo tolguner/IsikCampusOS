@@ -1,5 +1,6 @@
 export const YOLLAR = {
   anaSayfa: '/',
+  tanitim: '/tanitim',
   giris: '/giris',
   sertifikaDogrula: '/sertifikalar/dogrula',
   epostaDogrula: '/eposta-dogrula',

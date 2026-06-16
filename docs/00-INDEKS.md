@@ -4,14 +4,14 @@ Bu dizin, IsikCampusOS projesinin tüm dokümantasyonunu içerir. Dokümanlar ik
 
 ## 📁 proje/ — Proje Dokümantasyonu
 
-Sistemin teknik ve işlevsel dokümantasyonu. Tüm dosyalar projenin **gerçek kod durumunu** yansıtır; tam vizyon (6 modül) ile fiilen kodlanan modüller açıkça ayrılmıştır.
+Sistemin teknik ve işlevsel dokümantasyonu. Tüm dosyalar projenin **gerçek kod durumunu** yansıtır; fiilen kodlanan modüller ile henüz plan aşamasındaki modüller açıkça ayrılmıştır.
 
 | # | Doküman | İçerik |
 |---|---------|--------|
 | 01 | [Genel Bakış ve Vizyon](proje/01-genel-bakis-ve-vizyon.md) | Proje tanımı, vizyon, modül durum tablosu, kullanıcılar |
 | 02 | [Mimari](proje/02-mimari.md) | Mikroservis mimarisi, servis kataloğu, iletişim, gateway rotaları |
 | 03 | [Veritabanı Tasarımı](proje/03-veritabani-tasarimi.md) | Servis başına DB, gerçek entity'ler, planlanan modeller |
-| 04 | [API Sözleşmesi](proje/04-api-sozlesmesi.md) | Gerçek uç noktalar (kimlik, profil, kulüp, etkinlik, tesis) |
+| 04 | [API Sözleşmesi](proje/04-api-sozlesmesi.md) | Gerçek uç noktalar (kimlik, profil, kulüp, etkinlik, tesis, yemek, yolculuk, bildirim, mesajlaşma) |
 | 05 | [Roller ve Yetkiler](proje/05-roller-ve-yetkiler.md) | Rol modeli, yetki matrisi, iş kuralları |
 | 06 | [Kullanıcı Akışları](proje/06-kullanici-akislari.md) | Kayıt, kulüp/etkinlik, tesis, bildirim akışları |
 | 07 | [Çalıştırma Rehberi](proje/07-calistirma-rehberi.md) | Yerel kurulum ve başlatma |
@@ -31,5 +31,5 @@ Yönetim Bilişim Sistemleri lisans bitirme tezi. Türkçe yazılmaktadır.
 
 ## Notlar
 
-- **Kod gerçekliği:** Backend Türkçeleştirilmiştir (`com.isik.kampusos.*`). Çalışan servisler: eureka, gateway, auth, profile, event, facility. Yemek/yolculuk/proje/mikro iş modülleri planlama aşamasındadır.
+- **Kod gerçekliği:** Backend Türkçeleştirilmiştir (`com.isik.kampusos.*`). Çalışan servisler: eureka, gateway, auth, profile, club, notification, facility, food, ride ve message. ProjectMatch ve MicroJob modülleri henüz kodlanmamıştır.
 - **Tutarlılık ilkesi:** Tüm proje dokümanlarında "kodlandı" (✅) ve "planlandı" (🔵) ayrımı korunur.

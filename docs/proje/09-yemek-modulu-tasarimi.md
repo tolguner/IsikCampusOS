@@ -176,7 +176,7 @@ UNIQUE(kullanici_id, satici_id)
 Her müşteri-görünür durum değişiminde (`KABUL_EDILDI, HAZIRLANIYOR, HAZIR, YOLDA, TESLIM_EDILDI, REDDEDILDI`)
 food-service `bildirim.olustur` Kafka olayı üretir:
 - `hedefKitle = KULLANICI`, `aliciKullaniciId = musteri_kullanici_id`
-- `tur = SIPARIS_DURUMU` *(notification BildirimTuru'ya eklenecek + CHECK V7)*
+- `tur = SIPARIS_DURUMU` *(notification BildirimTuru ve CHECK migrasyonlarında desteklenir)*
 - mesaj: "Siparişiniz hazırlanıyor", "Siparişiniz yola çıktı", "Siparişiniz teslim edildi" vb.
 
 notification-service persist eder → **mevcut SSE** ile öğrenciye **anlık** iletir. Öğrenci
