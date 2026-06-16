@@ -23,9 +23,9 @@
     --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
     --shadow-glow: 0 0 80px rgba(129, 140, 248, 0.12);
     --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
-    --app-bg-a: #060818;
-    --app-bg-b: #0a0c27;
-    --app-bg-c: #070716;
+    --app-bg-a: #060c24;
+    --app-bg-b: #0a153a;
+    --app-bg-c: #07112a;
     --nav-bg: rgba(10, 10, 25, 0.55);
     --nav-border: rgba(255, 255, 255, 0.06);
     --content-panel-bg: rgba(10, 10, 25, 0.45);
@@ -41,14 +41,14 @@
     --auth-card-bg: rgba(12, 12, 30, 0.65);
     --auth-card-border: rgba(255, 255, 255, 0.07);
     --auth-card-shadow: 0 0 80px rgba(99,102,241,0.05), 0 32px 64px rgba(0,0,0,0.4);
-    --ambient-indigo: rgba(99, 102, 241, 0.25);
-    --ambient-pink: rgba(236, 72, 153, 0.18);
-    --ambient-cyan: rgba(6, 182, 212, 0.18);
-    --ambient-cyan-strong: rgba(0, 210, 255, 0.35);
-    --ambient-cyan-soft: rgba(0, 150, 255, 0.15);
-    --ambient-indigo-strong: rgba(138, 43, 226, 0.45);
-    --ambient-indigo-soft: rgba(100, 40, 200, 0.18);
-    --ambient-pink-strong: rgba(236, 72, 153, 0.25);
+    --ambient-indigo: rgba(70, 110, 250, 0.32);
+    --ambient-pink: rgba(249, 140, 55, 0.26);
+    --ambient-cyan: rgba(6, 182, 212, 0.26);
+    --ambient-cyan-strong: rgba(0, 200, 255, 0.45);
+    --ambient-cyan-soft: rgba(0, 140, 255, 0.20);
+    --ambient-indigo-strong: rgba(64, 108, 250, 0.46);
+    --ambient-indigo-soft: rgba(64, 108, 250, 0.20);
+    --ambient-pink-strong: rgba(249, 125, 35, 0.34);
   }
 
   html[data-theme='light'] {
@@ -103,14 +103,14 @@
     --tint-orange: rgba(194, 65, 12, 0.1);
     --tint-amber: rgba(180, 83, 9, 0.11);
     --tint-red: rgba(185, 28, 28, 0.1);
-    --ambient-indigo: rgba(79, 70, 229, 0.13);
-    --ambient-pink: rgba(219, 39, 119, 0.1);
-    --ambient-cyan: rgba(8, 145, 178, 0.12);
-    --ambient-cyan-strong: rgba(8, 145, 178, 0.18);
-    --ambient-cyan-soft: rgba(14, 165, 233, 0.1);
-    --ambient-indigo-strong: rgba(99, 102, 241, 0.18);
-    --ambient-indigo-soft: rgba(79, 70, 229, 0.1);
-    --ambient-pink-strong: rgba(219, 39, 119, 0.12);
+    --ambient-indigo: rgba(56, 100, 240, 0.22);
+    --ambient-pink: rgba(245, 130, 40, 0.22);
+    --ambient-cyan: rgba(8, 145, 178, 0.22);
+    --ambient-cyan-strong: rgba(6, 170, 220, 0.34);
+    --ambient-cyan-soft: rgba(14, 165, 233, 0.20);
+    --ambient-indigo-strong: rgba(56, 100, 240, 0.32);
+    --ambient-indigo-soft: rgba(56, 100, 240, 0.18);
+    --ambient-pink-strong: rgba(245, 120, 30, 0.30);
   }
 
   body {

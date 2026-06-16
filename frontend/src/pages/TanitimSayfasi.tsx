@@ -40,20 +40,20 @@ const Bolum = ({ children, className = '', id }: BolumProps) => (
     initial="gizli"
     whileInView="gorunur"
     viewport={{ once: true, amount: 0.18 }}
-    className={`relative mx-auto w-full max-w-6xl px-6 py-20 sm:py-28 ${className}`}
+    className={`relative mx-auto w-full max-w-7xl px-6 py-20 sm:py-28 lg:px-10 ${className}`}
   >
     {children}
   </motion.section>
 );
 
 const BolumBaslik = ({ etiket, baslik, aciklama }: { etiket: string; baslik: React.ReactNode; aciklama?: string }) => (
-  <motion.div variants={yukariGel} className="mx-auto mb-14 max-w-3xl text-center">
-    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-300/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-100">
-      <Sparkles className="h-3.5 w-3.5" />
+  <motion.div variants={yukariGel} className="mx-auto mb-16 max-w-4xl text-center">
+    <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-100">
+      <Sparkles className="h-4 w-4" />
       {etiket}
     </div>
-    <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">{baslik}</h2>
-    {aciklama && <p className="mt-5 text-base leading-7 text-white/55 sm:text-lg">{aciklama}</p>}
+    <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl md:text-6xl">{baslik}</h2>
+    {aciklama && <p className="mt-6 text-lg leading-8 text-white/60 sm:text-xl sm:leading-9">{aciklama}</p>}
   </motion.div>
 );
 
@@ -203,7 +203,7 @@ export const TanitimSayfasi = () => {
   const ilerleme = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
   return (
-    <div className="theme-page relative min-h-screen overflow-hidden bg-[#050510] text-white">
+    <div className="theme-page relative min-h-screen overflow-hidden bg-[#060c24] text-white">
       {/* Scroll ilerleme çubuğu */}
       <motion.div
         style={{ width: ilerleme }}
@@ -212,9 +212,9 @@ export const TanitimSayfasi = () => {
 
       {/* Ambient arkaplan + ince ızgara dokusu */}
       <div className="pointer-events-none fixed inset-0">
-        <div className="theme-app-gradient absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(34,211,238,0.20),transparent_30%),radial-gradient(circle_at_80%_20%,rgba(168,85,247,0.26),transparent_32%),linear-gradient(135deg,#050510,#0a0b24_55%,#080718)]" />
+        <div className="theme-app-gradient absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(56,189,248,0.28),transparent_36%),radial-gradient(circle_at_82%_16%,rgba(64,108,250,0.28),transparent_38%),radial-gradient(circle_at_50%_108%,rgba(45,212,191,0.16),transparent_46%),linear-gradient(160deg,#060c24,#0a153a_52%,#07112a)]" />
         <div className="animate-float absolute bottom-[-15%] left-[-8%] h-[640px] w-[640px] rounded-full" style={{ background: 'radial-gradient(circle, var(--ambient-cyan-strong) 0%, var(--ambient-cyan-soft) 40%, transparent 70%)' }} />
-        <div className="animate-float-reverse absolute top-[-10%] right-[-5%] h-[560px] w-[560px] rounded-full" style={{ background: 'radial-gradient(circle, var(--ambient-indigo-strong) 0%, var(--ambient-indigo-soft) 40%, transparent 70%)' }} />
+        <div className="animate-float-reverse absolute top-[-10%] right-[-5%] h-[560px] w-[560px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(64,108,250,0.42) 0%, rgba(56,130,246,0.18) 42%, transparent 70%)' }} />
         <div
           className="absolute inset-0 opacity-[0.18]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '54px 54px', maskImage: 'radial-gradient(ellipse at 50% 0%, black, transparent 75%)', WebkitMaskImage: 'radial-gradient(ellipse at 50% 0%, black, transparent 75%)' }}
@@ -248,33 +248,33 @@ export const TanitimSayfasi = () => {
 
       <main className="relative z-10">
         {/* 1 — HERO */}
-        <section ref={heroRef} className="relative mx-auto grid min-h-[90vh] max-w-6xl grid-cols-1 items-center gap-12 px-6 py-20 lg:grid-cols-[1.1fr_0.9fr]">
+        <section ref={heroRef} className="relative mx-auto grid min-h-[90vh] max-w-7xl grid-cols-1 items-center gap-12 px-6 py-20 lg:grid-cols-[1.15fr_0.85fr] lg:px-10">
           <motion.div initial="gizli" animate="gorunur" variants={kademeli}>
-            <motion.div variants={yukariGel} className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-100">
+            <motion.div variants={yukariGel} className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-300/10 px-5 py-2.5 text-sm font-black uppercase tracking-[0.16em] text-cyan-100">
               <Sparkles className="h-4 w-4" />
               Işık Üniversitesi · Kapalı dijital kampüs platformu
             </motion.div>
-            <motion.h1 variants={yukariGel} className="text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl xl:text-7xl">
+            <motion.h1 variants={yukariGel} className="text-6xl font-black leading-[1.0] tracking-tight sm:text-7xl xl:text-8xl">
               Kampüs artık<br />
               <span className="bg-gradient-to-r from-cyan-300 via-indigo-300 to-fuchsia-400 bg-clip-text text-transparent">tek işletim sistemi.</span>
             </motion.h1>
-            <motion.p variants={yukariGel} className="mt-7 max-w-xl text-lg leading-8 text-white/60">
+            <motion.p variants={yukariGel} className="mt-8 max-w-2xl text-xl leading-9 text-white/65">
               Kulüpler, tesis rezervasyonu, yemek siparişi ve paylaşımlı yolculuk; tek kimlik,
               tek geçit ve ortak bir güven katmanı altında birleşiyor. Dağınık kampüs süreçlerini
               tutarlı tek bir deneyimde toplayan mikroservis tabanlı bir platform.
             </motion.p>
-            <motion.div variants={yukariGel} className="mt-9 flex flex-wrap items-center gap-3">
-              <a href="#moduller" className="inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-950 transition hover:bg-cyan-100">
+            <motion.div variants={yukariGel} className="mt-10 flex flex-wrap items-center gap-3">
+              <a href="#moduller" className="inline-flex items-center gap-2 rounded-2xl bg-white px-7 py-4 text-base font-black text-slate-950 transition hover:bg-cyan-100">
                 Modülleri keşfet
-                <ArrowDown className="h-4 w-4" />
+                <ArrowDown className="h-5 w-5" />
               </a>
-              <Link to={YOLLAR.giris} className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-3.5 text-sm font-bold text-white/75 transition hover:bg-white/[0.08] hover:text-white">
+              <Link to={YOLLAR.giris} className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-7 py-4 text-base font-bold text-white/75 transition hover:bg-white/[0.08] hover:text-white">
                 Platforma giriş
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-5 w-5" />
               </Link>
             </motion.div>
-            <motion.div variants={yukariGel} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white/45">
-              <ShieldCheck className="h-4 w-4 text-emerald-300" />
+            <motion.div variants={yukariGel} className="mt-6 inline-flex items-center gap-2 text-base font-semibold text-white/50">
+              <ShieldCheck className="h-5 w-5 text-emerald-300" />
               Yalnızca doğrulanmış üniversite üyelerine açık
             </motion.div>
           </motion.div>
@@ -349,13 +349,13 @@ export const TanitimSayfasi = () => {
         <Bolum className="!py-10">
           <motion.div variants={kademeli} className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {istatistikler.map((s) => (
-              <motion.div key={s.etiket} variants={yukariGel} className="theme-card flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-4 backdrop-blur-xl">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-cyan-200">
-                  <s.icon className="h-5 w-5" />
+              <motion.div key={s.etiket} variants={yukariGel} className="theme-card flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-5 backdrop-blur-xl">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-cyan-200">
+                  <s.icon className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="text-2xl font-black leading-none text-white">{s.sayi}</div>
-                  <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-white/45">{s.etiket}</div>
+                  <div className="text-3xl font-black leading-none text-white">{s.sayi}</div>
+                  <div className="mt-1.5 text-xs font-semibold uppercase tracking-wider text-white/45">{s.etiket}</div>
                 </div>
               </motion.div>
             ))}
@@ -379,8 +379,8 @@ export const TanitimSayfasi = () => {
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-300">
                   <p.icon className="h-6 w-6" />
                 </div>
-                <h3 className="mb-2 text-lg font-black text-white">{p.baslik}</h3>
-                <p className="text-sm leading-6 text-white/55">{p.metin}</p>
+                <h3 className="mb-2.5 text-xl font-black text-white">{p.baslik}</h3>
+                <p className="text-base leading-7 text-white/60">{p.metin}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -403,8 +403,8 @@ export const TanitimSayfasi = () => {
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/12 text-cyan-200">
                   <c.icon className="h-6 w-6" />
                 </div>
-                <h3 className="mb-2 text-lg font-black text-white">{c.baslik}</h3>
-                <p className="text-sm leading-6 text-white/55">{c.metin}</p>
+                <h3 className="mb-2.5 text-xl font-black text-white">{c.baslik}</h3>
+                <p className="text-base leading-7 text-white/60">{c.metin}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -448,14 +448,14 @@ export const TanitimSayfasi = () => {
                     {m.durum}
                   </span>
                 </div>
-                <h3 className="text-2xl font-black text-white">{m.ad}</h3>
-                <p className="mt-0.5 text-sm font-bold text-white/45">{m.altBaslik}</p>
-                <p className="mt-3 text-sm leading-6 text-white/55">{m.aciklama}</p>
-                <div className="mt-5 grid grid-cols-2 gap-2.5">
+                <h3 className="text-3xl font-black text-white">{m.ad}</h3>
+                <p className="mt-1 text-base font-bold text-white/45">{m.altBaslik}</p>
+                <p className="mt-3 text-base leading-7 text-white/60">{m.aciklama}</p>
+                <div className="mt-6 grid grid-cols-2 gap-3">
                   {m.ozellikler.map((o) => (
-                    <div key={o.metin} className="flex items-center gap-2 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2">
-                      <o.icon className="h-4 w-4 shrink-0 text-cyan-200/80" />
-                      <span className="text-[12px] font-semibold leading-4 text-white/65">{o.metin}</span>
+                    <div key={o.metin} className="flex items-center gap-2.5 rounded-xl border border-white/5 bg-white/[0.03] px-3.5 py-2.5">
+                      <o.icon className="h-5 w-5 shrink-0 text-cyan-200/80" />
+                      <span className="text-[13px] font-semibold leading-5 text-white/70">{o.metin}</span>
                     </div>
                   ))}
                 </div>
@@ -560,11 +560,11 @@ export const TanitimSayfasi = () => {
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/[0.06]">
                     <g.icon className={`h-5 w-5 ${g.renk}`} />
                   </div>
-                  <h3 className="text-lg font-black text-white">{g.baslik}</h3>
+                  <h3 className="text-xl font-black text-white">{g.baslik}</h3>
                 </div>
-                <ul className="space-y-2">
+                <ul className="space-y-2.5">
                   {g.ogeler.map((o) => (
-                    <li key={o} className="flex items-center gap-2 text-sm text-white/60">
+                    <li key={o} className="flex items-center gap-2.5 text-[15px] text-white/65">
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300/70" />
                       {o}
                     </li>
@@ -588,9 +588,9 @@ export const TanitimSayfasi = () => {
                 <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/12 text-amber-200">
                   <Users className="h-4 w-4" />
                 </div>
-                <h3 className="text-sm font-black text-white">{r.ad}</h3>
-                <code className="mt-0.5 block text-[10px] font-bold text-amber-200/70">{r.kod}</code>
-                <p className="mt-2 text-xs leading-5 text-white/50">{r.metin}</p>
+                <h3 className="text-base font-black text-white">{r.ad}</h3>
+                <code className="mt-0.5 block text-[11px] font-bold text-amber-200/70">{r.kod}</code>
+                <p className="mt-2 text-sm leading-6 text-white/55">{r.metin}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -611,11 +611,11 @@ export const TanitimSayfasi = () => {
         <Bolum id="mobil">
           <motion.div variants={yukariGel} className="grid items-center gap-10 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.025] p-8 backdrop-blur-xl sm:p-12 lg:grid-cols-[1fr_auto]">
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-fuchsia-300/20 bg-fuchsia-400/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-fuchsia-100">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-300/20 bg-orange-400/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-orange-100">
                 <Smartphone className="h-3.5 w-3.5" /> Gelecek Planı
               </div>
               <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
-                Kampüs, <span className="bg-gradient-to-r from-fuchsia-300 to-indigo-300 bg-clip-text text-transparent">cebinde</span>
+                Kampüs, <span className="bg-gradient-to-r from-orange-300 to-amber-300 bg-clip-text text-transparent">cebinde</span>
               </h2>
               <p className="mt-4 max-w-xl text-base leading-7 text-white/55">
                 Sıradaki büyük adım: mevcut API Gateway’i tüketen native bir <strong className="text-white/80">iOS & Android</strong> uygulaması.
@@ -628,7 +628,7 @@ export const TanitimSayfasi = () => {
                   { icon: Route, metin: 'Konum tabanlı CampusRide' },
                 ].map((o) => (
                   <div key={o.metin} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white/70">
-                    <o.icon className="h-4 w-4 text-fuchsia-200" />
+                    <o.icon className="h-4 w-4 text-orange-200" />
                     {o.metin}
                   </div>
                 ))}
@@ -636,8 +636,8 @@ export const TanitimSayfasi = () => {
             </div>
             {/* küçük telefon ikonu rozeti */}
             <div className="relative mx-auto hidden h-44 w-44 shrink-0 items-center justify-center lg:flex">
-              <div className="absolute inset-0 rounded-full bg-fuchsia-500/20 blur-2xl" />
-              <div className="relative flex h-32 w-32 items-center justify-center rounded-[2rem] border border-white/15 bg-gradient-to-br from-fuchsia-500/30 to-indigo-500/30">
+              <div className="absolute inset-0 rounded-full bg-orange-500/20 blur-2xl" />
+              <div className="relative flex h-32 w-32 items-center justify-center rounded-[2rem] border border-white/15 bg-gradient-to-br from-orange-500/30 to-amber-500/30">
                 <Smartphone className="h-14 w-14 text-white" />
               </div>
             </div>
@@ -656,16 +656,16 @@ export const TanitimSayfasi = () => {
             <div className="space-y-5">
               {yolHaritasi.map((f) => (
                 <motion.div key={f.faz} variants={yukariGel} className="relative flex items-start gap-5">
-                  <div className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 ${f.aktif ? 'border-cyan-400 bg-cyan-400/20 text-cyan-200' : f.vurgu ? 'border-fuchsia-400/60 bg-fuchsia-500/15 text-fuchsia-200' : 'border-white/15 bg-[#0a0b1e] text-white/40'}`}>
+                  <div className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 ${f.aktif ? 'border-cyan-400 bg-cyan-400/20 text-cyan-200' : f.vurgu ? 'border-orange-400/60 bg-orange-500/15 text-orange-200' : 'border-white/15 bg-[#0a0b1e] text-white/40'}`}>
                     <span className="text-xs font-black">{f.faz}</span>
                   </div>
-                  <div className={`flex-1 rounded-2xl border bg-white/[0.035] p-5 backdrop-blur-xl ${f.aktif ? 'border-cyan-400/30' : f.vurgu ? 'border-fuchsia-400/30' : 'border-white/10'}`}>
+                  <div className={`flex-1 rounded-2xl border bg-white/[0.035] p-5 backdrop-blur-xl ${f.aktif ? 'border-cyan-400/30' : f.vurgu ? 'border-orange-400/30' : 'border-white/10'}`}>
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-base font-black text-white">{f.baslik}</h3>
-                      {f.vurgu && <Smartphone className="h-4 w-4 text-fuchsia-200" />}
-                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${f.aktif ? 'bg-cyan-300/15 text-cyan-100' : f.vurgu ? 'bg-fuchsia-300/15 text-fuchsia-100' : 'bg-white/10 text-white/50'}`}>{f.durum}</span>
+                      {f.vurgu && <Smartphone className="h-4 w-4 text-orange-200" />}
+                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${f.aktif ? 'bg-cyan-300/15 text-cyan-100' : f.vurgu ? 'bg-orange-300/15 text-orange-100' : 'bg-white/10 text-white/50'}`}>{f.durum}</span>
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-white/55">{f.metin}</p>
+                    <p className="mt-2 text-base leading-7 text-white/60">{f.metin}</p>
                   </div>
                 </motion.div>
               ))}

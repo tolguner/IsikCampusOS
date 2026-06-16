@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useKimlikDeposu } from '../../depolar/kimlikDeposu';
-import { Bell, Building2, CarFront, LayoutDashboard, Link as LinkIcon, ShieldCheck, Calendar, UtensilsCrossed, MessageSquare } from 'lucide-react';
+import { Bell, Building2, LayoutDashboard, Link as LinkIcon, MessageSquare } from 'lucide-react';
 import { useMesajDeposu } from '../../depolar/mesajDeposu';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useBildirimDeposu } from '../../depolar/bildirimDeposu';
-import { useKulupDeposu } from '../../depolar/kulupDeposu';
 import { useProfilDeposu } from '../../depolar/profilDeposu';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../../yardimcilar/yetkiler';
 import { YOLLAR } from '../../yardimcilar/yollar';
@@ -15,12 +14,9 @@ export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, logout, user } = useKimlikDeposu();
   const { bildirimler, okunmamisSayisi, bildirimleriGetir, okunduIsaretle } = useBildirimDeposu();
   const { okunmamisToplam: mesajOkunmamis, akisBaslat: mesajAkisBaslat, okunmamisGetir: mesajOkunmamisGetir } = useMesajDeposu();
-  const { managedClubs, fetchManagedClubs } = useKulupDeposu();
   const { profile, fetchMyProfile } = useProfilDeposu();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);
   const isFacilityAdmin = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.tesisYonetimi);
-  const isClubPresident = isStudent && managedClubs.length > 0;
   const userInitials = `${user?.ad?.[0] ?? ''}${user?.soyad?.[0] ?? ''}` ||
     user?.tamAd?.split(' ').map(part => part[0]).slice(0, 2).join('') ||
     '?';
@@ -34,18 +30,14 @@ export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
   }, [isAuthenticated, mesajAkisBaslat, mesajOkunmamisGetir]);
 
   useEffect(() => {
-    if (isAuthenticated && isStudent) fetchManagedClubs();
-  }, [fetchManagedClubs, isAuthenticated, isStudent]);
-
-  useEffect(() => {
     if (isAuthenticated && user) fetchMyProfile();
   }, [fetchMyProfile, isAuthenticated, user]);
 
   return (
-    <div className="theme-page min-h-screen flex flex-col relative overflow-hidden bg-[#050510]">
+    <div className="theme-page min-h-screen flex flex-col relative overflow-hidden bg-[#060c24]">
       {/* Dynamic Ambient Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="theme-app-gradient absolute inset-0 bg-gradient-to-br from-[#060818] via-[#0A0C27] to-[#070716]" />
+        <div className="theme-app-gradient absolute inset-0 bg-gradient-to-br from-[#060c24] via-[#0a153a] to-[#07112a]" />
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full blur-[120px] animate-float"
              style={{ background: 'radial-gradient(circle, var(--ambient-indigo) 0%, transparent 70%)' }} />
         <div className="absolute top-[20%] -right-[10%] w-[50%] h-[50%] rounded-full blur-[120px] animate-float-reverse"
@@ -84,27 +76,6 @@ export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
                 <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-cyan-500 px-1 text-[10px] font-black text-white">{mesajOkunmamis > 9 ? '9+' : mesajOkunmamis}</span>
               )}
             </Link>
-            {isStudent && (
-              <>
-                <Link to={YOLLAR.tesisRezervasyon} className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Tesis Rezerve Et">
-                  <Calendar className="w-5 h-5 text-white/40 hover:text-white/70" />
-                </Link>
-                <Link to={YOLLAR.rezervasyonlarim} className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Tesis Rezervasyonlarım">
-                  <Building2 className="w-5 h-5 text-white/40 hover:text-white/70" />
-                </Link>
-                <Link to={YOLLAR.yemek} className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="UniEats — Yemek Siparişi">
-                  <UtensilsCrossed className="w-5 h-5 text-white/40 hover:text-white/70" />
-                </Link>
-                <Link to={YOLLAR.campusRide} className="p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="CampusRide">
-                  <CarFront className="w-5 h-5 text-white/40 hover:text-white/70" />
-                </Link>
-              </>
-            )}
-            {isClubPresident && (
-              <Link to={YOLLAR.kulupYonetimi} className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Kulüp Yönetim Paneli">
-                <ShieldCheck className="w-5 h-5 text-white/40 hover:text-white/70" />
-              </Link>
-            )}
             {isFacilityAdmin && (
               <Link to={YOLLAR.tesisYonetimi} className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Tesis Yönetim Paneli">
                 <Building2 className="w-5 h-5 text-white/40 hover:text-white/70" />

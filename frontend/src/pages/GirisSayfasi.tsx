@@ -60,10 +60,10 @@ export const GirisSayfasi = () => {
   const inputBlur = (e: React.FocusEvent<HTMLInputElement>) => { e.currentTarget.style.borderColor = 'var(--input-border)'; e.currentTarget.style.boxShadow = 'none'; };
 
   return (
-    <div className="theme-page min-h-screen relative overflow-hidden bg-[#050510]">
+    <div className="theme-page min-h-screen relative overflow-hidden bg-[#060c24]">
       {/* AMBIENT BACKGROUND */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="theme-app-gradient absolute inset-0 bg-gradient-to-br from-[#060818] via-[#0A0C27] to-[#070716]" />
+        <div className="theme-app-gradient absolute inset-0 bg-gradient-to-br from-[#060c24] via-[#0a153a] to-[#07112a]" />
         <div className="absolute bottom-[-15%] left-[-8%] w-[700px] h-[700px] rounded-full animate-float" style={{ background: 'radial-gradient(circle, var(--ambient-cyan-strong) 0%, var(--ambient-cyan-soft) 40%, transparent 70%)' }} />
         <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full animate-float-reverse" style={{ background: 'radial-gradient(circle, var(--ambient-indigo-strong) 0%, var(--ambient-indigo-soft) 40%, transparent 70%)' }} />
         <div className="absolute top-[40%] left-[30%] w-[500px] h-[500px] rounded-full animate-pulse-glow" style={{ background: 'radial-gradient(circle, var(--ambient-pink-strong) 0%, transparent 60%)' }} />
