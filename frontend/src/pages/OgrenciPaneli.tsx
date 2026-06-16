@@ -114,15 +114,15 @@ export const OgrenciPaneli = () => {
 
               <div className="relative flex h-full min-h-[232px] flex-col justify-between p-5 sm:p-6">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-white/20 bg-white/15 text-white backdrop-blur-md">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/15 text-white backdrop-blur-md">
                     <Icon className="h-6 w-6" />
                   </div>
                   {card.soon ? (
-                    <span className="rounded-lg border border-white/18 bg-black/25 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-white/80 backdrop-blur-md">
+                    <span className="rounded-xl border border-white/18 bg-black/25 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-white/80 backdrop-blur-md">
                       Çok yakında
                     </span>
                   ) : (
-                    <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 bg-black/20 text-white/80 backdrop-blur-md transition group-hover:bg-white/15 group-hover:text-white">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-black/20 text-white/80 backdrop-blur-md transition group-hover:bg-white/15 group-hover:text-white">
                       <ArrowUpRight className="h-5 w-5" />
                     </span>
                   )}
@@ -146,7 +146,7 @@ export const OgrenciPaneli = () => {
           return card.soon ? (
             <div
               key={card.name}
-              className="module-image-card group relative min-h-[232px] overflow-hidden rounded-lg border border-white/10 bg-slate-950 shadow-2xl shadow-black/25"
+              className="module-image-card group relative min-h-[232px] overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-2xl shadow-black/25"
             >
               {cardContent}
             </div>
@@ -154,7 +154,7 @@ export const OgrenciPaneli = () => {
             <Link
               key={card.name}
               to={card.to}
-              className="module-image-card group relative min-h-[232px] overflow-hidden rounded-lg border border-white/10 bg-slate-950 shadow-2xl shadow-black/25 outline-none transition duration-300 hover:-translate-y-1 hover:border-white/25 focus-visible:ring-2 focus-visible:ring-indigo-300"
+              className="module-image-card group relative min-h-[232px] overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-2xl shadow-black/25 outline-none transition duration-300 hover:-translate-y-1 hover:border-white/25 focus-visible:ring-2 focus-visible:ring-indigo-300"
             >
               {cardContent}
             </Link>
