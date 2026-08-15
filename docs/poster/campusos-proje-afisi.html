@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Işık CampusOS Proje Afişi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    @page { size: 70cm 80cm; margin: 0; }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 3500px;
+      height: 4000px;
+      margin: 0;
+      overflow: hidden;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #060c24;
+      color: #f8fafc;
+    }
+
+    .poster {
+      position: relative;
+      width: 3500px;
+      height: 4000px;
+      padding: 96px 112px 92px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 16% 8%, rgba(34, 211, 238, 0.30), transparent 30%),
+        radial-gradient(circle at 78% 10%, rgba(99, 102, 241, 0.31), transparent 32%),
+        radial-gradient(circle at 52% 104%, rgba(236, 72, 153, 0.17), transparent 38%),
+        linear-gradient(160deg, #060c24 0%, #0a153a 52%, #07112a 100%);
+    }
+
+    .poster::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 54px 54px;
+      opacity: 0.18;
+      mask-image: radial-gradient(ellipse at 50% 10%, black, transparent 78%);
+    }
+
+    .poster::after {
+      content: "";
+      position: absolute;
+      inset: 42px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 58px;
+      pointer-events: none;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 34px;
+    }
+
+    .brand-header {
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      gap: 18px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+      padding: 28px 46px;
+      border-radius: 38px;
+      border: 1px solid rgba(255,255,255,0.11);
+      background: rgba(8, 10, 28, 0.72);
+      box-shadow: 0 28px 80px rgba(0,0,0,0.25);
+      backdrop-filter: blur(24px);
+    }
+
+    .brand-icon {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      filter: drop-shadow(0 18px 36px rgba(129, 140, 248, 0.32));
+    }
+
+    .brand-name {
+      font-size: 82px;
+      line-height: 0.9;
+      font-weight: 900;
+      letter-spacing: -3px;
+      color: #fff;
+      text-align: left;
+    }
+
+    .brand-name span {
+      background: linear-gradient(90deg, #818cf8, #c084fc, #f472b6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .brand-sub {
+      margin-top: 13px;
+      color: rgba(226,232,240,0.64);
+      font-size: 31px;
+      font-weight: 700;
+      text-align: left;
+    }
+
+    .headline {
+      max-width: 2300px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 18px;
+      padding: 13px 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(34, 211, 238, 0.25);
+      background: rgba(34, 211, 238, 0.10);
+      color: #a5f3fc;
+      font-size: 20px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .headline h1 {
+      margin: 0;
+      color: #fff;
+      font-size: 78px;
+      line-height: 1.03;
+      font-weight: 900;
+      letter-spacing: -3px;
+    }
+
+    .headline h1 span {
+      background: linear-gradient(90deg, #22d3ee, #818cf8 45%, #f472b6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      grid-template-rows: 650px 620px 520px 520px 500px;
+      gap: 28px;
+      min-height: 0;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 34px;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.026)),
+        rgba(9, 12, 31, 0.70);
+      box-shadow: 0 26px 78px rgba(0, 0, 0, 0.23);
+      backdrop-filter: blur(24px);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 7px;
+      background: var(--accent, linear-gradient(90deg, #22d3ee, #818cf8));
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      padding: 30px;
+    }
+
+    .section-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 11px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.055);
+      color: #a5f3fc;
+      font-size: 17px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 2.2px;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 0 0 20px;
+      color: #fff;
+      font-size: 43px;
+      line-height: 1.06;
+      font-weight: 900;
+      letter-spacing: -1.3px;
+    }
+
+    h2 .grad-cyan {
+      background: linear-gradient(90deg, #67e8f9, #a5b4fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    h2 .grad-rose {
+      background: linear-gradient(90deg, #fda4af, #fdba74);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    h2 .grad-violet {
+      background: linear-gradient(90deg, #c4b5fd, #f0abfc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    p,
+    li {
+      margin: 0;
+      color: rgba(226,232,240,0.67);
+      font-size: 24px;
+      line-height: 1.43;
+      font-weight: 650;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .problem { grid-column: 1; grid-row: 1; --accent: linear-gradient(90deg, #fb7185, #fb923c); }
+    .screen-card { grid-column: 2; grid-row: 1; --accent: linear-gradient(90deg, #22d3ee, #818cf8, #f472b6); }
+    .solution { grid-column: 1 / span 2; grid-row: 2; --accent: linear-gradient(90deg, #22d3ee, #818cf8); }
+    .modules { grid-column: 1 / span 2; grid-row: 3; --accent: linear-gradient(90deg, #8b5cf6, #ec4899); }
+    .architecture { grid-column: 1; grid-row: 4; --accent: linear-gradient(90deg, #34d399, #22d3ee); }
+    .stack { grid-column: 2; grid-row: 4; --accent: linear-gradient(90deg, #22d3ee, #34d399); }
+
+    .roles {
+      grid-column: 1 / span 2;
+      grid-row: auto;
+      --accent: linear-gradient(90deg, #fbbf24, #fb923c);
+      min-height: 410px;
+    }
+
+    .screen-card .card-inner {
+      display: flex;
+      flex-direction: column;
+      padding: 30px;
+    }
+
+    .pc {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      border-radius: 30px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(129,140,248,0.24), transparent 58%),
+        rgba(255,255,255,0.045);
+    }
+
+    .monitor {
+      width: 100%;
+      max-width: 720px;
+      padding: 18px 18px 24px;
+      border-radius: 34px;
+      background: linear-gradient(145deg, #161a2f, #070813);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.12), 0 42px 110px rgba(0,0,0,0.58);
+    }
+
+    .monitor-bar {
+      display: flex;
+      gap: 10px;
+      height: 31px;
+      padding-left: 8px;
+    }
+
+    .window-dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #fb7185;
+    }
+
+    .window-dot:nth-child(2) { background: #fbbf24; }
+    .window-dot:nth-child(3) { background: #34d399; }
+
+    .screen {
+      overflow: hidden;
+      border-radius: 23px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #070813;
+    }
+
+    .screen img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .stand {
+      width: 220px;
+      height: 38px;
+      margin: 0 auto;
+      background: linear-gradient(180deg, rgba(148,163,184,0.30), rgba(15,23,42,0.08));
+      clip-path: polygon(34% 0, 66% 0, 76% 100%, 24% 100%);
+    }
+
+    .base {
+      width: 360px;
+      height: 18px;
+      margin: 0 auto;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(34,211,238,0.35), rgba(129,140,248,0.48), rgba(244,114,182,0.34));
+    }
+
+    .mini-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .problem-points {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .problem-point {
+      min-height: 150px;
+      padding: 18px;
+      border-radius: 22px;
+      border: 1px solid rgba(251,113,133,0.15);
+      background: rgba(251,113,133,0.055);
+    }
+
+    .problem-point strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #fff;
+      font-size: 21px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .problem-point span {
+      color: rgba(226,232,240,0.60);
+      font-size: 16px;
+      line-height: 1.28;
+      font-weight: 650;
+    }
+
+    .mini-list li,
+    .cap-card,
+    .module-card,
+    .stack-card,
+    .role-card,
+    .service-card {
+      border-radius: 25px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.044);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    .mini-list li {
+      min-height: 205px;
+      padding: 22px;
+    }
+
+    .mini-list strong {
+      display: block;
+      margin-bottom: 9px;
+      color: #fff;
+      font-size: 28px;
+      line-height: 1.12;
+      font-weight: 900;
+    }
+
+    .cap-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .cap-card {
+      min-height: 170px;
+      padding: 21px;
+      background: rgba(34,211,238,0.070);
+      border-color: rgba(34,211,238,0.16);
+    }
+
+    .cap-card strong {
+      display: block;
+      margin-bottom: 9px;
+      color: #fff;
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    .cap-card span {
+      color: rgba(226,232,240,0.64);
+      font-size: 20px;
+      line-height: 1.35;
+      font-weight: 650;
+    }
+
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .module-card {
+      position: relative;
+      min-height: 360px;
+      padding: 24px;
+    }
+
+    .module-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 7px;
+      border-radius: 25px 0 0 25px;
+      background: var(--module-accent);
+    }
+
+    .module-card h3 {
+      margin: 0;
+      color: #fff;
+      font-size: 36px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .module-card em {
+      display: block;
+      margin-top: 10px;
+      color: rgba(226,232,240,0.48);
+      font-size: 17px;
+      line-height: 1.25;
+      font-style: normal;
+      font-weight: 850;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .status {
+      display: inline-flex;
+      margin: 17px 0 18px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(52,211,153,0.12);
+      color: #a7f3d0;
+      font-size: 15px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+    }
+
+    .module-card p {
+      font-size: 20px;
+      line-height: 1.35;
+    }
+
+    .feature-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .feature-chips span,
+    .tech-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.065);
+      border: 1px solid rgba(255,255,255,0.07);
+      color: rgba(226,232,240,0.72);
+      font-size: 15px;
+      line-height: 1;
+      font-weight: 750;
+    }
+
+    .architecture-body {
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: 18px;
+      height: calc(100% - 78px);
+    }
+
+    .flow {
+      display: grid;
+      align-content: center;
+      gap: 8px;
+      padding: 18px;
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.035);
+    }
+
+    .flow-box {
+      padding: 12px;
+      border-radius: 22px;
+      text-align: center;
+      color: #fff;
+      font-size: 20px;
+      line-height: 1.18;
+      font-weight: 900;
+      background: rgba(129,140,248,0.14);
+      border: 1px solid rgba(129,140,248,0.24);
+    }
+
+    .flow-arrow {
+      text-align: center;
+      color: rgba(103,232,249,0.82);
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .services {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .service-card {
+      min-height: 74px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .service-card strong {
+      display: block;
+      color: #fff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .service-card small {
+      display: block;
+      margin-top: 2px;
+      color: #a5f3fc;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .service-card span {
+      display: block;
+      margin-top: 3px;
+      color: rgba(226,232,240,0.50);
+      font-size: 12px;
+      line-height: 1.18;
+      font-weight: 650;
+    }
+
+    .infra-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 9px;
+    }
+
+    .infra-row div {
+      padding: 10px 10px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.045);
+      border: 1px solid rgba(255,255,255,0.09);
+      color: rgba(226,232,240,0.70);
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .stack-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .stack-card {
+      min-height: 205px;
+      padding: 18px;
+    }
+
+    .stack-card strong {
+      display: block;
+      margin-bottom: 12px;
+      color: #fff;
+      font-size: 23px;
+      font-weight: 900;
+    }
+
+    .tech-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tech-chip {
+      font-size: 13px;
+      padding: 8px 10px;
+    }
+
+    .roles {
+      display: none;
+    }
+
+    .roles-full {
+      grid-column: 1 / span 2;
+      grid-row: 5;
+      --accent: linear-gradient(90deg, #fbbf24, #fb923c);
+      min-height: 0;
+    }
+
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .role-card {
+      min-height: 148px;
+      padding: 17px;
+    }
+
+    .role-card strong {
+      display: block;
+      color: #fff;
+      font-size: 22px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .role-card code {
+      display: inline-block;
+      margin: 8px 0 8px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(251,191,36,0.12);
+      color: #fde68a;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .role-card span {
+      color: rgba(226,232,240,0.58);
+      font-size: 16px;
+      line-height: 1.25;
+      font-weight: 650;
+    }
+
+    .footer {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 34px;
+      min-height: 126px;
+      padding: 25px 34px;
+      border-radius: 34px;
+      border: 1px solid rgba(255,255,255,0.11);
+      background: rgba(8, 10, 28, 0.72);
+      backdrop-filter: blur(24px);
+    }
+
+    .footer-left,
+    .footer-right {
+      color: #fff;
+      font-size: 32px;
+      line-height: 1.15;
+      font-weight: 900;
+    }
+
+    .footer-right { text-align: right; }
+
+    .footer img {
+      width: 365px;
+      max-height: 82px;
+      object-fit: contain;
+      filter: drop-shadow(0 12px 28px rgba(255,255,255,0.08));
+    }
+  </style>
+</head>
+<body>
+  <main class="poster">
+    <div class="content">
+      <header class="brand-header">
+        <div class="brand">
+          <img class="brand-icon" src="../../frontend/public/isik-ikon.png" alt="Işık CampusOS">
+          <div>
+            <div class="brand-name">Işık<span>CampusOS</span></div>
+            <div class="brand-sub">Dijital Kampüs Platformu</div>
+          </div>
+        </div>
+        <div class="headline">
+          <div class="badge">Işık Üniversitesi · Kapalı dijital kampüs platformu</div>
+          <h1>Dağınık kampüs süreçlerini <span>tek güvenli deneyim omurgasında</span> birleştirir.</h1>
+        </div>
+      </header>
+
+      <section class="main-grid">
+        <article class="card problem">
+          <div class="card-inner">
+            <div class="section-kicker">Problem</div>
+            <h2>Kampüs yaşamı <span class="grad-rose">dağınık kanallara</span> sıkışmış</h2>
+            <p>Kulüp duyuruları, tesis talepleri, yemek ve ulaşım koordinasyonu bugün çoğunlukla denetimsiz harici kanallarda yürüyor. Bu dağınıklık güven, görünürlük ve tutarlılık sorunlarına yol açıyor.</p>
+            <div class="problem-points">
+              <div class="problem-point"><strong>Dağınık iletişim</strong><span>Duyurular WhatsApp/Instagram gruplarına, e-postalara ve manuel listelere bölünmüş durumda.</span></div>
+              <div class="problem-point"><strong>Denetimsiz güven</strong><span>Harici kanallarda kimin doğrulanmış üniversite üyesi olduğu belirsiz; kötüye kullanım kolay.</span></div>
+              <div class="problem-point"><strong>Tutarsız deneyim</strong><span>Her süreç farklı bir araçta; öğrenci her seferinde yeni bir akış öğrenmek zorunda.</span></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card screen-card">
+          <div class="card-inner">
+            <div class="section-kicker">Ürün Görseli</div>
+            <h2>Canlı <span class="grad-cyan">platform ekranı</span></h2>
+            <div class="pc">
+              <div>
+                <div class="monitor">
+                  <div class="monitor-bar">
+                    <span class="window-dot"></span>
+                    <span class="window-dot"></span>
+                    <span class="window-dot"></span>
+                  </div>
+                  <div class="screen">
+                    <img src="./giris-ekrani.png" alt="Işık CampusOS giriş ekranı">
+                  </div>
+                </div>
+                <div class="stand"></div>
+                <div class="base"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card solution">
+          <div class="card-inner">
+            <div class="section-kicker">Çözüm</div>
+            <h2>Tek omurga, <span class="grad-cyan">tek güven katmanı</span></h2>
+            <ul class="mini-list">
+              <li><strong>Tek kimlik ile onboarding</strong>Üniversite e-postası ile giriş; e-posta doğrulama ve JWT tabanlı oturum.</li>
+              <li><strong>Merkezi güvenlik</strong>JWT API Gateway’de doğrulanır; rol ve kullanıcı bilgisi servislere güvenli iletilir.</li>
+              <li><strong>Tutarlı kullanıcı deneyimi</strong>Tüm modüllerde ortak tasarım dili; bilişsel geçiş maliyeti minimuma iner.</li>
+            </ul>
+            <div class="cap-row">
+              <div class="cap-card"><strong>Tek Kimlik</strong><span>Üniversite e-postası ile tek giriş; tüm modüller aynı kimliği paylaşır.</span></div>
+              <div class="cap-card"><strong>Anlık Bildirim</strong><span>In-app bildirim + SSE canlı akış, modüller arası fan-out.</span></div>
+              <div class="cap-card"><strong>Bağlam Bazlı Mesajlaşma</strong><span>Yemek/yolculuk gibi bağlamlara bağlı konuşmalar, canlı mesaj akışı.</span></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card modules">
+          <div class="card-inner">
+            <div class="section-kicker">Modüller</div>
+            <h2>Kampüsün <span class="grad-violet">dört aktif</span> ekosistemi</h2>
+            <div class="module-grid">
+              <div class="module-card" style="--module-accent: linear-gradient(180deg,#8b5cf6,#9333ea)">
+                <h3>ClubHub</h3><em>Kulüp & Etkinlik Yönetimi</em><span class="status">Aktif</span>
+                <p>Kulüp kuruluşundan etkinlik sertifikasına kadar tüm öğrenci topluluğu yaşam döngüsü.</p>
+                <div class="feature-chips"><span>Üyelik & SKS onay zinciri</span><span>RSVP & yedek liste</span><span>QR check-in</span><span>Dijital sertifika</span></div>
+              </div>
+              <div class="module-card" style="--module-accent: linear-gradient(180deg,#06b6d4,#2563eb)">
+                <h3>SpotReserve</h3><em>Spor Tesisi Rezervasyonu</em><span class="status">Aktif</span>
+                <p>Tesis ve kaynakların çakışmasız, kurallı ve denetlenebilir biçimde rezervasyonu.</p>
+                <div class="feature-chips"><span>Uygunluk & saat dilimleri</span><span>Çakışma kontrolü</span><span>Tesis & kaynak</span><span>Check-in</span></div>
+              </div>
+              <div class="module-card" style="--module-accent: linear-gradient(180deg,#f97316,#ef4444)">
+                <h3>UniEats</h3><em>Kampüs Yemek Siparişi</em><span class="status">Aktif</span>
+                <p>İşletmeden öğrenciye uçtan uca sipariş: menü, kampanya, favori ve anlık durum takibi.</p>
+                <div class="feature-chips"><span>Menü & ekstralar</span><span>Kampanya</span><span>Sipariş durumu</span><span>Favori satıcılar</span></div>
+              </div>
+              <div class="module-card" style="--module-accent: linear-gradient(180deg,#10b981,#0d9488)">
+                <h3>CampusRide</h3><em>Paylaşımlı Yolculuk</em><span class="status">Aktif</span>
+                <p>Doğrulanmış sürücü ve yolcular için güvenli kampüs içi/dışı yolculuk paylaşımı.</p>
+                <div class="feature-chips"><span>İlan / talep</span><span>Rota önizleme</span><span>Araç & ehliyet</span><span>Şikayet logları</span></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card architecture">
+          <div class="card-inner">
+            <div class="section-kicker">Mimari</div>
+            <h2>Bağımsız servisler, <span class="grad-cyan">tek geçit</span></h2>
+            <div class="architecture-body">
+              <div class="flow">
+                <div class="flow-box">React Frontend</div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box">API Gateway :8080<br><span style="font-size:15px;color:rgba(255,255,255,.55)">JWT doğrulama · X-User-Roles</span></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-box">Mikroservisler</div>
+              </div>
+              <div>
+                <div class="services">
+                  <div class="service-card"><strong>auth</strong><small>:8081</small><span>Kimlik & JWT</span></div>
+                  <div class="service-card"><strong>profile</strong><small>:8082</small><span>Profil</span></div>
+                  <div class="service-card"><strong>notification</strong><small>:8083</small><span>Bildirim & SSE</span></div>
+                  <div class="service-card"><strong>facility</strong><small>:8086</small><span>Tesis & rezervasyon</span></div>
+                  <div class="service-card"><strong>food</strong><small>:8087</small><span>Yemek siparişi</span></div>
+                  <div class="service-card"><strong>ride</strong><small>:8088</small><span>CampusRide</span></div>
+                  <div class="service-card"><strong>club</strong><small>:8089</small><span>Kulüp & etkinlik</span></div>
+                  <div class="service-card"><strong>message</strong><small>:8090</small><span>Mesajlaşma</span></div>
+                </div>
+                <div class="infra-row">
+                  <div>Eureka servis keşfi</div>
+                  <div>Kafka olay akışı</div>
+                  <div>DB-per-service</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card stack">
+          <div class="card-inner">
+            <div class="section-kicker">Teknoloji Yığını</div>
+            <h2>Üretim sınıfı <span class="grad-cyan">teknolojiler</span></h2>
+            <div class="stack-grid">
+              <div class="stack-card"><strong>Backend</strong><div class="tech-row"><span class="tech-chip">Java 17 + Spring Boot</span><span class="tech-chip">Spring Cloud Gateway</span><span class="tech-chip">Eureka</span><span class="tech-chip">Spring Data JPA</span><span class="tech-chip">JWT + Security</span></div></div>
+              <div class="stack-card"><strong>Frontend</strong><div class="tech-row"><span class="tech-chip">React 19 + TypeScript</span><span class="tech-chip">Vite</span><span class="tech-chip">React Router</span><span class="tech-chip">Zustand</span><span class="tech-chip">Tailwind + Framer Motion</span></div></div>
+              <div class="stack-card"><strong>Veri & Olay</strong><div class="tech-row"><span class="tech-chip">PostgreSQL</span><span class="tech-chip">Kafka + Zookeeper</span><span class="tech-chip">Flyway</span><span class="tech-chip">Redis</span></div></div>
+              <div class="stack-card"><strong>Altyapı & Gözlem</strong><div class="tech-row"><span class="tech-chip">Docker Compose</span><span class="tech-chip">Zipkin</span><span class="tech-chip">Mailpit</span><span class="tech-chip">Monorepo</span></div></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card roles-full">
+          <div class="card-inner">
+            <div class="section-kicker">Roller & Yetkiler</div>
+            <h2>Herkese <span class="grad-rose">doğru yetki</span></h2>
+            <div class="roles-grid">
+              <div class="role-card"><strong>Öğrenci</strong><code>STUDENT</code><span>Kulüp, etkinlik, tesis, yemek ve yolculuk akışlarının ana kullanıcısı.</span></div>
+              <div class="role-card"><strong>Kulüp Başkanı</strong><code>YONETICI</code><span>Kendi kulübü için etkinlik, duyuru ve üye yönetimi.</span></div>
+              <div class="role-card"><strong>SKS Personeli</strong><code>SKS_ADMIN</code><span>Kulüp/etkinlik onayı, başkan atama, performans izleme.</span></div>
+              <div class="role-card"><strong>Öğrenci İşleri</strong><code>REGISTRAR</code><span>Öğrenci hesabı oluşturma ve durum yönetimi.</span></div>
+              <div class="role-card"><strong>Tesis Yöneticisi</strong><code>FACILITY_ADMIN</code><span>Tesis kaynakları, politika ve uygunluk kuralları.</span></div>
+              <div class="role-card"><strong>İşletme Yetkilisi</strong><code>VENDOR_ADMIN / STAFF</code><span>Satıcı profili, menü, kampanya, personel ve sipariş operasyonu.</span></div>
+              <div class="role-card"><strong>Ride Yönetimi</strong><code>RIDE / BUILDING_SUPPORT</code><span>Sürücü/araç doğrulama, şikayet ve yolculuk logları.</span></div>
+              <div class="role-card"><strong>Sistem Yöneticisi</strong><code>ADMIN</code><span>Roller, güvenlik ve sistem geneli yönetim.</span></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <footer class="footer">
+        <div class="footer-left">Tolga Olguner<br>23YÖBİ1035</div>
+        <img src="../../frontend/public/isik-logo.png" alt="Işık Üniversitesi">
+        <div class="footer-right">Danışman:<br>Dr. Şahin Aydın</div>
+      </footer>
+    </div>
+  </main>
+</body>
+</html>

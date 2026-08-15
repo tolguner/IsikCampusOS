@@ -25,6 +25,12 @@ dist-ssr/
 **/dist-ssr/
 *.local
 
+# Tez uretim artiklari ve yedekleri
+docs/tez/yedekler/
+docs/tez/build/yedek_*
+docs/tez/build/_docx_metin_dump.txt
+*.stackdump
+
 # IDE and OS files
 .idea/
 .vscode/*

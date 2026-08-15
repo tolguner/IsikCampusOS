@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useKimlikDeposu } from '../../depolar/kimlikDeposu';
-import { Bell, Building2, LayoutDashboard, Link as LinkIcon, MessageSquare } from 'lucide-react';
+import { Bell, Building2, LayoutDashboard, Link as LinkIcon, MessageSquare, ShieldCheck } from 'lucide-react';
 import { useMesajDeposu } from '../../depolar/mesajDeposu';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useBildirimDeposu } from '../../depolar/bildirimDeposu';
+import { useKulupDeposu } from '../../depolar/kulupDeposu';
 import { useProfilDeposu } from '../../depolar/profilDeposu';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../../yardimcilar/yetkiler';
 import { YOLLAR } from '../../yardimcilar/yollar';
@@ -14,9 +15,12 @@ export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, logout, user } = useKimlikDeposu();
   const { bildirimler, okunmamisSayisi, bildirimleriGetir, okunduIsaretle } = useBildirimDeposu();
   const { okunmamisToplam: mesajOkunmamis, akisBaslat: mesajAkisBaslat, okunmamisGetir: mesajOkunmamisGetir } = useMesajDeposu();
+  const { managedClubs, fetchManagedClubs } = useKulupDeposu();
   const { profile, fetchMyProfile } = useProfilDeposu();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const isStudent = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.ogrenci);
   const isFacilityAdmin = yetkilerdenBiriVarMi(user?.roller, YETKI_GRUPLARI.tesisYonetimi);
+  const isClubPresident = isStudent && managedClubs.length > 0;
   const userInitials = `${user?.ad?.[0] ?? ''}${user?.soyad?.[0] ?? ''}` ||
     user?.tamAd?.split(' ').map(part => part[0]).slice(0, 2).join('') ||
     '?';
@@ -28,6 +32,10 @@ export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (isAuthenticated) { mesajAkisBaslat(); mesajOkunmamisGetir(); }
   }, [isAuthenticated, mesajAkisBaslat, mesajOkunmamisGetir]);
+
+  useEffect(() => {
+    if (isAuthenticated && isStudent) fetchManagedClubs();
+  }, [fetchManagedClubs, isAuthenticated, isStudent]);
 
   useEffect(() => {
     if (isAuthenticated && user) fetchMyProfile();
@@ -76,6 +84,11 @@ export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
                 <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-cyan-500 px-1 text-[10px] font-black text-white">{mesajOkunmamis > 9 ? '9+' : mesajOkunmamis}</span>
               )}
             </Link>
+            {isClubPresident && (
+              <Link to={YOLLAR.kulupYonetimi} className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Kulüp Yönetim Paneli">
+                <ShieldCheck className="w-5 h-5 text-white/40 hover:text-white/70" />
+              </Link>
+            )}
             {isFacilityAdmin && (
               <Link to={YOLLAR.tesisYonetimi} className="hidden md:flex p-2.5 hover:bg-white/5 rounded-xl transition-colors cursor-pointer" title="Tesis Yönetim Paneli">
                 <Building2 className="w-5 h-5 text-white/40 hover:text-white/70" />

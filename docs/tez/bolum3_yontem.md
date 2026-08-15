@@ -18,7 +18,7 @@ Geliştirme süreci, her biri belirli bir teslimat hedefi olan döngüler halind
 
 1. **Çekirdek altyapı döngüsü:** Servis keşfi (Eureka), API Gateway, container orkestrasyonu (Docker Compose) ve mesajlaşma altyapısı (Kafka) kurulmuştur.
 2. **Kimlik ve profil döngüsü:** Kullanıcı kimliği, üniversite e-postası doğrulaması ve profil yönetimi tamamlanmıştır.
-3. **Modül döngüleri:** Her fonksiyonel modül (kulüp/etkinlik, tesis rezervasyon, yemek, paylaşımlı yolculuk, proje eşleştirme, mikro iş) sırayla, kendi içinde uçtan uca çalışır biçimde geliştirilmiştir.
+3. **Modül döngüleri:** Her fonksiyonel modül (kulüp/etkinlik, tesis rezervasyon, yemek, paylaşımlı yolculuk) ve bunları destekleyen platform geneli bildirim ile mesajlaşma altyapısı sırayla, kendi içinde uçtan uca çalışır biçimde geliştirilmiştir. Projenin tam vizyonunda yer alan proje eşleştirme ve mikro iş modülleri ise bu çalışmada tasarım düzeyinde ele alınmış, gerçekleştirimleri gelecek geliştirme fazına bırakılmıştır (bkz. 3.6 ve Bölüm 6).
 
 Her döngünün sonunda, üretilen yazılım parçası çalışır durumda gösterilebilir hâle getirilmiş; bir sonraki döngünün kapsamı, ortaya çıkan teknik gerçeklikler ışığında güncellenmiştir.
 
@@ -50,14 +50,16 @@ Platform, altyapı servisleri ve domain servisleri olmak üzere iki katmandan ol
 | Altyapı | `api-gateway` | 8080 | Yönlendirme, merkezi JWT doğrulama, CORS |
 | Domain | `auth-service` | 8081 | Kimlik, JWT üretimi, e-posta doğrulama, kullanıcı yönetimi |
 | Domain | `profile-service` | 8082 | Profil yönetimi, beceri etiketleri |
+| Domain | `notification-service` | 8083 | Platform geneli in-app bildirim, SSE akışı, duyuru |
 | Domain | `facility-service` | 8086 | Tesis ve kaynak rezervasyonu, çakışma kontrolü |
-| Domain | `food-service` | 8087 | Satıcı, menü ve sipariş yönetimi |
-| Domain | `ride-service` | 8088 | Paylaşımlı yolculuk ilanı ve eşleştirme |
-| Domain | `club-service` | 8089 | Kulüp, etkinlik, RSVP, bildirim |
-| Domain | `projectmatch-service` | 8090 | Beceri tabanlı proje ekip eşleştirme |
-| Domain | `microjob-service` | 8091 | Kampüs içi mikro iş ilanı ve teklif |
+| Domain | `food-service` | 8087 | Satıcı, menü, kampanya, sipariş ve işletme yönetimi |
+| Domain | `ride-service` | 8088 | Paylaşımlı yolculuk ilanı, eşleştirme, doğrulama, puanlama |
+| Domain | `club-service` | 8089 | Kulüp, etkinlik, RSVP, sertifika, duyuru fan-out |
+| Domain | `message-service` | 8090 | Bağlam temelli konuşma, mesajlaşma, SSE akışı |
 
 Altyapı bileşenleri olarak ayrıca PostgreSQL (servis başına veri tabanı), Apache Kafka ve Zookeeper (asenkron mesajlaşma), Redis (önbellek ve hız sınırlama) ve Zipkin (dağıtık izleme) kullanılmıştır.
+
+Projenin tam vizyonunda yer alan beceri tabanlı proje eşleştirme (ProjectMatch) ve kampüs içi mikro iş (MicroJob) modülleri bu çalışmada tasarım düzeyinde ele alınmıştır (3.6.5–3.6.7). Bu modüllerin bağımsız servisleri (`projectmatch-service`, `microjob-service`), mevcut servislerin oturmuş şablonu izlenerek gelecek geliştirme fazında platforma eklenecek biçimde planlanmıştır (bkz. Bölüm 6).
 
 ### 3.2.3. Genel Mimari Şeması
 
@@ -77,6 +79,7 @@ flowchart TD
     subgraph Cekirdek["Çekirdek Servisler"]
         Gateway -->|"X-User-Id / X-User-Roles"| Auth["auth-service :8081"]
         Gateway --> Profile["profile-service :8082"]
+        Gateway --> Notif["notification-service :8083"]
     end
 
     subgraph Domain["Fonksiyonel Modüller"]
@@ -84,23 +87,28 @@ flowchart TD
         Gateway --> Facility["facility-service :8086"]
         Gateway --> Food["food-service :8087"]
         Gateway --> Ride["ride-service :8088"]
-        Gateway --> ProjMatch["projectmatch-service :8090"]
-        Gateway --> MicroJob["microjob-service :8091"]
+        Gateway --> Message["message-service :8090"]
     end
 
     Auth -->|"kullanici.kaydedildi"| Kafka{{"Apache Kafka"}}
     Kafka -.->|"tüketir"| Profile
     Event -->|"etkinlik.* olayları"| Kafka
     Kafka -.->|"tüketir"| Auth
+    Event -->|"bildirim.olustur"| Kafka
+    Facility -->|"bildirim.olustur"| Kafka
+    Food -->|"bildirim.olustur"| Kafka
+    Ride -->|"bildirim.olustur"| Kafka
+    Message -->|"bildirim.olustur"| Kafka
+    Kafka -.->|"tüketir"| Notif
 
     Auth --> AuthDB[("auth_db")]
     Profile --> ProfDB[("profile_db")]
+    Notif --> NotifDB[("notification_db")]
     Event --> EventDB[("club_db")]
     Facility --> FacDB[("facility_db")]
     Food --> FoodDB[("food_db")]
     Ride --> RideDB[("ride_db")]
-    ProjMatch --> PMDB[("projectmatch_db")]
-    MicroJob --> MJDB[("microjob_db")]
+    Message --> MsgDB[("message_db")]
 ```
 
 ### 3.2.4. Spring Cloud Entegrasyon Katmanı
@@ -110,9 +118,11 @@ Servisler arası ağ trafiği ve dış dünyadan gelen istekler, Spring Cloud bi
 - **API Gateway (Spring Cloud Gateway):** İstemci hiçbir domain servisine doğrudan erişemez. Tüm istekler `/api/v1/...` temel yolu üzerinden Gateway tarafından karşılanır. Gateway; rota eşleme, CORS politikaları, kimlik doğrulama filtresi ve hız sınırlama (rate limiting) sorumluluklarını üstlenir. Gateway'in yönlendirme yapısı Türkçe yol adları üzerine kuruludur (örneğin `/api/v1/kimlik/**` → auth-service, `/api/v1/kulupler/**` → club-service, `/api/v1/tesisler/**` → facility-service).
 - **Eureka (Service Registry & Discovery):** Tüm servisler başlangıçta Eureka'ya kendi adları ve ağ konumlarıyla kaydolur. Servisler birbirini sabit IP adresi yerine servis adıyla bulur; bu, dinamik ölçeklenmeyi kolaylaştırır.
 
-### 3.2.5. Mimari Karar: Bildirim Sorumluluğunun Konumu
+### 3.2.5. Mimari Karar: Bildirim Sorumluluğunun Evrimi
 
-Mikroservis mimarisinde "her işlev için ayrı servis" yaklaşımı her zaman doğru değildir; gereksiz servis ayrımı operasyonel karmaşıklığı artırır (Taibi vd., 2017). Bu farkındalıkla, bildirim (in-app notification) işlevi ayrı bir servise çıkarılmak yerine, mevcut sürümde bildirimin yegâne tüketicisi olan club-service içinde konumlandırılmıştır. Bu, kanıta dayalı bilinçli bir tasarım kararıdır: bildirim üreten ikinci bir modül devreye girdiğinde, bildirim olay güdümlü bağımsız bir servise ayrılacak biçimde tasarlanmıştır. Bu yaklaşım, mimari kararların gereksinimlerle birlikte evrildiği artımlı geliştirme felsefesiyle tutarlıdır.
+Mikroservis mimarisinde "her işlev için ayrı servis" yaklaşımı her zaman doğru değildir; gereksiz servis ayrımı operasyonel karmaşıklığı artırır (Taibi vd., 2017). Bu farkındalıkla bildirim (in-app notification) işlevi, ilk geliştirme döngüsünde bildirimin yegâne üreticisi olan club-service içinde konumlandırılmıştır. Ancak platform büyüdükçe tesis rezervasyonu, yemek siparişi ve paylaşımlı yolculuk gibi modüller de kullanıcıya bildirim üretmeye başlamış; böylece bildirim, tek bir domaine ait bir işlev olmaktan çıkıp ortak bir platform yeteneği hâline gelmiştir.
+
+Bu gereksinim değişikliği üzerine, başlangıçtan beri öngörülen evrim hayata geçirilmiş ve bildirim işlevi bağımsız bir **`notification-service`** olarak ayrılmıştır. Üretici servisler (club, facility, food, ride ve message) bildirim oluşturmak için doğrudan bildirim tablosuna erişmek yerine Kafka üzerinden `bildirim.olustur` olayını yayar; `notification-service` bu olayı tüketerek bildirimi kalıcılaştırır, okundu/okunmadı durumunu yönetir ve istemciye sunucu-gönderimli olaylar (Server-Sent Events, SSE) akışıyla iletir. Bu karar, mimari kararların gereksinimlerle birlikte evrildiği artımlı geliştirme felsefesinin somut bir örneğidir: bir sorumluluk, ancak birden çok tüketicisi/üreticisi ortaya çıktığında ayrı bir servise taşınarak gereksiz erken parçalanmadan kaçınılmıştır.
 
 ---
 
@@ -191,12 +201,14 @@ Servisler, ürettikleri durum değişikliklerini Kafka topic'lerine birer **doma
 | Olay (Topic) | Üreten | Tüketen | Amaç |
 |--------------|--------|---------|------|
 | `kullanici.kaydedildi` | auth-service | profile-service | Yeni kullanıcı için otomatik profil oluşturma |
+| `kullanici.guncellendi` | auth-service | profile-service | Profil bilgisinin senkron tutulması |
 | `kullanici.silindi` | auth-service | profile-service | Profil kaydının senkron tutulması |
 | `etkinlik.yayinlandi` | club-service | (ilgili tüketiciler) | Etkinlik yayını bildirimi |
 | `etkinlik.iptal-edildi` | club-service | (ilgili tüketiciler) | Etkinlik iptali bildirimi |
 | `etkinlik.sertifika.olusturma-talep-edildi` | club-service | auth-service | Sertifika üretim ve teslimat süreci |
+| `bildirim.olustur` | club, facility, food, ride, message | notification-service | Platform geneli in-app bildirim üretimi |
 
-> **Not (yazım rehberi):** Yukarıdaki topic adları projedeki gerçek adlandırma kuralını (Türkçe, `nesne.aksiyon` biçimi) yansıtır. Yeni modüller devreye alındığında (örneğin `siparis.olusturuldu`, `yolculuk.eslesti`, `is.tamamlandi`) aynı kurala uygun olarak bu tabloya eklenir.
+> **Not (yazım rehberi):** Yukarıdaki topic adları projedeki gerçek adlandırma kuralını (Türkçe, `nesne.aksiyon` biçimi) yansıtır. `bildirim.olustur` olayının birden çok üretici tarafından yayılması, bildirim işlevinin ortak bir platform yeteneği olarak `notification-service`e ayrılmasının (3.2.5) olay güdümlü karşılığıdır.
 
 ### 3.4.3. Örnek Akış: Kullanıcı Kaydı ve Otomatik Profil Oluşturma
 
@@ -246,12 +258,14 @@ Veri tabanı dağılımı Tablo 3.3'te sunulmuştur.
 |--------|-------------|
 | auth-service | `auth_db` |
 | profile-service | `profile_db` |
+| notification-service | `notification_db` |
 | club-service | `club_db` |
 | facility-service | `facility_db` |
 | food-service | `food_db` |
 | ride-service | `ride_db` |
-| projectmatch-service | `projectmatch_db` |
-| microjob-service | `microjob_db` |
+| message-service | `message_db` |
+
+Gelecek geliştirme fazında eklenecek proje eşleştirme ve mikro iş modülleri de aynı izolasyon ilkesini izleyerek kendi veri tabanlarına (`projectmatch_db`, `microjob_db`) sahip olacak biçimde tasarlanmıştır.
 
 ### 3.5.2. Şema Yönetimi ve Veri Standartları
 
@@ -326,7 +340,7 @@ erDiagram
 
 ## 3.6. Fonksiyonel Modüllerin Tasarımı
 
-Bu bölümde, platformun altı fonksiyonel modülünün tasarımı ve temel iş kuralları sunulmaktadır. Modüller ortak bir altyapı (kimlik, profil, bildirim, olay akışı) üzerine oturur; her biri kendi domain mantığını kapsar. Ayrıca ProjectMatch ve MicroJob modüllerinin paylaştığı etiket tabanlı eşleştirme altyapısı, ayrı bir ortak bileşen olarak (3.6.5) ele alınmaktadır.
+Bu bölümde, platformun fonksiyonel modüllerinin tasarımı ve temel iş kuralları sunulmaktadır. Modüller ortak bir altyapı (kimlik, profil, bildirim, mesajlaşma, olay akışı) üzerine oturur; her biri kendi domain mantığını kapsar. Önce gerçekleştirilen modüller — kulüp ve etkinlik yönetimi, tesis rezervasyonu, yemek siparişi, paylaşımlı yolculuk ile bunları destekleyen bildirim ve mesajlaşma — ele alınmakta; ardından projenin tam vizyonunda yer alan ve bu çalışmada tasarım düzeyinde işlenen proje eşleştirme (ProjectMatch) ile mikro iş (MicroJob) modülleri ve bunların paylaştığı etiket tabanlı eşleştirme altyapısı sunulmaktadır (3.6.7–3.6.9).
 
 ### 3.6.1. Kulüp ve Etkinlik Yönetimi (ClubHub)
 
@@ -406,9 +420,25 @@ Bu modül, kampüse ulaşımda öğrencilerin sürücü/yolcu olarak eşleştiri
 
 > **Not (yazım rehberi):** Bu modülün matematiksel formülasyonu (ağırlıklı en kısa yol ve sapma oranı denklemleri) Bölüm 3.7'de "önerilen algoritmik tasarım" başlığı altında ayrıntılı sunulmaktadır. Buradaki anlatım, modülün tasarım mantığını özetler.
 
-### 3.6.5. Etiket Tabanlı İlgi Alanı ve Beceri Altyapısı (Ortak Bileşen)
+### 3.6.5. Bildirim Yönetimi
 
-ProjectMatch ve MicroJob modüllerinin her ikisi de, öğrencileri ilgi ve yeteneklerine göre eşleştirmek için ortak bir **etiket (tag) altyapısı** üzerine kurulmuştur. Bu altyapı, iki modülde tutarlılığı sağlamak ve mükerrer tasarımı önlemek amacıyla tek bir paylaşılan kavram olarak ele alınmıştır.
+Bu modül, platform genelinde üretilen bildirimleri tek bir noktada toplayan ortak bir yetenektir (3.2.5). Kulüp/etkinlik, tesis, yemek ve yolculuk modülleri, kullanıcıyı ilgilendiren bir durum değişikliği oluştuğunda (etkinlik yayını, rezervasyon onayı, sipariş durumunun ilerlemesi, yolculuk talebine yanıt gibi) `bildirim.olustur` olayını yayar. `notification-service` bu olayları tüketerek bildirimi kalıcılaştırır ve her kullanıcının okunmuş/okunmamış durumunu yönetir.
+
+İstemciye iletim, sürekli bir bağlantı üzerinden **sunucu-gönderimli olaylar (Server-Sent Events, SSE)** akışıyla gerçek zamanlı sağlanır; böylece kullanıcı sayfayı yenilemeden bildirim alır. Modül ayrıca SKS ve destek birimlerinin tüm kullanıcılara ya da belirli kitlelere toplu duyuru göndermesini destekler. Bildirimlerin tek bir serviste merkezîleşmesi, hem üretici modülleri iletim ayrıntısından soyutlar hem de kullanıcıya tutarlı tek bir bildirim deneyimi sunar.
+
+### 3.6.6. Bağlam Temelli Mesajlaşma
+
+Bu modül, kullanıcıların platform içindeki etkileşimlerini kurum dışı kanallara taşımadan iletişim kurmasını sağlar. Mesajlaşma, serbest bir genel sohbet uygulaması değil; belirli bir işlem **bağlamına** (örneğin bir yemek siparişi ya da bir paylaşımlı yolculuk ilanı) bağlı **konuşmalar** üzerine kuruludur. Bir bağlam için açılan konuşma, yalnızca ilgili taraflar arasında mesaj alışverişine olanak tanır; konuşma kapatılabilir, okunmamış mesaj sayısı tutulur ve yeni mesajlar SSE akışıyla gerçek zamanlı iletilir.
+
+Bu bağlam temelli yaklaşım, iletişimi ilgili işle (sipariş, yolculuk) ilişkilendirerek kapalı topluluk içinde izlenebilir ve hesap verebilir bir etkileşim sağlar. Yeni bir mesaj geldiğinde alıcıya, bildirim altyapısı (3.6.5) üzerinden `bildirim.olustur` olayıyla haber verilir; böylece mesajlaşma ve bildirim modülleri olay güdümlü biçimde birlikte çalışır.
+
+---
+
+> Aşağıdaki üç alt bölüm (3.6.7–3.6.9), projenin tam vizyonunda yer alan ve bu çalışmada **tasarım düzeyinde** ele alınan proje eşleştirme ve mikro iş modüllerini sunar. Bu modüllerin gerçekleştirimi gelecek geliştirme fazına bırakılmıştır (Bölüm 6); burada sunulan tasarım, platformun ortak altyapısının (kimlik, profil, etiket, bildirim, mesajlaşma) bu modülleri nasıl destekleyeceğini ortaya koyar.
+
+### 3.6.7. Etiket Tabanlı İlgi Alanı ve Beceri Altyapısı (Ortak Bileşen)
+
+ProjectMatch ve MicroJob modüllerinin her ikisi de, öğrencileri ilgi ve yeteneklerine göre eşleştirmek için ortak bir **etiket (tag) altyapısı** üzerine kurulacak biçimde tasarlanmıştır. Bu altyapı, iki modülde tutarlılığı sağlamak ve mükerrer tasarımı önlemek amacıyla tek bir paylaşılan kavram olarak ele alınmıştır.
 
 Altyapının temel öğeleri şunlardır:
 
@@ -419,12 +449,12 @@ Altyapının temel öğeleri şunlardır:
 
 Bu ortak altyapı, etiket eşleşmesini iki modülün eşleştirme mantığının temel sinyali hâline getirir.
 
-### 3.6.6. Proje Eşleştirme Sistemi (ProjectMatch)
+### 3.6.8. Proje Eşleştirme Sistemi (ProjectMatch)
 
 Bu modül, öğrencileri proje ekipleriyle buluşturan, **LinkedIn iş ilanları mantığında** çalışan bir ekip kurma platformudur. Tipik bir kullanım senaryosu şöyledir: bir TÜBİTAK projesi yürütmek isteyen öğrenci, projesi için bir yazılımcıya veya belirli bir yetkinliğe sahip ekip arkadaşlarına ihtiyaç duyar; bu doğrultuda bir proje ilanı açar, beklediği etiketleri (aranan yetkinlikler) seçer ve ilanı uygun görünürlük düzeyiyle yayımlar. İlgilenen öğrenciler ilana başvurur ve taraflar iletişime geçerek ekip kurar.
 
 **Temel iş akışı:**
-1. Öğrenci, profilinde ilgi alanı/beceri etiketlerini tanımlar (3.6.5).
+1. Öğrenci, profilinde ilgi alanı/beceri etiketlerini tanımlar (3.6.7).
 2. Proje sahibi, aranan yetkinlik etiketlerini ve görünürlüğü (herkese açık / etiket bazlı niş) belirleyerek ilan açar.
 3. İlan, görünürlük tercihine ve öğrencilerin bildirim filtrelerine göre ilgili kitleye ulaşır.
 4. Öğrenciler ilana başvurur; başvurular proje sahibi tarafından değerlendirilir.
@@ -434,7 +464,7 @@ Bu modül, öğrencileri proje ekipleriyle buluşturan, **LinkedIn iş ilanları
 
 > **Tasarım notu:** ProjectMatch'in temel akışı başvuru-tabanlıdır (LinkedIn modeli); kararlı eşleştirme algoritması, çok sayıda aday ve projenin toplu olarak dağıtıldığı senaryolar için önerilen bir genişlemedir.
 
-### 3.6.7. Kampüs İçi Mikro İş Pazarı (MicroJob)
+### 3.6.9. Kampüs İçi Mikro İş Pazarı (MicroJob)
 
 Bu modül, öğrencilerin hem yeteneklerini/ürünlerini pazarlayabildiği hem de ihtiyaç duydukları hizmet veya ürünler için ilan açabildiği, **iki taraflı bir kampüs içi pazaryeridir**. Tasarım, armut.com benzeri hizmet pazaryeri modelini temel alır; ancak kapalı bir üniversite topluluğu bağlamına özgü biçimde uyarlanmıştır. Tasarımın merkezinde, kapalı toplulukta güven inşası için **çift yönlü itibar (reputation) göstergeleri** bulunur (Wood vd., 2019; ter Huurne vd., 2017).
 
@@ -443,7 +473,7 @@ Bu modül, öğrencilerin hem yeteneklerini/ürünlerini pazarlayabildiği hem d
 - **Arz ilanı (hizmet/ürün sunumu):** Öğrenci, sunabileceği bir yeteneği veya ürünü vitrinler (örneğin "logo tasarlarım", "matematik özel dersi veririm"). İlgilenen kullanıcılar bu ilana teklif/iletişim talebiyle yaklaşır.
 - **Talep ilanı (ihtiyaç):** Öğrenci, ihtiyaç duyduğu bir hizmet veya ürün için ilan açar (örneğin "sunum tasarlayacak birini arıyorum"). İlgili yetkinliğe sahip öğrenciler bu ilana teklif verir.
 
-Her iki ilan türü de ortak etiket altyapısını (3.6.5) ve görünürlük tercihini kullanır. İlanlar, **ücret türü** açısından iki seçenek sunar: **ücretli** (tutar/koşullar taraflar arasında serbestçe görüşülür) veya **gönüllü** (karşılıksız yardım). Platform gerçek bir ödeme aracısı değildir; ücret yalnızca bir bilgi alanı olarak tutulur ve ödeme tarafların kendi arasında gerçekleşir (bkz. Bölüm 1, kapsam dışı alanlar).
+Her iki ilan türü de ortak etiket altyapısını (3.6.7) ve görünürlük tercihini kullanır. İlanlar, **ücret türü** açısından iki seçenek sunar: **ücretli** (tutar/koşullar taraflar arasında serbestçe görüşülür) veya **gönüllü** (karşılıksız yardım). Platform gerçek bir ödeme aracısı değildir; ücret yalnızca bir bilgi alanı olarak tutulur ve ödeme tarafların kendi arasında gerçekleşir (bkz. Bölüm 1, kapsam dışı alanlar).
 
 **Temel iş akışı:** `ilan (arz/talep) → teklif/iletişim → anlaşma → teslim → çift yönlü puanlama`. Bir iş tamamlandığında **her iki taraf da** birbirini puanlar; bu çift yönlü değerlendirme, tek yönlü ticari pazaryerlerinden farklı olarak kapalı toplulukta simetrik bir hesap verebilirlik sağlar (Wood vd., 2019). Toplanan puanlar kullanıcının itibar göstergesini besler ve sonraki etkileşimlerde güven sinyali olarak sunulur.
 
@@ -468,7 +498,7 @@ stateDiagram-v2
 
 ## 3.7. Önerilen Algoritmik Tasarımlar ve Matematiksel Modeller
 
-Bu bölümde, eşleştirme ve optimizasyon gerektiren modüllerin (ProjectMatch, CampusRide) dayandığı matematiksel modeller akademik formülasyonlarıyla sunulmaktadır. Bu modeller, ilgili modüllerin tasarım temelini oluşturur.
+Bu bölümde, eşleştirme ve optimizasyon gerektiren modüllerin dayandığı matematiksel modeller akademik formülasyonlarıyla sunulmaktadır. Bunlardan beceri tabanlı kararlı eşleştirme (3.7.1), tasarım düzeyinde ele alınan ProjectMatch modülünün; rota sapması ile eşleştirme (3.7.2) ise gerçekleştirilen CampusRide modülünün tasarım temelini oluşturur.
 
 > **Not (yazım rehberi):** Aşağıdaki denklemler, Markdown'da LaTeX biçiminde verilmiştir. Tez Word dosyasına aktarılırken bu denklemler **Word denklem editörü** ile yeniden yazılmalıdır (görsel/ekran görüntüsü olarak değil). Denklem numaralandırması bölüm boyunca tutarlı tutulmalıdır (3.1, 3.2, ...).
 
@@ -476,7 +506,7 @@ Bu bölümde, eşleştirme ve optimizasyon gerektiren modüllerin (ProjectMatch,
 
 Eşleştirme problemi, öğrenci kümesi $S = \{s_1, s_2, \dots, s_n\}$ ve proje kümesi $P = \{p_1, p_2, \dots, p_m\}$ üzerinde tanımlanır. Her projenin $p_j$ bir kontenjanı $c_j$ vardır.
 
-Her öğrencinin profili bir etiket kümesi $E(s_i)$ ile, her projenin aradığı yetkinlikler ise etiket kümesi $E(p_j)$ ile temsil edilir (3.6.5). Bir öğrencinin $s_i$ bir proje $p_j$ için **uyum skoru**, öğrencinin etiketleri ile projenin aradığı etiketler arasındaki ağırlıklı örtüşme olarak hesaplanır:
+Her öğrencinin profili bir etiket kümesi $E(s_i)$ ile, her projenin aradığı yetkinlikler ise etiket kümesi $E(p_j)$ ile temsil edilir (3.6.7). Bir öğrencinin $s_i$ bir proje $p_j$ için **uyum skoru**, öğrencinin etiketleri ile projenin aradığı etiketler arasındaki ağırlıklı örtüşme olarak hesaplanır:
 
 $$
 \text{Uyum}(s_i, p_j) = \sum_{r \in E(p_j) \cap E(s_i)} w(r)

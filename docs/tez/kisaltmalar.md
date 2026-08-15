@@ -20,6 +20,7 @@
 | SPA (mimari) | Single Page Application (Tek Sayfa Uygulaması) |
 | SPA (algoritma) | Student-Project Allocation (Öğrenci-Proje Atama) |
 | SPA-T | Student-Project Allocation with Ties (Eşitlikli Öğrenci-Proje Atama) |
+| SSE | Server-Sent Events (Sunucu-Gönderimli Olaylar) |
 | SSO | Single Sign-On (Tek Oturum Açma) |
 | SQL | Structured Query Language (Yapılandırılmış Sorgu Dili) |
 | UI | User Interface (Kullanıcı Arayüzü) |
