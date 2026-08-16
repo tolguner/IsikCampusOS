@@ -130,61 +130,24 @@ flowchart TD
 | İzleme | Zipkin |
 | Dağıtım | Docker & Docker Compose |
 
-## Kurulum ve çalıştırma
+## Hızlı başlangıç
 
-**Gereksinimler:** Docker Desktop, JDK 21, Node.js 20+
-
-### 1. Ortam değişkenlerini hazırla
-
-`.env` dosyası **zorunludur** — `JWT_SECRET` ve `POSTGRES_PASSWORD` tanımlı değilse servisler bilinçli olarak başlamaz (fail-fast).
+**Gereksinimler:** Docker Desktop · JDK 21 · Node.js 20+
 
 ```bash
-cp .env.example .env
-```
-
-Ardından `.env` içindeki değerleri doldur:
-
-```bash
-openssl rand -hex 32      # JWT_SECRET icin
-openssl rand -base64 24   # POSTGRES_PASSWORD icin
-```
-
-> `SPRING_DATASOURCE_PASSWORD` ile `POSTGRES_PASSWORD` **aynı** değer olmalıdır.
-
-### 2. Derle ve başlat
-
-```powershell
-.\mvnw.cmd clean package -DskipTests   # servis JAR'larini uretir (~3-4 dk)
-docker compose up -d                    # tum sistem
+cp .env.example .env                     # JWT_SECRET ve POSTGRES_PASSWORD doldurulmali
+./mvnw.cmd clean package -DskipTests     # servis JAR'larini uretir (~3-4 dk)
+docker compose up -d                     # tum sistem
 ```
 
 Uygulama birkaç dakika içinde **http://localhost:8080** adresinde açılır.
+Yan arayüzler: Eureka `:8761` · Zipkin `:9411` · Mailpit `:8025`
 
-| Arayüz | Adres |
-|--------|-------|
-| Uygulama | http://localhost:8080 |
-| Eureka paneli | http://localhost:8761 |
-| Zipkin (izleme) | http://localhost:9411 |
-| Mailpit (e-posta yakalayıcı) | http://localhost:8025 |
+> `.env` zorunludur — `JWT_SECRET` ve `POSTGRES_PASSWORD` tanımlı değilse servisler
+> bilinçli olarak başlamaz (fail-fast).
 
-Yalnızca altyapıyı (PostgreSQL, Kafka, Zipkin, Mailpit) ayağa kaldırmak için:
-
-```bash
-docker compose -f infra/docker-compose.infra.yml up -d
-```
-
-### 3. Giriş
-
-Kurumsal roller (yönetici, öğrenci işleri, SKS, tesis yönetimi, işletme) `auth-service` migration'larıyla otomatik oluşturulur. **Bu hesapların parolaları güvenlik gerekçesiyle depoda yayımlanmaz.** Kendi kurulumunda giriş yapmak için `auth_db.kullanicilar` tablosundaki ilgili kaydın `sifre` alanına kendi BCrypt hash'ini yazman yeterlidir.
-
-Öğrenci hesapları migration ile gelmez; Öğrenci İşleri rolüyle giriş yapıp panelden oluşturulur. Yeni kullanıcıların e-posta doğrulama kodları geliştirme ortamında Mailpit'e düşer.
-
-<details>
-<summary>Gerçek Gmail SMTP ile e-posta gönderimi</summary>
-
-Doğrulama ve şifre sıfırlama kodlarını gerçek bir Gmail hesabı üzerinden göndermek için `.env.gmail.example` dosyasındaki ayarları `.env` dosyana ekle ve `MAIL_PASSWORD` değerini bir Gmail **App Password** ile doldur. `MAIL_ENABLED=false` yaparsan e-posta gönderimi tamamen kapanır.
-
-</details>
+Ortam değişkenleri, servisleri tek tek çalıştırma, Gmail SMTP kurulumu ve sık
+karşılaşılan sorunlar için → **[Çalıştırma Rehberi](docs/proje/07-calistirma-rehberi.md)**
 
 ## Platform modülleri
 
