@@ -123,4 +123,6 @@ Gerekli Gmail ayarlari:
 
 `auth`, `profile`, `club`, `notification`, `facility`, `food`, `ride` ve `message` servisleri kod tabaninda mevcuttur ve API Gateway uzerinden route edilir. Frontend; giris, rol bazli paneller, kulup/etkinlik, tesis, yemek, CampusRide, bildirim ve mesajlasma ekranlarini icerir.
 
-Siradaki ana genisleme adaylari `projectmatch-service` ve `microjob-service`tir. Kisa vadeli teknik odak ise mevcut servislerin test kapsamini, dokuman tutarliligini ve frontend build temizligini iyilestirmektir.
+Frontend uretim derlemesi rota bazli kod bolunmesi kullanir: her sayfa `React.lazy` ile kendi chunk'ina ayrilir, `xlsx` gibi agir kutuphaneler ise yalnizca kullanildiklari anda dinamik olarak indirilir. Ilk acilista inen paket 1.66 MB'tan ~445 kB'a (gzip ~141 kB) dusmustur.
+
+Siradaki ana genisleme adaylari `projectmatch-service` ve `microjob-service`tir. Kisa vadeli teknik odak ise mevcut servislerin test kapsamini ve dokuman tutarliligini iyilestirmektir. Frontend tarafinda ESLint hala temiz degildir (`npm run lint` cogunlukla `react-hooks` ve `no-explicit-any` kaynakli hatalar uretir); bu ayri bir temizlik isidir.

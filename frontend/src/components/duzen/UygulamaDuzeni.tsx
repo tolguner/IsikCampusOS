@@ -10,6 +10,7 @@ import { useProfilDeposu } from '../../depolar/profilDeposu';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from '../../yardimcilar/yetkiler';
 import { YOLLAR } from '../../yardimcilar/yollar';
 import { TemaDegistirici } from './TemaDegistirici';
+import { SayfaYukleniyor } from '../ortak/SayfaYukleniyor';
 
 export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, logout, user } = useKimlikDeposu();
@@ -239,7 +240,8 @@ export const UygulamaDuzeni = ({ children }: { children: React.ReactNode }) => {
               border: '1px solid var(--content-panel-border)',
             }}
           >
-            {children}
+            {/* Tembel yüklenen sayfa chunk'ı inerken üst bar ve arka plan yerinde kalır. */}
+            <React.Suspense fallback={<SayfaYukleniyor />}>{children}</React.Suspense>
           </motion.div>
         </main>
       </div>

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
-import * as XLSX from 'xlsx';
 import {
   ArrowLeft,
   Banknote,
@@ -44,7 +43,10 @@ const participantName = (participant: EtkinlikKatilimci) =>
 const participantNumber = (participant: EtkinlikKatilimci) =>
   participant.ogrenciNumarasi || participant.kullaniciId;
 
-const downloadXlsx = (filename: string, rows: Record<string, string>[]) => {
+// xlsx kütüphanesi (~440 kB) yalnızca dışa aktarma tıklandığında indirilir;
+// sayfanın kendi chunk'ına dahil edilmez.
+const downloadXlsx = async (filename: string, rows: Record<string, string>[]) => {
+  const XLSX = await import('xlsx');
   const headers = [
     'Ad Soyad',
     'Öğrenci No',

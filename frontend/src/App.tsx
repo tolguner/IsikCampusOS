@@ -2,39 +2,44 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { UygulamaDuzeni } from './components/duzen/UygulamaDuzeni';
 import { TemaUygulayici } from './components/duzen/TemaUygulayici';
-import { GirisSayfasi } from './pages/GirisSayfasi';
-import { TanitimSayfasi } from './pages/TanitimSayfasi';
-import { EpostaDogrulama } from './pages/EpostaDogrulama';
-import { SifreDegistir } from './pages/SifreDegistir';
-import { OgrenciIsleriPaneli } from './pages/OgrenciIsleriPaneli';
-import { SksPaneli } from './pages/SksPaneli';
-import { ProfilSayfasi } from './pages/ProfilSayfasi';
-import { AyarlarSayfasi } from './pages/AyarlarSayfasi';
-import { MesajlarSayfasi } from './pages/MesajlarSayfasi';
-import { KuluplerSayfasi } from './pages/KuluplerSayfasi';
-import { KulupDetaySayfasi } from './pages/KulupDetaySayfasi';
-import { BildirimlerSayfasi } from './pages/BildirimlerSayfasi';
-import { OgrenciPaneli } from './pages/OgrenciPaneli';
-import { KulupBaskaniPaneli } from './pages/KulupBaskaniPaneli';
-import { KulupEtkinlikYonetimSayfasi } from './pages/KulupEtkinlikYonetimSayfasi';
-import { SertifikaDogrulamaSayfasi } from './pages/SertifikaDogrulamaSayfasi';
-import { TesisYonetimPaneli } from './pages/TesisYonetimPaneli';
-import { TesisRezervasyonSayfasi } from './pages/TesisRezervasyonSayfasi';
-import { RezervasyonlarimSayfasi } from './pages/RezervasyonlarimSayfasi';
-import { YonetimPaneli } from './pages/YonetimPaneli';
-import { DuyuruSayfasi } from './pages/DuyuruSayfasi';
-import { YemekSayfasi } from './pages/YemekSayfasi';
-import { YemekSiparislerimSayfasi } from './pages/YemekSiparislerimSayfasi';
-import { IsletmePaneli } from './pages/IsletmePaneli';
-import { CampusRideSayfasi } from './pages/CampusRideSayfasi';
-import { RideYonetimPaneli } from './pages/RideYonetimPaneli';
-import { DestekHizmetleriPaneli } from './pages/DestekHizmetleriPaneli';
 import { useKimlikDeposu } from './depolar/kimlikDeposu';
 import { useBildirimDeposu } from './depolar/bildirimDeposu';
 import { useKulupDeposu } from './depolar/kulupDeposu';
 import { OtomatikMesajTemizleyici } from './components/OtomatikMesajTemizleyici';
 import { yetkilerdenBiriVarMi, YETKI_GRUPLARI } from './yardimcilar/yetkiler';
 import { YOLLAR } from './yardimcilar/yollar';
+
+// Sayfalar tembel (lazy) yüklenir: her sayfa kendi chunk'ına ayrılır ve yalnızca
+// o rotaya girildiğinde indirilir. Böylece ilk açılışta tek parça dev bir bundle
+// yerine sadece çekirdek + ilgili sayfa iner. Sayfalar named export verdiği için
+// dinamik import sonucu `default` alanına eşlenir.
+const GirisSayfasi = React.lazy(() => import('./pages/GirisSayfasi').then(m => ({ default: m.GirisSayfasi })));
+const TanitimSayfasi = React.lazy(() => import('./pages/TanitimSayfasi').then(m => ({ default: m.TanitimSayfasi })));
+const EpostaDogrulama = React.lazy(() => import('./pages/EpostaDogrulama').then(m => ({ default: m.EpostaDogrulama })));
+const SifreDegistir = React.lazy(() => import('./pages/SifreDegistir').then(m => ({ default: m.SifreDegistir })));
+const OgrenciIsleriPaneli = React.lazy(() => import('./pages/OgrenciIsleriPaneli').then(m => ({ default: m.OgrenciIsleriPaneli })));
+const SksPaneli = React.lazy(() => import('./pages/SksPaneli').then(m => ({ default: m.SksPaneli })));
+const ProfilSayfasi = React.lazy(() => import('./pages/ProfilSayfasi').then(m => ({ default: m.ProfilSayfasi })));
+const AyarlarSayfasi = React.lazy(() => import('./pages/AyarlarSayfasi').then(m => ({ default: m.AyarlarSayfasi })));
+const MesajlarSayfasi = React.lazy(() => import('./pages/MesajlarSayfasi').then(m => ({ default: m.MesajlarSayfasi })));
+const KuluplerSayfasi = React.lazy(() => import('./pages/KuluplerSayfasi').then(m => ({ default: m.KuluplerSayfasi })));
+const KulupDetaySayfasi = React.lazy(() => import('./pages/KulupDetaySayfasi').then(m => ({ default: m.KulupDetaySayfasi })));
+const BildirimlerSayfasi = React.lazy(() => import('./pages/BildirimlerSayfasi').then(m => ({ default: m.BildirimlerSayfasi })));
+const OgrenciPaneli = React.lazy(() => import('./pages/OgrenciPaneli').then(m => ({ default: m.OgrenciPaneli })));
+const KulupBaskaniPaneli = React.lazy(() => import('./pages/KulupBaskaniPaneli').then(m => ({ default: m.KulupBaskaniPaneli })));
+const KulupEtkinlikYonetimSayfasi = React.lazy(() => import('./pages/KulupEtkinlikYonetimSayfasi').then(m => ({ default: m.KulupEtkinlikYonetimSayfasi })));
+const SertifikaDogrulamaSayfasi = React.lazy(() => import('./pages/SertifikaDogrulamaSayfasi').then(m => ({ default: m.SertifikaDogrulamaSayfasi })));
+const TesisYonetimPaneli = React.lazy(() => import('./pages/TesisYonetimPaneli').then(m => ({ default: m.TesisYonetimPaneli })));
+const TesisRezervasyonSayfasi = React.lazy(() => import('./pages/TesisRezervasyonSayfasi').then(m => ({ default: m.TesisRezervasyonSayfasi })));
+const RezervasyonlarimSayfasi = React.lazy(() => import('./pages/RezervasyonlarimSayfasi').then(m => ({ default: m.RezervasyonlarimSayfasi })));
+const YonetimPaneli = React.lazy(() => import('./pages/YonetimPaneli').then(m => ({ default: m.YonetimPaneli })));
+const DuyuruSayfasi = React.lazy(() => import('./pages/DuyuruSayfasi').then(m => ({ default: m.DuyuruSayfasi })));
+const YemekSayfasi = React.lazy(() => import('./pages/YemekSayfasi').then(m => ({ default: m.YemekSayfasi })));
+const YemekSiparislerimSayfasi = React.lazy(() => import('./pages/YemekSiparislerimSayfasi').then(m => ({ default: m.YemekSiparislerimSayfasi })));
+const IsletmePaneli = React.lazy(() => import('./pages/IsletmePaneli').then(m => ({ default: m.IsletmePaneli })));
+const CampusRideSayfasi = React.lazy(() => import('./pages/CampusRideSayfasi').then(m => ({ default: m.CampusRideSayfasi })));
+const RideYonetimPaneli = React.lazy(() => import('./pages/RideYonetimPaneli').then(m => ({ default: m.RideYonetimPaneli })));
+const DestekHizmetleriPaneli = React.lazy(() => import('./pages/DestekHizmetleriPaneli').then(m => ({ default: m.DestekHizmetleriPaneli })));
 
 // Giriş sonrası yönlendirme mantığı:
 // 1. emailVerified === false → E-posta doğrulama
