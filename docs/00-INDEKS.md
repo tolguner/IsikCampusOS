@@ -23,7 +23,7 @@ Yönetim Bilişim Sistemleri lisans bitirme tezi (Türkçe). Tezin tam ve günce
 tek bir Word dosyasında tutulur:
 
 - **[IsikCampusOS_Tez.docx](tez/IsikCampusOS_Tez.docx)** — teslim edilen tez metni
-- `tez/build/_sablon_kaynak.docx` — biçimlendirme şablonu (kaynak dosya)
+- `tez/_sablon_kaynak.docx` — biçimlendirme şablonu (kaynak dosya)
 
 Tezin daha önce ayrı markdown bölümleri hâlinde tutulan taslakları kaldırılmıştır;
 geçmiş sürümlere git tarihinden erişilebilir.

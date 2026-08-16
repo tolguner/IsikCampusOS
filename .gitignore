@@ -25,10 +25,8 @@ dist-ssr/
 **/dist-ssr/
 *.local
 
-# Tez uretim artiklari ve yedekleri
-docs/tez/yedekler/
-docs/tez/build/yedek_*
-docs/tez/build/_docx_metin_dump.txt
+# Word gecici/yedek dosyalari
+docs/tez/yedek_*
 *.stackdump
 
 # IDE and OS files
