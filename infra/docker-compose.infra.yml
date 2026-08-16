@@ -6,7 +6,7 @@ services:
     container_name: campusos-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-campusos}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-campusospassword}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD zorunlu - .env dosyasina ekleyin}
     ports:
       - "5433:5432"
     volumes:
