@@ -2,7 +2,7 @@
 
 Bu doküman, projenin güncel durumunu ve devam eden/planlanan süreçleri tek yerde toplar. Eski birden çok planlama dosyası (action-plan, roadmap, implementation-readiness, bitirme-projesi-planlama) bu dosyada konsolide edilmiştir.
 
-Son güncelleme: 2026-06-16
+Son güncelleme: 2026-08-17
 
 ## 1. Mevcut Durum (Özet)
 
@@ -16,7 +16,9 @@ Son güncelleme: 2026-06-16
 - **food-service:** Satıcı, menü, kategori, kampanya, favori, sipariş, işletme personeli, ciro, değişiklik talebi ve sipariş durum yönetimi.
 - **ride-service:** CampusRide ilan/talep akışı, rota önizleme, popüler noktalar, araç/ehliyet doğrulama, puanlama, şikayet ve yönetim logları.
 - **message-service:** FOOD/RIDE gibi bağlamlara bağlı konuşma açma/kapatma, mesaj gönderme, okunmamış sayısı ve SSE mesaj akışı.
-- **Frontend:** Giriş, e-posta doğrulama, şifre değiştirme, rol bazlı dashboard'lar (Admin, SKS, Registrar, Facility, İşletme, Ride, Student), kulüp/etkinlik ekranları, tesis rezervasyon ekranları, yemek siparişi, işletme paneli, CampusRide, mesajlar, profil, bildirimler, sertifika doğrulama sayfası.
+- **Güvenlik yapılandırması:** `JWT_SECRET` ve veritabanı parolası kod içinde varsayılana sahip değildir; yalnızca ortam değişkeninden okunur, tanımsızsa servisler fail-fast ile durur.
+- **Şema yönetimi:** 8 domain servisinin tamamı Flyway ile sürümlenir (toplam 51 migration) ve `ddl-auto: validate` ile açılışta yalnızca doğrulama yapar.
+- **Frontend:** Giriş, e-posta doğrulama, şifre değiştirme, rol bazlı dashboard'lar (Admin, SKS, Registrar, Facility, İşletme, Ride, Student), kulüp/etkinlik ekranları, tesis rezervasyon ekranları, yemek siparişi, işletme paneli, CampusRide, mesajlar, profil, bildirimler, sertifika doğrulama sayfası. Üretim derlemesi rota bazlı kod bölünmesi kullanır (`React.lazy`); ilk yüklenen paket 1.66 MB’tan ~445 kB’a düşmüştür.
 
 ### 🔵 Future Works (tez kapsamı dışı, kodlanmadı)
 - `projectmatch-service` (proje eşleştirme) — tez Bölüm 6.3'te tasarım düzeyinde ele alındı
@@ -25,7 +27,7 @@ Son güncelleme: 2026-06-16
 - İleride ayrı servis adayları: moderation, analytics
 
 Bu başlıklar tezde bilinçli kapsam sınırlaması olarak tanımlanmış ve gelecek çalışma
-olarak konumlandırılmıştır (bkz. tez Bölüm 5.1.1, 6.2 ve 6.3).
+olarak konumlandırılmıştır (bkz. tez Bölüm 5.1, 6.2 ve 6.3).
 
 ## 2. Bilinen Teknik Borçlar
 
@@ -34,17 +36,20 @@ Yeni modül eklemeden önce ele alınması önerilen konular:
 | # | Konu | Öncelik |
 |---|------|---------|
 | 1 | ~~JWT secret `application.yml` / `docker-compose.yml` içinde varsayılan değerde~~ ✅ **Kapatıldı (2026-06-16):** sabit varsayılanlar kaldırıldı; `JWT_SECRET` yalnızca env'den okunur, yoksa fail-fast (bkz. `.env.example`) | — |
-| 2 | Flyway çoğu serviste aktif olsa da `ddl-auto: validate` ile migration uyumu düzenli kontrol edilmeli | Orta |
-| 3 | Otomatik test kapsamı sınırlı — kritik iş kuralları için birim/entegrasyon testleri | Orta |
+| 2 | ~~Flyway çoğu serviste aktif olsa da migration uyumu düzenli kontrol edilmeli~~ ✅ **Kapatıldı (2026-08-17):** 8 domain servisinin tamamında Flyway etkin (51 migration), hepsi `ddl-auto: validate` | — |
+| 3 | Otomatik test kapsamı sınırlı — 8 serviste toplam 15 birim test sınıfı; `api-gateway`, `common-security` ve `eureka-server` testsiz | Orta |
 | 4 | Bazı proje dokümanları ve tez metinleri kodun son halini geriden takip edebilir; kod gerçekliğiyle periyodik hizalama gerekir | Orta |
-| 5 | ProjectMatch ve MicroJob future works kapsamındadır; servis/port/DB oluşturma kararı geliştirme fazına bırakıldı | Düşük |
+| 5 | Frontend ESLint temiz değil (`react-hooks`, `no-explicit-any` kaynaklı uyarılar) | Orta |
+| 6 | ProjectMatch ve MicroJob future works kapsamındadır; servis/port/DB oluşturma kararı geliştirme fazına bırakıldı | Düşük |
 
 ## 3. Geliştirme Yol Haritası
 
 ### Faz A — Çekirdeği sağlamlaştırma (mevcut odak)
 - [x] JWT secret'i tamamen env tabanlı hale getirme (sabit varsayılanlar kaldırıldı, fail-fast)
+- [x] Veritabanı parolasını env tabanlı hale getirme (kod içinde varsayılan yok, fail-fast)
+- [x] Flyway migration disiplinine geçiş — 8 servisin tamamı, 51 migration, `ddl-auto: validate`
 - [ ] Kritik iş kuralları için test altyapısı (auth giriş, RSVP kapasite/waitlist, rezervasyon çakışma, etkinlik onay yetkisi)
-- [ ] Flyway migration disiplinine geçiş (önce auth-service)
+- [ ] Frontend ESLint temizliği
 
 ### Faz B — Kodlanan yeni modülleri sağlamlaştırma
 - [ ] `food-service` için kritik sipariş durum makinesi ve işletme/personel yetki testlerini artırma

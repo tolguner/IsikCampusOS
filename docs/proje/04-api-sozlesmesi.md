@@ -62,6 +62,11 @@
 ### Akademik Kadro
 - `GET /api/v1/akademik-kadro/**` — kulüp danışmanı seçimi için akademik personel sorgulama
 
+### Denetim Günlükleri
+- `GET /api/v1/denetim-gunlukleri` — sistem geneli denetim günlüğü (yalnızca `ROLE_ADMIN`)
+- `GET /api/v1/kulupler/{kulupId}/denetim-gunlukleri` — kulüp bazlı denetim kaydı (`ROLE_SKS_ADMIN`, `ROLE_ADMIN`)
+- `GET /api/v1/etkinlikler/{etkinlikId}/denetim-gunlukleri` — etkinlik bazlı denetim kaydı
+
 ## 5. Tesis Rezervasyon — facility-service
 
 - `GET /api/v1/tesisler` — tesis listesi
