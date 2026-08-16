@@ -7,6 +7,9 @@ setinin **yalnızca toplu istatistiklerini** içerir:
 - `summary.json` — birime ve unvana göre kişi sayıları, kaynak URL'ler, sayım özetleri
 - `research_notes.md` — kapsam, yöntem ve derleme notları
 
+Kişi düzeyindeki tam veri seti ve onu üreten kazıyıcı, erişimi kısıtlı ayrı bir
+depoda tutulur: **`tolguner/isikcampusos-veri`** (private).
+
 ## Kişi düzeyindeki veriler neden burada değil?
 
 Derlemenin ham hâli 303 akademisyenin adı, unvanı, kurumsal e-postası, bölümü ve
