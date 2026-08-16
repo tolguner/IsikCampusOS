@@ -18,10 +18,14 @@ Son güncelleme: 2026-06-16
 - **message-service:** FOOD/RIDE gibi bağlamlara bağlı konuşma açma/kapatma, mesaj gönderme, okunmamış sayısı ve SSE mesaj akışı.
 - **Frontend:** Giriş, e-posta doğrulama, şifre değiştirme, rol bazlı dashboard'lar (Admin, SKS, Registrar, Facility, İşletme, Ride, Student), kulüp/etkinlik ekranları, tesis rezervasyon ekranları, yemek siparişi, işletme paneli, CampusRide, mesajlar, profil, bildirimler, sertifika doğrulama sayfası.
 
-### 🔵 Planlanan (henüz kodlanmadı)
-- `projectmatch-service` (proje eşleştirme)
-- `microjob-service` (mikro iş pazarı)
+### 🔵 Future Works (tez kapsamı dışı, kodlanmadı)
+- `projectmatch-service` (proje eşleştirme) — tez Bölüm 3.6.8'de tasarım düzeyinde ele alındı
+- `microjob-service` (mikro iş pazarı) — tez Bölüm 3.6.9'da tasarım düzeyinde ele alındı
+- Yerel (native) mobil uygulama — platform web tabanlıdır
 - İleride ayrı servis adayları: moderation, analytics
+
+Bu başlıklar tezde bilinçli kapsam sınırlaması olarak tanımlanmış ve gelecek çalışma
+olarak konumlandırılmıştır (bkz. tez Bölüm 5.1.1, 6.2 ve 6.3).
 
 ## 2. Bilinen Teknik Borçlar
 
@@ -47,10 +51,13 @@ Yeni modül eklemeden önce ele alınması önerilen konular:
 - [ ] `ride-service` için rota, talep kabul/red, doğrulama ve şikayet akışlarını entegrasyon testleriyle genişletme
 - [ ] `notification-service` ve `message-service` SSE akışlarını uçtan uca doğrulama
 
-### Faz C — Yeni modüller
-Önerilen sıra:
+### Faz C — Yeni modüller (future works, tez sonrası)
+Tez kapsamına alınmayan bu modüller ileride ele alınırsa önerilen sıra:
 1. **projectmatch-service** — beceri profili, proje ilanı, eşleştirme
 2. **microjob-service** — ilan, teklif, kontrat, itibar
+
+Her ikisi de ortak etiket tabanlı eşleştirme altyapısına dayanır; mevcut
+`profile-service` beceri etiketleri üzerine inşa edilmesi planlanmıştır.
 
 ### Faz D — Olgunlaştırma
 - [ ] Moderasyon/analitik işlevlerinin gözden geçirilmesi ve gerekirse ayrı servislere bölünmesi

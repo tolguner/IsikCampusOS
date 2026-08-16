@@ -22,10 +22,10 @@ IsikCampusOS, Işık Üniversitesi öğrencileri ve personeli için tasarlanmı�
 | **Mesajlaşma** | Bağlam bazlı konuşma, mesaj akışı, okunmamış sayısı, SSE | ✅ **Kodlandı** (`message-service`) |
 | **Kampüs Yemek Sipariş ve Yönetim** | Satıcı, menü, kategori, kampanya, favori, sipariş, işletme paneli, durum takibi | ✅ **Kodlandı** (`food-service`) |
 | **Paylaşımlı Yolculuk (CampusRide)** | Sürücü/yolcu ilanı, rota önizleme, araç/ehliyet doğrulama, talep, puan, şikayet | ✅ **Kodlandı** (`ride-service`) |
-| **Proje Eşleştirme (ProjectMatch)** | Beceri profili, proje ilanı, uyum temelli akran eşleştirme | 🔵 **Planlandı** (henüz kodlanmadı) |
-| **Kampüs İçi Mikro İş (MicroJob)** | Kısa süreli iş ilanı, teklif, anlaşma, itibar göstergeleri | 🔵 **Planlandı** (henüz kodlanmadı) |
+| **Proje Eşleştirme (ProjectMatch)** | Beceri profili, proje ilanı, uyum temelli akran eşleştirme | 🔵 **Tasarlandı** (future works — kodlanmadı) |
+| **Kampüs İçi Mikro İş (MicroJob)** | Kısa süreli iş ilanı, teklif, anlaşma, itibar göstergeleri | 🔵 **Tasarlandı** (future works — kodlanmadı) |
 
-**Özet:** Çekirdek altyapı + kimlik + profil + kulüp/etkinlik + bildirim + tesis rezervasyon + yemek + yolculuk + mesajlaşma modülleri kod tabanında mevcuttur. ProjectMatch ve MicroJob modülleri henüz tasarım/plan aşamasındadır (bkz. [08-yol-haritasi-ve-durum.md](08-yol-haritasi-ve-durum.md)).
+**Özet:** Çekirdek altyapı + kimlik + profil + kulüp/etkinlik + bildirim + tesis rezervasyon + yemek + yolculuk + mesajlaşma modülleri kod tabanında mevcuttur. ProjectMatch ve MicroJob modülleri tasarım düzeyinde ele alınmış olup gerçekleştirimleri future works kapsamındadır; yerel mobil uygulama da aynı şekilde kapsam dışıdır (bkz. [08-yol-haritasi-ve-durum.md](08-yol-haritasi-ve-durum.md) ve tez Bölüm 6).
 
 ## 4. Hedef Kullanıcılar
 

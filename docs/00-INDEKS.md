@@ -21,15 +21,24 @@ Sistemin teknik ve işlevsel dokümantasyonu. Tüm dosyalar projenin **gerçek k
 
 Yönetim Bilişim Sistemleri lisans bitirme tezi. Türkçe yazılmaktadır.
 
+Bölüm indeksi: [tez/00-TEZ-INDEKS.md](tez/00-TEZ-INDEKS.md)
+
 | Dosya | İçerik |
 |-------|--------|
+| [Ön Kısımlar](tez/on-kisimlar.md) | Kapak, teşekkür, içindekiler |
+| [Özet / Abstract](tez/ozet_abstract.md) | Türkçe özet ve İngilizce abstract |
+| [Kısaltmalar](tez/kisaltmalar.md) | Kısaltma listesi |
 | [Bölüm 1 — Giriş](tez/bolum1_giris.md) | Arka plan, motivasyon, problem, kapsam ve amaç |
 | [Bölüm 2 — Literatür Taraması](tez/bolum2_literatur_taramasi.md) | Projeye-odaklı literatür incelemesi |
-| [Bölüm 3 — Metodoloji ve Sistem Tasarımı](tez/bolum3_yontem.md) | Yöntem ve tasarım (revizyon sürecinde) |
-| [Doğrulanmış Kaynaklar](tez/dogrulanmis_kaynaklar.md) | APA 7 kaynak kayıt defteri (web'den teyitli) |
-| [Tez Analiz ve Planlama](tez/tez_analiz_ve_planlama.md) | Eski kaynak denetim raporu (referans) |
+| [Bölüm 3 — Metodoloji ve Sistem Tasarımı](tez/bolum3_yontem.md) | Yöntem, mimari, veri modeli, modül tasarımları |
+| [Bölüm 4 — Gerçekleştirim](tez/bolum4_gelistirme.md) | Geliştirme süreci ve uygulama detayları |
+| [Bölüm 5 — Değerlendirme](tez/bolum5_degerlendirme.md) | Gereksinimlerin karşılanma durumu, tasarım hedefleri |
+| [Bölüm 6 — Sonuç ve Gelecek Yönelimleri](tez/bolum6_sonuc.md) | Sonuç, sınırlılıklar, gelecek çalışmalar |
+| [Kaynakça](tez/kaynakca.md) | APA 7 kaynakça |
+| [Doğrulanmış Kaynaklar](tez/_calisma/dogrulanmis_kaynaklar.md) | APA 7 kaynak kayıt defteri (web'den teyitli) |
+| [Tez Analiz ve Planlama](tez/_calisma/tez_analiz_ve_planlama.md) | Eski kaynak denetim raporu (referans) |
 
 ## Notlar
 
-- **Kod gerçekliği:** Backend Türkçeleştirilmiştir (`com.isik.kampusos.*`). Çalışan servisler: eureka, gateway, auth, profile, club, notification, facility, food, ride ve message. ProjectMatch ve MicroJob modülleri henüz kodlanmamıştır.
+- **Kod gerçekliği:** Backend Türkçeleştirilmiştir (`com.isik.kampusos.*`). Çalışan servisler: eureka, gateway, auth, profile, club, notification, facility, food, ride ve message. ProjectMatch ve MicroJob modülleri kodlanmamıştır; tez kapsamında tasarım düzeyinde ele alınmış olup gerçekleştirimleri gelecek çalışmaya bırakılmıştır (bkz. Bölüm 5.1.1 ve 6.3). Yerel mobil uygulama da aynı şekilde kapsam dışıdır.
 - **Tutarlılık ilkesi:** Tüm proje dokümanlarında "kodlandı" (✅) ve "planlandı" (🔵) ayrımı korunur.
