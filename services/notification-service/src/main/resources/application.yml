@@ -6,8 +6,8 @@ spring:
     name: notification-service
   datasource:
     url: jdbc:postgresql://localhost:5433/notification_db
-    username: campusos
-    password: campusospassword
+    username: ${SPRING_DATASOURCE_USERNAME:campusos}
+    password: ${SPRING_DATASOURCE_PASSWORD:campusospassword}
   jpa:
     hibernate:
       ddl-auto: validate

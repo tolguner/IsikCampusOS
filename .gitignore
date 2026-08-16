@@ -29,6 +29,13 @@ dist-ssr/
 docs/tez/yedek_*
 *.stackdump
 
+# Yerel notlar ve demo kimlik bilgileri (git'e gonderilmez)
+*.local.md
+
+# Kisisel veri iceren derlemeler — public repoya girmemeli
+data/isik-academic-staff/academic_staff_*
+data/isik-academic-staff/profile_details.json
+
 # IDE and OS files
 .idea/
 .vscode/*

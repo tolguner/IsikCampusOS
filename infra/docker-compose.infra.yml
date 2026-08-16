@@ -5,8 +5,8 @@ services:
     image: postgres:15-alpine
     container_name: campusos-postgres
     environment:
-      POSTGRES_USER: campusos
-      POSTGRES_PASSWORD: campusospassword
+      POSTGRES_USER: ${POSTGRES_USER:-campusos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-campusospassword}
     ports:
       - "5433:5432"
     volumes:

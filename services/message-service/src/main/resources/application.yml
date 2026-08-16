@@ -8,8 +8,8 @@ spring:
     name: message-service
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/mesaj_db}
-    username: campusos
-    password: campusospassword
+    username: ${SPRING_DATASOURCE_USERNAME:campusos}
+    password: ${SPRING_DATASOURCE_PASSWORD:campusospassword}
   jpa:
     hibernate:
       ddl-auto: validate

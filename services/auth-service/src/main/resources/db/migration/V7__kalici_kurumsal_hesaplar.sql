@@ -3,15 +3,16 @@
 --   * Migration bir kez çalışır ve flyway_schema_history'ye kaydedilir; her açılışta tekrar etmez.
 --   * ON CONFLICT (eposta) DO NOTHING: mevcut DB'de zaten varsa dokunulmaz (değiştirilen
 --     şifreler korunur); temiz bir veritabanında ise hesaplar bir kez oluşturulur.
---   * BCrypt hash'leri çalışan kimlik bilgilerine karşılık gelir (kapalı kampüs demo hesapları).
+--   * Şifreler BCrypt ile saklanır. Başlangıç şifreleri yalnızca yerel demo içindir ve
+--     bu depoda belgelenmez; yerel kopya: `docs/proje/DEMO-HESAPLAR.local.md` (gitignore).
 --
--- Hesaplar / başlangıç şifreleri:
---   admin@isikun.edu.tr           / Admin123!        (ROLE_ADMIN)
---   ogrenci.isleri@isikun.edu.tr  / Admin123!        (ROLE_REGISTRAR)
---   ozlem.ak@isikun.edu.tr        / 12345678901      (ROLE_REGISTRAR)
---   odul.celep@isikun.edu.tr      / odul.celep       (ROLE_SKS_ADMIN)
---   atakan.cetiner@isikun.edu.tr  / atakan.cetiner   (ROLE_FACILITY_ADMIN)
---   kantin@isikun.edu.tr          / kantin.123       (ROLE_VENDOR_ADMIN — food-service satıcı eşlemesi için SABİT id)
+-- Oluşturulan hesaplar (rol bazında):
+--   admin@isikun.edu.tr           (ROLE_ADMIN)
+--   ogrenci.isleri@isikun.edu.tr  (ROLE_REGISTRAR)
+--   ozlem.ak@isikun.edu.tr        (ROLE_REGISTRAR)
+--   odul.celep@isikun.edu.tr      (ROLE_SKS_ADMIN)
+--   atakan.cetiner@isikun.edu.tr  (ROLE_FACILITY_ADMIN)
+--   kantin@isikun.edu.tr          (ROLE_VENDOR_ADMIN — food-service satıcı eşlemesi için SABİT id)
 
 INSERT INTO kullanicilar
     (id, eposta, sifre, roller, ad, soyad, fakulte, bolum, durum,
