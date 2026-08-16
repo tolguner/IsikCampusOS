@@ -1,6 +1,6 @@
 # IsikCampusOS — Doküman İndeksi
 
-Bu dizin, IsikCampusOS projesinin tüm dokümantasyonunu içerir. Dokümanlar iki ana grupta toplanmıştır: **proje dokümantasyonu** ve **tez çalışması**.
+Bu dizin, IsikCampusOS projesinin tüm dokümantasyonunu içerir: **proje dokümantasyonu**, **tez çalışması** ve tekil notlar.
 
 ## 📁 proje/ — Proje Dokümantasyonu
 
@@ -23,16 +23,16 @@ Yönetim Bilişim Sistemleri lisans bitirme tezi (Türkçe). Tezin tam ve günce
 tek bir Word dosyasında tutulur:
 
 - **[IsikCampusOS_Tez.docx](tez/IsikCampusOS_Tez.docx)** — teslim edilen tez metni
-- `tez/_sablon_kaynak.docx` — biçimlendirme şablonu (kaynak dosya)
 
 Tezin daha önce ayrı markdown bölümleri hâlinde tutulan taslakları kaldırılmıştır;
 geçmiş sürümlere git tarihinden erişilebilir.
 
 ## 📄 Diğer
 
+- **[Veri Sahipliği Notu](veri-sahipligi-notu.md)** — hangi kullanıcı alanının kaynak doğrusunun hangi serviste olduğu, `auth → profile` senkronizasyon olayları ve bilinçli anlık görüntü (snapshot) alanları
 - **[afis.pdf](afis.pdf)** — bitirme projesi afişi
 
 ## Notlar
 
-- **Kod gerçekliği:** Backend Türkçeleştirilmiştir (`com.isik.kampusos.*`). Çalışan servisler: eureka, gateway, auth, profile, club, notification, facility, food, ride ve message. ProjectMatch ve MicroJob modülleri kodlanmamıştır; tez kapsamında tasarım düzeyinde ele alınmış olup gerçekleştirimleri gelecek çalışmaya bırakılmıştır (bkz. Bölüm 5.1.1 ve 6.3). Yerel mobil uygulama da aynı şekilde kapsam dışıdır.
+- **Kod gerçekliği:** Backend Türkçeleştirilmiştir (`com.isik.kampusos.*`). Çalışan servisler: eureka, gateway, auth, profile, club, notification, facility, food, ride ve message. ProjectMatch ve MicroJob modülleri kodlanmamıştır; tez kapsamında tasarım düzeyinde ele alınmış olup gerçekleştirimleri gelecek çalışmaya bırakılmıştır (bkz. Bölüm 5.1 ve 6.3). Yerel mobil uygulama da aynı şekilde kapsam dışıdır.
 - **Tutarlılık ilkesi:** Tüm proje dokümanlarında "kodlandı" (✅) ve "planlandı" (🔵) ayrımı korunur.
