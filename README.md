@@ -160,3 +160,10 @@ Asagidaki basliklar tez kapsaminda bilincli olarak kapsam disi birakilmistir ve 
 - **Uretim olcegi operasyonel olgunluk** — yuk testi, gozlemlenebilirlik, coklu kampus (multi-tenant) destegi.
 
 Moderasyon ve analitik yetenekleri de ileride ayri servisler olarak degerlendirilebilir.
+
+## Lisans
+
+Kaynak kod ve teknik dokumantasyon [MIT Lisansi](LICENSE) ile yayimlanmistir.
+
+Bitirme tezi (`docs/tez/IsikCampusOS_Tez.docx`) ve proje afisi (`docs/afis.pdf`)
+bu lisansin kapsami disindadir; bu akademik calismalarin tum haklari saklidir.
