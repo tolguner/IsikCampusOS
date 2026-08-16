@@ -103,4 +103,4 @@ Bildirim işlevi bağımsız `notification-service` olarak çalışır. Üretici
 
 ## 7. Tez Çalışması ile İlişki
 
-Bu proje aynı zamanda bir Yönetim Bilişim Sistemleri lisans bitirme tezinin konusudur. Tez çalışması `docs/tez/` altında yürütülmektedir; hangi modüllerin kodlandığı bu dokümanda ve [01-genel-bakis-ve-vizyon.md](01-genel-bakis-ve-vizyon.md) içinde net olarak işaretlenmiştir.
+Bu proje aynı zamanda bir Yönetim Bilişim Sistemleri lisans bitirme tezinin konusudur. Tezin tam metni [docs/tez/IsikCampusOS_Tez.docx](../tez/IsikCampusOS_Tez.docx) dosyasındadır; hangi modüllerin kodlandığı bu dokümanda ve [01-genel-bakis-ve-vizyon.md](01-genel-bakis-ve-vizyon.md) içinde net olarak işaretlenmiştir.

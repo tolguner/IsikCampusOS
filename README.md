@@ -103,7 +103,10 @@ Proje dokumantasyonu:
 - [Calistirma Rehberi](docs/proje/07-calistirma-rehberi.md)
 - [Yol Haritasi ve Durum](docs/proje/08-yol-haritasi-ve-durum.md)
 
-Bitirme tezi: [docs/tez/00-TEZ-INDEKS.md](docs/tez/00-TEZ-INDEKS.md)
+Bitirme tezi ve afis:
+
+- [Bitirme Tezi (Word)](docs/tez/IsikCampusOS_Tez.docx) — tezin tam metni
+- [Bitirme Projesi Afisi (PDF)](docs/afis.pdf)
 
 ## Baslatma
 

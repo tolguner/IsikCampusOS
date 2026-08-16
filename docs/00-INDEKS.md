@@ -17,26 +17,20 @@ Sistemin teknik ve işlevsel dokümantasyonu. Tüm dosyalar projenin **gerçek k
 | 07 | [Çalıştırma Rehberi](proje/07-calistirma-rehberi.md) | Yerel kurulum ve başlatma |
 | 08 | [Yol Haritası ve Durum](proje/08-yol-haritasi-ve-durum.md) | Mevcut durum, teknik borçlar, sonraki adımlar |
 
-## 📁 tez/ — Bitirme Tezi Çalışması
+## 📁 tez/ — Bitirme Tezi
 
-Yönetim Bilişim Sistemleri lisans bitirme tezi. Türkçe yazılmaktadır.
+Yönetim Bilişim Sistemleri lisans bitirme tezi (Türkçe). Tezin tam ve güncel metni
+tek bir Word dosyasında tutulur:
 
-Bölüm indeksi: [tez/00-TEZ-INDEKS.md](tez/00-TEZ-INDEKS.md)
+- **[IsikCampusOS_Tez.docx](tez/IsikCampusOS_Tez.docx)** — teslim edilen tez metni
+- `tez/build/_sablon_kaynak.docx` — biçimlendirme şablonu (kaynak dosya)
 
-| Dosya | İçerik |
-|-------|--------|
-| [Ön Kısımlar](tez/on-kisimlar.md) | Kapak, teşekkür, içindekiler |
-| [Özet / Abstract](tez/ozet_abstract.md) | Türkçe özet ve İngilizce abstract |
-| [Kısaltmalar](tez/kisaltmalar.md) | Kısaltma listesi |
-| [Bölüm 1 — Giriş](tez/bolum1_giris.md) | Arka plan, motivasyon, problem, kapsam ve amaç |
-| [Bölüm 2 — Literatür Taraması](tez/bolum2_literatur_taramasi.md) | Projeye-odaklı literatür incelemesi |
-| [Bölüm 3 — Metodoloji ve Sistem Tasarımı](tez/bolum3_yontem.md) | Yöntem, mimari, veri modeli, modül tasarımları |
-| [Bölüm 4 — Gerçekleştirim](tez/bolum4_gelistirme.md) | Geliştirme süreci ve uygulama detayları |
-| [Bölüm 5 — Değerlendirme](tez/bolum5_degerlendirme.md) | Gereksinimlerin karşılanma durumu, tasarım hedefleri |
-| [Bölüm 6 — Sonuç ve Gelecek Yönelimleri](tez/bolum6_sonuc.md) | Sonuç, sınırlılıklar, gelecek çalışmalar |
-| [Kaynakça](tez/kaynakca.md) | APA 7 kaynakça |
-| [Doğrulanmış Kaynaklar](tez/_calisma/dogrulanmis_kaynaklar.md) | APA 7 kaynak kayıt defteri (web'den teyitli) |
-| [Tez Analiz ve Planlama](tez/_calisma/tez_analiz_ve_planlama.md) | Eski kaynak denetim raporu (referans) |
+Tezin daha önce ayrı markdown bölümleri hâlinde tutulan taslakları kaldırılmıştır;
+geçmiş sürümlere git tarihinden erişilebilir.
+
+## 📄 Diğer
+
+- **[afis.pdf](afis.pdf)** — bitirme projesi afişi
 
 ## Notlar
 
