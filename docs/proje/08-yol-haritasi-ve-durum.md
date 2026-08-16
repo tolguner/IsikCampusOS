@@ -40,6 +40,7 @@ Yeni modül eklemeden önce ele alınması önerilen konular:
 | 3 | Otomatik test kapsamı sınırlı — 8 serviste toplam 15 birim test sınıfı; `api-gateway`, `common-security` ve `eureka-server` testsiz | Orta |
 | 4 | Bazı proje dokümanları ve tez metinleri kodun son halini geriden takip edebilir; kod gerçekliğiyle periyodik hizalama gerekir | Orta |
 | 5 | Frontend ESLint temiz değil (`react-hooks`, `no-explicit-any` kaynaklı uyarılar) | Orta |
+| 5b | `xlsx` (SheetJS) 0.18.5 — npm üzerinde yaması olmayan iki zafiyet: CVE-2023-30533 (prototype pollution) ve CVE-2024-22363 (ReDoS). **Kabul edilen risk:** her iki zafiyet de *dosya okuma/ayrıştırma* sırasında tetiklenir; bu projede kütüphane yalnızca katılımcı listesi **yazmak** için kullanılır (`XLSX.utils.json_to_sheet` + `writeFile`), hiçbir yerde `read`/`readFile`/`parse` çağrılmaz. Kalıcı çözüm için SheetJS'in kendi dağıtımına (`https://cdn.sheetjs.com`) geçilmeli veya dışa aktarım CSV'ye çevrilmelidir. | Düşük |
 | 6 | ProjectMatch ve MicroJob future works kapsamındadır; servis/port/DB oluşturma kararı geliştirme fazına bırakıldı | Düşük |
 
 ## 3. Geliştirme Yol Haritası
