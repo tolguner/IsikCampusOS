@@ -19,8 +19,8 @@ Son güncelleme: 2026-06-16
 - **Frontend:** Giriş, e-posta doğrulama, şifre değiştirme, rol bazlı dashboard'lar (Admin, SKS, Registrar, Facility, İşletme, Ride, Student), kulüp/etkinlik ekranları, tesis rezervasyon ekranları, yemek siparişi, işletme paneli, CampusRide, mesajlar, profil, bildirimler, sertifika doğrulama sayfası.
 
 ### 🔵 Future Works (tez kapsamı dışı, kodlanmadı)
-- `projectmatch-service` (proje eşleştirme) — tez Bölüm 3.6.8'de tasarım düzeyinde ele alındı
-- `microjob-service` (mikro iş pazarı) — tez Bölüm 3.6.9'da tasarım düzeyinde ele alındı
+- `projectmatch-service` (proje eşleştirme) — tez Bölüm 6.3'te tasarım düzeyinde ele alındı
+- `microjob-service` (mikro iş pazarı) — tez Bölüm 6.3'te tasarım düzeyinde ele alındı
 - Yerel (native) mobil uygulama — platform web tabanlıdır
 - İleride ayrı servis adayları: moderation, analytics
 

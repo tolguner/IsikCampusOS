@@ -56,7 +56,7 @@ Tasarim duzeyinde ele alinan, gerceklestirimi gelecek calismaya birakilan modull
 - ProjectMatch (etiket tabanli proje eslestirme)
 - Campus MicroJob Marketplace (kampus ici mikro is pazari)
 
-Bu iki modulun tasarimi tezin 3.6.8, 3.6.9 ve 3.7.1 bolumlerinde ayrintilandirilmistir; kod tabaninda karsiliklari yoktur.
+Bu iki modulun tasarimi tezin 6.3 (Gelecek Calismalar) bolumunde ele alinmistir; kod tabaninda karsiliklari yoktur.
 
 ## Temel Hedef
 
