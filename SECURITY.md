@@ -20,7 +20,7 @@ Bir güvenlik açığı bulduysanız **herkese açık issue açmayın.** Bunun y
 
 1. **Tercih edilen yol —** GitHub üzerinden özel bildirim:
    [Security → Report a vulnerability](https://github.com/tolguner/IsikCampusOS/security/advisories/new)
-2. **Alternatif —** doğrudan e-posta: `tolgaolguner1@gmail.com`
+2. **Alternatif —** doğrudan e-posta: `tolgaolguner@gmail.com`
 
 Bildiriminizde şunları paylaşırsanız değerlendirme hızlanır: etkilenen servis veya
 dosya, yeniden üretme adımları, olası etki ve varsa bir kavram kanıtı.
